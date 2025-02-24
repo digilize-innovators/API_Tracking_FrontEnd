@@ -205,11 +205,8 @@ const Index = () => {
   };
   const getLocation = async () => {
     try {
-      const params = new URLSearchParams({
-        limit: -1
-      })
       setIsLoading(true)
-      const res = await api(`/location/?${params.toString()}`, {}, 'get', true)
+      const res = await api(`/location?limit=-1}`, {}, 'get', true)
       setIsLoading(false)
       console.log('All location ', res.data)
       if (res.data.success) {
