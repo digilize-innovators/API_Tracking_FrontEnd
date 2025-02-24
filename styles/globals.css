@@ -1,0 +1,12 @@
+html,
+body {
+  min-height: 100%;
+}
+
+#__next {
+  height: 100%;
+}
+
+.d-child > :nth-child(3) > :first-child {
+  width: 100%;
+}

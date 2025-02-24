@@ -1,0 +1,333 @@
+/* Base styles, these will apply to large screens by default */
+
+:root {
+    --theme-color: #50BDA0;
+    /* Default theme color */
+}
+
+.knopf-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    flex-wrap: wrap !important;
+}
+
+.knopf-button {
+    margin: 4px !important;
+    border-radius: 25px !important;
+    padding: 5px !important;
+    font-size: 15px !important;
+    background: #ebf7f4 !important;
+    color: var(--theme-color) !important;
+    text-align: center !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 50px !important;
+    font-weight: normal !important;
+}
+
+/* for the above duplicated code */
+
+.knopf-button:hover {
+    background-color: var(--theme-color) !important;
+    color: #fff !important;
+}
+
+.react-chatbot-kit-chat-input {
+    display: none !important;
+    /* Hides the input bar */
+}
+
+.react-chatbot-kit-chat-btn-send {
+    display: none !important;
+    /* Hides the send button */
+}
+
+.outerbot {
+    height: 85%;
+    width: 29%;
+    box-sizing: border-box;
+    overflow: hidden;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    border-radius: 26px !important;
+}
+
+.react-chatbot-kit-chat-container {
+    height: 100% !important;
+    width: 100% !important;
+    z-index: 9999 !important;
+    background-color: var(--theme-color);
+    padding-left: 2% !important;
+    padding-right: 2% !important;
+
+}
+
+
+.react-chatbot-kit-chat-inner-container {
+    height: 100% !important;
+    width: 100% !important;
+    z-index: 9999 !important;
+    border-radius: 3% 3% 0 0 !important;
+    /* Curved top only */
+    overflow: hidden;
+    /* Optional, to handle content inside if needed */
+}
+
+.react-chatbot-kit-chat-header,
+.react-chatbot-kit-chat-bot-avatar,
+.react-chatbot-kit-chat-bot-avatar-container,
+.react-chatbot-kit-chat-bot-avatar-letter,
+.react-chatbot-kit-chat-bot-message-arrow,
+.react-chatbot-kit-user-chat-message-container,
+.react-chatbot-kit-user-chat-message,
+.react-chatbot-kit-user-avatar {
+    display: none !important;
+}
+
+.react-chatbot-kit-chat-bot-message-container {
+    margin: 14px 0px 0px 0px !important;
+}
+
+.react-chatbot-kit-chat-message-container {
+    padding: 0 3.5px 21px 16.5px !important;
+    overflow: scroll !important;
+    height: 80% !important;
+}
+
+.react-chatbot-kit-chat-bot-message {
+    background-color: #F4F5FA !important;
+    padding: 10px;
+    margin-bottom: 9px !important;
+    border-radius: 5px;
+    color: #666666 !important;
+    font-weight: medium;
+    position: relative;
+    width: 431.5px !important;
+    margin-right: 39px !important;
+    text-align: left !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 18px !important;
+}
+
+.react-chatbot-kit-chat-message-container::-webkit-scrollbar {
+    width: 15px !important;
+}
+
+.react-chatbot-kit-chat-message-container::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 6px;
+    border: 4px solid rgba(0, 0, 0, 0);
+    background-clip: content-box;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.botheader {
+    height: 20%;
+    width: 100%;
+    background: linear-gradient(180deg, var(--theme-color) 100%, var(--theme-color) 100%);
+    display: flex;
+    align-items: center;
+    /* Align vertically */
+    justify-content: space-between;
+    /* Ensure spacing between elements */
+    padding: 10px;
+    /* Add padding to avoid overflow when resized */
+    box-sizing: border-box;
+    /* Ensure padding is accounted for in width/height */
+}
+
+.botupperborder {
+    height: 20px !important;
+    background-color: #fff;
+    border-radius: 21px !important;
+}
+
+.botlogo {
+    padding: 5%;
+    padding-top: -3%;
+    flex-shrink: 0;
+    /* Prevent the logo from shrinking */
+}
+
+.botcontent {
+    padding: 2%;
+    flex-grow: 1;
+    /* Allow the text content to grow if needed */
+    display: flex;
+    flex-direction: column;
+    /* Align title and text vertically */
+    justify-content: center;
+    /* Center vertically */
+    text-align: left;
+}
+
+/* Make the title larger and the text smaller, both responsive */
+.EqbootTitle {
+    font-size: calc(1.2rem + 0.7vw);
+    /* Larger, responsive font size */
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+}
+
+.eqbootText {
+    font-size: calc(0.7rem + 0.3vw);
+    /* Smaller, responsive font size */
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+}
+
+.crossIcon {
+    position: absolute;
+    top: 5%;
+    right: 4%;
+    font-size: 23px;
+    z-index: 1000;
+    /* Ensure it's above other elements */
+    flex-shrink: 0;
+    /* Prevent the icon from shrinking */
+}
+
+.lineupperbot {
+    position: absolute;
+    height: 34px;
+    width: 100% !important;
+    top: 20%;
+    background-color: #fff;
+    border-radius: 21px;
+}
+
+.boticon {
+    border-radius: 50%;
+    /* Ensure the container is circular */
+    background-color: var(--theme-color);
+    z-index: 9999;
+    position: fixed;
+    right: 3%;
+    bottom: 7%;
+    padding: 10px;
+    box-shadow: 5px 5px 13px rgba(91, 81, 81, 0.4);
+    transition: transform 0.6s ease-in-out;
+    width: 60px;
+    /* Default width */
+    height: 60px;
+    /* Ensure height is equal to width */
+}
+
+.boticon:hover {
+    transform: scale(1.1);
+}
+
+.boticonimage {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    /* Ensure the image is circular */
+    object-fit: cover;
+    /* Make sure the image fits well within the container */
+}
+
+.chatbot-loader-container {
+    display: flex;
+    width: 100%;
+    color: var(--theme-color) !important;
+    justify-content: center;
+}
+
+#chatbot-loader #chatbot-loader-dot1,
+#chatbot-loader #chatbot-loader-dot2,
+#chatbot-loader #chatbot-loader-dot3 {
+    animation: load 1s infinite;
+    fill: var(--theme-color) !important;
+}
+
+.app-chatbot-container {
+    display: flex;
+    justify-content: center;
+    position: relative !important;
+    right: 200px;
+    z-index: 9999;
+    box-shadow: 5px 5px 13px rgba(91, 81, 81, 0.4);
+    border-radius: 5px;
+}
+
+/* For screens smaller than 2700px */
+@media (max-width: 2696px) {
+    .lineupperbot {
+        top: 19% !important;
+    }
+}
+
+/* For screens smaller than 2830px */
+@media (max-width: 2828px) {
+    .lineupperbot {
+        top: 19% !important;
+    }
+}
+
+
+/* For screens smaller than 768px */
+@media (max-width: 768px) {
+    .boticon {
+        width: 50px;
+        /* Smaller size for mobile */
+        height: 50px;
+    }
+}
+
+/* For screens smaller than 1024px */
+@media (max-width: 1024px) {
+    .boticon {
+        width: 55px;
+        /* Adjust size for tablets */
+        height: 55px;
+    }
+}
+
+/* For screens smaller than 1800px */
+@media (max-width: 1799px) {
+    .boticon {
+        width: 60px;
+        /* Adjust size for smaller desktops */
+        height: 60px;
+    }
+}
+
+/* For large screens */
+@media (min-width: 1800px) {
+    .boticon {
+        width: 70px;
+        /* Larger size for large screens */
+        height: 70px;
+    }
+}
+
+/* Adjustments for small screens */
+@media (max-width: 768px) {
+    .botheader {
+        height: auto;
+        /* Let it adjust automatically */
+        padding: 5px;
+        /* Reduce padding on small screens */
+    }
+
+    .crossIcon {
+        top: 2%;
+        right: 2%;
+    }
+
+    .EqbootTitle {
+        font-size: 1.2rem;
+        /* Smaller title size for mobile */
+    }
+
+    .eqbootText {
+        font-size: 0.9rem;
+        /* Smaller text size for mobile */
+    }
+}
