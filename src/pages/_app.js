@@ -40,7 +40,7 @@ const App = props => {
   useEffect(() => {
     setClient(true);
     const storedShowBot = Cookies.get('showBot');
-    console.log('Show Bot: ', storedShowBot);
+    // console.log('Show Bot: ', storedShowBot);
     setShowBot(storedShowBot == 'true');
     setShowBot(storedShowBot === 'true');
     console.warn = () => { };

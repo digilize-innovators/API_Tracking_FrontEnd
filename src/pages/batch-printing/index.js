@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 'use clients'
 'use-client'
@@ -35,14 +36,18 @@ import { useRouter } from 'next/router'
 import { style } from 'src/configs/generalConfig'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
 import axios from 'axios'
+import AuthModal from 'src/components/authModal'
+import { decodeAndSetConfig } from 'src/utils/tokenUtils';
 
 const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAccess, ip }) => {
   console.log('Project setting data ', projectSettingData);
+  const { setIsLoading } = useLoading()
   const [openSnackbar, setOpenSnackbar] = useState(false)
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' })
   const [editId, setEditId] = useState(null);
   const { removeAuthToken } = useAuth();
   const router = useRouter();
+  const [labels, setLabels] = useState([]);
   const [settingData, setSettingData] = useState({
     label: '',
     dateFormat: '',
@@ -109,11 +114,9 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     }
   }, []);
 
-  // const [errorNoOfVariable, setErrorNoOfVariable] = useState({ isError: false, message: '' })
-  const { setIsLoading } = useLoading()
-
   const getPrintlineSetting = async ()=> {
     try {
+      setIsLoading(true);
       const res = await api(`/printLineSetting/${projectSettingData.lineId}`, {}, 'get', true, true, ip);
       console.log("GET printline setting data ", res.data);
       if (res.data.success && res.data.data) {
@@ -136,8 +139,10 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
           ...settingData,
         })
       }
+      setIsLoading(false);
     } catch (error) {
       console.log('Error to get printline setting ', error);
+      setIsLoading(false);
     }
   }
 
@@ -241,6 +246,23 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     setOpenSnackbar(false)
   }
 
+  const getLabels = async () => {
+    console.log("getting lables");
+    try {
+      setIsLoading(true);
+      setTimeout(() => { setIsLoading(false) }, 5000);
+      const res = await api(`/batchprinting/getPrinterLabels/${projectSettingData.printerId}`, {}, 'get', true, true, ip);
+      console.log('Get labels ', res?.data?.data)
+      setIsLoading(false);
+      if(res?.data.success){
+        setLabels(res.data?.data?.projectNames);
+      }
+    } catch (error) {
+      console.error("Error to get print line setting")
+      setIsLoading(false)
+    }
+  }
+
   return (
     <>
       <Modal open={openModal} onClose={closeModal}>
@@ -253,8 +275,8 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
             <Grid2 size={6}>
               <FormControl fullWidth>
                 <InputLabel id='label'>Label</InputLabel>
-                <Select labelId='label' id='label' label='Label' fullWidth onChange={handleInput} name='label' value={settingData.label}>
-                  {projectSettingData.labels?.map((item, index) => (
+                <Select labelId='label' id='label' label='Label' fullWidth onChange={handleInput} name='label' value={settingData.label} onOpen={getLabels}>
+                  {labels?.map((item, index) => (
                     <MenuItem key={index} value={item}>
                       {item}
                     </MenuItem>
@@ -393,14 +415,23 @@ const Index = ({ userId, ip }) => {
   const [socketId, setSocketId] = useState('')
   const { removeAuthToken } = useAuth()
   const router = useRouter()
-  const [projectSettingData, setProjectSettingData] = useState({ labels: [], printingTechnology: '', lineId: '', controlPanelId: '' })
+  const [projectSettingData, setProjectSettingData] = useState({ lineId: '', printerId: '' })
   const apiAccess = useApiAccess("batch-printing-create", "batch-printing-update", "batch-printing-approve");
-
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [openModalApprove, setOpenModalApprove] = useState(false);
+  const [approveData, setApproveData] = useState({ approveAPIName: "", approveAPImethod: "", approveAPIEndPoint: "", session: "" });
+  const [config, setConfig] = useState(null);
+  
   useEffect(() => {
+    (async ()=> {
+      await getLinesByPcIp();
+      decodeAndSetConfig(setConfig);
+    })()
+
     if (!socket.current) {
       // Connect to the backend server
       socket.current = io(`http://${ip}:4000`, { query: { userId } });
-      console.log("User id ", userId);
+      // console.log("User id ", userId);
     }
 
     socket.current.on('connect', () => {
@@ -442,6 +473,8 @@ const Index = ({ userId, ip }) => {
         line.disabledStartPrint = true
         line.disabledStopPrint = false
         line.disabledReset = true
+        line.disabledCodeToPrint = true
+        line.disabledStopSession = true
         return panels
       })
       setAlertData({ type: 'success', message: 'Printer started', variant: 'filled' })
@@ -458,7 +491,9 @@ const Index = ({ userId, ip }) => {
         line.disabledStartPrint = true
         line.disabledStopPrint = true
         line.disabledCodePrintSave = false
-        line.disabledReset = false
+        line.disabledReset = true
+        line.disabledCodeToPrint = false
+        line.disabledStopSession = false
         line.pendingCount = 0
         line.printCount = data.printCount
         line.scanned = data.scanCount
@@ -494,10 +529,13 @@ const Index = ({ userId, ip }) => {
           const line = panel.lines.find(i => (i.id === data.lineId))
           line.disabledStartPrint = true
           line.disabledStopPrint = true
+          line.disabledCodeToPrint = false
+          line.disabledCodePrintSave = false
           line.pendingCount = 0
           line.printCount = data.printCount
           line.scanned = data.scanCount
-          line.disabledReset = false
+          line.disabledReset = true
+          line.disabledStopSession = false
           console.log("panel line competed ", panels)
           return panels
         })
@@ -515,34 +553,101 @@ const Index = ({ userId, ip }) => {
       setOpenSnackbar(true)
     })
 
-    return () => {
-      if (socket.current) {
-        socket.current.disconnect()
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    (async ()=> {
-      await getAllControlPanelWiseLines()
-    })()
     const handleBeforeUnload = (event) => {
       const message = 'Are you sure you want to leave? Printing Data might be lost.';
       event.preventDefault();
       event.returnValue = message; // Shows the confirmation dialog.
       return message; // Required for older browsers.
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
 
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
+      if (socket.current) {
+        socket.current.disconnect()
+      }
+    }
   }, [])
 
-  const getAllControlPanelWiseLines = async () => {
+
+  const getPrintingStatus = async (groupedPanels) => {
+    try {
+      setIsLoading(true);
+      const panels = [...groupedPanels];
+      const updatedPanels = await Promise.all(
+        panels.map(async (panel) => {
+          // Process all lines asynchronously
+          panel.lines = await Promise.all(
+            panel.lines.map(async (line) => {
+              const res = await api(`/printLineSetting/restore/${line.id}`, {}, 'get', true, true, ip);
+              console.log("Response of restore ", res.data);
+  
+              if (res?.data?.success && res?.data?.data) {
+                const data = res.data.data.result;
+                console.log("line is ", line);
+  
+                line.product = data.product_id;
+  
+                // Fetch additional data
+                const [productRes, batchRes, levelRes, availRes] = await Promise.all([
+                  api('/batchprinting/getAllProducts', {}, 'get', true, true, ip),
+                  api(`/batchprinting/getBatchesByProduct/${data.product_id}`, {}, 'get', true, true, ip),
+                  api(`/batchprinting/getPackagingHeirarchyFromProductAndBatch/${data.product_id}/${data.batch_id}`, {}, 'get', true, true, ip),
+                  api(`/batchprinting/getAvailableCodesFromProductAndBatch/${data.product_id}/${data.batch_id}/${data.packing_hierarchy}/${line.ControlPanel.id}/${line.id}`, {}, 'get', true, true, ip)
+                ]);
+  
+                // Update line properties
+                line.products = productRes.data.data.products;
+                line.batch = data.batch_id;
+                line.batches = batchRes.data.data.batches;
+                line.packagingHierarchy = data.packing_hierarchy;
+                line.packagingHierarchies = [levelRes.data.data.packagingheirarchy];
+                line.saveData = true;
+                line.availableToCode = availRes.data.data.availableCodes;
+                line.printCount = res.data.data.printCount;
+                line.scanned = res.data.data.scanCount;
+                line.pendingCount = res.data.data.pendingCount;
+                line.codeToPrint = String(res.data.data.codesLength);
+                line.disabledStartPrint = true;
+                line.disabledReset = true;
+                
+                line.disabledStartSession = true;
+                if (data.status === 'running') {
+                  line.disabledStopSession = true;
+                  line.disabledCodePrintSave = true;
+                  line.disabledStopPrint = false;
+                  line.disabledCodeToPrint = true;
+                } else if (data.status === 'pending') {
+                  line.disabledStopSession = false;
+                  line.disabledCodePrintSave = false;
+                  line.disabledStopPrint = true;
+                  line.disabledCodeToPrint = true;
+                } else {
+                  line.disabledStopSession = false;
+                  line.disabledCodePrintSave = false;
+                  line.disabledStopPrint = false;
+                  line.disabledCodeToPrint = false;
+                }
+              }
+              return line; // Return the modified line
+            })
+          );
+          return panel; // Return updated panel
+        })
+      );
+      setPrinterLines(updatedPanels); // Now updatedPanels has all the async results
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+    }
+};
+
+
+  const getLinesByPcIp = async () => {
     setIsLoading(true)
     try {
-      const res = await api('/batchprinting/getAllControlPanelWiseLines/', {}, 'get', true, true, ip)
+      const res = await api(`/batchprinting/getLinesByPcIp/${ip}`, {}, 'get', true, true, ip)
       console.log('Get Printer line name and control panel for Batch printing', res.data)
       if (res.data.success) {
         const groupedPanels = []
@@ -567,6 +672,10 @@ const Index = ({ userId, ip }) => {
             disabledStartPrint: true,
             disabledStopPrint: true,
             disabledReset: false,
+            disabledCodeToPrint: true,
+            disabledStartSession: true,
+            disabledStopSession: true,
+            sessionStarted: false,
             pendingCount: 0,
             printCount: 0,
             scanned: 0
@@ -574,7 +683,8 @@ const Index = ({ userId, ip }) => {
           groupedPanels.push({ panelName: key, lines: values, connected: false })
         })
         console.log('GROUPED PANEL ', groupedPanels)
-        setPrinterLines(groupedPanels)
+        setPrinterLines(groupedPanels);
+        getPrintingStatus(groupedPanels);
       } else {
         console.log('Error fetching lines', res.data)
         if (res.data.code === 401) {
@@ -738,6 +848,7 @@ const Index = ({ userId, ip }) => {
           line.availableToCode = availableCodes
           line.codeToPrint = codeToPrint
           line.scanned = 0
+          line.disabledCodeToPrint = false;
           return panels
         })
       } else {
@@ -778,6 +889,7 @@ const Index = ({ userId, ip }) => {
           line.disabledCodePrintSave = true
           line.disabledStartPrint = false
           line.disabledReset = true
+          line.disabledCodeToPrint = true
           return panels
         })
       } else {
@@ -850,7 +962,7 @@ const Index = ({ userId, ip }) => {
     try {
       setIsLoading(true)
       console.log('redis key ', redisKey)
-      const res = await api('/batchprinting/removeTableFromRedis', { redisKey }, 'delete', true, true, ip)
+      const res = await api('/batchprinting/removeTableFromRedis', { redisKey, lineId: line.id }, 'delete', true, true, ip)
       console.log('res of reset ', res.data)
       setIsLoading(false)
     } catch (error) {
@@ -858,29 +970,157 @@ const Index = ({ userId, ip }) => {
     }
   }
 
-  const getLabels = async (line) => {
-    try {
-      setIsLoading(true)
-      const res = await api(`/batchprinting/getPrinterLabels/${line.printer_id}`, {}, 'get', true, true, ip)
-      console.log('Get labels ', res?.data?.data)
-      setIsLoading(false);
-      if(res?.data.success){
-        setProjectSettingData({ ...projectSettingData, labels: res.data?.data?.projectNames, printingTechnology: line.printingTechnology, lineId: line.id, controlPanelId: line.ControlPanel.id });
-      }else {
-        setProjectSettingData({ ...projectSettingData, printingTechnology: line.printingTechnology, lineId: line.id, controlPanelId: line.ControlPanel.id });
-      }
-      setOpenProjectModal(!openProjectModal);
+  const handleOpenSetting = async (line) => {
+    console.log('setting of line ', line)
+    setProjectSettingData({ ...projectSettingData, lineId: line.id, printerId: line.printer_id });
+    setOpenProjectModal(!openProjectModal);
+  }
 
+  const handleAfterStartSession = async () => {
+    const panels = [...printerLines];
+    const data = { stop: false };
+    await Promise.all(
+      panels.map(async (panel) => {
+        const lines = [...panel.lines];
+        await Promise.all(
+          lines.map(async (line) => {
+            if(line.line_pc_ip === ip){
+              data.lineId = line.id;
+              line.disabledCodePrintSave = false;
+              line.disabledStartSession = true;
+              line.disabledCodeToPrint = true;
+              line.disabledStopSession = false;
+              line.disabledReset = true;
+              line.sessionStarted = true;
+            }
+            return line;
+          })
+        );
+        panel.lines = lines;
+        return panel;
+      })
+    );
+    setPrinterLines(panels);
+    try {
+      socket.current.emit('stopPrintingSession', data);
     } catch (error) {
-      console.error("Error to get print line setting")
-      setIsLoading(false)
+      console.log('Error handle Stop Printing Session ', error)
+      setOpenSnackbar(true);
+      setAlertData({ ...alertData, type: 'error', message: error });
     }
   }
 
-  const handleOpenSetting = async (line) => {
-    console.log('setting of line ', line)
-    await getLabels(line);
+  const handleAfterStopSession = async () => {
+    const panels = [...printerLines];
+    const data = { stop: true };
+    await Promise.all(
+      panels.map(async (panel) => {
+        const lines = [...panel.lines];
+        await Promise.all(
+          lines.map(async (line) => {
+            data.lineId = line.id;
+            line.disabledCodePrintSave = true;
+            line.disabledStartSession = true;
+            line.disabledStopSession = true;
+            line.disabledCodeToPrint = true;
+            line.disabledStartPrint = true;
+            line.disabledStopPrint = true;
+            line.disabledReset = false;
+            line.sessionStarted = false;
+            return line;
+          })
+        );
+        panel.lines = lines;
+        return panel;
+      })
+    );
+    setPrinterLines(panels);
+    try {
+      socket.current.emit('stopPrintingSession', data);
+    } catch (error) {
+      console.log('Error handle Stop Printing Session ', error)
+      setOpenSnackbar(true);
+      setAlertData({ ...alertData, type: 'error', message: error });
+    }
   }
+
+  const handleSessionStart = async (line)=> {
+    setApproveData({ approveAPIName: "batch-printing-create", approveAPImethod: "POST", approveAPIEndPoint: "/api/v1/batch-printing", session: "start" });
+    setAuthModalOpen(true);
+  }
+
+  const handleSessionStop = async ()=> {
+    setApproveData({ approveAPIName: "batch-printing-create", approveAPImethod: "POST", approveAPIEndPoint: "/api/v1/batch-printing", session: "stop" });
+    setAuthModalOpen(true);
+  }
+
+  const handleAuthModalClose = () => {
+    setAuthModalOpen(false);
+    setOpenModalApprove(false);
+  };
+
+  const handleAuthModalOpen = () => {
+    console.log("Open auth model again");
+    setApproveData({ ...approveData, approveAPIName: "batch-printing-approve", approveAPImethod: "PATCH", approveAPIEndPoint: "/api/v1/batch-printing" });
+    setAuthModalOpen(true);
+  };
+
+   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+      const resetState = () => {
+        setApproveData({ approveAPIName: "", approveAPImethod: "", approveAPIEndPoint: "", session: "" });
+        setAuthModalOpen(false);
+      };
+      if (!isAuthenticated) {
+        setAlertData({ type: 'error', message: 'Authentication failed, Please try again.' });
+        setOpenSnackbar(true);
+        return;
+      }
+      const prepareData = () => ({
+        esignStatus: esignStatus,
+        audit_log: config?.config?.audit_logs ? {
+          "user_id": user.userId,
+          "user_name": user.userName,
+          "performed_action": 'approved',
+          "remarks": remarks.length > 0 ? remarks : `Batch printing session start approved`,
+        } : {}
+      });
+      const handleEsignApproved = async () => {
+        console.log("esign is approved for creator.");
+        const data = {
+          esignStatus: "approved",
+          audit_log: config?.config?.audit_logs ? {
+            "user_id": user.userId,
+            "user_name": user.userName,
+            "performed_action": 'approved',
+            "remarks": remarks.length > 0 ? remarks : `Batch printing session start requested`,
+          } : {}
+        }
+        await api('/esign-status/double-esign', data, 'patch', true);
+        handleAuthModalOpen();
+      };
+      const handleApproverActions = async () => {
+        console.log("esign approve by approver.");
+        const data = prepareData();
+        await api('/esign-status/double-esign', data, 'patch', true);
+      };
+      if (isApprover && esignStatus === "approved") {
+        await handleApproverActions();
+        if(approveData.session === "start") {
+          handleAfterStartSession();
+        }else {
+          handleAfterStopSession();
+        }
+      } else {
+        if (esignStatus === "rejected") {
+          console.log("esign is rejected.");
+          setAuthModalOpen(false);
+          setOpenModalApprove(false);
+        } else if (esignStatus === "approved") {
+          handleEsignApproved();
+        }
+      }
+      resetState();
+    };
 
   return (
     <Box padding={4}>
@@ -1082,17 +1322,41 @@ const Index = ({ userId, ip }) => {
                     <Grid2 size={3} item sx={{ width: '24%' }}>
                       <TextField
                         id='code-to-print'
+                        disabled={line.disabledCodeToPrint}
                         value={line.codeToPrint}
                         onChange={e => {
-                          handleInputChange(panelIndex, lineIndex, 'codeToPrint', e.target.value)
-                          handleInputChange(panelIndex, lineIndex, 'disabledCodePrintSave', false)
+                          handleInputChange(panelIndex, lineIndex, 'codeToPrint', e.target.value);
+                          console.log({ value: e.target.value, start: line.sessionStarted });
+                          if(!line.sessionStarted && e.target.value !== '') handleInputChange(panelIndex, lineIndex, 'disabledStartSession', false)
+                          else handleInputChange(panelIndex, lineIndex, 'disabledStartSession', true)
                         }}
                         error={line.errorCodeToPrint.isError}
                         helperText={line.errorCodeToPrint.isError ? line.errorCodeToPrint.message : ''}
                         fullWidth
+                        type='number'
                         aria-label='code-to-print'
                         label='Code To Print'
                       />
+                    </Grid2>
+                    <Grid2 size={3} item sx={{ width: '20%' }}>
+                      <Button
+                          variant='contained'
+                          className='py-2'
+                          onClick={() => handleSessionStart(line)}
+                          disabled={line.disabledStartSession}
+                        >
+                        Start Session
+                      </Button>
+                    </Grid2>
+                    <Grid2 size={3} item sx={{ width: '20%' }}>
+                      <Button
+                          variant='contained'
+                          className='py-2'
+                          onClick={() => handleSessionStop(panelIndex, lineIndex, line)}
+                          disabled={line.disabledStopSession}
+                        >
+                        Stop Session
+                      </Button>
                     </Grid2>
                   </Grid2>
                   <Divider />
@@ -1167,6 +1431,17 @@ const Index = ({ userId, ip }) => {
         />
       )}
       <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+      <AuthModal
+        open={authModalOpen}
+        handleClose={handleAuthModalClose}
+        approveAPIName={approveData.approveAPIName}
+        approveAPImethod={approveData.approveAPImethod}
+        approveAPIEndPoint={approveData.approveAPIEndPoint}
+        handleAuthResult={handleAuthResult}
+        config={config}
+        handleAuthModalOpen={handleAuthModalOpen}
+        openModalApprove={openModalApprove}
+      />
     </Box>
   )
 }

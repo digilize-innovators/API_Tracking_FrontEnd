@@ -21,8 +21,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const getUserData = () => {
-    const profileImage=Cookies.get("profile-image")
-    console.log(">>>>>>>>>>>>>>>>>>>>>>image",profileImage);
+    const profileImage=Cookies.get("profile-image");
     const userName = Cookies.get('userName');
     const departmentName = Cookies.get('departmentName');
     return { userName, departmentName,profileImage };

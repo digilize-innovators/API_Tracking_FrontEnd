@@ -98,6 +98,7 @@ const AuthModal = ({ open, handleClose, handleAuthResult, approveAPIName, approv
                 const isApprover = config.userId !== user.user_id;
 
                 handleAuthResult(isAuthenticated, user, isApprover, esignStatus, remarks);
+                resetFields();
                 handleClose();
                 return;
             } else {
