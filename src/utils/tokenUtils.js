@@ -14,3 +14,17 @@ export const decodeAndSetConfig = (setConfig) => {
         console.error("Error decoding token", error);
     }
 };
+
+export const getTokenValues = () => {
+    try {
+        const token = Cookies.get('token');
+        if (!token) {
+            // console.error("Error decoding token");
+            return;
+        }
+        const decodedToken = jwtDecode(token);
+        return decodedToken;
+    } catch (error) {
+        console.error("Error decoding token", error);
+    }
+};
