@@ -24,7 +24,7 @@ const CustomTextField = ({ name, label, control, rules, disabled, type }) => {
           error={!!error}
           helperText={error ? error.message : ''}
           disabled={disabled}
-          type={type}
+          type={showPassword ? 'text' : type}
           InputProps={
             type === 'password'
               ? {

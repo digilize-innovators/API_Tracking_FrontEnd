@@ -60,7 +60,8 @@ const tableBody = allAreaCategoryData.map((item, index) =>
  const tableData = useMemo(() => ({
     tableHeader: ['Sr.No.', 'Area Category', 'E-Sign'],
     tableHeaderText: 'Area Category Report',
-    tableBodyText: 'Area Category Data'
+    tableBodyText: 'Area Category Data',
+    filename:'AreaCategory'
   }), []);
   
   useLayoutEffect(() => {

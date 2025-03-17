@@ -1,21 +1,18 @@
 'use-client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useLayoutEffect } from 'react'
 import Select from '@mui/material/Select'
 import Typography from '@mui/material/Typography'
 import TableCollapsibleuser from 'src/views/tables/TableCollapsibleuser.js'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
-import { Button, FormHelperText, Modal, TextField, Box, MenuItem, Switch, TableContainer, Paper, Grid2 } from '@mui/material'
+import { Button,  Box, MenuItem, TableContainer, Paper, Grid2 } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import { api } from 'src/utils/Rest-API'
 import SnackbarAlert from 'src/components/SnackbarAlert'
-import styled from '@emotion/styled'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import Head from 'next/head'
 import { useAuth } from 'src/Context/AuthContext'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import { BaseUrl } from '../../../constants'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { decrypt } from 'src/utils/Encrypt-Decrypt'
@@ -24,37 +21,14 @@ import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken';
-import { style } from 'src/configs/generalConfig';
-import { decodeAndSetConfig } from '../../utils/tokenUtils';
+import { getTokenValues} from '../../utils/tokenUtils';
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
-import SearchBar from 'src/components/SearchBarComponent'
-import EsignStatusFilter from 'src/components/EsignStatusFilter'
-import { footerContent } from 'src/utils/footerContentPdf';
-import { headerContentFix } from 'src/utils/headerContentPdfFix';
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
+import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
+import CustomSearchBar from 'src/components/CustomSearchBar'
+import downloadPdf from 'src/utils/DownloadPdf'
+import UserModel from 'src/components/Modal/UserModel'
 const mainUrl = BaseUrl
-
-const ImgStyled = styled('img')(({ theme }) => ({
-  width: 120,
-  height: 120,
-  marginRight: theme.spacing(6.25),
-  borderRadius: theme.shape.borderRadius
-}))
-const ButtonStyled = styled(Button)(({ theme }) => ({
-  [theme.breakpoints.down('sm')]: {
-    width: '100%',
-    textAlign: 'center'
-  }
-}))
-const ResetButtonStyled = styled(Button)(({ theme }) => ({
-  marginLeft: theme.spacing(4.5),
-  [theme.breakpoints.down('sm')]: {
-    width: '100%',
-    marginLeft: 0,
-    textAlign: 'center',
-    marginTop: theme.spacing(4)
-  }
-}))
 const Index = () => {
   const router = useRouter()
   const { settings } = useSettings()
@@ -62,36 +36,16 @@ const Index = () => {
   const [allDepartment, setAllDepartment] = useState([])
   const [allDesignation, setAllDesignation] = useState([])
   const [allLocation, setAllLocation] = useState([])
-  const [openSnackbar, setOpenSnackbar] = useState(false)
-  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' })
-  const [searchVal, setSearchVal] = useState('')
+  const [alertData, setAlertData] = useState({openSnackbar:false, type: '', message: '', variant: 'filled' })
   const [departmentFilter, setDepartmentFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [eSignStatus, setESignStatus] = useState('')
-  const [userId, setUserId] = useState('')
-  const [userName, setUserName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [password, setPassword] = useState('Dummy@1234')
   const [departmentId, setDepartmentId] = useState('')
-  const [designationId, setDesignationId] = useState('')
-  const [locationId, setLocationId] = useState('')
-  const [errorUserId, setErrorUserId] = useState({ isError: false, message: '' })
-  const [errorUserName, setErrorUserName] = useState({ isError: false, message: '' })
-  const [errorEmail, setErrorEmail] = useState({ isError: false, message: '' })
-  const [errorPhoneNumber, setErrorPhoneNumber] = useState({ isError: false, message: '' })
-  const [errorPassword, setErrorPassword] = useState({ isError: false, message: '' })
-  const [errorDepartmentId, setErrorDepartmentId] = useState({ isError: false, message: '' })
-  const [errorDesignationId, setErrorDesignationId] = useState({ isError: false, message: '' })
-  const [errorLocationId, setErrorLocationId] = useState({ isError: false, message: '' })
+  const [statusFilter, setStatusFilter] = useState('')
   const [openModal, setOpenModal] = useState(false)
   const [editData, setEditData] = useState({})
   const [sortDirection, setSortDirection] = useState('asc')
   const [profilePhoto, setProfilePhoto] = useState('/images/avatars/1.png')
-  const [isEnabled, setIsEnabled] = useState(true)
   const [file, setFile] = useState('')
   const { setIsLoading } = useLoading()
-  const [tempSearchVal, setTempSearchVal] = useState('')
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
   const [totalRecords, setTotalRecords] = useState(0)
@@ -100,36 +54,57 @@ const Index = () => {
   const [userDataPdf, setUserDataPdf] = useState()
   const [config, setConfig] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [approveAPIName, setApproveAPIName] = useState('');
-  const [approveAPImethod, setApproveAPImethod] = useState('');
-  const [approveAPIEndPoint, setApproveAPIEndPoint] = useState('');
+  const [approveAPI,setApproveAPI]=useState({ approveAPIName:'',approveAPImethod:'',approveAPIEndPoint:''})
+  const [tableHeaderData, setTableHeaderData] = useState({
+    esignStatus: '',
+    searchVal: ''
+  });
   const [eSignStatusId, setESignStatusId] = useState('');
   const [auditLogMark, setAuditLogMark] = useState('');
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
   const [openModalApprove, setOpenModalApprove] = useState(false);
+  const [formData,setFormData]=useState({})
   const apiAccess = useApiAccess(
     "user-create",
     "user-update",
     "user-approve");
 
-  useEffect(() => {
-    let data = getUserData();
-    setUserDataPdf(data);
-    decodeAndSetConfig(setConfig);
-  }, [])
+  useLayoutEffect(() => {
+      let data = getUserData();
+      const decodedToken = getTokenValues();
+      setConfig(decodedToken);
+      setUserDataPdf(data);
+      return () => { }
+    }, [])
 
   useEffect(() => {
     getDepartments()
     getUser()
     getDesignation()
     getLocation()
-  }, [departmentFilter, eSignStatus, searchVal, page, rowsPerPage, statusFilter])
-
+  }, [departmentFilter, tableHeaderData, page, rowsPerPage, statusFilter])
+ const tableBody = userData.map((item, index) => 
+  [index + 1, item.user_id,
+    item.user_name,
+    item.department?.department_name,
+    item.designation?.designation_name,
+    item.email,
+    item.is_active ? 'enabled' : 'disabled',
+    item.esign_status]);
+   
+  const tableData = useMemo(() => ({
+     tableHeader: ['Sr.No.', 'User Id', 'User Name', 'Department Name', 'Designation Name', 'Email', 'Status', 'E-Sign'],
+     tableHeaderText: 'User Master Report',
+     tableBodyText: 'User Data',
+     departmentFilter:departmentFilter,
+     filename:"UserMaster"
+   }), [departmentFilter]);
   useEffect(() => {
     if (departmentId) {
       getDesignation()
     }
   }, [departmentId])
+
 
   const getUser = async () => {
     try {
@@ -137,8 +112,8 @@ const Index = () => {
       const params = new URLSearchParams({
         page: page + 1,
         limit: rowsPerPage === -1 ? -1 : rowsPerPage,
-        search: searchVal,
-        esign_status: eSignStatus,
+        search: tableHeaderData.searchVal,
+        esign_status: tableHeaderData.esignStatus,
         status: statusFilter,
         department_name: departmentFilter
       });
@@ -169,7 +144,7 @@ const Index = () => {
         limit: -1
       })
       const res = await api(`/designation/${departmentId}/?${params.toString()}`, {}, 'get', true)
-      console.log('designation by department ', res.data, departmentId)
+      console.log('designation by department ', res.data, formData.departmentId)
       setIsLoading(false)
       console.log('All Designation ', res.data)
       if (res.data.success) {
@@ -225,13 +200,15 @@ const Index = () => {
   }
 
   const closeSnackbar = () => {
-    setOpenSnackbar(false)
+    setAlertData({...alertData,openSnackbar:false})
   }
 
   const handleOpenModal = () => {
-    setApproveAPIName("user-create");
-    setApproveAPImethod("POST");
-    setApproveAPIEndPoint("/api/v1/user");
+    setApproveAPI({
+      approveAPIName:"user-create",
+      approveAPImethod:"POST",
+      approveAPIEndPoint:"/api/v1/user"
+    })
     resetForm();
     setOpenModal(true);
   }
@@ -306,64 +283,73 @@ const Index = () => {
     return !isInvalid;
   };
   const resetForm = () => {
-    setUserId('')
+    // setUserId('')
 
-    setUserName('')
-    setEmail('')
-    setPhoneNumber('')
-    setPassword('')
-    setDepartmentId('')
-    setDesignationId('')
-    setLocationId('')
-    setIsEnabled(true)
-    setErrorUserId({ isError: false, message: '' })
-    setErrorUserName({ isError: false, message: '' })
-    setErrorEmail({ isError: false, message: '' })
-    setErrorPhoneNumber({ isError: false, message: '' })
-    setErrorPassword({ isError: false, message: '' })
-    setErrorDepartmentId({ isError: false, message: '' })
-    setErrorDesignationId({ isError: false, message: '' })
-    setErrorLocationId({ isError: false, message: '' })
+    // setUserName('')
+    // setEmail('')
+    // setPhoneNumber('')
+    // setPassword('')
+    // setDepartmentId('')
+    // setDesignationId('')
+    // setLocationId('')
+    // setIsEnabled(true)
+    // setErrorUserId({ isError: false, message: '' })
+    // setErrorUserName({ isError: false, message: '' })
+    // setErrorEmail({ isError: false, message: '' })
+    // setErrorPhoneNumber({ isError: false, message: '' })
+    // setErrorPassword({ isError: false, message: '' })
+    // setErrorDepartmentId({ isError: false, message: '' })
+    // setErrorDesignationId({ isError: false, message: '' })
+    // setErrorLocationId({ isError: false, message: '' })
     setEditData({})
-    setAllDesignation([])
+    // setAllDesignation([])
     setProfilePhoto('/images/avatars/1.png')
   }
-  const resetEditForm = () => {
-    console.log('REset edit field')
-    setEmail('')
-    setPhoneNumber('')
-    setDepartmentId('')
-    setDesignationId('')
-    setLocationId('')
-    setIsEnabled(true)
-    setErrorUserId({ isError: false, message: '' })
-    setErrorUserName({ isError: false, message: '' })
-    setErrorEmail({ isError: false, message: '' })
-    setErrorPhoneNumber({ isError: false, message: '' })
-    setErrorPassword({ isError: false, message: '' })
-    setErrorDepartmentId({ isError: false, message: '' })
-    setErrorDesignationId({ isError: false, message: '' })
-    setErrorLocationId({ isError: false, message: '' })
-    setEditData(prev => ({
-      ...prev,
-      email: '',
-      phone_number: '',
-      user_location_id: '',
-      user_department_id: '',
-      user_designation_id: '',
-      profile_photo: ''
-    }))
-  }
-  const handleSubmitForm = async () => {
+  // const resetEditForm = () => {
+  //   console.log('REset edit field')
+  //   setEmail('')
+  //   setPhoneNumber('')
+  //   setDepartmentId('')
+  //   setDesignationId('')
+  //   setLocationId('')
+  //   setIsEnabled(true)
+  //   setErrorUserId({ isError: false, message: '' })
+  //   setErrorUserName({ isError: false, message: '' })
+  //   setErrorEmail({ isError: false, message: '' })
+  //   setErrorPhoneNumber({ isError: false, message: '' })
+  //   setErrorPassword({ isError: false, message: '' })
+  //   setErrorDepartmentId({ isError: false, message: '' })
+  //   setErrorDesignationId({ isError: false, message: '' })
+  //   setErrorLocationId({ isError: false, message: '' })
+  //   setEditData(prev => ({
+  //     ...prev,
+  //     email: '',
+  //     phone_number: '',
+  //     user_location_id: '',
+  //     user_department_id: '',
+  //     user_designation_id: '',
+  //     profile_photo: ''
+  //   }))
+  // }
+  const handleSubmitForm = async (data) => {
+    console.log("data",data)
+    setFormData(data)
     const isEdit = !!editData?.id;
-    setApproveAPIName(isEdit ? "user-update" : "user-create");
-    setApproveAPImethod(isEdit ? "PUT" : "POST");
-    setApproveAPIEndPoint("/api/v1/user");
-    applyValidation();
-    const isValid = checkValidate();
-    if (!isValid) {
-      return true;
-    }
+    isEdit? setApproveAPI({
+      approveAPIName:"user-update",
+      approveAPImethod:"PUT",
+      approveAPIEndPoint:"/api/v1/user"
+    }): setApproveAPI({
+      approveAPIName:"user-create",
+      approveAPImethod:"POST",
+      approveAPIEndPoint:"/api/v1/user"
+    })
+    // applyValidation();
+
+    // const isValid = checkValidate();
+    // if (!isValid) {
+    //   return true;
+    // }
     if (config?.config?.esign_status) {
       setAuthModalOpen(true);
       return;
@@ -374,26 +360,21 @@ const Index = () => {
   const addUser = async (esign_status, remarks) => {
     const uploadRes = await uploadUserImage();
     if (!uploadRes?.success) {
-      setOpenSnackbar(true);
-      setAlertData({ ...alertData, type: 'error', message: uploadRes?.message });
+      setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: uploadRes?.message });
       return;
     }
     console.log('user profile url', uploadRes?.url)
     try {
+      console.log(formData)
       setIsLoading(true)
       const data = {
-        userId,
-        userName,
-        password,
-        departmentId,
-        designationId,
-        locationId,
-        email,
-        phoneNumber,
+       ...formData,
         profilePhoto: uploadRes?.url || "",
-        is_active: isEnabled,
+        is_active: formData.isEnabled,
         role: 'user'
       }
+      delete data.isEnabled;
+      console.log(data)
       const auditlogRemark = remarks;
       const audit_log = config?.config?.audit_logs ? {
         "audit_log": true,
@@ -411,14 +392,12 @@ const Index = () => {
       console.log('Add user res ', res?.data)
       setIsLoading(false)
       if (res?.data?.success) {
-        setOpenSnackbar(true);
-        setAlertData({ ...alertData, type: 'success', message: 'User added successfully' });
+        setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'User added successfully' });
         getUser();
         resetForm();
       } else {
         console.log('error to add User ', res.data)
-        setOpenSnackbar(true);
-        setAlertData({ ...alertData, type: 'error', message: res.data?.message });
+        setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: res.data?.message });
         if (res.data.code === 401) {
           removeAuthToken();
           router.push('/401');
@@ -430,9 +409,11 @@ const Index = () => {
     } finally {
       setOpenModal(false);
       setIsLoading(false);
-      setApproveAPIName('');
-      setApproveAPImethod('');
-      setApproveAPIEndPoint('');
+      setApproveAPI({
+        approveAPIName:"",
+        approveAPImethod:"",
+        approveAPIEndPoint:""
+      })
     }
   }
   const editUser = async (esign_status, remarks) => {
@@ -441,22 +422,21 @@ const Index = () => {
     if (profilePhoto !== editData.profile_photo || editData.profile_photo === "") {
       const uploadRes = await uploadUserImage();
       if (!uploadRes?.success) {
-        setOpenSnackbar(true);
-        setAlertData({ ...alertData, type: 'error', message: uploadRes?.message });
+        setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: uploadRes?.message });
         return;
       }
       url = uploadRes?.url;
     }
     try {
       const data = {
-        departmentId,
-        designationId,
-        locationId,
-        email,
-        phoneNumber,
+        ...formData,
         profilePhoto: url || editData?.profile_photo,
-        is_active: isEnabled
+        is_active: formData.isEnabled
       }
+      delete data.isEnabled
+      delete data.userId
+      delete data.password
+      delete data.userName
       const auditlogRemark = remarks;
       let audit_log;
       if (config?.config?.audit_logs) {
@@ -481,14 +461,12 @@ const Index = () => {
       setIsLoading(false)
       if (res.data.success) {
         console.log('res ', res.data)
-        setOpenSnackbar(true)
-        setAlertData({ ...alertData, type: 'success', message: 'User updated successfully' })
+        setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'User updated successfully' })
         resetForm()
         getUser()
       } else {
         console.log('error to edit User ', res.data)
-        setOpenSnackbar(true)
-        setAlertData({ ...alertData, type: 'error', message: res.data.message })
+        setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: res.data.message })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401');
@@ -500,17 +478,19 @@ const Index = () => {
     } finally {
       setOpenModal(false)
       setIsLoading(false)
-      setApproveAPIName('');
-      setApproveAPImethod('');
-      setApproveAPIEndPoint('');
+      setApproveAPI({
+        approveAPIName:"",
+        approveAPImethod:"",
+        approveAPIEndPoint:""
+      })
     }
+
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log("handleAuthResult 01", isAuthenticated, isApprover, esignStatus, user);
     console.log("handleAuthResult 02", config.userId, user.user_id);
     const handleAuthenticationError = () => {
-      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.' });
-      setOpenSnackbar(true);
+      setAlertData({ openSnackbar:true,type: 'error', message: 'Authentication failed, Please try again.' });
     };
     const handleApproverActions = async (user, esignStatus, remarks) => {
       const data = prepareApproverData(user, esignStatus, remarks);
@@ -545,7 +525,7 @@ const Index = () => {
     const handleApproveDownload = () => {
       console.log("esign is approved for approver");
       setOpenModalApprove(false);
-      downloadPdf();
+      downloadPdf(tableData,tableHeaderData,tableBody,userData,userDataPdf);
       resetApprovalState();
     };
     const handleRejectDownload = () => {
@@ -559,8 +539,7 @@ const Index = () => {
     };
     const handleEsignUpdateError = () => {
       console.error("Error updating esign status:");
-      setAlertData({ type: 'error', message: 'Failed to update e-sign status.' });
-      setOpenSnackbar(true);
+      setAlertData({openSnackbar:true, type: 'error', message: 'Failed to update e-sign status.' });
       resetApprovalState();
     };
     const handleCreatorActions = (esignStatus, remarks) => {
@@ -577,9 +556,11 @@ const Index = () => {
       }
     };
     const resetApprovalState = () => {
-      setApproveAPIName('');
-      setApproveAPImethod('');
-      setApproveAPIEndPoint('');
+      setApproveAPI({
+        approveAPIName:"",
+        approveAPImethod:"",
+        approveAPIEndPoint:""
+      })
       setAuthModalOpen(false);
     };
     if (!isAuthenticated) {
@@ -596,9 +577,11 @@ const Index = () => {
   };
   const handleAuthCheck = async (row) => {
     console.log("handleAuthCheck", row)
-    setApproveAPIName("user-approve");
-    setApproveAPImethod("PATCH");
-    setApproveAPIEndPoint("/api/v1/user");
+    setApproveAPI({
+      approveAPIName:"user-approve",
+      approveAPImethod:"PATCH",
+      approveAPIEndPoint:"/api/v1/user"
+    })
     setAuthModalOpen(true);
     setESignStatusId(row.id);
     setAuditLogMark(row.user_id)
@@ -610,44 +593,23 @@ const Index = () => {
     setOpenModal(true);
     setEditData(item);
     const {
-      department,
-      user_id,
-      user_name,
-      email,
-      phone_number,
-      location,
       profile_photo,
-      is_active,
-      designation,
     } = item;
-    setDepartmentId(department?.id);
-    setUserId(user_id);
-    setUserName(user_name);
-    setEmail(email);
-    setPhoneNumber(phone_number);
-    setPassword('Dummy@1234');
-    setLocationId(location?.id);
-    setIsEnabled(is_active);
-    setDesignationId(designation?.id);
+   
     if (profile_photo && profile_photo !== '/images/avatars/1.png') {
       convertImageToBase64(profile_photo);
     } else {
       setProfilePhoto('/images/avatars/1.png');
     }
   };
-  const handleSearch = () => {
-    let currentVal = tempSearchVal
-    currentVal = currentVal.toLowerCase()
-    setSearchVal(currentVal)
-    if (currentVal === '') {
-      resetFilter()
+  const handleSearch = (val) => {
+    setTableHeaderData({ ...tableHeaderData,searchVal:val.toLowerCase()});
+    if(val===''){
+      setDepartmentFilter('')
+      setStatusFilter('')
     }
   }
-  const handleTempSearchValue = e => {
-    let currentVal = e.target.value
-    currentVal = currentVal.toLowerCase()
-    setTempSearchVal(currentVal)
-  }
+  
   const handleSortByUserName = () => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
     const sorted = [...userData].sort((a, b) => {
@@ -697,8 +659,7 @@ const Index = () => {
     setSortDirection(newSortDirection);
   };
   const resetFilter = () => {
-    setTempSearchVal('')
-    setSearchVal('')
+    setTableHeaderData({...tableHeaderData,searchVal:""})
     setDepartmentFilter('')
     setStatusFilter('')
   }
@@ -768,108 +729,30 @@ const Index = () => {
     setSortDirection(isAsc ? 'desc' : 'asc')
     setSortBy(property)
   }
-  const downloadPdf = () => {
-    console.log('clicked on download btn')
-    const doc = new jsPDF()
-    const headerContent = () => {
-      headerContentFix(doc, 'User Master Report');
-
-      if (searchVal) {
-        doc.setFontSize(10)
-        doc.text('Search : ' + `${tempSearchVal}`, 15, 25)
-      } else {
-        doc.setFontSize(10)
-        doc.text('Search : ' + '__', 15, 25)
-      }
-      doc.text('Filters :\n', 15, 30)
-      if (departmentFilter) {
-        doc.setFontSize(10)
-        doc.text('Department : ' + `${departmentFilter}`, 20, 35)
-      } else {
-        doc.setFontSize(10)
-        doc.text('Department : ' + '__', 20, 35)
-      }
-      if (eSignStatus) {
-        doc.setFontSize(10)
-        doc.text(`Status : ${eSignStatus ? 'enabled' : 'disabled'}`, 20, 40)
-      } else {
-        doc.setFontSize(10)
-        doc.text('Status : ' + '__', 20, 40)
-      }
-      doc.setFontSize(12)
-      doc.text('User Data', 15, 55)
-    }
-    const bodyContent = () => {
-      let currentPage = 1;
-      let dataIndex = 0;
-      const totalPages = Math.ceil(userData.length / 25);
-      headerContent();
-      while (dataIndex < userData.length) {
-        if (currentPage > 1) {
-          doc.addPage();
-        }
-        footerContent(currentPage, totalPages, userDataPdf, doc);
-
-        const body = userData
-          .slice(dataIndex, dataIndex + 25)
-          .map((item, index) => [
-            dataIndex + index + 1,
-            item.user_user_id,
-            item.user_name,
-            item.department?.department_name,
-            item.designation?.designation_name,
-            item.email,
-            item.is_active ? 'enabled' : 'disabled',
-            item.esign_status,
-          ]);
-        autoTable(doc, {
-          startY: currentPage === 1 ? 60 : 40,
-          styles: { halign: 'center' },
-          headStyles: {
-            fontSize: 8,
-            fillColor: [80, 189, 160],
-          },
-          alternateRowStyles: { fillColor: [249, 250, 252] },
-          tableLineColor: [80, 189, 160],
-          tableLineWidth: 0.1,
-          head: [
-            ['Sr.No.', 'User Id', 'User Name', 'Department Name', 'Designation Name', 'Email', 'Status', 'E-Sign'],
-          ],
-          body: body,
-          columnWidth: 'wrap',
-        });
-        dataIndex += 25;
-        currentPage++;
-      }
-    };
-
-    bodyContent()
-    const currentDate = new Date()
-    const formattedDate = currentDate
-      .toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
-      .replace(/\//g, '-')
-    const formattedTime = currentDate.toLocaleTimeString('en-US', { hour12: false }).replace(/:/g, '-')
-    const fileName = `User_${formattedDate}_${formattedTime}.pdf`
-    doc.save(fileName)
-  }
+ 
   const handleAuthModalOpen = () => {
     console.log("OPen auth model");
-    setApproveAPIName("user-approve");
-    setApproveAPImethod("PATCH");
-    setApproveAPIEndPoint("/api/v1/user");
+    setApproveAPI({
+      approveAPIName:"user-approve",
+      approveAPImethod:"PATCH",
+      approveAPIEndPoint:"/api/v1/user"
+    })
     setAuthModalOpen(true);
   };
   const handleDownloadPdf = () => {
-    setApproveAPIName("user-create");
-    setApproveAPImethod("POST");
-    setApproveAPIEndPoint("/api/v1/user");
+  
+    setApproveAPI({
+      approveAPIName:"user-create",
+      approveAPImethod:"POST",
+      approveAPIEndPoint:"/api/v1/user"
+    })
     if (config?.config?.esign_status) {
       console.log("Esign enabled for download pdf");
       setEsignDownloadPdf(true);
       setAuthModalOpen(true);
       return;
     }
-    downloadPdf();
+    downloadPdf(tableData,tableHeaderData,tableBody,userData,userDataPdf);
   }
   return (
     <Box padding={4}>
@@ -887,7 +770,7 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex-row justify-content-start align-items-center mx-4 my-3 '>
-                <EsignStatusFilter esignStatus={eSignStatus} setEsignStatus={setESignStatus} />
+          <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
                 <FormControl className='w-25 mx-2'>
                   <InputLabel id='department-label'>Department</InputLabel>
                   <Select
@@ -922,11 +805,13 @@ const Index = () => {
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
-                  <SearchBar
+                  {/* <SearchBar
                     searchValue={tempSearchVal}
                     handleSearchChange={handleTempSearchValue}
                     handleSearchClick={handleSearch}
-                  />
+                  /> */}
+                <CustomSearchBar handleSearchClick={handleSearch} />
+                  
                   {
                     apiAccess.addApiAccess && (
                       <Button variant='contained' className='mx-2' onClick={handleOpenModal} role='button'>
@@ -970,322 +855,18 @@ const Index = () => {
           </Box>
         </Grid2>
       </Grid2>
-      <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-      <Modal
-        open={openModal}
-        onClose={handleCloseModal}
-        data-testid="modal"
-        role='dialog'
-        aria-labelledby='modal-modal-title'
-        aria-describedby='modal-modal-description'
-      >
-        <Box sx={style}>
-          <Typography variant='h4' className='my-2'>
-            {editData?.id ? 'Edit User' : 'Add User'}
-          </Typography>
-
-          <Grid2 item xs={12} className='d-flex justify-content-between align-items-center'>
-            <Box >
-              <Grid2 item xs={12} sx={{ marginTop: 4.8, marginBottom: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <ImgStyled src={profilePhoto} alt='Profile Pic' />
-                  <Box>
-                    <ButtonStyled
-                      component='label'
-                      variant='contained'
-                      htmlFor='account-settings-upload-image'
-                    >
-                      Upload New Photo{/* */}
-                      <input
-                        hidden
-                        type='file'
-                        onChange={onChange}
-                        accept='image/png, image/jpeg, image/jpg'
-                        id='account-settings-upload-image'
-                      />
-                    </ButtonStyled>
-                    <ResetButtonStyled
-                      color='error'
-                      variant='outlined'
-                      onClick={() => setProfilePhoto('/images/avatars/1.png')}
-                    >
-                      Reset
-                    </ResetButtonStyled>
-                    <Typography variant='body2' sx={{ marginTop: 5 }}>
-                      Allowed PNG, JPG or JPEG. Max size of 8MB.
-                    </Typography>
-                  </Box>
-                </Box>
-              </Grid2>
-            </Box>
-          </Grid2>
-
-          <Grid2 container spacing={2}>
-            <Grid2 size={6}>
-              <TextField
-                fullWidth
-                label='User ID'
-                placeholder='User ID'
-                value={userId}
-                onChange={e => {
-                  setUserId(e.target.value)
-                  e.target.value && setErrorUserId({ isError: false, message: '' })
-                }}
-                required={true}
-                error={errorUserId.isError}
-                disabled={!!editData?.id}
-              />
-            </Grid2>
-            <Grid2 size={6}>
-              <TextField
-                fullWidth
-                label='User Name'
-                placeholder='User Name'
-                value={userName}
-                onChange={e => {
-                  setUserName(e.target.value)
-                  e.target.value && setErrorUserName({ isError: false, message: '' })
-                }}
-                required={true}
-                error={errorUserName.isError}
-                disabled={!!editData?.id}
-              />
-            </Grid2>
-          </Grid2>
-          <Grid2 container spacing={2} sx={{ margin: "0.5rem 0rem" }}>
-            <Grid2 size={6}>
-              <FormHelperText error={errorUserId.isError}>
-                {errorUserId.isError ? errorUserId.message : ''}
-              </FormHelperText>
-            </Grid2>
-            <Grid2 size={6}>
-              <FormHelperText error={errorUserName.isError}>
-                {errorUserName.isError ? errorUserName.message : ''}
-              </FormHelperText>
-            </Grid2>
-          </Grid2>
-          <Grid2 container spacing={2}>
-            <Grid2 size={6}>
-              <TextField
-                fullWidth
-                label='Email'
-                placeholder='Email'
-                value={email}
-                onChange={e => {
-                  setEmail(e.target.value);
-                  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value)) {
-                    setErrorEmail({ isError: false, message: '' })
-                  } else {
-                    setErrorEmail({ isError: true, message: 'Email is not Valid' })
-                  }
-                }}
-                required={true}
-                error={errorEmail.isError}
-              />
-            </Grid2>
-            <Grid2 size={6}>
-              <TextField
-                fullWidth
-                type='password'
-                label='Password'
-                placeholder='Password'
-                value={password}
-                onChange={e => {
-                  setPassword(e.target.value);
-                  const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@#$%^&*])[A-Za-z\d@#$%^&*()\-_=+]{8,}$/;
-                  if (e.target.value?.length < 8) {
-                    setErrorPassword({ isError: true, message: 'Password must be at least 8 characters' });
-                  } else if (passwordRegex.test(e.target.value)) {
-                    setErrorPassword({ isError: false, message: '' });
-                  } else {
-                    setErrorPassword({
-                      isError: true,
-                      message: 'Password must include at least 1 uppercase, 1 lowercase, 1 digit, and 1 special character (@#$%^&*)'
-                    });
-                  }
-                }}
-                required={true}
-                error={errorPassword.isError}
-                disabled={!!editData?.id}
-              />
-            </Grid2>
-          </Grid2>
-
-          <Grid2 container spacing={2} sx={{ margin: "0.5rem 0rem" }}>
-            <Grid2 size={6}>
-              <FormHelperText error={errorEmail.isError}>
-                {errorEmail.isError ? errorEmail.message : ''}
-              </FormHelperText>
-            </Grid2>
-            <Grid2 size={6}>
-              <FormHelperText error={errorPassword.isError}>
-                {errorPassword.isError ? errorPassword.message : ''}
-              </FormHelperText>
-            </Grid2>
-          </Grid2>
-
-          <Grid2 container spacing={2}>
-            <Grid2 size={6}>
-              <TextField
-                fullWidth
-                label='Phone'
-                placeholder='Enter Phone'
-                value={phoneNumber}
-                onChange={e => {
-                  const value = e.target.value;
-                  setPhoneNumber(value);
-                  if (value.length !== 10) {
-                    setErrorPhoneNumber({ isError: true, message: 'Phone number must be 10 digits' });
-                  } else if (!/^\d+$/.test(value)) {
-                    setErrorPhoneNumber({ isError: true, message: 'Phone number cannot contain alphabets' });
-                  } else {
-                    setErrorPhoneNumber({ isError: false, message: '' });
-                  }
-                }}
-                required={true}
-                error={errorPhoneNumber.isError}
-              />
-            </Grid2>
-            <Grid2 size={6}>
-              <FormControl fullWidth required error={errorDepartmentId.isError}>
-                <InputLabel required>Department</InputLabel>
-                <Select
-                  labelId='user-select-by-department-id'
-                  id='user-select-by-department-id'
-                  label='Department Name'
-                  value={departmentId}
-                  onChange={e => {
-                    setDepartmentId(e.target.value)
-                    setErrorDepartmentId({ isError: false, message: '' })
-                  }}
-                >
-                  {allDepartment?.map(d => {
-                    return (
-                      <MenuItem key={d?.id} value={d?.id} selected={departmentId === d.id}>
-                        {d?.department_name}
-                      </MenuItem>
-                    )
-                  })}
-                </Select>
-                <FormHelperText className='dropDown-error'>
-                </FormHelperText>
-              </FormControl>
-
-            </Grid2>
-          </Grid2>
-          <Grid2 container spacing={2} sx={{ margin: "0.5rem 0rem" }}>
-            <Grid2 size={6}>
-              <FormHelperText error={errorPhoneNumber.isError}>
-                {errorPhoneNumber.isError ? errorPhoneNumber.message : ''}
-              </FormHelperText>
-
-            </Grid2>
-            <Grid2 size={6}>
-              <FormHelperText error={errorDepartmentId.isError}>
-                {errorDepartmentId.isError ? errorDepartmentId.message : ''}
-              </FormHelperText>
-            </Grid2>
-          </Grid2>
-
-          <Grid2 container spacing={2}>
-            <Grid2 size={6}>
-              <FormControl fullWidth required error={errorDesignationId.isError}>
-                <InputLabel>Designation</InputLabel>
-                <Select
-                  labelId='user-select-by-designation-id'
-                  id='user-select-by-designation-id'
-                  label='Designation Name'
-                  value={designationId}
-                  onChange={e => {
-                    setDesignationId(e.target.value)
-                    setErrorDesignationId({ isError: false, message: '' })
-                  }}
-                >
-                  {allDesignation?.map(d => {
-                    return (
-                      <MenuItem key={d?.id} value={d?.id} selected={designationId === d.id}>
-                        {d?.designation_name}
-                      </MenuItem>
-                    )
-                  })}
-                </Select>
-              </FormControl>
-            </Grid2>
-            <Grid2 size={6}>
-              <FormControl fullWidth required error={errorLocationId.isError}>
-                <InputLabel>Location</InputLabel>
-                <Select
-                  labelId='user-select-by-location-id'
-                  id='user-select-by-location-id'
-                  label='Location Name'
-                  value={locationId}
-                  onChange={e => {
-                    setLocationId(e.target.value)
-                    setErrorLocationId({ isError: false, message: '' })
-                  }}
-                >
-                  {allLocation?.map(d => {
-                    return (
-                      <MenuItem key={d?.id} value={d?.id} selected={locationId === d.id}>
-                        {d?.location_name}
-                      </MenuItem>
-                    )
-                  })}
-                </Select>
-              </FormControl>
-            </Grid2>
-          </Grid2>
-          <Grid2 container spacing={2}>
-            <Grid2 size={6}>
-              <FormHelperText error={errorDesignationId.isError}>
-                {errorDesignationId.isError ? errorDesignationId.message : ''}
-              </FormHelperText>
-
-            </Grid2>
-            <Grid2 size={6}>
-              <FormHelperText error={errorLocationId.isError}>
-                {errorLocationId.isError ? errorLocationId.message : ''}
-              </FormHelperText>
-            </Grid2>
-          </Grid2>
-
-          {editData?.id && (
-            <Grid2 item xs={12} sm={6}>
-              <Typography component='Box'>
-                <Switch
-                  checked={isEnabled}
-                  onChange={event => setIsEnabled(event.target.checked)}
-                  name='enabled'
-                  color='primary'
-                />
-                User Enabled
-              </Typography>
-            </Grid2>
-          )}
-          <Grid2 item xs={12} className='my-3 '>
-            <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={handleSubmitForm}>
-              Save Changes
-            </Button>
-            <Button
-              type='reset'
-              variant='outlined'
-              color='primary'
-              onClick={editData?.id ? resetEditForm : resetForm}
-            >
-              Reset
-            </Button>
-            <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={handleCloseModal}>
-              Close
-            </Button>
-          </Grid2>
-        </Box>
-      </Modal>
+      <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+      <UserModel open={openModal} onClose={handleCloseModal}editData={editData}
+      handleSubmitForm={handleSubmitForm} allDepartment={allDepartment}
+      allDesignation={allDesignation} allLocation={allLocation}
+       profilePhoto={profilePhoto}setProfilePhoto={setProfilePhoto} onChange={onChange}
+       setDepartmentId={setDepartmentId}/>
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}
-        approveAPIName={approveAPIName}
-        approveAPImethod={approveAPImethod}
-        approveAPIEndPoint={approveAPIEndPoint}
+        approveAPIName={approveAPI.approveAPIName}
+        approveAPImethod={approveAPI.approveAPImethod}
+        approveAPIEndPoint={approveAPI.approveAPIEndPoint}
         handleAuthResult={handleAuthResult}
         config={config}
         handleAuthModalOpen={handleAuthModalOpen}

@@ -1,10 +1,10 @@
 'use-client'
-import React, { useState, useEffect,  useCallback, useLayoutEffect, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from 'react'
 import Box from '@mui/material/Box'
 import Grid2 from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 
-import { Button, TableContainer, Paper } from '@mui/material'
+import { Button, TextField, MenuItem, FormHelperText, TableContainer, Paper } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import TableArea from 'src/views/tables/TableArea'
 import { api } from 'src/utils/Rest-API'
@@ -12,6 +12,8 @@ import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import Head from 'next/head'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import { useAuth } from 'src/Context/AuthContext'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { useRouter } from 'next/router'
@@ -19,9 +21,13 @@ import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken';
-import {  getTokenValues } from '../../utils/tokenUtils';
+import { decodeAndSetConfig, getTokenValues } from '../../utils/tokenUtils';
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
+import SearchBar from 'src/components/SearchBarComponent'
+import EsignStatusFilter from 'src/components/EsignStatusFilter'
+import { footerContent } from 'src/utils/footerContentPdf';
+import { headerContentFix } from 'src/utils/headerContentPdfFix';
 import AreaModel from 'src/components/Modal/AreaModel'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
@@ -31,12 +37,15 @@ import downloadPdf from 'src/utils/DownloadPdf'
 
 const Index = () => {
   const { settings } = useSettings()
+  const [eSignStatus, setESignStatus] = useState('')
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
+  const [searchVal, setSearchVal] = useState('')
   const [areaData, setAreaData] = useState([])
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData, removeAuthToken } = useAuth()
   const { setIsLoading } = useLoading()
+  const [tempSearchVal, setTempSearchVal] = useState('')
   const [totalCount, setTotalCount] = useState(0)
   const [sortDirection, setSortDirection] = useState('asc')
   const [page, setPage] = useState(0)
@@ -58,6 +67,7 @@ const Index = () => {
     esignStatus: '',
     searchVal: ''
   });
+  // const inputRef = useRef(null); // Ref to track input field
 
   useLayoutEffect(() => {
     let data = getUserData();
@@ -69,11 +79,12 @@ const Index = () => {
 const tableBody = areaData.map((item, index) => 
   [index + 1, item.area_id,item.area_name,  item.area_category?.area_category_name,item.esign_status]);
 
- const tableData = useCallback(()=>({
-    tableHeader:['Sr.No.', 'Id', 'Name', 'Area Category', 'E-Sign'],
+ const tableData = {
+    tableHeader: ['Sr.No.', 'Id', 'Name', 'Area Category', 'E-Sign'],
     tableHeaderText: 'Area Master Report',
-    tableBodyText:'Area Master Data'
-  }),[]);
+    tableBodyText: 'Area Master Data',
+    filename:'AreaMaster'
+  };
   const getData = async () => {
     setIsLoading(true)
     try {

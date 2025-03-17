@@ -77,7 +77,8 @@ const Index = () => {
   const tableData = useMemo(() => ({
     tableHeader: ['Sr.No.', 'UOM Name', 'E-Sign'],
     tableHeaderText: 'UOM Report',
-    tableBodyText: 'UOM Data'
+    tableBodyText: 'UOM Data',
+    filename:'UOM'
   }), []);
   const getData = async () => {
     try {

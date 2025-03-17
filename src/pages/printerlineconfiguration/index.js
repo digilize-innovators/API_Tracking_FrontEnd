@@ -4,11 +4,9 @@ import Box from '@mui/material/Box'
 import Grid2 from '@mui/material/Grid2'
 import Modal from '@mui/material/Modal'
 import Typography from '@mui/material/Typography'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { IoMdAdd } from 'react-icons/io'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import { useLoading } from 'src/@core/hooks/useLoading'
@@ -22,12 +20,8 @@ import { style } from 'src/configs/generalConfig'
 import { useAuth } from 'src/Context/AuthContext'
 import { api } from 'src/utils/Rest-API'
 import { Switch, FormControlLabel } from '@mui/material'
-import { decodeAndSetConfig } from '../../utils/tokenUtils'
+import { getTokenValues } from '../../utils/tokenUtils'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
-import SearchBar from 'src/components/SearchBarComponent'
-import EsignStatusFilter from 'src/components/EsignStatusFilter'
-import { footerContent } from 'src/utils/footerContentPdf';
-import { headerContentFix } from 'src/utils/headerContentPdfFix';
 import { validateToken } from 'src/utils/ValidateToken'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
@@ -36,12 +30,13 @@ import Select from '@mui/material/Select'
 
 import MenuItem from '@mui/material/MenuItem'
 import TablePrinterLineConfiguration from 'src/views/tables/TablePrinterLineConfiguration'
+import CustomSearchBar from 'src/components/CustomSearchBar'
+import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
+import downloadPdf from 'src/utils/DownloadPdf'
+import PrinterLineConfigurationModal from 'src/components/Modal/PrinterLineConfigurationModal'
 
 const Index = () => {
     const { settings } = useSettings()
-    const [eSignStatus, setESignStatus] = useState('')
-    const [searchVal, setSearchVal] = useState('')
-    const [tempSearchVal, setTempSearchVal] = useState('')
     const [openModal, setOpenModal] = useState(false)
 
     const [printerLineName, setPrinterLineName] = useState('')
@@ -53,9 +48,7 @@ const Index = () => {
     const [areaId, setAreaId] = useState('')
     const [controlpanelId, setControlpanelId] = useState('')
     const [lineNo, setLineNo] = useState('')
-
-    const [openSnackbar, setOpenSnackbar] = useState(false)
-    const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' })
+    const [alertData, setAlertData] = useState({openSnackbar:false, type: '', message: '', variant: 'filled' })
     const [errorPrinterLineName, setErrorPrinterLineName] = useState({ isError: false, message: '' })
     const [errorPrinter, setErrorPrinter] = useState({ isError: false, message: '' })
     const [errorAreaCategoryId, setErrorAreaCategoryId] = useState({ isError: false, message: '' })
@@ -84,9 +77,10 @@ const Index = () => {
     const router = useRouter();
     const [config, setConfig] = useState(null);
     const [authModalOpen, setAuthModalOpen] = useState(false);
-    const [approveAPIName, setApproveAPIName] = useState('');
-    const [approveAPImethod, setApproveAPImethod] = useState('');
-    const [approveAPIEndPoint, setApproveAPIEndPoint] = useState('');
+    const [approveAPI, setApproveAPI] = useState({ 
+        approveAPIName: '', 
+        approveAPImethod: '', 
+        approveAPIEndPoint: '' })
     const [eSignStatusId, setESignStatusId] = useState('');
     const [auditLogMark, setAuditLogMark] = useState('');
     const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
@@ -98,19 +92,47 @@ const Index = () => {
     const [errorCameraIp, setErrorCameraIp] = useState({ isError: false, message: '' })
     const [errorCameraPort, setErrorCameraPort] = useState({ isError: false, message: '' })
     const [errorLinePcAddress, setErrorLinePcAddress] = useState({ isError: false, message: '' })
-
-    useEffect(() => {
-        let data = getUserData();
-        decodeAndSetConfig(setConfig);
-        setUserDataPdf(data);
+     const [tableHeaderData, setTableHeaderData] = useState({
+          esignStatus: '',
+          searchVal: ''
+        });
+        const [formData,setFormData]=useState({})
+    // useEffect(() => {
+    //     let data = getUserData();
+    //     decodeAndSetConfig(setConfig);
+    //     setUserDataPdf(data);
+    //     getAllPrinterCategories()
+    //     getAllAreaCategory()
+    //     getAllLocation()
+    //     getAllControlPanels()
+    // }, [])
+     useLayoutEffect(() => {
+        const data =getUserData()
+        const decodedToken = getTokenValues();
+        setConfig(decodedToken);
+        setUserDataPdf(data)
         getAllPrinterCategories()
         getAllAreaCategory()
         getAllLocation()
         getAllControlPanels()
-    }, [])
+        return () => { }
+      }, [])
     useEffect(() => {
         getAllPrinterLineConfigurationData()
-    }, [eSignStatus, searchVal, rowsPerPage, page])
+    }, [tableHeaderData, rowsPerPage, page])
+    const tableBody = allPrinterLineConfigurationData.map((item, index) => [
+          index + 1, 
+          item.printer_line_name, 
+          item.PrinterMaster.printer_id,
+          item.esign_status || "N/A"
+        ]);
+        console.log('allPrinterLineConfigurationData',allPrinterLineConfigurationData)
+        const tableData = useMemo(() => ({
+          tableHeader: ['Sr.No.', 'Printer Line Name', 'Printer', 'E-Sign'],
+          tableHeaderText: 'Printer Line Configuration Repor',
+          tableBodyText: 'Printer Line Configuration Data',
+          filename:'PrinterLineConfiguration'
+        }), []);
 
     useEffect(() => {
         if (areaCategoryId !== '') {
@@ -118,6 +140,12 @@ const Index = () => {
             getAllArea();
         }
     }, [areaCategoryId])
+    useEffect(() => {
+        if ( printerCategoryId!== '') {
+            console.log('printer cat changed');
+            getAllPrinterMaster(printerCategoryId);
+        }
+    }, [printerCategoryId])
 
     const getAllPrinterLineConfigurationData = async () => {
         try {
@@ -125,8 +153,8 @@ const Index = () => {
             const params = new URLSearchParams({
                 page: page + 1,
                 limit: rowsPerPage === -1 ? -1 : rowsPerPage,
-                search: searchVal,
-                esign_status: eSignStatus,
+                search: tableHeaderData.searchVal,
+                esign_status: tableHeaderData.esignStatus,
             });
             const res = await api(`/printerlineconfiguration/?${params.toString()}`, {}, 'get', true);
             console.log("get printer line configuration", res?.data)
@@ -276,7 +304,7 @@ const Index = () => {
     };
 
     const closeSnackbar = () => {
-        setOpenSnackbar(false)
+        setAlertData({...alertData,openSnackbar:false})
     }
     const handleOpenModal = () => {
         setErrorPrinterLineName({ isError: false, message: '' })
@@ -286,10 +314,11 @@ const Index = () => {
         setErrorLocationId({ isError: false, message: '' })
         setErrorControlpanelId({ isError: false, message: '' })
         setErrorLineNo({ isError: false, message: '' })
+        setApproveAPI({ 
+            approveAPIName:'printerlineconfiguration-create',
+            approveAPImethod:'POST',
+            approveAPIEndPoint:'/api/v1/printerlineconfiguration'})
 
-        setApproveAPIName("printerlineconfiguration-create");
-        setApproveAPImethod("POST");
-        setApproveAPIEndPoint("/api/v1/printerlineconfiguration");
         resetForm();
         setOpenModal(true)
     }
@@ -396,69 +425,71 @@ const Index = () => {
     }
 
     const resetForm = () => {
-        setAreaId('');
-        setAreaCategoryId('');
-        setPrinterEnabled(false)
-        setLocationId('');
-        setPrinter('');
-        setPrinterCategoryId('')
-        setControlpanelId('')
-        setLineNo('')
-        setPrinterLineName('');
-        setAllArea([]);
-        setAllPrinter([])
-        setErrorPrinterLineName({ isError: false, message: '' })
-        setErrorPrinterCategory({ isError: false, message: '' })
-        setErrorLineNo({ isError: false, message: '' })
-        setErrorLocationId({ isError: false, message: '' })
-        setErrorPrinter({ isError: false, message: '' })
-        setErrorAreaCategoryId({ isError: false, message: '' })
-        setErrorControlpanelId({ isError: false, message: '' })
-        setErrorAreaId({ isError: false, message: '' })
-        setCameraIp('')
-        setCameraPort('')
-        setLinePcAddress('')
-        setErrorCameraIp({ isError: false, message: '' })
-        setErrorCameraPort({ isError: false, message: '' })
-        setErrorLinePcAddress({ isError: false, message: '' })
+        // setAreaId('');
+        // setAreaCategoryId('');
+        // setPrinterEnabled(false)
+        // setLocationId('');
+        // setPrinter('');
+        // setPrinterCategoryId('')
+        // setControlpanelId('')
+        // setLineNo('')
+        // setPrinterLineName('');
+        // setAllArea([]);
+        // setAllPrinter([])
+        // setErrorPrinterLineName({ isError: false, message: '' })
+        // setErrorPrinterCategory({ isError: false, message: '' })
+        // setErrorLineNo({ isError: false, message: '' })
+        // setErrorLocationId({ isError: false, message: '' })
+        // setErrorPrinter({ isError: false, message: '' })
+        // setErrorAreaCategoryId({ isError: false, message: '' })
+        // setErrorControlpanelId({ isError: false, message: '' })
+        // setErrorAreaId({ isError: false, message: '' })
+        // setCameraIp('')
+        // setCameraPort('')
+        // setLinePcAddress('')
+        // setErrorCameraIp({ isError: false, message: '' })
+        // setErrorCameraPort({ isError: false, message: '' })
+        // setErrorLinePcAddress({ isError: false, message: '' })
+        setEditData({})
     }
     const resetEditForm = () => {
-        setAreaId('');
-        setAreaCategoryId('');
-        setLocationId('');
-        setPrinter('');
-        setPrinterCategoryId('')
-        setControlpanelId('')
-        setLineNo('')
-        setPrinterEnabled(false)
-        setPrinterLineName('');
-        setAllArea([]);
-        setErrorPrinterLineName({ isError: false, message: '' })
-        setErrorPrinterCategory({ isError: false, message: '' })
-        setErrorLineNo({ isError: false, message: '' })
-        setErrorLocationId({ isError: false, message: '' })
-        setErrorPrinter({ isError: false, message: '' })
-        setErrorAreaCategoryId({ isError: false, message: '' })
-        setErrorControlpanelId({ isError: false, message: '' })
-        setErrorAreaId({ isError: false, message: '' })
+        // setAreaId('');
+        // setAreaCategoryId('');
+        // setLocationId('');
+        // setPrinter('');
+        // setPrinterCategoryId('')
+        // setControlpanelId('')
+        // setLineNo('')
+        // setPrinterEnabled(false)
+        // setPrinterLineName('');
+        // setAllArea([]);
+        // setErrorPrinterLineName({ isError: false, message: '' })
+        // setErrorPrinterCategory({ isError: false, message: '' })
+        // setErrorLineNo({ isError: false, message: '' })
+        // setErrorLocationId({ isError: false, message: '' })
+        // setErrorPrinter({ isError: false, message: '' })
+        // setErrorAreaCategoryId({ isError: false, message: '' })
+        // setErrorControlpanelId({ isError: false, message: '' })
+        // setErrorAreaId({ isError: false, message: '' })
     }
-    const handleSubmitForm = async () => {
-        console.log("handleSubmitForm", printerLineName, printer, areaCategoryId, areaId, locationId)
+    const handleSubmitForm = async (data) => {
+        console.log("handleSubmitForm", data)
+        setFormData(data)
 
         if (editData?.id) {
-            setApproveAPIName("printerlineconfiguration-update");
-            setApproveAPImethod("PUT");
-            setApproveAPIEndPoint("/api/v1/printerlineconfiguration");
+           
+            setApproveAPI({
+                approveAPIName:'printerlineconfiguration-update',
+                approveAPImethod:'PUT',
+                approveAPIEndPoint:'/api/v1/printerlineconfiguration'})
         } else {
-            setApproveAPIName("printerlineconfiguration-create");
-            setApproveAPImethod("POST");
-            setApproveAPIEndPoint("/api/v1/printerlineconfiguration");
+           
+            setApproveAPI({ 
+                approveAPIName:'printerlineconfiguration-create',
+                approveAPImethod:'POST',
+                approveAPIEndPoint:'/api/v1/printerlineconfiguration'})
         }
-        applyValidation()
-        const validate = checkValidate()
-        if (!validate) {
-            return true
-        }
+       
         if (config?.config?.esign_status) {
             setAuthModalOpen(true);
             return;
@@ -468,7 +499,9 @@ const Index = () => {
     }
     const AddPrinterLineConfiguration = async (esign_status, remarks) => {
         try {
-            const data = { printerLineName, printer, areaCategoryId, areaId, printerCategoryId, locationId, printerEnabled: printerEnabled, controlpanelId, lineNo, cameraIp, cameraPort, linePcAddress };
+            
+            const data = { ...formData};
+            console.log('data',data)
             const auditlogRemark = remarks;
             const audit_log = config?.config?.audit_logs ? {
                 "audit_log": true,
@@ -492,14 +525,12 @@ const Index = () => {
             // }
             if (res?.data?.success) {
                 console.log('res data', res?.data)
-                setOpenSnackbar(true);
-                setAlertData({ ...alertData, type: 'success', message: 'Printer Line configuration added successfully' });
+                setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Printer Line configuration added successfully' });
                 getAllPrinterLineConfigurationData();
                 resetForm();
             } else {
                 console.log('Error to add printer line configuration', res.data)
-                setOpenSnackbar(true);
-                setAlertData({ ...alertData, type: 'error', message: res.data?.message })
+                setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: res.data?.message })
                 if (res.data.code === 401) {
                     removeAuthToken();
                     router.push('/401');
@@ -510,16 +541,19 @@ const Index = () => {
             router.push('/500');
         } finally {
             setOpenModal(false);
-            setApproveAPIName('');
-            setApproveAPImethod('');
-            setApproveAPIEndPoint('');
+            
+            setApproveAPI({ 
+                approveAPIName:'',
+                approveAPImethod:'',
+                approveAPIEndPoint:''})
             setEditData({})
         }
     }
     const editPrinterLineConfiguration = async (esign_status, remarks) => {
         try {
-            const data = { printerLineName, printer, areaCategoryId, areaId, locationId, printerCategoryId, printerEnabled: printerEnabled, controlpanelId, lineNo, cameraIp, linePcAddress };
-            data.cameraPort = String(cameraPort);
+            console.log('edata',formData)
+            const data = { ...formData};
+            data.cameraPort = String(formData.cameraPort);
             const auditlogRemark = remarks;
             let audit_log;
             if (config?.config?.audit_logs) {
@@ -544,13 +578,11 @@ const Index = () => {
             setIsLoading(false);
             if (res.data.success) {
                 console.log('res ', res.data)
-                setOpenSnackbar(true)
-                setAlertData({ ...alertData, type: 'success', message: 'Printer Line Configuration updated successfully' })
+                setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Printer Line Configuration updated successfully' })
                 resetForm();
                 getAllPrinterLineConfigurationData()
             } else {
-                setOpenSnackbar(true)
-                setAlertData({ ...alertData, type: 'error', message: res.data.message })
+                setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: res.data.message })
                 if (res.data.code === 401) {
                     removeAuthToken();
                     router.push('/401');
@@ -563,22 +595,23 @@ const Index = () => {
             setOpenModal(false);
             setIsLoading(false);
             setEditData({})
-            setApproveAPIName('');
-            setApproveAPImethod('');
-            setApproveAPIEndPoint('');
+            setApproveAPI({
+                 approveAPIName:'',
+                approveAPImethod:'',
+                approveAPIEndPoint:''})
         }
     }
     const handleUpdate = item => {
-
-        setErrorPrinterLineName({ isError: false, message: '' })
-        setErrorPrinter({ isError: false, message: '' })
-        setErrorAreaCategoryId({ isError: false, message: '' })
-        setErrorAreaId({ isError: false, message: '' })
-        setErrorPrinterCategory({ isError: false, message: '' })
-        setErrorLocationId({ isError: false, message: '' })
-        setErrorPrinter({ isError: false, message: '' })
-        setErrorControlpanelId({ isError: false, message: '' })
-        setErrorLineNo({ isError: false, message: '' })
+        //   console.log("editdata",item)
+        // setErrorPrinterLineName({ isError: false, message: '' })
+        // setErrorPrinter({ isError: false, message: '' })
+        // setErrorAreaCategoryId({ isError: false, message: '' })
+        // setErrorAreaId({ isError: false, message: '' })
+        // setErrorPrinterCategory({ isError: false, message: '' })
+        // setErrorLocationId({ isError: false, message: '' })
+        // setErrorPrinter({ isError: false, message: '' })
+        // setErrorControlpanelId({ isError: false, message: '' })
+        // setErrorLineNo({ isError: false, message: '' })
 
         resetForm()
         setEditData(item)
@@ -586,31 +619,32 @@ const Index = () => {
         getAllAreaCategory()
         getAllLocation()
         getAllPrinterCategories()
-        getAllPrinterMaster(item.printer_category_id)
-        setPrinterLineName(item.printer_line_name)
-        setPrinterCategoryId(item.printer_category_id)
-        setAreaCategoryId(item.area_category_id)
-        setAreaId(item.area_id)
-        setPrinter(item.printer_id)
-        setPrinterEnabled(item.enabled)
-        setLocationId(item.location_id)
-        setLineNo(item.line_no)
-        setControlpanelId(item.ControlPanel.id)
-        setCameraIp(item.camera_ip)
-        setCameraPort(item.camera_port)
-        setLinePcAddress(item.line_pc_ip)
-        getAllArea()
-        getAllControlPanels()
+        // getAllPrinterMaster(item.printer_category_id)
+        // setPrinterLineName(item.printer_line_name)
+        // setPrinterCategoryId(item.printer_category_id)
+        // setAreaCategoryId(item.area_category_id)
+        // setAreaId(item.area_id)
+        // setPrinter(item.printer_id)
+        // setPrinterEnabled(item.enabled)
+        // setLocationId(item.location_id)
+        // setLineNo(item.line_no)
+        // setControlpanelId(item.ControlPanel.id)
+        // setCameraIp(item.camera_ip)
+        // setCameraPort(item.camera_port)
+        // setLinePcAddress(item.line_pc_ip)
+        // getAllArea()
+        // getAllControlPanels()
         setOpenModal(true)
     }
 
     const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
         console.log("handleAuthResult 01", isAuthenticated, isApprover, esignStatus, user);
         console.log("handleAuthResult 02", config?.userId, user.user_id);
-        const resetState = () => {
-            setApproveAPIName("");
-            setApproveAPImethod("");
-            setApproveAPIEndPoint("");
+        const resetState = () => {    
+            setApproveAPI({
+                 approveAPIName:'',
+                approveAPImethod:'',
+                approveAPIEndPoint:''})
             setAuthModalOpen(false);
         };
         const handleApproverActions = async () => {
@@ -629,7 +663,7 @@ const Index = () => {
                 setOpenModalApprove(false);
                 console.log("esign is approved for approver");
                 resetState();
-                downloadPdf();
+                downloadPdf(tableData,  tableHeaderData,tableBody,allPrinterLineConfigurationData,userDataPdf)
                 return;
             }
             const res = await api('/esign-status/update-esign-status', data, 'patch', true);
@@ -657,8 +691,7 @@ const Index = () => {
             }
         };
         if (!isAuthenticated) {
-            setAlertData({ type: 'error', message: 'Authentication failed, Please try again.' });
-            setOpenSnackbar(true);
+            setAlertData({openSnackbar:true, type: 'error', message: 'Authentication failed, Please try again.' });
             return;
         }
         if (isApprover) {
@@ -671,9 +704,10 @@ const Index = () => {
     };
     const handleAuthCheck = async (row) => {
         console.log("handleAuthCheck", row)
-        setApproveAPIName("printerlineconfiguration-approve");
-        setApproveAPImethod("PATCH");
-        setApproveAPIEndPoint("/api/v1/printerlineconfiguration");
+        setApproveAPI({ 
+            approveAPIName:'printerlineconfiguration-approve',
+            approveAPImethod:'PATCH',
+            approveAPIEndPoint:'/api/v1/printerlineconfiguration'})
         setAuthModalOpen(true);
         setESignStatusId(row.id);
         setAuditLogMark(row.printer_line_name)
@@ -681,23 +715,24 @@ const Index = () => {
     }
 
     const resetFilter = () => {
-        setESignStatus('')
-        setSearchVal('')
-        setTempSearchVal('')
+        // setESignStatus('')
+        // setSearchVal('')
+        // setTempSearchVal('')
+        setTableHeaderData({esignStatus:"",searchVal:""})
     }
-    const handleSearch = () => {
-        let currentVal = tempSearchVal
-        currentVal = currentVal.toLowerCase()
-        setSearchVal(currentVal)
-        if (currentVal === '') {
+    const handleSearch = (val) => {
+    //    let currentVal = tempSearchVal 
+    //     currentVal = currentVal.toLowerCase()
+       setTableHeaderData({...tableHeaderData,searchVal:val.toLowerCase()})
+        if (val === '') {
             getAllPrinterLineConfigurationData();
         }
     }
-    const handleTempSearchValue = (e) => {
-        let currentVal = e.target.value
-        currentVal = currentVal.toLowerCase()
-        setTempSearchVal(currentVal)
-    }
+    // const handleTempSearchValue = (e) => {
+    //     let currentVal = e.target.value
+    //     currentVal = currentVal.toLowerCase()
+    //     setTempSearchVal(currentVal)
+    // }
     const handleChangePage = (event, newPage) => {
         setPage(newPage)
     }
@@ -707,89 +742,90 @@ const Index = () => {
     }
     const handleAuthModalOpen = () => {
         console.log("OPen auth model");
-        setApproveAPIName("printerlineconfiguration-approve");
-        setApproveAPImethod("PATCH");
-        setApproveAPIEndPoint("/api/v1/printerlineconfiguration");
+        setApproveAPI({ 
+            approveAPIName:'printerlineconfiguration-approve',
+            approveAPImethod:'PATCH',
+            approveAPIEndPoint:'/api/v1/printerlineconfiguration'})
         setAuthModalOpen(true);
     };
     const handleDownloadPdf = () => {
-        setApproveAPIName("printerlineconfiguration-create");
-        setApproveAPImethod("POST");
-        setApproveAPIEndPoint("/api/v1/printerlineconfiguration");
+        setApproveAPI({ approveAPIName:'printerlineconfiguration-create',
+            approveAPImethod:'POST',
+            approveAPIEndPoint:'/api/v1/printerlineconfiguration'})
         if (config?.config?.esign_status) {
             console.log("Esign enabled for download pdf");
             setEsignDownloadPdf(true);
             setAuthModalOpen(true);
             return;
         }
-        downloadPdf();
+        downloadPdf(tableData,tableHeaderData,tableBody,allPrinterLineConfigurationData,userDataPdf)
     }
-    const downloadPdf = () => {
-        console.log('clicked on download btn')
-        const doc = new jsPDF()
-        const headerContent = () => {
-            headerContentFix(doc, 'Printer Line Configuration Report');
+    // const downloadPdf = () => {
+    //     console.log('clicked on download btn')
+    //     const doc = new jsPDF()
+    //     const headerContent = () => {
+    //         headerContentFix(doc, 'Printer Line Configuration Report');
 
-            if (searchVal) {
-                doc.setFontSize(10)
-                doc.text('Search : ' + `${tempSearchVal}`, 15, 25)
-            } else {
-                doc.setFontSize(10)
-                doc.text('Search : ' + '__', 15, 25)
-            }
-            doc.text("Filters :\n", 15, 30)
-            if (eSignStatus) {
-                doc.setFontSize(10)
-                doc.text('E-Sign : ' + `${eSignStatus}`, 20, 35)
-            } else {
-                doc.setFontSize(10)
-                doc.text('E-Sign : ' + '__', 20, 35)
-            }
-            doc.setFontSize(12)
-            doc.text('Printer Line Configuration Data', 15, 55)
-        }
-        const bodyContent = () => {
-            let currentPage = 1
-            let dataIndex = 0
-            const totalPages = Math.ceil(allPrinterLineConfigurationData.length / 25)
-            headerContent()
-            while (dataIndex < allPrinterLineConfigurationData.length) {
-                if (currentPage > 1) {
-                    doc.addPage()
-                }
+    //         if (tableHeaderData.searchVal) {
+    //             doc.setFontSize(10)
+    //             doc.text('Search : ' + `${tableHeaderData.searchVal}`, 15, 25)
+    //         } else {
+    //             doc.setFontSize(10)
+    //             doc.text('Search : ' + '__', 15, 25)
+    //         }
+    //         doc.text("Filters :\n", 15, 30)
+    //         if (tableHeaderData.esignStatus) {
+    //             doc.setFontSize(10)
+    //             doc.text('E-Sign : ' + `${tableHeaderData.esignStatus}`, 20, 35)
+    //         } else {
+    //             doc.setFontSize(10)
+    //             doc.text('E-Sign : ' + '__', 20, 35)
+    //         }
+    //         doc.setFontSize(12)
+    //         doc.text('Printer Line Configuration Data', 15, 55)
+    //     }
+    //     const bodyContent = () => {
+    //         let currentPage = 1
+    //         let dataIndex = 0
+    //         const totalPages = Math.ceil(allPrinterLineConfigurationData.length / 25)
+    //         headerContent()
+    //         while (dataIndex < allPrinterLineConfigurationData.length) {
+    //             if (currentPage > 1) {
+    //                 doc.addPage()
+    //             }
 
-                footerContent(currentPage, totalPages, userDataPdf, doc);
+    //             footerContent(currentPage, totalPages, userDataPdf, doc);
 
-                const body = allPrinterLineConfigurationData
-                    .slice(dataIndex, dataIndex + 25)
-                    .map((item, index) => [dataIndex + index + 1, item.printer_line_name, item.printer, item.esign_status]);
-                autoTable(doc, {
-                    startY: currentPage === 1 ? 60 : 40,
-                    styles: { halign: 'center' },
-                    headStyles: {
-                        fontSize: 8,
-                        fillColor: [80, 189, 160],
-                    },
-                    alternateRowStyles: { fillColor: [249, 250, 252] },
-                    tableLineColor: [80, 189, 160],
-                    tableLineWidth: 0.1,
-                    head: [['Sr.No.', 'Printer Line Name', 'Printer', 'E-Sign']],
-                    body: body,
-                    columnWidth: 'wrap'
-                })
-                dataIndex += 25
-                currentPage++
-            }
-        }
+    //             const body = allPrinterLineConfigurationData
+    //                 .slice(dataIndex, dataIndex + 25)
+    //                 .map((item, index) => [dataIndex + index + 1, item.printer_line_name, item.printer, item.esign_status]);
+    //             autoTable(doc, {
+    //                 startY: currentPage === 1 ? 60 : 40,
+    //                 styles: { halign: 'center' },
+    //                 headStyles: {
+    //                     fontSize: 8,
+    //                     fillColor: [80, 189, 160],
+    //                 },
+    //                 alternateRowStyles: { fillColor: [249, 250, 252] },
+    //                 tableLineColor: [80, 189, 160],
+    //                 tableLineWidth: 0.1,
+    //                 head: [['Sr.No.', 'Printer Line Name', 'Printer', 'E-Sign']],
+    //                 body: body,
+    //                 columnWidth: 'wrap'
+    //             })
+    //             dataIndex += 25
+    //             currentPage++
+    //         }
+    //     }
 
-        bodyContent()
-        const currentDate = new Date();
-        const formattedDate = currentDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
-        const formattedTime = currentDate.toLocaleTimeString('en-US', { hour12: false }).replace(/:/g, '-');
-        const fileName = `Area Category_${formattedDate}_${formattedTime}.pdf`;
-        doc.save(fileName);
+    //     bodyContent()
+    //     const currentDate = new Date();
+    //     const formattedDate = currentDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
+    //     const formattedTime = currentDate.toLocaleTimeString('en-US', { hour12: false }).replace(/:/g, '-');
+    //     const fileName = `Area Category_${formattedDate}_${formattedTime}.pdf`;
+    //     doc.save(fileName);
 
-    }
+    // }
 
     const handleSort = (key) => {
         const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -828,16 +864,20 @@ const Index = () => {
                         </Typography>
                         <Grid2 item xs={12}>
                             <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                                <EsignStatusFilter esignStatus={eSignStatus} setEsignStatus={setESignStatus} />
+          <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+                                
+                                {/* <EsignStatusFilter esignStatus={eSignStatus} setEsignStatus={setESignStatus} /> */}
                             </Box>
                             <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                                 <Box className='d-flex justify-content-between align-items-center '>
-                                    <SearchBar
+                                    {/* <SearchBar
                                         searchValue={tempSearchVal}
                                         handleSearchChange={handleTempSearchValue}
                                         handleSearchClick={handleSearch}
-                                    />
+                                    /> */}
+                          <CustomSearchBar handleSearchClick={handleSearch} />
+                                    
                                     {
                                         apiAccess.addApiAccess && (
                                             <Box className='mx-2'>
@@ -884,8 +924,8 @@ const Index = () => {
                     </Box>
                 </Grid2>
             </Grid2>
-            <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-            <Modal
+            <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+            {/* <Modal
                 open={openModal}
                 onClose={handleCloseModal}
                 data-testid="modal"
@@ -1181,13 +1221,26 @@ const Index = () => {
                         </Button>
                     </Grid2>
                 </Box>
-            </Modal>
+            </Modal> */}
+            <PrinterLineConfigurationModal open={openModal}
+       handleClose={handleCloseModal}
+        editData={editData} 
+        handleSubmitForm={handleSubmitForm}
+        allLocation={allLocation}
+        allAreaCategory={allAreaCategory}
+        allArea={allArea}
+        allPrinterCategory={allPrinterCategory}
+        allPrinter={allPrinter}
+        allControlPanelData={allControlPanelData}
+        setAreaCategoryId={setAreaCategoryId}
+        setPrinterCategoryId={setPrinterCategoryId}
+         />
             <AuthModal
                 open={authModalOpen}
                 handleClose={handleAuthModalClose}
-                approveAPIName={approveAPIName}
-                approveAPImethod={approveAPImethod}
-                approveAPIEndPoint={approveAPIEndPoint}
+                approveAPIName={approveAPI.approveAPIName}
+                approveAPImethod={approveAPI.approveAPImethod}
+                approveAPIEndPoint={approveAPI.approveAPIEndPoint}
                 handleAuthResult={handleAuthResult}
                 config={config}
                 handleAuthModalOpen={handleAuthModalOpen}

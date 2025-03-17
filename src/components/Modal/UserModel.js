@@ -1,0 +1,294 @@
+import React, { useEffect } from 'react';
+import { style } from 'src/configs/generalConfig';
+import { Modal, Box, Typography, Button, Grid2, FormControlLabel, Switch } from '@mui/material';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import CustomTextField from 'src/components/CustomTextField';
+import styled from '@emotion/styled'
+import CustomDropdown from '../CustomDropdown';
+import { Console } from 'mdi-material-ui';
+
+const ButtonStyled = styled(Button)(({ theme }) => ({
+    [theme.breakpoints.down('sm')]: {
+        width: '100%',
+        textAlign: 'center'
+    }
+}))
+const ResetButtonStyled = styled(Button)(({ theme }) => ({
+    marginLeft: theme.spacing(4.5),
+    [theme.breakpoints.down('sm')]: {
+        width: '100%',
+        marginLeft: 0,
+        textAlign: 'center',
+        marginTop: theme.spacing(4)
+    }
+}))
+const ImgStyled = styled('img')(({ theme }) => ({
+    width: 120,
+    height: 120,
+    marginRight: theme.spacing(6.25),
+    borderRadius: theme.shape.borderRadius
+}))
+const MAX_LENGTH = 50;
+const PHONE_LENGTH = 10;
+const MIN_PASSWORD_LENGTH = 8;
+
+const UserSchema = yup.object().shape({
+  userId: yup
+    .string()
+    .max(MAX_LENGTH, `User ID length should be less than ${MAX_LENGTH} characters`)
+    .matches(/^[a-zA-Z0-9]+$/, 'User ID cannot contain special symbols')
+    .required("User ID can't be empty"),
+  userName: yup
+    .string()
+    .max(MAX_LENGTH, `User name length should be less than ${MAX_LENGTH} characters`)
+    .matches(/^[a-zA-Z0-9]+(?:\s[a-zA-Z0-9]+)*$/, 'Username cannot contain special symbols')
+    .required("User Name can't be empty"),
+  email: yup.string().email('Email is not valid').required('Email is required'),
+  password: yup
+    .string()
+    .min(MIN_PASSWORD_LENGTH, `Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
+    .matches(
+      /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@#$%^&*])[A-Za-z\d@#$%^&*()\-_=+]{8,}$/,
+      'Password must contain at least 1 uppercase, 1 lowercase, 1 digit, and 1 special character (@#$%^&*)'
+    )
+    .required('Password is required'),
+  phoneNumber: yup
+    .string()
+    .length(PHONE_LENGTH, `Phone number must be ${PHONE_LENGTH} digits`)
+    .matches(/^\d+$/, 'Phone number cannot contain alphabets')
+    .required('Phone is required'),
+  departmentId: yup.string().required('Department ID cannot be empty'),
+  designationId: yup.string().required('Designation ID cannot be empty'),
+  locationId: yup.string().required('Location ID cannot be empty'),
+});
+function UserModel({open, onClose, editData,handleSubmitForm, allDepartment,
+    allDesignation, allLocation,profilePhoto, setProfilePhoto, onChange,setDepartmentId}) {
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+        reset,
+        watch
+      } = useForm({
+        resolver:yupResolver(UserSchema),
+        defaultValues: {
+          userId: editData?.id || '',
+          userName: editData?.userName || '',
+          email: editData?.email || '',
+          password: '',
+          phoneNumber: editData?.phoneNumber || '',
+          departmentId: editData?.departmentId || '',
+          designationId: editData?.designationId || '',
+          locationId: editData?.locationId || '',
+          isEnabled: editData?.isEnabled || true
+        },
+      });
+      
+     const selectedDepartment = watch('departmentId');
+     setDepartmentId(selectedDepartment)
+      const departmentData = allDepartment?.map((item) => ({
+        id: item.id,
+        value: item.id,
+        label: item.department_id,
+    }));
+    const designationData =watch('departmentId')?allDesignation?.map((item) => ({
+        id: item.id,
+        value: item.id,
+        label: item.designation_id,
+    })):[];
+    const locationData= allLocation?.map((item) => ({
+        id: item.id,
+        value: item.id,
+        label: item.location_id,
+    }));
+    
+      useEffect(() => {
+          if (editData) {
+            reset({
+         userId: editData?.user_id || '',
+          userName: editData?.user_name || '',
+          email: editData?.email || '',
+          password: editData.password?"Dummy@1234":"",
+          phoneNumber: editData?.phone_number || '',
+          departmentId: editData?.department_id|| '',
+          designationId: editData?.designation_id || '',
+          locationId: editData?.location_id|| '',
+          isEnabled: editData?.is_active || true,
+      
+            });
+          }
+        }, [editData]);
+    return (
+        <>
+            <Modal
+                open={open}
+                onClose={onClose}
+                data-testid="modal"
+                role='dialog'
+                aria-labelledby='modal-modal-title'
+                aria-describedby='modal-modal-description'
+            >
+                <Box sx={style}>
+                    <Typography variant='h4' className='my-2'>
+                        {editData?.id ? 'Edit User' : 'Add User'}
+                    </Typography>
+
+                    <Grid2 item xs={12} className='d-flex justify-content-between align-items-center'>
+                        <Box >
+                            <Grid2 item xs={12} sx={{ marginTop: 4.8, marginBottom: 3 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <ImgStyled src={profilePhoto} alt='Profile Pic' />
+                                    <Box>
+                                        <ButtonStyled
+                                            component='label'
+                                            variant='contained'
+                                            htmlFor='account-settings-upload-image'
+                                        >
+                                            Upload New Photo{/* */}
+                                            <input
+                                                hidden
+                                                type='file'
+                                                onChange={onChange}
+                                                accept='image/png, image/jpeg, image/jpg'
+                                                id='account-settings-upload-image'
+                                            />
+                                        </ButtonStyled>
+                                        <ResetButtonStyled
+                                            color='error'
+                                            variant='outlined'
+                                            onClick={() => setProfilePhoto('/images/avatars/1.png')}
+                                        >
+                                            Reset
+                                        </ResetButtonStyled>
+                                        <Typography variant='body2' sx={{ marginTop: 5 }}>
+                                            Allowed PNG, JPG or JPEG. Max size of 8MB.
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </Grid2>
+                        </Box>
+                    </Grid2>
+                    <form onSubmit={handleSubmit(handleSubmitForm)}>
+                        <Grid2 container spacing={2}>
+                            <Grid2 size={6}>
+                                <CustomTextField
+                                    name="userId"
+                                    label="User ID"
+                                    control={control}
+                                    disabled={!!editData?.id}
+
+                                />
+                            </Grid2>
+                            <Grid2 size={6}>
+                                <CustomTextField
+                                    name="userName"
+                                    label="User Name"
+                                    control={control}
+                                    disabled={!!editData?.id}
+
+                                />
+                            </Grid2>
+                        </Grid2>
+                        <Grid2 container spacing={2}>
+                            <Grid2 size={6}>
+                                <CustomTextField
+                                    name="email"
+                                    label="Email"
+                                    control={control}
+                                />
+
+                            </Grid2>
+                            <Grid2 size={6}>
+                                <CustomTextField
+                                    name="password"
+                                    label="password"
+                                    type='password'
+                                    control={control}
+                                    disabled={!!editData?.id}
+                                />
+
+                            </Grid2>
+                        </Grid2>
+                        <Grid2 container spacing={2}>
+                            <Grid2 size={6}>
+                                <CustomTextField
+                                    name="phoneNumber"
+                                    label="Phone"
+                                    control={control}
+                                />
+                            </Grid2>
+                            <Grid2 size={6}>
+
+                                <CustomDropdown
+                                    name='departmentId'
+                                    label='Department Name *'
+                                    control={control}
+                                    options={departmentData}
+                                />
+                            </Grid2>
+                        </Grid2>
+
+                        <Grid2 container spacing={2}>
+                            <Grid2 size={6}>
+                                <CustomDropdown
+                                    name='designationId'
+                                    label='Designation Name'
+                                    control={control}
+                                    options={designationData}
+                                />
+
+                            </Grid2>
+                            <Grid2 size={6}>
+                                <CustomDropdown
+                                    name='locationId'
+                                    label='Location Name'
+                                    control={control}
+                                    options={locationData}
+                                />
+
+                            </Grid2>
+                        </Grid2>
+                         {editData?.id && (
+                                    <Grid2 item xs={12} sm={6}>
+                                      <Typography component='Box'>                       
+              <Controller
+                name="isEnabled"
+                control={control}
+                render={({ field }) => (
+                  <FormControlLabel
+                    control={<Switch {...field} checked={field.value} color="primary" />}
+                  />
+                )}
+              />
+                                        User Enabled
+                                      </Typography>
+                                    </Grid2>
+                                  )}
+                        <Grid2 item xs={12} className='my-3 '>
+                            <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'>
+                                Save Changes
+                            </Button>
+                            <Button
+                                type='reset'
+                                variant='outlined'
+                                color='primary'
+                                onClick={reset}
+                            >
+                                Reset
+                            </Button>
+                            <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={onClose}>
+                                Close
+                            </Button>
+                        </Grid2>
+
+                    </form>
+                </Box>
+            </Modal>
+        </>
+
+    )
+}
+
+export default UserModel
