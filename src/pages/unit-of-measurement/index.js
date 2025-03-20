@@ -1,5 +1,5 @@
 'use-client'
-import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import Box from '@mui/material/Box'
 import Grid2 from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
@@ -48,6 +48,8 @@ const Index = () => {
   const [auditLogMark, setAuditLogMark] = useState('');
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
   const [openModalApprove, setOpenModalApprove] = useState(false);
+  const searchBarRef = useRef(null);
+ const [pendingAction, setPendingAction] = useState(null);
   const { settings } = useSettings()
   const [tableHeaderData, setTableHeaderData] = useState({
     esignStatus: '',
@@ -65,6 +67,19 @@ const Index = () => {
     setUserDataPdf(data);
     return () => { }
   }, [])
+
+  useEffect(() => {
+      if (formData && pendingAction) {
+        const esign_status = "approved";
+        if (pendingAction === "edit") {
+          editUOM() ;
+        }
+        else {
+          addUOM(esign_status)
+        }
+        setPendingAction(null);
+      }
+    }, [formData, pendingAction]);
 
   useEffect(() => {
     getData();
@@ -136,7 +151,6 @@ const Index = () => {
 
   const handleSubmitForm = async (UomData) => {
     console.log(UomData, ':-unit measure')
-    // setUnitName(UomData.unitName)
     setFormData(UomData);
     console.log(editData)
     if (editData?.id) {
@@ -152,17 +166,12 @@ const Index = () => {
         approveAPIEndPoint: "/api/v1/uom"
       })
     }
-    // applyValidation();
-    // const validate = checkValidate();
-    // if (!validate) {
-    //   return;
-    // }
+  
     if (config?.config?.esign_status) {
       setAuthModalOpen(true);
       return;
     }
-    const esign_status = "approved";
-    editData?.id ? editUOM() : addUOM(esign_status);
+    setPendingAction(editData?.id ? "edit" : "add");
   };
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
@@ -276,17 +285,21 @@ const Index = () => {
       const res = await api('/uom/', data, 'post', true);
       console.log('add res uom', res);
       if (res?.data?.success) {
-        setAlertData({ openSnackbar: true, type: 'success', message: 'Unit added successfully' });
+        setAlertData({...alertData ,openSnackbar: true, type: 'success', message: 'Unit added successfully' });
         getData();
+        setOpenModal(false);
       } else {
-        setAlertData({ type: 'error', message: res.data?.message });
+        setAlertData({...alertData, openSnackbar:true,type: 'error', message: res.data?.message });
         if (res.data?.code === 401) {
           removeAuthToken();
           router.push('/401');
         }
       }
     } catch (error) {
+
       router.push('/500');
+      setOpenModal(false);
+
     } finally {
       setApproveAPI({
         approveAPIName: "",
@@ -294,7 +307,6 @@ const Index = () => {
         approveAPIMethod: ""
 
       })
-      setOpenModal(false);
       setIsLoading(false);
     }
   };
@@ -327,6 +339,8 @@ const Index = () => {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Unit updated successfully' });
         resetForm();
         getData();
+        setOpenModal(false);
+
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message });
         if (res.data.code === 401) {
@@ -336,8 +350,9 @@ const Index = () => {
       }
     } catch (error) {
       router.push('/500');
-    } finally {
       setOpenModal(false);
+
+    } finally {
       setIsLoading(false);
     }
   };
@@ -367,9 +382,11 @@ const Index = () => {
     setSortDirection(newSortDirection);
   };
   const resetFilter = () => {
+    if (searchBarRef.current) {
+      searchBarRef.current.resetSearch();
+    }
     setTableHeaderData({ ...tableHeaderData, esignStatus: "" ,searchVal:""})
     // setSearchVal('');
-    setTempSearchVal('');
   };
   const handleSearch = (val) => {
     setTableHeaderData({ ...tableHeaderData,searchVal:val.toLowerCase()});
@@ -426,7 +443,9 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+                 {(config?.config?.esign_status) &&
+             <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+                  }
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
@@ -436,9 +455,9 @@ const Index = () => {
                     handleSearchChange={handleTempSearchValue}
                     handleSearchClick={handleSearch}
                   /> */}
-            <CustomSearchBar handleSearchClick={handleSearch} />
 
-
+                 <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
+               
 
                   {
                     apiAccess.addApiAccess && (

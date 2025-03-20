@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useEffect } from 'react';
+import React, { useState, Fragment, useEffect, useMemo, useLayoutEffect } from 'react';
 import {
   Box,
   Table,
@@ -37,9 +37,11 @@ import AuthModal from 'src/components/authModal';
 import PropTypes from 'prop-types';
 import { statusObj } from 'src/configs/statusConfig';
 import { getSortIcon } from 'src/utils/sortUtils';
-import { decodeAndSetConfig } from '../../utils/tokenUtils';
+import { decodeAndSetConfig, getTokenValues } from '../../utils/tokenUtils';
 import { handleRowToggleHelper } from 'src/utils/rowUtils';
 import StatusChip from 'src/components/StatusChip';
+import DesignationModal from 'src/components/Modal/DesignationModal';
+import downloadPdf from 'src/utils/DownloadPdf';
 
 const style = {
   position: 'absolute',
@@ -60,7 +62,7 @@ const ChevronIcon = ({ isOpen }) => (
 ChevronIcon.propTypes = {
   isOpen: PropTypes.any
 }
-const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAuthCheck, handleUpdate, designationData, apiAccess, config_dept, handleSortById, handleSortByName, sortDirection, setOpenSnackbar, setAlertData, alertData, getDesignations, departmentData, historyData,
+const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAuthCheck, handleUpdate, designationData, apiAccess, config_dept, handleSortById, handleSortByName, sortDirection, setAlertData, alertData, getDesignations, departmentData, historyData,
 }) => {
   const [state, setState] = useState({ addDrawer: false });
   const [openModalDes, setOpenModalDes] = useState(false);
@@ -76,18 +78,44 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
   const { getUserData } = useAuth();
   const [config, setConfig] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [approveAPIName, setApproveAPIName] = useState('');
-  const [approveAPImethod, setApproveAPImethod] = useState('');
-  const [approveAPIEndPoint, setApproveAPIEndPoint] = useState('');
+  const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
   const [eSignStatusId, setESignStatusId] = useState('');
   const [auditLogMark, setAuditLogMark] = useState('');
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
   const [openModalApprove, setOpenModalApprove] = useState(false);
-  useEffect(() => {
-    const data = getUserData();
+  const [pendingAction, setPendingAction] = useState(null);
+  const [formData, setFormData] = useState({})
+
+  useLayoutEffect(() => {
+    let data = getUserData();
+    const decodedToken = getTokenValues();
+    setConfig(decodedToken);
     setUserDataPdf(data);
-    decodeAndSetConfig(setConfig);
-  }, [openModalDes]);
+    return () => { }
+  }, [openModalDes])
+
+  useEffect(() => {
+    if (formData && pendingAction) {
+      const esign_status = "approved";
+      if (pendingAction === "edit") {
+        editDesignation()
+      }
+      else {
+        addDesignation(esign_status)
+      }
+      setPendingAction(null);
+    }
+  }, [formData, pendingAction]);
+
+  const tableBody = arrayDesignation.map((item, index) =>
+    [index + 1, item.designation_id, item.designation_name, item.esign_status]);
+
+  const tableData = useMemo(() => ({
+    tableHeader: ['Sr.No.', 'Id', 'Designation Name', 'E-Sign'],
+    tableHeaderText: 'Designation Report',
+    tableBodyText: 'Designation Data',
+    filename: 'Designation'
+  }), []);
 
   useEffect(() => {
     const filteredData = designationData?.filter(data => data.department_id === row.id)
@@ -109,9 +137,12 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
     console.log("handleAuthResult 01", isAuthenticated, isApprover, esignStatus, user);
     console.log("handleAuthResult 02", config.userId, user.user_id);
     const resetState = () => {
-      setApproveAPIName('');
-      setApproveAPImethod('');
-      setApproveAPIEndPoint('');
+
+      setApproveAPI({
+        approveAPIName: "",
+        approveAPImethod: "",
+        approveAPIEndPoint: ""
+      })
       setAuthModalOpen(false);
     };
     const createAuditLog = (action) => config?.config?.audit_logs ? {
@@ -131,7 +162,7 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
         console.log("esign is approved for approver");
         setOpenModalApprove(false);
         resetState();
-        downloadPdf();
+        downloadPdf(tableData, null, tableBody, arrayDesignation, userDataPdf);
         return;
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true);
@@ -160,8 +191,7 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
     };
 
     const handleUnauthenticated = () => {
-      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.' });
-      setOpenSnackbar(true);
+      setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' });
     };
     if (!isAuthenticated) {
       handleUnauthenticated();
@@ -177,9 +207,12 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
   };
   const handleDesigAuthCheck = async (row) => {
     console.log("handleDesigAuthCheck", row)
-    setApproveAPIName("designation-approve");
-    setApproveAPImethod("PATCH");
-    setApproveAPIEndPoint("/api/v1/designation");
+
+    setApproveAPI({
+      approveAPIName: "designation-approve",
+      approveAPImethod: "PATCH",
+      approveAPIEndPoint: "/api/v1/designation"
+    })
     setAuthModalOpen(true);
     setESignStatusId(row.id);
     setAuditLogMark(row.designation_id)
@@ -193,28 +226,17 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
     // console.log('Filtered data based on department_id:', filteredData)
   }
   const resetFormDes = () => {
-    setDesignationId('')
-    setDesignationName('')
-    setErrorDesignationId({ isError: false, message: '' })
-    setErrorDesignationName({ isError: false, message: '' })
+
     setEditData({})
   }
-  const resetEditFormDes = () => {
-    console.log('REset edit field')
-    setDesignationName('')
-    setErrorDesignationId({ isError: false, message: '' })
-    setErrorDesignationName({ isError: false, message: '' })
-    setEditData(prev => ({
-      ...prev,
-      designation_name: '',
-      department_name: '',
-      department_id: ''
-    }))
-  }
+
   const handleOpenModalDes = () => {
-    setApproveAPIName("designation-create");
-    setApproveAPImethod("POST");
-    setApproveAPIEndPoint("/api/v1/designation");
+
+    setApproveAPI({
+      approveAPIName: "designation-create",
+      approveAPImethod: "POST",
+      approveAPIEndPoint: "/api/v1/designation"
+    })
     resetFormDes()
     setOpenModalDes(true)
   }
@@ -222,70 +244,40 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
     resetFormDes()
     setOpenModalDes(false)
   }
-  const applyValidation = () => {
-    if (designationId.length > 20) {
-      setErrorDesignationId({ isError: true, message: 'Designation ID length should be <= 20' })
-    } else if (designationId.trim() === '') {
-      setErrorDesignationId({ isError: true, message: "Designation ID can't be empty" })
-    } 
-       else if(!(/^[a-zA-Z0-9]+\s*$/.test(designationId))){
-        setErrorDesignationId({ isError: true, message: "Designation ID cannot contain any special symbols" 
 
-        })
-      }
-
-    else {
-      setErrorDesignationId({ isError: false, message: '' })
-    }
-    if (designationName.length > 50) {
-      setErrorDesignationName({ isError: true, message: 'Designation Name length should be <= 50' })
-    } else if (designationName.trim() === '') {
-      setErrorDesignationName({ isError: true, message: "Designation Name can't be empty" })
-    } 
-    
-       else if(!(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/.test(designationName))){
-        setErrorDesignationName({ isError: true, message: "Designation Name cannot contain any special symbols" 
-
-        })
-      }
-    else {
-      setErrorDesignationName({ isError: false, message: '' })
-    }
-  }
-  const checkValidate = () => {
-    return !(designationId === '' || designationId.length > 20 || designationName === '' ||!(/^[a-zA-Z0-9]+\s*$/.test(designationId))||!(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/.test(designationName))|| designationName.length > 50);
-  };
-  const handleSubmitFormDes = async () => {
+  const handleSubmitFormDes = async (data) => {
+    console.log("data", data)
+    setFormData(data)
     if (editData?.id) {
-      setApproveAPIName("designation-update");
-      setApproveAPImethod("PUT");
-      setApproveAPIEndPoint("/api/v1/designation");
+
+      setApproveAPI({
+        approveAPIName: "designation-update",
+        approveAPImethod: "PUT",
+        approveAPIEndPoint: "/api/v1/designation"
+      })
     } else {
-      setApproveAPIName("designation-create");
-      setApproveAPImethod("POST");
-      setApproveAPIEndPoint("/api/v1/designation");
+      setApproveAPI({
+        approveAPIName: "designation-create",
+        approveAPImethod: "POST",
+        approveAPIEndPoint: "/api/v1/designation"
+      })
     }
-    applyValidation()
-    const validate = checkValidate()
-    if (!validate) {
-      return true
-    }
+
     if (config?.config?.esign_status) {
       setAuthModalOpen(true);
       return;
     }
-    const esign_status = "approved";
-    editData?.id ? editDesignation() : addDesignation(esign_status);
+    setPendingAction(editData?.id ? "edit" : "add");
   }
   const addDesignation = async (esign_status, remarks) => {
     try {
-      const data = { designationId, designationName, departmentId: depData.id }
+      const data = { ...formData }
       console.log('Add designation data ', data)
       const auditlogRemark = remarks;
       const audit_log = config?.config?.audit_logs ? {
         "audit_log": true,
         "performed_action": "add",
-        "remarks": auditlogRemark?.length > 0 ? auditlogRemark : `Designation added - ${designationId}`,
+        "remarks": auditlogRemark?.length > 0 ? auditlogRemark : `Designation added - ${formData.designationId}`,
       } : {
         "audit_log": false,
         "performed_action": "none",
@@ -298,37 +290,40 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
       setIsLoading(false)
       if (res?.data?.success) {
         console.log('res data of add designation', res?.data)
-        setOpenSnackbar(true)
-        setAlertData({ ...alertData, type: 'success', message: 'Designation added successfully' })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Designation added successfully' })
         getDesignations()
         resetFormDes()
+        setOpenModalDes(false)
       } else {
         console.log('error to add designation ', res.data)
-        setOpenSnackbar(true)
-        setAlertData({ ...alertData, type: 'error', message: res.data?.message })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
       }
     } catch (error) {
       console.log('Erorr to add designation ', error)
-      setOpenSnackbar(true)
-      setAlertData({ ...alertData, type: 'error', message: 'Something went wrong' })
-    } finally {
+      setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: 'Something went wrong' })
       setOpenModalDes(false)
+
+    } finally {
       setIsLoading(false)
-      setApproveAPIName('');
-      setApproveAPImethod('');
-      setApproveAPIEndPoint('');
+
+      setApproveAPI({
+        approveAPIName: "",
+        approveAPImethod: "",
+        approveAPIEndPoint: ""
+      })
     }
   }
   const editDesignation = async (esign_status, remarks) => {
     try {
-      const data = { designationName, departmentId: depData.id }
+      const data = { ...formData }
+      delete data.designationId
       const auditlogRemark = remarks;
       let audit_log;
       if (config?.config?.audit_logs) {
         audit_log = {
           "audit_log": true,
           "performed_action": "edit",
-          "remarks": auditlogRemark > 0 ? auditlogRemark : `Designation edited - ${designationName}`,
+          "remarks": auditlogRemark > 0 ? auditlogRemark : `Designation edited - ${formData.designationName}`,
         };
       } else {
         audit_log = {
@@ -344,25 +339,27 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
       setIsLoading(false)
       if (res.data.success) {
         console.log('res of edit designation ', res.data)
-        setOpenSnackbar(true)
-        setAlertData({ ...alertData, type: 'success', message: 'Designation updated successfully' })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Designation updated successfully' })
         resetFormDes()
         getDesignations()
+        setOpenModalDes(false)
+
       } else {
         console.log('error to edit designation ', res.data)
-        setOpenSnackbar(true)
-        setAlertData({ ...alertData, type: 'error', message: res.data.message })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
       }
     } catch (error) {
       console.log('Erorr to edit designation ', error)
-      setOpenSnackbar(true)
-      setAlertData({ ...alertData, type: 'error', message: 'Something went wrong' })
-    } finally {
+      setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: 'Something went wrong' })
       setOpenModalDes(false)
+
+    } finally {
       setIsLoading(false)
-      setApproveAPIName('');
-      setApproveAPImethod('');
-      setApproveAPIEndPoint('');
+      setApproveAPI({
+        approveAPIName: "",
+        approveAPImethod: "",
+        approveAPIEndPoint: ""
+      })
     }
   }
   const handleUpdateDes = item => {
@@ -372,99 +369,31 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
     setDesignationId(item.designation_id)
     setDesignationName(item.designation_name)
   }
-  const downloadPdf = () => {
-    console.log('clicked on download btn')
-    const doc = new jsPDF()
-    const headerContent = () => {
-      const img = new Image()
-      img.src = '/images/brand.png'
-      const logoWidth = 45
-      const logoHeight = 28
-      const logoX = doc.internal.pageSize.width - logoWidth - 12
-      const logoY = 8
-      doc.addImage(img, 'PNG', logoX, logoY, logoWidth, logoHeight)
-      doc.setFontSize(16).setFont(undefined, 'bold').text('Designation Report', 70, 14)
-      doc.setFontSize(12)
-      doc.text('Designation Data', 15, 55)
-    }
-    const bodyContent = () => {
-      let currentPage = 1
-      let dataIndex = 0
-      const totalPages = Math.ceil(arrayDesignation.length / 25)
-      headerContent()
-      while (dataIndex < arrayDesignation.length) {
-        if (currentPage > 1) {
-          doc.addPage()
-        }
-        footerContent(currentPage, totalPages)
-        const body = arrayDesignation
-          .slice(dataIndex, dataIndex + 25)
-          .map((item, index) => [dataIndex + index + 1, item.designation_id, item.designation_name, item.esign_status]);
-        autoTable(doc, {
-          startY: currentPage === 1 ? 60 : 40,
-          styles: { halign: 'center' },
-          headStyles: {
-            fontSize: 8,
-            fillColor: [80, 189, 160]
-          },
-          alternateRowStyles: { fillColor: [249, 250, 252] },
-          tableLineColor: [80, 189, 160],
-          tableLineWidth: 0.1,
-          head: [['Sr.No.', 'Id', 'Designation Name', 'E-Sign']],
-          body: body,
-          columnWidth: 'wrap'
-        })
-        dataIndex += 25
-        currentPage++
-      }
-    }
-    const footerContent = (pageNumber, totalPages) => {
-      const currentDate = new Date()
-      const formattedDate = currentDate.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: '2-digit'
-      })
-      const formattedTime = currentDate.toLocaleTimeString('en-US', { hour12: false })
-      const dateTimeString = 'Generated on: \n' + formattedDate + ' at ' + formattedTime
-      const userInfo = 'User: ' + userDataPdf?.userName + '\nDepartment: ' + userDataPdf?.departmentName
-      doc.setFontSize(10)
-      doc.text(userInfo, 20, doc.internal.pageSize.height - 15)
-      doc.text(dateTimeString, 160, doc.internal.pageSize.height - 15)
-      doc.text(
-        `Page ${pageNumber} of ${totalPages}`,
-        doc.internal.pageSize.width / 2,
-        doc.internal.pageSize.height - 10,
-        { align: 'center' }
-      )
-    }
-    bodyContent()
-    const currentDate = new Date()
-    const formattedDate = currentDate
-      .toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
-      .replace(/\//g, '-')
-    const formattedTime = currentDate.toLocaleTimeString('en-US', { hour12: false }).replace(/:/g, '-')
-    const fileName = `Designation_${formattedDate}_${formattedTime}.pdf`
-    doc.save(fileName)
-  }
+
   const handleAuthModalOpen = () => {
     console.log("OPen auth model");
-    setApproveAPIName("designation-approve");
-    setApproveAPImethod("PATCH");
-    setApproveAPIEndPoint("/api/v1/designation");
+
+    setApproveAPI({
+      approveAPIName: "designation-approve",
+      approveAPImethod: "PATCH",
+      approveAPIEndPoint: "/api/v1/designation"
+    })
     setAuthModalOpen(true);
   };
   const handleDownloadPdf = () => {
-    setApproveAPIName("designation-create");
-    setApproveAPImethod("POST");
-    setApproveAPIEndPoint("/api/v1/designation");
+    setApproveAPI({
+      approveAPIName: "designation-create",
+      approveAPImethod: "POST",
+      approveAPIEndPoint: "/api/v1/designation"
+    })
     if (config?.config?.esign_status) {
       console.log("Esign enabled for download pdf");
       setEsignDownloadPdf(true);
       setAuthModalOpen(true);
       return;
     }
-    downloadPdf();
+    downloadPdf(tableData, null, tableBody, arrayDesignation, userDataPdf);
+
   }
   const list = anchor => (
     <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
@@ -521,9 +450,9 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}
-        approveAPIName={approveAPIName}
-        approveAPImethod={approveAPImethod}
-        approveAPIEndPoint={approveAPIEndPoint}
+        approveAPIName={approveAPI.approveAPIName}
+        approveAPImethod={approveAPI.approveAPImethod}
+        approveAPIEndPoint={approveAPI.approveAPIEndPoint}
         handleAuthResult={handleAuthResult}
         config={config}
         handleAuthModalOpen={handleAuthModalOpen}
@@ -645,14 +574,14 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             Location Required
                           </TableCell>
-                                    {
-                                      config?.config?.esign_status === true &&
-                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            E-Sign
-                          </TableCell>
-                           
-                           }
-                          
+                          {
+                            config?.config?.esign_status === true &&
+                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
+                              E-Sign
+                            </TableCell>
+
+                          }
+
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             Updated At
                           </TableCell>
@@ -678,14 +607,14 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
                               {historyRow.is_location_required ? 'True' : 'False'}
                             </TableCell>
                             {
-                                          config?.config?.esign_status === true &&
-<StatusChip
-                              label={historyRow.esign_status}
-                              color={statusObj[historyRow.esign_status]?.color || 'default'}
-                            />
+                              config?.config?.esign_status === true &&
+                              <StatusChip
+                                label={historyRow.esign_status}
+                                color={statusObj[historyRow.esign_status]?.color || 'default'}
+                              />
 
                             }
-                            
+
                             <TableCell align='center'>
                               {moment(historyRow.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
                             </TableCell>
@@ -701,95 +630,15 @@ const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, handleAut
         )}
       </Fragment>
       {openModalDes && (
-        <Modal
-          open={openModalDes}
+
+        <DesignationModal open={openModalDes}
           onClose={handleCloseModalDes}
-          aria-labelledby='modal-modal-title'
-          aria-describedby='modal-modal-description'
-        >
-          <Box sx={style}>
-            <Typography variant='h4' className='my-2'>
-              {editData?.id ? 'Edit Designation' : 'Add Designation'}
-            </Typography>
-            <Grid2 container spacing={2} sx={{ margin: "0.5rem 0rem" }}>
-              <Grid2 size={6}>
-                <TextField
-                  fullWidth
-                  id='outlined-controlled'
-                  label='Designation ID'
-                  placeholder='Designation ID'
-                  value={designationId}
-                  onChange={e => {
-                    setDesignationId(e.target.value)
-                    e.target.value && setErrorDesignationId({ isError: false, message: '' })
-                  }}
-                  required={true}
-                  disabled={!!editData?.id}
-                  error={errorDesignationId.isError}
-                  helperText={errorDesignationId.isError ? errorDesignationId.message : ''}
-                />
-              </Grid2>
-              <Grid2 size={6}>
-                <TextField
-                  fullWidth
-                  id='outlined-controlled'
-                  label='Designation Name'
-                  placeholder='Designation Name'
-                  value={designationName}
-                  onChange={e => {
-                    setDesignationName(e.target.value)
-                    e.target.value && setErrorDesignationName({ isError: false, message: '' })
-                  }}
-                  required={true}
-                  error={errorDesignationName.isError}
-                  helperText={errorDesignationName.isError ? errorDesignationName.message : ''}
-                />
-              </Grid2>
-            </Grid2>
-            <Grid2 container spacing={2} sx={{ margin: "0.5rem 0rem" }}>
-              <Grid2 size={6}>
+          editData={editData}
+          handleSubmitForm={handleSubmitFormDes} departmentData={departmentData}
+          depData={depData}
 
+        />
 
-                <FormControl fullWidth>
-                  <InputLabel id='label-department'>Department</InputLabel>
-                  <Select
-                    labelId='lable-department'
-                    id='department'
-                    label='Department'
-                    value={depData.id}
-                    disabled={!!depData.id}
-                  >
-                    {departmentData?.map(item => {
-                      return (
-                        <MenuItem key={item?.id} value={item?.id} selected={depData.id == item.id}>
-                          {item?.department_name}
-                        </MenuItem>
-                      )
-                    })}
-                  </Select>
-                </FormControl>
-              </Grid2>
-            </Grid2>
-
-            <Grid2 item xs={12} className='my-3 '>
-              <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={handleSubmitFormDes}>
-                Save Changes
-              </Button>
-              <Button
-                type='reset'
-                variant='outlined'
-                color='primary'
-                onClick={editData?.id ? resetEditFormDes : resetFormDes}
-              >
-                Reset
-              </Button>
-              <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={() => handleCloseModalDes()}
-              >
-                Close
-              </Button>
-            </Grid2>
-          </Box>
-        </Modal >
       )}
     </>
   );
@@ -809,7 +658,6 @@ Row.propTypes = {
   handleSortById: PropTypes.any,
   handleSortByName: PropTypes.any,
   sortDirection: PropTypes.any,
-  setOpenSnackbar: PropTypes.any,
   setAlertData: PropTypes.any,
   alertData: PropTypes.any,
   getDesignations: PropTypes.any,
@@ -818,7 +666,6 @@ Row.propTypes = {
 };
 // Now define your TableDepartment component
 const TableDepartment = ({
-  setOpenSnackbar,
   alertData,
   setAlertData,
   getDesignations,
@@ -931,7 +778,6 @@ const TableDepartment = ({
                 handleSortById={handleSortById}
                 handleSortByName={handleSortByName}
                 sortDirection={sortDirection}
-                setOpenSnackbar={setOpenSnackbar}
                 setAlertData={setAlertData}
                 alertData={alertData}
                 getDesignations={getDesignations}
@@ -953,7 +799,6 @@ const TableDepartment = ({
   );
 };
 TableDepartment.propTypes = {
-  setOpenSnackbar: PropTypes.any,
   alertData: PropTypes.any,
   setAlertData: PropTypes.any,
   getDesignations: PropTypes.any,

@@ -51,7 +51,7 @@ const DepartmentModel = ({ open, onClose, editData, handleSubmitForm }) => {
   return (
     <Modal
       open={open}
-      onClose={open}
+      onClose={onClose}
       data-testid="modal"
       role='dialog'
       aria-labelledby='modal-modal-title'

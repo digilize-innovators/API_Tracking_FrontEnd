@@ -5,47 +5,62 @@ import { footerContent } from 'src/utils/footerContentPdf';
 
 
 const downloadPdf = (tableData,tableHeaderData,tableBody,Data,userDataPdf) => {
+    console.log(tableData,tableHeaderData,tableBody,Data,userDataPdf)
      console.log("departFilter",tableData)
     console.log('clicked on download btn')
     const head=tableData.tableHeader
     const doc = new jsPDF()
     const headerContent = () => {
       headerContentFix(doc, `${tableData.tableHeaderText}`);
+      if(tableHeaderData!=null)
+      {
+        if (tableHeaderData.searchVal) {
+          doc.setFontSize(10)
+          doc.text('Search : ' + `${tableHeaderData.searchVal}`, 15, 25)
+        } else {
+          doc.setFontSize(10)
+          doc.text('Search : ' + '__', 15, 25)
+        }
+        doc.text("Filters :\n", 15, 30)
 
-      if (tableHeaderData.searchVal) {
-        doc.setFontSize(10)
-        doc.text('Search : ' + `${tableHeaderData.searchVal}`, 15, 25)
-      } else {
-        doc.setFontSize(10)
-        doc.text('Search : ' + '__', 15, 25)
       }
-      doc.text("Filters :\n", 15, 30)
+     
       
       
-      if (tableData.departmentFilter=="") {
-        if (tableData.departmentFilter) {
+      if (tableData.Filter) {
+        if (tableData.Filter[1]) {
                 doc.setFontSize(10)
-                doc.text('Department : ' + `${tableData.departmentFilter}`, 20, 35)
+                doc.text(`${tableData.Filter[0]} : ` + `${tableData.Filter[1]}`, 20, 35)
               } else {
                 doc.setFontSize(10)
-                doc.text('Department : ' + '__', 20, 35)
+                doc.text(`${tableData.Filter[0]} : ` + '__', 20, 35)
               }
               if (tableHeaderData.eSignStatus) {
                 doc.setFontSize(10)
-                doc.text(`Status : ${tableHeaderData.eSignStatus ? 'enabled' : 'disabled'}`, 20, 40)
+                tableData.Filter[0]==='department'?
+                doc.text(`Status : ${tableHeaderData.eSignStatus ? 'enabled' : 'disabled'}`, 20, 40):
+                doc.text('E-Sign : ' + `${tableHeaderData.esignStatus}`, 20, 40)
               } else {
                 doc.setFontSize(10)
-                doc.text('Status : ' + '__', 20, 40)
+                tableData.Filter[0]==='department'?
+                doc.text('Status : ' + '__', 20, 40):doc.text('E-Sign : ' + '__', 20, 40)
+
               }
       }
       else{
-        if (tableHeaderData.esignStatus) {
-          doc.setFontSize(10)
-          doc.text('E-Sign : ' + `${tableHeaderData.esignStatus}`, 20, 35)
-        } else {
-          doc.setFontSize(10)
-          doc.text('E-Sign : ' + '__', 20, 35)
+        if(tableHeaderData!=null)
+        {
+          if (tableHeaderData.esignStatus) {
+            doc.setFontSize(10)
+            doc.text('E-Sign : ' + `${tableHeaderData.esignStatus}`, 20, 35)
+          } else {
+            doc.setFontSize(10)
+            doc.text('E-Sign : ' + '__', 20, 35)
+          }
+
         }
+          
+      
       }
 
       doc.setFontSize(12)

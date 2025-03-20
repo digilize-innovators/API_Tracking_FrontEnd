@@ -1,5 +1,5 @@
 'use-client'
-import React, { useState, useEffect, useMemo, useLayoutEffect } from 'react'
+import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react'
 import Grid2 from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import { Button, TableContainer, Paper } from '@mui/material'
@@ -18,7 +18,7 @@ import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken';
-import { getTokenValues} from '../../utils/tokenUtils';
+import { getTokenValues } from '../../utils/tokenUtils';
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
@@ -30,7 +30,7 @@ const Index = () => {
   const router = useRouter()
   const { settings } = useSettings()
   const [openModal, setOpenModal] = useState(false)
-  const [alertData, setAlertData] = useState({ openSnackbar:false,type: '', message: '', variant: 'filled' })
+  const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [departmentData, setDepartmentData] = useState([])
   const [editData, setEditData] = useState({})
   const [sortDirection, setSortDirection] = useState('asc')
@@ -43,7 +43,7 @@ const Index = () => {
   const { getUserData, removeAuthToken } = useAuth()
   const [config, setConfig] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [approveAPI,setApproveAPI]=useState({ approveAPIName:'',approveAPImethod:'',approveAPIEndPoint:''})
+  const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
   const [eSignStatusId, setESignStatusId] = useState('');
   const [auditLogMark, setAuditLogMark] = useState('');
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
@@ -52,7 +52,9 @@ const Index = () => {
     esignStatus: '',
     searchVal: ''
   });
-  const [formData,setFormData]=useState({})
+  const [pendingAction, setPendingAction] = useState(null);
+  const searchBarRef = useRef(null);
+  const [formData, setFormData] = useState({})
   const apiAccess1 = useApiAccess(
     "department-create",
     "department-update",
@@ -68,25 +70,42 @@ const Index = () => {
     editDesignationApiAccess: apiAccess2.editApiAccess
   };
 
- 
-  const tableBody = designationData.map((item, index) => 
-    [index + 1,  item.department.department_id,item.department.department_name,
-      item.department.is_location_required,item.department.esign_status]);
-   const tableData = useMemo(() => ({
-      tableHeader: ['Sr.No.', 'Department Id', 'Department Name', 'Location Required', 'E-Sign'],
-      tableHeaderText: 'Department Report',
-      tableBodyText: 'Department Data',
-      filename:'DepartmentMaster'
-    }), []);
+
+  const tableBody = designationData.map((item, index) =>
+    [index + 1, item.department.department_id, item.department.department_name,
+    item.department.is_location_required, item.department.esign_status]);
+
+  const tableData = useMemo(() => ({
+    tableHeader: ['Sr.No.', 'Department Id', 'Department Name', 'Location Required', 'E-Sign'],
+    tableHeaderText: 'Department Report',
+    tableBodyText: 'Department Data',
+    filename: 'DepartmentMaster'
+  }), []);
+
+
+  useEffect(() => {
+    if (formData && pendingAction) {
+      const esign_status = "approved";
+      if (pendingAction === "edit") {
+        editDepartment()
+      }
+      else {
+        addDepartment(esign_status)
+      }
+      setPendingAction(null);
+    }
+  }, [formData, pendingAction]);
+
 
   useLayoutEffect(() => {
-      getDesignations()
-      let data = getUserData();
-      const decodedToken = getTokenValues();
-      setConfig(decodedToken);
-      setUserDataPdf(data);
-      return () => { }
-    }, [openModal])
+    getDesignations()
+    let data = getUserData();
+    const decodedToken = getTokenValues();
+    setConfig(decodedToken);
+    setUserDataPdf(data);
+    return () => { }
+  }, [openModal])
+
 
   useEffect(() => {
     getDepartments()
@@ -143,14 +162,17 @@ const Index = () => {
     setPage(0)
   }
   const resetFilter = () => {
-    setTableHeaderData({...tableHeaderData,esignStatus:"",searchVal:""})
+    if (searchBarRef.current) {
+      searchBarRef.current.resetSearch();
+    }
+    setTableHeaderData({ ...tableHeaderData, esignStatus: "", searchVal: "" })
     setPage(0)
   }
   const handleOpenModal = () => {
     setApproveAPI({
-      approveAPIName:"department-create",
-      approveAPImethod:"POST",
-      approveAPIEndPoint:"/api/v1/department"
+      approveAPIName: "department-create",
+      approveAPImethod: "POST",
+      approveAPIEndPoint: "/api/v1/department"
     })
     resetForm();
     setOpenModal(true);
@@ -180,16 +202,16 @@ const Index = () => {
   const handleUpdate = item => {
     setOpenModal(true)
     setEditData(item)
-    
+
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log("handleAuthResult 01", isAuthenticated, isApprover, esignStatus, user);
     console.log("handleAuthResult 02", config?.userId, user.user_id);
     const resetState = () => {
       setApproveAPI({
-        approveAPIName:"",
-        approveAPImethod:"",
-        approveAPIEndPoint:""
+        approveAPIName: "",
+        approveAPImethod: "",
+        approveAPIEndPoint: ""
       })
       setAuthModalOpen(false);
     };
@@ -197,7 +219,7 @@ const Index = () => {
       if (esignDownloadPdf) {
         setOpenModalApprove(true);
         console.log("esign is approved for creator to download");
-        downloadPdf(tableData,tableHeaderData,tableBody,departmentData,userDataPdf);
+        downloadPdf(tableData, tableHeaderData, tableBody, departmentData, userDataPdf);
       } else {
         console.log("esign is approved for creator");
         const esign_status = "pending";
@@ -205,7 +227,7 @@ const Index = () => {
       }
     };
     const handleUnauthenticated = () => {
-      setAlertData({ openSnackbar:true,type: 'error', message: 'Authentication failed, Please try again.' });
+      setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' });
       resetState();
     };
     const handleApproverActions = async () => {
@@ -224,7 +246,7 @@ const Index = () => {
         setOpenModalApprove(false);
         console.log("esign is approved for approver");
         resetState();
-        downloadPdf(tableData,tableHeaderData,tableBody,departmentData,userDataPdf);
+        downloadPdf(tableData, tableHeaderData, tableBody, departmentData, userDataPdf);
         return;
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true);
@@ -258,9 +280,9 @@ const Index = () => {
   const handleAuthCheck = async (row) => {
     console.log("handleAuthCheck", row)
     setApproveAPI({
-      approveAPIName:"department-approve",
-      approveAPImethod:"PATCH",
-      approveAPIEndPoint:"/api/v1/department"
+      approveAPIName: "department-approve",
+      approveAPImethod: "PATCH",
+      approveAPIEndPoint: "/api/v1/department"
     })
     setAuthModalOpen(true);
     setESignStatusId(row.id);
@@ -296,28 +318,27 @@ const Index = () => {
     setFormData(data)
     if (editData?.id) {
       setApproveAPI({
-        approveAPIName:"department-update",
-        approveAPImethod:"PUT",
-        approveAPIEndPoint:"/api/v1/department"
+        approveAPIName: "department-update",
+        approveAPImethod: "PUT",
+        approveAPIEndPoint: "/api/v1/department"
       })
     } else {
       setApproveAPI({
-        approveAPIName:"department-create",
-        approveAPImethod:"POST",
-        approveAPIEndPoint:"/api/v1/department"
+        approveAPIName: "department-create",
+        approveAPImethod: "POST",
+        approveAPIEndPoint: "/api/v1/department"
       })
     }
-    
+
     if (config?.config?.esign_status) {
       setAuthModalOpen(true);
       return;
     }
-    const esign_status = "approved";
-    editData?.id ? editDepartment() : addDepartment(esign_status);
+    setPendingAction(editData?.id ? "edit" : "add");
   }
   const addDepartment = async (esign_status, remarks) => {
     try {
-        console.log("formData",formData)
+      console.log("formData", formData)
       const data = { ...formData }
       const auditlogRemark = remarks;
       const audit_log = config?.config?.audit_logs ? {
@@ -335,11 +356,13 @@ const Index = () => {
       const res = await api('/department/', data, 'post', true)
       setIsLoading(false)
       if (res?.data?.success) {
-        setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Department added successfully' })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Department added successfully' })
         getDepartments()
         resetForm()
+        setOpenModal(false);
+
       } else {
-        setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: res.data?.message })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
         if (res.data.code === 401) {
           removeAuthToken();
           router.push('/401');
@@ -347,13 +370,14 @@ const Index = () => {
       }
     } catch (error) {
       router.push('/500');
-    } finally {
       setOpenModal(false);
+
+    } finally {
       setIsLoading(false);
       setApproveAPI({
-        approveAPIName:"",
-        approveAPImethod:"",
-        approveAPIEndPoint:""
+        approveAPIName: "",
+        approveAPImethod: "",
+        approveAPIEndPoint: ""
       })
     }
   }
@@ -382,11 +406,13 @@ const Index = () => {
       const res = await api(`/department/${editData.id}`, data, 'put', true)
       setIsLoading(false)
       if (res.data.success) {
-        setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Department updated successfully' })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Department updated successfully' })
         getDepartments()
         resetForm()
+        setOpenModal(false);
+
       } else {
-        setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: res.data.message });
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message });
         if (res.data.code === 401) {
           removeAuthToken();
           router.push('/401');
@@ -394,39 +420,40 @@ const Index = () => {
       }
     } catch (error) {
       router.push('/500');
-    } finally {
       setOpenModal(false);
+
+    } finally {
       setIsLoading(false);
       setApproveAPI({
-        approveAPIName:"",
-        approveAPImethod:"",
-        approveAPIEndPoint:""
+        approveAPIName: "",
+        approveAPImethod: "",
+        approveAPIEndPoint: ""
       })
     }
   }
   const closeSnackbar = () => {
-    setAlertData({...alertData,openSnackbar:false})
+    setAlertData({ ...alertData, openSnackbar: false })
   }
   const handleSearch = (val) => {
-    setTableHeaderData({ ...tableHeaderData,searchVal:val.toLowerCase()});
+    setTableHeaderData({ ...tableHeaderData, searchVal: val.toLowerCase() });
     setPage(0);
   }
-  
-  
+
+
   const handleAuthModalOpen = () => {
     console.log("OPen auth model");
     setApproveAPI({
-      approveAPIName:"department-approve",
-      approveAPImethod:"PATCH",
-      approveAPIEndPoint:"/api/v1/department"
+      approveAPIName: "department-approve",
+      approveAPImethod: "PATCH",
+      approveAPIEndPoint: "/api/v1/department"
     })
     setAuthModalOpen(true);
   };
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName:"department-create",
-      approveAPImethod:"POST",
-      approveAPIEndPoint:"/api/v1/department"
+      approveAPIName: "department-create",
+      approveAPImethod: "POST",
+      approveAPIEndPoint: "/api/v1/department"
     })
     if (config?.config?.esign_status) {
       console.log("Esign enabled for download pdf");
@@ -434,7 +461,7 @@ const Index = () => {
       setAuthModalOpen(true);
       return;
     }
-    downloadPdf(tableData,tableHeaderData,tableBody,departmentData,userDataPdf);
+    downloadPdf(tableData, tableHeaderData, tableBody, departmentData, userDataPdf);
   }
   return (
     <Box padding={4}>
@@ -452,15 +479,17 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-       <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
-                
+                {(config?.config?.esign_status) &&
+                  <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+                }
+
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
-                  
-                   <CustomSearchBar handleSearchClick={handleSearch} />
-                  
+
+                  <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
+
                   {
                     apiAccess.addApiAccess && (
                       <Box className='mx-2'>
@@ -484,8 +513,6 @@ const Index = () => {
                 <TableDepartment
                   getDesignations={getDesignations}
                   designationData={designationData}
-                  openSnackbar={alertData.openSnackbar}
-                  setOpenSnackbar={alertData.openSnackbar}
                   alertData={alertData}
                   setAlertData={setAlertData}
                   departmentData={departmentData}
@@ -510,103 +537,10 @@ const Index = () => {
         </Grid2>
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-      {/* <Modal
-        open={openModal}
-        onClose={handleCloseModal}
-        data-testid="modal"
-        role='dialog'
-        aria-labelledby='modal-modal-title'
-        aria-describedby='modal-modal-description'
-      >
-        <Box sx={style}>
-          <Typography variant='h4' className='my-2'>
-            {editData?.id ? 'Edit Department' : 'Add Department'}
-          </Typography>
-
-          <Grid2 container spacing={2}>
-            <Grid2 size={6}>
-              <TextField
-                fullWidth
-                id='outlined-controlled'
-                label='Department ID'
-                placeholder='Department ID'
-                value={departmentId}
-                onChange={e => {
-                  setDepartmentId(e.target.value)
-                  e.target.value && setErrorDepartmentId({ isError: false, message: '' })
-                }}
-                required={true}
-                error={errorDepartmentId.isError}
-                disabled={!!editData?.id}
-              />
-            </Grid2>
-            <Grid2 size={6}>
-              <TextField
-                fullWidth
-                id='outlined-controlled'
-                label='Department Name'
-                placeholder='Department Name'
-                value={departmentName}
-                onChange={e => {
-                  setDepartmentName(e.target.value)
-                  e.target.value && setErrorDepartmentName({ isError: false, message: '' })
-                }}
-                required={true}
-                error={errorDepartmentName.isError}
-              />
-            </Grid2>
-          </Grid2>
-
-          <Grid2 container spacing={2}>
-            <Grid2 size={6} sx={{ padding: "0rem 0.8rem" }} >
-              <FormHelperText error={errorDepartmentId.isError} >
-                {errorDepartmentId.isError ? errorDepartmentId.message : ''}
-              </FormHelperText>
-            </Grid2>
-            <Grid2 size={6} sx={{ padding: "0rem 0.8rem" }}>
-              <FormHelperText error={errorDepartmentName.isError} >
-                {errorDepartmentName.isError ? errorDepartmentName.message : ''}
-              </FormHelperText>
-            </Grid2>
-          </Grid2>
-
-          <Grid2 item xs={12} sm={6} >
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={isLocationRequire}
-                  size='medium'
-                  color='primary'
-                  onChange={event => setIsLocationRequire(event.target.checked)}
-                />
-              }
-              label='Location required'
-            />
-          </Grid2>
-
-          <Grid2 item xs={12} className='my-3 '>
-            <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={() => handleSubmitForm()}>
-              Save Changes
-            </Button>
-            <Button
-              type='reset'
-              variant='outlined'
-              color='primary'
-              onClick={() => editData?.id ? resetEditForm() : resetForm()}
-            >
-              Reset
-            </Button>
-            <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={() => handleCloseModal()}>
-              Close
-            </Button>
-          </Grid2>
-
-        </Box>
-      </Modal > */}
       <DepartmentModel open={openModal}
-               onClose={handleCloseModal} 
-         editData={editData}
-          handleSubmitForm={handleSubmitForm}/>
+        onClose={handleCloseModal}
+        editData={editData}
+        handleSubmitForm={handleSubmitForm} />
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}
