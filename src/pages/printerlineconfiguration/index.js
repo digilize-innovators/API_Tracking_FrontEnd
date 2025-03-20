@@ -2,7 +2,6 @@
 import { Button, Paper, TableContainer, TextField } from '@mui/material'
 import Box from '@mui/material/Box'
 import Grid2 from '@mui/material/Grid2'
-import Modal from '@mui/material/Modal'
 import Typography from '@mui/material/Typography'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
@@ -23,12 +22,6 @@ import { Switch, FormControlLabel } from '@mui/material'
 import { getTokenValues } from '../../utils/tokenUtils'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import { validateToken } from 'src/utils/ValidateToken'
-import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
-import FormHelperText from '@mui/material/FormHelperText'
-import Select from '@mui/material/Select'
-
-import MenuItem from '@mui/material/MenuItem'
 import TablePrinterLineConfiguration from 'src/views/tables/TablePrinterLineConfiguration'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
@@ -39,25 +32,9 @@ const Index = () => {
     const { settings } = useSettings()
     const [openModal, setOpenModal] = useState(false)
 
-    const [printerLineName, setPrinterLineName] = useState('')
-    const [printer, setPrinter] = useState('')
-    const [printerEnabled, setPrinterEnabled] = useState(false)
     const [printerCategoryId, setPrinterCategoryId] = useState("")
-    const [locationId, setLocationId] = useState('')
     const [areaCategoryId, setAreaCategoryId] = useState('')
-    const [areaId, setAreaId] = useState('')
-    const [controlpanelId, setControlpanelId] = useState('')
-    const [lineNo, setLineNo] = useState('')
     const [alertData, setAlertData] = useState({openSnackbar:false, type: '', message: '', variant: 'filled' })
-    const [errorPrinterLineName, setErrorPrinterLineName] = useState({ isError: false, message: '' })
-    const [errorPrinter, setErrorPrinter] = useState({ isError: false, message: '' })
-    const [errorAreaCategoryId, setErrorAreaCategoryId] = useState({ isError: false, message: '' })
-    const [errorAreaId, setErrorAreaId] = useState({ isError: false, message: '' })
-    const [errorLocationId, setErrorLocationId] = useState({ isError: false, message: '' })
-    const [errorPrinterCategory, setErrorPrinterCategory] = useState({ isError: false, message: '' })
-    const [errorControlpanelId, setErrorControlpanelId] = useState({ isError: false, message: '' })
-    const [errorLineNo, setErrorLineNo] = useState({ isError: false, message: '' })
-
     const [allAreaCategory, setAllAreaCategory] = useState([])
     const [allArea, setAllArea] = useState([])
     const [allLocation, setAllLocation] = useState([])
@@ -86,12 +63,6 @@ const Index = () => {
     const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
     const [openModalApprove, setOpenModalApprove] = useState(false);
     const apiAccess = useApiAccess("printerlineconfiguration-create", "printerlineconfiguration-update", "printerlineconfiguration-approve")
-    const [cameraIp, setCameraIp] = useState('')
-    const [cameraPort, setCameraPort] = useState('')
-    const [linePcAddress, setLinePcAddress] = useState('')
-    const [errorCameraIp, setErrorCameraIp] = useState({ isError: false, message: '' })
-    const [errorCameraPort, setErrorCameraPort] = useState({ isError: false, message: '' })
-    const [errorLinePcAddress, setErrorLinePcAddress] = useState({ isError: false, message: '' })
      const [tableHeaderData, setTableHeaderData] = useState({
           esignStatus: '',
           searchVal: ''
@@ -129,7 +100,7 @@ const Index = () => {
         console.log('allPrinterLineConfigurationData',allPrinterLineConfigurationData)
         const tableData = useMemo(() => ({
           tableHeader: ['Sr.No.', 'Printer Line Name', 'Printer', 'E-Sign'],
-          tableHeaderText: 'Printer Line Configuration Repor',
+          tableHeaderText: 'Printer Line Configuration Report',
           tableBodyText: 'Printer Line Configuration Data',
           filename:'PrinterLineConfiguration'
         }), []);
@@ -140,6 +111,7 @@ const Index = () => {
             getAllArea();
         }
     }, [areaCategoryId])
+
     useEffect(() => {
         if ( printerCategoryId!== '') {
             console.log('printer cat changed');
@@ -307,13 +279,13 @@ const Index = () => {
         setAlertData({...alertData,openSnackbar:false})
     }
     const handleOpenModal = () => {
-        setErrorPrinterLineName({ isError: false, message: '' })
-        setErrorPrinter({ isError: false, message: '' })
-        setErrorAreaCategoryId({ isError: false, message: '' })
-        setErrorAreaId({ isError: false, message: '' })
-        setErrorLocationId({ isError: false, message: '' })
-        setErrorControlpanelId({ isError: false, message: '' })
-        setErrorLineNo({ isError: false, message: '' })
+        // setErrorPrinterLineName({ isError: false, message: '' })
+        // setErrorPrinter({ isError: false, message: '' })
+        // setErrorAreaCategoryId({ isError: false, message: '' })
+        // setErrorAreaId({ isError: false, message: '' })
+        // setErrorLocationId({ isError: false, message: '' })
+        // setErrorControlpanelId({ isError: false, message: '' })
+        // setErrorLineNo({ isError: false, message: '' })
         setApproveAPI({ 
             approveAPIName:'printerlineconfiguration-create',
             approveAPImethod:'POST',
@@ -871,11 +843,7 @@ const Index = () => {
                             <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                                 <Box className='d-flex justify-content-between align-items-center '>
-                                    {/* <SearchBar
-                                        searchValue={tempSearchVal}
-                                        handleSearchChange={handleTempSearchValue}
-                                        handleSearchClick={handleSearch}
-                                    /> */}
+                                    
                           <CustomSearchBar handleSearchClick={handleSearch} />
                                     
                                     {

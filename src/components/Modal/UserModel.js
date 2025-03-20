@@ -1,14 +1,12 @@
 import React, { useEffect } from 'react';
 import { style } from 'src/configs/generalConfig';
-import { Modal, Box, Typography, Button, Grid2, FormControlLabel, Switch } from '@mui/material';
+import { Modal, Box, Typography, Button, Grid2, FormControlLabel, Switch ,TextField} from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import CustomTextField from 'src/components/CustomTextField';
 import styled from '@emotion/styled'
 import CustomDropdown from '../CustomDropdown';
-import { Console } from 'mdi-material-ui';
-
 const ButtonStyled = styled(Button)(({ theme }) => ({
     [theme.breakpoints.down('sm')]: {
         width: '100%',
@@ -130,14 +128,16 @@ function UserModel({open, onClose, editData,handleSubmitForm, allDepartment,
                 aria-labelledby='modal-modal-title'
                 aria-describedby='modal-modal-description'
             >
-                <Box sx={style}>
+                <Box sx={{ ...style,   
+                  width: { xs: "100%", sm: "75%", md: "50%", lg: "40%" }, // Responsive width
+                   overflowY: 'auto' }}>
                     <Typography variant='h4' className='my-2'>
                         {editData?.id ? 'Edit User' : 'Add User'}
                     </Typography>
 
-                    <Grid2 item xs={12} className='d-flex justify-content-between align-items-center'>
+                    <Grid2 item  md={12} className='d-flex justify-content-between align-items-center'>
                         <Box >
-                            <Grid2 item xs={12} sx={{ marginTop: 4.8, marginBottom: 3 }}>
+                            <Grid2 item xs={12} sx={{ marginTop: 5, marginBottom: 3 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                     <ImgStyled src={profilePhoto} alt='Profile Pic' />
                                     <Box>
@@ -201,13 +201,31 @@ function UserModel({open, onClose, editData,handleSubmitForm, allDepartment,
 
                             </Grid2>
                             <Grid2 size={6}>
-                                <CustomTextField
+                                {/* <CustomTextField
                                     name="password"
                                     label="password"
                                     type='password'
                                     control={control}
                                     disabled={!!editData?.id}
-                                />
+                                /> */}
+   <Controller
+      name='password'
+      control={control}
+      render={({ field, fieldState: { error } }) => (
+        <TextField
+          {...field}
+          sx={{ mb: 3 }}
+          fullWidth
+          label='password'
+          placeholder='password'
+          type="password"
+          error={!!error}s
+          helperText={error ? error.message : ''}
+          disabled={!!editData?.id}
+          
+        />
+      )}
+    />
 
                             </Grid2>
                         </Grid2>
@@ -261,12 +279,36 @@ function UserModel({open, onClose, editData,handleSubmitForm, allDepartment,
                     control={<Switch {...field} checked={field.value} color="primary" />}
                   />
                 )}
-              />
+              />   
+                                    
+
                                         User Enabled
                                       </Typography>
                                     </Grid2>
                                   )}
-                        <Grid2 item xs={12} className='my-3 '>
+                                  <Grid2
+    item
+    xs={12}
+    sx={{
+        my: 3,
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' }, // Column on xs, row on sm+
+        gap: 2, // Spacing between buttons
+        alignItems: { xs: 'stretch', sm: 'center' }, // Full width on xs, normal on sm+
+        justifyContent: { sm: 'flex-start' }, // Align left on sm+
+    }}
+>
+    <Button variant="contained" type="submit">
+        Save Changes
+    </Button>
+    <Button type="reset" variant="outlined" color="primary" onClick={reset}>
+        Reset
+    </Button>
+    <Button variant="outlined" color="error" onClick={onClose}>
+        Close
+    </Button>
+</Grid2>
+                        {/* <Grid2 item xs={12} className='my-3 '>
                             <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'>
                                 Save Changes
                             </Button>
@@ -281,7 +323,7 @@ function UserModel({open, onClose, editData,handleSubmitForm, allDepartment,
                             <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={onClose}>
                                 Close
                             </Button>
-                        </Grid2>
+                        </Grid2> */}
 
                     </form>
                 </Box>

@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react'
 import Box from '@mui/material/Box'
 import Grid2 from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
-import { Button, TextField, TableContainer, Paper, FormControlLabel, Checkbox, FormGroup } from '@mui/material'
-import Modal from '@mui/material/Modal'
+import { Button, TableContainer, Paper } from '@mui/material'
+//import { Button, TextField, TableContainer, Paper, FormControlLabel, Checkbox, FormGroup } from '@mui/material'
+// import Modal from '@mui/material/Modal'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import SnackbarAlert from 'src/components/SnackbarAlert'
@@ -15,9 +16,10 @@ import { useSettings } from 'src/@core/hooks/useSettings'
 import { useRouter } from 'next/router'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
-import { style } from 'src/configs/generalConfig'
+// import { style } from 'src/configs/generalConfig'
 import { decodeAndSetConfig } from '../../utils/tokenUtils'
 import TableCountryMaster from 'src/views/tables/TableCountryMaster'
+import AddCountryModalComponent from 'src/components/Modal/CountryModel.js'
 
 const Index = () => {
   const router = useRouter()
@@ -27,7 +29,7 @@ const Index = () => {
   const [codeStructure, setCodeStructure] = useState([])
   const [openModal, setOpenModal] = useState(false)
   const [errorCountry, setErrorCountry] = useState({ isError: false, message: '' })
-  // const [errorCodeStructure, setErrorCodeStructure] = useState({ isError: false, message: '' })
+  //const [errorCodeStructure, setErrorCodeStructure] = useState({ isError: false, message: '' })
   const [editData, setEditData] = useState({})
   const [countryMasterData, setCountryMasterData] = useState([])
   const [sortDirection, setSortDirection] = useState('asc')
@@ -41,92 +43,91 @@ const Index = () => {
   const [config, setConfig] = useState(null)
   const [urlMakerData, setUrlMakerData] = useState([
     {
-      label: "Product",
+      label: 'Product',
       options: [
         {
-          label: "Registration No",
-          value: "registrationNo",
-          checked: false,
+          label: 'Registration No',
+          value: 'registrationNo',
+          checked: false
         },
         {
-          label: "NDC",
-          value: "NDC",
-          checked: false,
+          label: 'NDC',
+          value: 'NDC',
+          checked: false
         },
         {
-          label: "GTIN",
-          value: "GTIN",
-          checked: false,
+          label: 'GTIN',
+          value: 'GTIN',
+          checked: false
         }
       ]
     },
     {
-      label: "Batch",
+      label: 'Batch',
       options: [
         {
-          label: "Batch No",
-          value: "batchNo",
-          checked: false,
+          label: 'Batch No',
+          value: 'batchNo',
+          checked: false
         },
         {
-          label: "Manufacturing Date",
-          value: "manufacturingDate",
-          checked: false,
+          label: 'Manufacturing Date',
+          value: 'manufacturingDate',
+          checked: false
         },
         {
-          label: "Expiry Date",
-          value: "expiryDate",
-          checked: false,
+          label: 'Expiry Date',
+          value: 'expiryDate',
+          checked: false
         }
       ]
     },
     {
-      label: "Unique Code",
+      label: 'Unique Code',
       options: [
         {
-          label: "Unique Code",
-          value: "uniqueCode",
-          checked: false,
-        },
+          label: 'Unique Code',
+          value: 'uniqueCode',
+          checked: false
+        }
       ]
     },
     {
-      label: "Group Separator",
+      label: 'Group Separator',
       options: [
-        { label: '00', value: '00', Description: 'GTIN', checked: false, },
-        { label: '01', value: '01', Description: 'GTIN (product)', checked: false, },
-        { label: '10', value: '10', Description: 'Batch', checked: false, },
-        { label: '11', value: '11', Description: 'ProductionDate', checked: false, },
-        { label: '12', value: '12', Description: 'Due Date', checked: false, },
-        { label: '13', value: '13', Description: 'Packaging Date', checked: false, },
-        { label: '15', value: '15', Description: 'Best Before Date', checked: false, },
-        { label: '17', value: '17', Description: 'Expiration Date', checked: false, },
-        { label: '20', value: '20', Description: 'Product Variant', checked: false, },
-        { label: '21', value: '21', Description: 'Serial Number', checked: false, },
-        { label: '22', value: '22', Description: 'Consumer Product Code', checked: false, },
-        { label: '240', value: '240', Description: 'Secondary Serial Number', checked: false, },
-        { label: '30', value: '30', Description: 'Quantity', checked: false, },
-        { label: '37', value: '37', Description: 'Quantity of Items ', checked: false, },
-        { label: '90', value: '90', Description: 'Internal Identification', checked: false, },
-        { label: '91', value: '91', Description: 'Application Identifier', checked: false, },
-        { label: '92', value: '92', Description: 'Additional Information', checked: false, },
-        { label: '93', value: '93', Description: 'Packaging/Serialization information', checked: false, },
-        { label: '94', value: '94', Description: 'Discount Codes', checked: false, },
+        { label: '00', value: '00', Description: 'GTIN', checked: false },
+        { label: '01', value: '01', Description: 'GTIN (product)', checked: false },
+        { label: '10', value: '10', Description: 'Batch', checked: false },
+        { label: '11', value: '11', Description: 'ProductionDate', checked: false },
+        { label: '12', value: '12', Description: 'Due Date', checked: false },
+        { label: '13', value: '13', Description: 'Packaging Date', checked: false },
+        { label: '15', value: '15', Description: 'Best Before Date', checked: false },
+        { label: '17', value: '17', Description: 'Expiration Date', checked: false },
+        { label: '20', value: '20', Description: 'Product Variant', checked: false },
+        { label: '21', value: '21', Description: 'Serial Number', checked: false },
+        { label: '22', value: '22', Description: 'Consumer Product Code', checked: false },
+        { label: '240', value: '240', Description: 'Secondary Serial Number', checked: false },
+        { label: '30', value: '30', Description: 'Quantity', checked: false },
+        { label: '37', value: '37', Description: 'Quantity of Items ', checked: false },
+        { label: '90', value: '90', Description: 'Internal Identification', checked: false },
+        { label: '91', value: '91', Description: 'Application Identifier', checked: false },
+        { label: '92', value: '92', Description: 'Additional Information', checked: false },
+        { label: '93', value: '93', Description: 'Packaging/Serialization information', checked: false },
+        { label: '94', value: '94', Description: 'Discount Codes', checked: false },
         { label: '95', value: '95', Description: 'Other Use', checked: false }
       ]
-    },
-  ]);
+    }
+  ])
 
   useEffect(() => {
     setTotalRecords(10)
     decodeAndSetConfig(setConfig)
 
-    return () => { }
+    return () => {}
   }, [])
 
   useEffect(() => {
     getCountryMasterData()
-
   }, [openModal])
 
   const closeSnackbar = () => {
@@ -148,17 +149,17 @@ const Index = () => {
     setCodeStructure([])
     setCrmURL({ value: 'CRM', checked: false })
     setCountry('')
-    const updatedData = urlMakerData.map((el) => {
+    const updatedData = urlMakerData.map(el => {
       return {
         ...el,
-        options: el.options.map((option) => {
+        options: el.options.map(option => {
           return {
             ...option,
-            checked: false,
+            checked: false
           }
         })
       }
-    });
+    })
     setUrlMakerData(updatedData)
 
     // setErrorCodeStructure({ isError: false, message: '' })
@@ -191,7 +192,7 @@ const Index = () => {
     }
     return isValid
   }
-  console.log(crmURL)
+
   const getCountryMasterData = async () => {
     try {
       setIsLoading(true)
@@ -285,8 +286,7 @@ const Index = () => {
     try {
       const data = {
         country,
-        codeStructure: codeStructure.join(' '),
-
+        codeStructure: codeStructure.join(' ')
       }
 
       console.log('Edit country data ', data)
@@ -328,26 +328,20 @@ const Index = () => {
     }))
   }
 
-  const updateCheckedValues = (valuesToFind) => {
-    if (valuesToFind.includes("CRMURL")) {
-      setCrmURL({ value: "CRMURL", checked: true })
+  const updateCheckedValues = valuesToFind => {
+    if (valuesToFind.includes('CRMURL')) {
+      setCrmURL({ value: 'CRMURL', checked: true })
     }
 
-
-    setUrlMakerData((prevData) =>
-      prevData.map((group) => ({
+    setUrlMakerData(prevData =>
+      prevData.map(group => ({
         ...group,
-        options: group.options.map((option) =>
-          valuesToFind.includes(option.value)
-            ? { ...option, checked: true }
-            : option
-        ),
+        options: group.options.map(option =>
+          valuesToFind.includes(option.value) ? { ...option, checked: true } : option
+        )
       }))
-    );
-
-  };
-
-
+    )
+  }
 
   const handleUpdate = async item => {
     resetForm()
@@ -360,7 +354,6 @@ const Index = () => {
     updateCheckedValues(editCodeStructure)
 
     setCodeStructure(editCodeStructure)
-
   }
 
   const handleSort = key => {
@@ -392,40 +385,53 @@ const Index = () => {
 
   const handleCheckboxChange = (value, outerLabel, label, check) => {
     // console.log("click on ", value, outerLabel, label)
-    let checked = !check;
-    const updatedData = urlMakerData.map((el) => {
+    let checked = !check
+    const updatedData = urlMakerData.map(el => {
       if (el.label === outerLabel) {
         return {
           ...el,
-          options: el.options.map((el2) =>
-            el2.label === label
-              ? { ...el2, checked: !el2.checked } // Create a new object with updated `checked`
-              : el2 // Return the original object for unchanged items
-          ),
-        };
+          options: el.options.map(
+            el2 =>
+              el2.label === label
+                ? { ...el2, checked: !el2.checked } // Create a new object with updated `checked`
+                : el2 // Return the original object for unchanged items
+          )
+        }
       }
-      return el; // Return the original object for unmatched labels
-    });
-    setUrlMakerData(updatedData);
+      return el // Return the original object for unmatched labels
+    })
+    setUrlMakerData(updatedData)
 
     if (checked) {
-      const updatedCodeStructure = [...codeStructure];
-      updatedCodeStructure.push(value);
-      setCodeStructure(updatedCodeStructure);
+      const updatedCodeStructure = [...codeStructure]
+      updatedCodeStructure.push(value)
+      setCodeStructure(updatedCodeStructure)
     } else {
-      let updatedCodeStructure = [...codeStructure];
-      updatedCodeStructure.splice(updatedCodeStructure.indexOf(value), 1);
-      setCodeStructure(updatedCodeStructure);
+      let updatedCodeStructure = [...codeStructure]
+      updatedCodeStructure.splice(updatedCodeStructure.indexOf(value), 1)
+      setCodeStructure(updatedCodeStructure)
     }
   }
 
-  const handleCRMURLChange = (e) => {
-    setCrmURL({ ...crmURL, checked: !crmURL.checked });
+  //UNDO functionality Implementations
+  const undoCodeStructureValue = () => {
+    let updatedCodeStructure = [...codeStructure]
+    const lastValue = updatedCodeStructure.pop();
+    setCodeStructure(updatedCodeStructure);
+    const updatedUrlMarker = urlMakerData?.map(item => ({
+      ...item,
+      options: item.options.map(op => (op.value === lastValue ? { ...op, checked: false } : op))
+    }));
+    setUrlMakerData(updatedUrlMarker)
+  }
+
+  const handleCRMURLChange = e => {
+    setCrmURL({ ...crmURL, checked: !crmURL.checked })
     const updatedCodeStructure = [...codeStructure]
     if (e.target.checked) {
       setCodeStructure([...codeStructure, e.target.value])
     } else {
-      updatedCodeStructure.splice(updatedCodeStructure.indexOf("CRMURL"), 1);
+      updatedCodeStructure.splice(updatedCodeStructure.indexOf('CRMURL'), 1)
       setCodeStructure([...updatedCodeStructure])
     }
   }
@@ -474,7 +480,6 @@ const Index = () => {
                   totalRecords={totalRecords}
                   rowsPerPage={rowsPerPage}
                   page={page}
-
                   apiAccess={{ editApiAccess: true }}
                   handleChangePage={handleChangePage}
                   handleChangeRowsPerPage={handleChangeRowsPerPage}
@@ -486,7 +491,7 @@ const Index = () => {
         </Grid2>
       </Grid2>
       <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-      <Modal
+      {/* <Modal
         open={openModal}
         onClose={handleCloseModal}
         data-testid='modal'
@@ -638,7 +643,25 @@ const Index = () => {
             </Button>
           </Grid2>
         </Box>
-      </Modal>
+      </Modal> */}
+      <AddCountryModalComponent
+        openModal={openModal}
+        handleCloseModal={handleCloseModal}
+        editData={editData}
+        country={country}
+        setCountry={setCountry}
+        errorCountry={errorCountry}
+        codeStructure={codeStructure}
+        urlMakerData={urlMakerData}
+        handleCheckboxChange={handleCheckboxChange}
+        setCodeStructure={setCodeStructure}
+        crmURL={crmURL}
+        handleCRMURLChange={handleCRMURLChange}
+        handleSubmitForm={handleSubmitForm}
+        resetForm={resetForm}
+        resetEditForm={resetEditForm}
+        undoCodeStructureValue={undoCodeStructureValue}
+      />
       <AccessibilitySettings />
       <ChatbotComponent />
     </Box>

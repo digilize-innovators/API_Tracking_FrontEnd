@@ -51,7 +51,6 @@ const Index = () => {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
   const [editData, setEditData] = useState({})
-  const [allAreaCategory, setAllAreaCategory] = useState([])
   const router = useRouter();
   const [config, setConfig] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -61,7 +60,6 @@ const Index = () => {
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
   const [openModalApprove, setOpenModalApprove] = useState(false);
   const apiAccess = useApiAccess("area-create", "area-update", "area-approve");
-  const [allLocationsData, setAllLocationData] = useState([]);
   const [formData, setFormData] = useState({})
   const [tableHeaderData, setTableHeaderData] = useState({
     esignStatus: '',
@@ -76,14 +74,14 @@ const Index = () => {
     setUserDataPdf(data);
     return () => { }
   }, [])
-const tableBody = areaData.map((item, index) => 
-  [index + 1, item.area_id,item.area_name,  item.area_category?.area_category_name,item.esign_status]);
+  const tableBody = areaData.map((item, index) =>
+    [index + 1, item.area_id, item.area_name, item.area_category?.area_category_name, item.esign_status]);
 
- const tableData = {
+  const tableData = {
     tableHeader: ['Sr.No.', 'Id', 'Name', 'Area Category', 'E-Sign'],
     tableHeaderText: 'Area Master Report',
     tableBodyText: 'Area Master Data',
-    filename:'AreaMaster'
+    filename: 'AreaMaster'
   };
   const getData = async () => {
     setIsLoading(true)
@@ -114,59 +112,13 @@ const tableBody = areaData.map((item, index) =>
   }
   useEffect(() => {
     getData();
-    getAllLocations();
-  }, [tableHeaderData.esignStatus,tableHeaderData.searchVal, page, rowsPerPage])
-
-
-  const getAllAreaCategory = async () => {
-    setIsLoading(true)
-    try {
-      const res = await api(`/area-category/`, {}, 'get', true)
-      if (res.data.success) {
-        setAllAreaCategory(res.data.data.areaCategories)
-      } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
-      } else {
-        console.log('Error: Unexpected response', res.data);
-      }
-    } catch (error) {
-      console.log('Error in get area categories ', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const getAllLocations = async () => {
-    try {
-      setIsLoading(true);
-      const res = await api('/location/', {}, 'get', true);
-      setIsLoading(false);
-      console.log('All locations ', res.data);
-      if (res.data.success) {
-        setAllLocationData(res.data.data.locations);
-      } else {
-        console.log('Error to get all locations ', res.data);
-        if (res.data.code === 401) {
-          removeAuthToken();
-          router.push('/401');
-        }
-      }
-    } catch (error) {
-      console.log('Error in get locations ', error);
-      setIsLoading(false);
-    }
-  };
+  }, [tableHeaderData.esignStatus, tableHeaderData.searchVal, page, rowsPerPage])
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
   const handleOpenModal = () => {
-    setApproveAPI({ approveAPIName: 'area-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/area' })
-
-    // resetForm()
-    getAllAreaCategory()
-    getAllLocations()
+    setApproveAPI({ approveAPIName: 'area-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/area' });
     setOpenModal(true)
   }
   const handleAuthModalClose = () => {
@@ -226,7 +178,7 @@ const tableBody = areaData.map((item, index) =>
     console.log('form data ', data);
     setFormData(data);
     console.log('after set ', editData);
-    
+
     if (editData?.id) {
       setApproveAPI({ approveAPIName: 'area-update', approveAPImethod: 'PUT', approveAPIEndPoint: '/api/v1/area' })
     } else {
@@ -293,7 +245,7 @@ const tableBody = areaData.map((item, index) =>
   }
   const editArea = async (esign_status, remarks) => {
     try {
-      console.log(formData,"formdata")
+      console.log(formData, "formdata")
       const data = {
         areaId: formData.areaId,
         areaName: formData.areaName,
@@ -318,7 +270,7 @@ const tableBody = areaData.map((item, index) =>
       }
       data.audit_log = audit_log;
       data.esign_status = esign_status;
-      console.log(data,'aaaa')
+      console.log(data, 'aaaa')
       setIsLoading(true)
       const res = await api(`/area/${editData.id}`, data, 'put', true)
       if (res.data.success) {
@@ -359,8 +311,8 @@ const tableBody = areaData.map((item, index) =>
       if (esignDownloadPdf) {
         console.log("esign is approved for download.");
         setOpenModalApprove(true);
-        console.log(tableData,"tabledata")
-        downloadPdf(tableData,tableHeaderData,tableBody,areaData,userDataPdf)
+        console.log(tableData, "tabledata")
+        downloadPdf(tableData, tableHeaderData, tableBody, areaData, userDataPdf)
 
       } else {
         console.log("esign is approved for creator.");
@@ -384,9 +336,9 @@ const tableBody = areaData.map((item, index) =>
         setOpenModalApprove(false);
         console.log("esign is approved for approver");
         resetState();
-        console.log(tableData,"tabledata")
+        console.log(tableData, "tabledata")
 
-        downloadPdf(tableData,tableHeaderData,tableBody,areaData,userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, areaData, userDataPdf)
         return;
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true);
@@ -418,9 +370,9 @@ const tableBody = areaData.map((item, index) =>
     setAuditLogMark(row.area_name)
     console.log("row", row)
   }
-  
-  const handleSearchClick = (val)=> {
-    setTableHeaderData({ ...tableHeaderData,searchVal:val.toLowerCase()});
+
+  const handleSearchClick = (val) => {
+    setTableHeaderData({ ...tableHeaderData, searchVal: val.toLowerCase() });
     setPage(0);
   }
   // }
@@ -428,11 +380,9 @@ const tableBody = areaData.map((item, index) =>
     setTempSearchVal(e.target.value.toLowerCase())
   }
   const handleUpdate = item => {
-    getAllAreaCategory()
-    getAllLocations()
     setOpenModal(true)
     setEditData(item)
-   
+
   }
   const handleSort = (key) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -453,7 +403,7 @@ const tableBody = areaData.map((item, index) =>
   const handleSortByID = () => handleSort('area_id');
   const resetFilter = () => {
     setTableHeaderData({
-      ...tableHeaderData,esignStatus:"",searchVal:""
+      ...tableHeaderData, esignStatus: "", searchVal: ""
     })
     // setESignStatus('')
     // setSearchVal('')
@@ -481,9 +431,9 @@ const tableBody = areaData.map((item, index) =>
       setAuthModalOpen(true);
       return;
     }
-    downloadPdf(tableData,tableHeaderData,tableBody,areaData,userDataPdf);
+    downloadPdf(tableData, tableHeaderData, tableBody, areaData, userDataPdf);
   }
- 
+
   return (
     <Box padding={4}>
       <Head>
@@ -501,8 +451,8 @@ const tableBody = areaData.map((item, index) =>
             <Grid2 item xs={12} >
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
                 {/* <EsignStatusFilter esignStatus={eSignStatus} setEsignStatus={setESignStatus} /> */}
-        <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
-                
+                <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
@@ -514,8 +464,8 @@ const tableBody = areaData.map((item, index) =>
                     handleSearchClick={handleSearchClick}
 
                   /> */}
-              <CustomSearchBar handleSearchClick={handleSearchClick} />
-                  
+                  <CustomSearchBar handleSearchClick={handleSearchClick} />
+
                   {
                     apiAccess.addApiAccess && (
                       <Box className='mx-2'>
@@ -563,153 +513,11 @@ const tableBody = areaData.map((item, index) =>
         onClose={handleCloseModal}
         editData={editData}
         handleSubmitForm={handleSubmitForm}
-        allAreaCategory={allAreaCategory}
-        allLocationsData={allLocationsData} />
-      {/* <Modal
-        open={openModal}
-        onClose={handleCloseModal}
-        aria-labelledby='modal-modal-title'
-        aria-describedby='modal-modal-description'
-      >  
-        <Box sx={style}>
-          <Typography variant='h4' className='my-2'>
-            {editData?.id ? 'Edit Area' : 'Add Area'}
-          </Typography>
-          <Grid2 container spacing={2}>
-            <Grid2 size={6}>
-              <TextField
-                fullWidth
-                id='outlined-controlled'
-                label='Area ID'
-                placeholder='Area ID'
-                value={areaId}
-                onChange={e => {
-                  setAreaId(e.target.value)
-                  e.target.value && setErrorAreaId({ isError: false, message: '' })
-                }}
-                required
-                error={errorAreaId.isError}
-                disabled={!!editData?.id}
-              />
-            </Grid2>
-            <Grid2 size={6}>
-              <TextField
-                fullWidth
-                id='outlined-controlled'
-                label='Area Name'
-                placeholder='Area Name'
-                value={areaName}
-                onChange={e => {
-                  setAreaName(e.target.value)
-                  e.target.value && setErrorAreaName({ isError: false, message: '' })
-                }}
-                required
-                error={errorAreaName.isError}
-              />
-            </Grid2>
-          </Grid2>
-          <Grid2 container spacing={2} >
-            <Grid2 size={6} sx={{ padding: "0.5rem 1rem" }}>
-              <FormHelperText error={errorAreaId.isError}>
-                {errorAreaId.isError ? errorAreaId.message : ''}
-              </FormHelperText>
-            </Grid2>
-            <Grid2 size={6} sx={{ padding: "0.5rem 1rem" }}>
-              <FormHelperText error={errorAreaName.isError}>
-                {errorAreaName.isError ? errorAreaName.message : ''}
-              </FormHelperText>
-            </Grid2>
-          </Grid2>
+        />
 
-          <Grid2 container spacing={2}>
-            <Grid2 size={6}>
-              <FormControl
-                fullWidth
-                required
-                error={errorAreaCategory.isError}>
-                <InputLabel id='label-area-category'>Area Category</InputLabel>
-                <Select
-                  labelId='label-area-category'
-                  id='area-category'
-                  label='Area-category *'
-                  value={areaCategoryId}
-                  onChange={e => {
-                    setAreaCategoryId(e.target.value)
-                    setErrorAreaCategory({ isError: false, message: '' })
-                  }}
-                >
-                  {allAreaCategory?.map(item => (
-                    <MenuItem key={item.id} value={item.id} selected={areaCategoryId === item.id}>
-                      {item.area_category_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid2>
-            <Grid2 size={6}>
-              <FormControl
-                fullWidth
-                required
-                error={errorAreaCategory.isError}>
-                <InputLabel id='label-location'>Location</InputLabel>
-                <Select
-                  labelId='label-location'
-                  id='location'
-                  label='Location *'
-                  value={location_uuid}
-                  onChange={e => {
-                    setLocation_uuid(e.target.value)
-                    setErrorLocation({ isError: false, message: '' })
-
-                  }}
-                >
-                  {allLocationsData?.map(item => (
-                    <MenuItem key={item.id} value={item.id} selected={location_uuid === item.id}>
-                      {item.location_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid2>
-          </Grid2>
-          <Grid2 container spacing={2}>
-            <Grid2 size={6}>
-              <FormHelperText sx={{ padding: "0.5rem 1rem" }} error={errorAreaCategory.isError}>
-                {errorAreaCategory.isError ? errorAreaCategory.message : ''}
-              </FormHelperText>
-            </Grid2>
-            <Grid2 size={6} sx={{ padding: "0.5rem 1rem" }}>
-              <FormHelperText error={errorLocation.isError}>
-                {console.log(errorLocation)} 
-                {errorLocation.isError ? errorLocation.message : ''}
-              </FormHelperText>
-            </Grid2>
-          </Grid2>
-
-          <Grid2 item xs={12} className='my-3 '>
-            <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={handleSubmitForm}>
-              Save Changes
-            </Button>
-            <Button
-              type='reset'
-              variant='outlined'
-              color='primary'
-              onClick={editData?.id ? resetEditForm : resetForm}
-            >
-              Reset
-            </Button>
-            <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={handleCloseModal}>
-              Close
-            </Button>
-          </Grid2>
-        </Box>
-      </Modal > */}
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}
-        approveAPIName={approveAPI.approveAPIName}
-        approveAPImethod={approveAPI.approveAPImethod}
-        approveAPIEndPoint={approveAPI.approveAPIEndPoint}
         handleAuthResult={handleAuthResult}
         config={config}
         handleAuthModalOpen={handleAuthModalOpen}

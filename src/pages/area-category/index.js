@@ -5,7 +5,7 @@ import Grid2 from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { IoMdAdd } from 'react-icons/io'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import { useLoading } from 'src/@core/hooks/useLoading'
@@ -51,7 +51,9 @@ const Index = () => {
       esignStatus: '',
       searchVal: ''
     });
+ const [pendingAction, setPendingAction] = useState(null);
  const [formData, setFormData] = useState({}); 
+ const searchBarRef = useRef(null);
 const apiAccess = useApiAccess("area-category-create", "area-category-update", "area-category-approve")
 
 const tableBody = allAreaCategoryData.map((item, index) => 
@@ -63,7 +65,20 @@ const tableBody = allAreaCategoryData.map((item, index) =>
     tableBodyText: 'Area Category Data',
     filename:'AreaCategory'
   }), []);
-  
+
+  useEffect(() => {
+      if (formData && pendingAction) {
+        const esign_status = "approved";
+        if (pendingAction === "edit") {
+          editAreaCategory() ;
+        }
+        else {
+          addAreaCategory(esign_status)
+        }
+        setPendingAction(null);
+      }
+    }, [formData, pendingAction]);
+    
   useLayoutEffect(() => {
     let data = getUserData();
     const decodedToken = getTokenValues();
@@ -146,8 +161,7 @@ const tableBody = allAreaCategoryData.map((item, index) =>
       setAuthModalOpen(true);
       return;
     }
-    const esign_status = "approved";
-    editData?.id ? editAreaCategory() : addAreaCategory(esign_status);
+    setPendingAction(editData?.id ? "edit" : "add");
   }
   const addAreaCategory = async (esign_status, remarks) => {
     try {
@@ -220,6 +234,8 @@ const tableBody = allAreaCategoryData.map((item, index) =>
         setAlertData({ ...alertData, openSnackbar:true,type: 'success', message: 'Area category updated successfully' })
         resetForm();
         getData()
+        setOpenModal(false);
+
       } else {
         console.log('error to edit area category ', res.data)
         setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: res.data.message })
@@ -231,8 +247,9 @@ const tableBody = allAreaCategoryData.map((item, index) =>
     } catch (error) {
       console.log('Erorr to edit area category ', error)
       router.push('/500');
-    } finally {
       setOpenModal(false);
+
+    } finally {
       setIsLoading(false);
       setApproveAPI({
         approveAPIName:'',approveAPImethod:'',approveAPIEndPoint:''
@@ -258,7 +275,7 @@ const tableBody = allAreaCategoryData.map((item, index) =>
     const handleApproverActions = async () => {
       const data = {
         modelName: "areacategory",
-        esignStatus:tableHeaderData.esignStatus,
+        esignStatus,
         id: eSignStatusId,
         audit_log: config?.config?.audit_logs ? {
           "user_id": user.userId,
@@ -299,7 +316,7 @@ const tableBody = allAreaCategoryData.map((item, index) =>
       }
     };
     if (!isAuthenticated) {
-      setAlertData({openSnackbar:true, type: 'error', message: 'Authentication failed, Please try again.' });
+      setAlertData({...alertData,openSnackbar:true, type: 'error', message: 'Authentication failed, Please try again.' });
       return;
     }
     if (isApprover) {
@@ -336,6 +353,9 @@ const tableBody = allAreaCategoryData.map((item, index) =>
     setSortDirection(newSortDirection)
   }
   const resetFilter = () => {
+    if (searchBarRef.current) {
+      searchBarRef.current.resetSearch();
+    }
     setTableHeaderData({ ...tableHeaderData, esignStatus: "",searchVal:"" })
   }
   const handleSearch = (val) => {
@@ -395,15 +415,16 @@ const tableBody = allAreaCategoryData.map((item, index) =>
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                {/* <EsignStatusFilter esignStatus={eSignStatus} setEsignStatus={setESignStatus} /> */}
-           <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+                 {(config?.config?.esign_status) &&
+          <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+             }
                
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
                 
-               <CustomSearchBar handleSearchClick={handleSearch} />
+                 <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
                   
                   {
                     apiAccess.addApiAccess && (

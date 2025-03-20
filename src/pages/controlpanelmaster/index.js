@@ -29,6 +29,7 @@ import { footerContent } from 'src/utils/footerContentPdf';
 import { headerContentFix } from 'src/utils/headerContentPdfFix';
 import { validateToken } from 'src/utils/ValidateToken'
 import TableControlPanelMaster from 'src/views/tables/TableControlPanelMaster'
+import ControlPanelModal from 'src/components/Modal/ControlPanelModal'
 
 const Index = () => {
     const router = useRouter()
@@ -67,13 +68,27 @@ const Index = () => {
     const [approveAPIEndPoint, setApproveAPIEndPoint] = useState('');
     const [eSignStatusId, setESignStatusId] = useState('');
     const [auditLogMark, setAuditLogMark] = useState('');
+    const [formData,setFormData]=useState({})
     const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
     const [openModalApprove, setOpenModalApprove] = useState(false);
+    const [pendingAction, setPendingAction] = useState(null);
+
     const apiAccess = useApiAccess(
         "controlpanelmaster-create",
         "controlpanelmaster-update",
         "controlpanelmaster-approve"
     );
+    useEffect(() => {
+        if (formData && pendingAction) {
+            const esign_status = "approved";
+            if (pendingAction === "edit") {
+                editControlPanelMaster();
+            } else {
+                addControlPanelMaster(esign_status);
+            }
+            setPendingAction(null);
+        }
+    }, [formData, pendingAction]);
 
     useEffect(() => {
         let data = getUserData();
@@ -123,16 +138,15 @@ const Index = () => {
         setApproveAPIName("controlpanelmaster-create");
         setApproveAPImethod("POST");
         setApproveAPIEndPoint("/api/v1/controlpanelmaster");
-        resetForm()
-        setOpenModal(true)
+        setEditData({})
+        setOpenModal(true);
     }
     const handleCloseModal = () => {
-        resetForm()
-        setEditData({})
         setOpenModal(false)
-        setErrorName({ isError: false, message: '' })
-        setErrorIp({ isError: false, message: '' })
-        setErrorPort({ isError: false, message: '' })
+        setEditData({})
+        // setErrorName({ isError: false, message: '' })
+        // setErrorIp({ isError: false, message: '' })
+        // setErrorPort({ isError: false, message: '' })
     }
     const applyValidation = () => {
         console.log(name.trim().length,)
@@ -192,12 +206,13 @@ const Index = () => {
         setOpenModalApprove(false);
     };
     const resetForm = () => {
-        setName('')
-        setIp('')
-        setPort('')
-        setErrorName({ isError: false, message: '' })
-        setErrorIp({ isError: false, message: '' })
-        setErrorPort({ isError: false, message: '' })
+        // setName('')
+        // setIp('')
+        // setPort('')
+        // setErrorName({ isError: false, message: '' })
+        // setErrorIp({ isError: false, message: '' })
+        // setErrorPort({ isError: false, message: '' })
+        setEditData({})
     }
     const resetEditForm = () => {
         setName('')
@@ -207,7 +222,10 @@ const Index = () => {
         setErrorIp({ isError: false, message: '' })
         setErrorPort({ isError: false, message: '' })
     }
-    const handleSubmitForm = async () => {
+    const handleSubmitForm = async (data) => {
+        console.log('data',data)
+        setFormData(data)
+
         if (editData?.id) {
             setApproveAPIName("controlpanelmaster-update");
             setApproveAPImethod("PUT");
@@ -217,17 +235,20 @@ const Index = () => {
             setApproveAPImethod("POST");
             setApproveAPIEndPoint("/api/v1/controlpanelmaster");
         }
-        applyValidation();
-        const validate = checkValidate();
-        if (validate) {
-            return;
-        }
+        // applyValidation();
+        // const validate = checkValidate();
+        // if (validate) {
+        //     return;
+        // }
         if (config?.config?.esign_status) {
             setAuthModalOpen(true);
             return;
         }
         const esign_status = "approved";
-        editData?.id ? editControlPanelMaster() : addControlPanelMaster(esign_status);
+        console.log("data",formData)
+        setPendingAction(editData?.id ? "edit" : "add");
+
+        // editData?.id ? editControlPanelMaster() : addControlPanelMaster(esign_status);
     };
     const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
         console.log("handleAuthResult 01", isAuthenticated, isApprover, esignStatus, user);
@@ -316,13 +337,15 @@ const Index = () => {
     }
     const addControlPanelMaster = async (esign_status, remarks) => {
         try {
-            const data = { name, ip, port };
+
+            console.log("formData",formData)
+            const data = { name:formData.name, ip:formData.ip, port:formData.port  };
 
             const auditlogRemark = remarks
             const audit_log = config?.config?.audit_logs ? {
                 "audit_log": true,
                 "performed_action": "add",
-                "remarks": auditlogRemark?.length > 0 ? auditlogRemark : `control panel master added - ${name}`,
+                "remarks": auditlogRemark?.length > 0 ? auditlogRemark : `control panel master added - ${formData.name}`,
             } : {
                 "audit_log": false,
                 "performed_action": "none",
@@ -338,7 +361,7 @@ const Index = () => {
                 setOpenSnackbar(true)
                 setAlertData({ ...alertData, type: 'success', message: 'Control panel master added successfully' })
                 getData()
-                resetForm()
+                setEditData({})
             } else {
                 setOpenSnackbar(true)
                 setAlertData({ ...alertData, type: 'error', message: res.data?.message })
@@ -384,7 +407,7 @@ const Index = () => {
             if (res.data.success) {
                 setOpenSnackbar(true)
                 setAlertData({ ...alertData, type: 'success', message: 'Control panel master updated successfully' })
-                resetForm()
+                setEditData({})
                 getData()
             } else {
                 setOpenSnackbar(true)
@@ -410,13 +433,13 @@ const Index = () => {
         setTempSearchVal(e.target.value.toLowerCase())
     }
     const handleUpdate = item => {
-        resetForm()
-        setOpenModal(true)
-        setEditData(item)
+        setEditData(item);
+        // setFormData({...FormData, name: formData.name,  // Set a default value for name
+        //     ip:formData.ip,     // Set a default IP
+        //     port: formData.ip,});
+        setOpenModal(true);
 
-        setName(item.name)
-        setIp(item.ip)
-        setPort(item.port)
+        
     }
     const handleSortByName = () => {
         const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
@@ -623,7 +646,7 @@ const Index = () => {
                 </Grid2>
             </Grid2>
             <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-            <Modal
+            {/* <Modal
                 open={openModal}
                 onClose={handleCloseModal}
                 aria-labelledby='modal-modal-title'
@@ -727,8 +750,13 @@ const Index = () => {
                         </Button>
                     </Grid2>
                 </Box>
-            </Modal>
-            <AuthModal
+            </Modal> */}
+<ControlPanelModal
+                openModal={openModal}
+                handleCloseModal={handleCloseModal}
+                editData={editData}
+                handleSubmitForm={handleSubmitForm}
+            />            <AuthModal
                 open={authModalOpen}
                 handleClose={handleAuthModalClose}
                 approveAPIName={approveAPIName}

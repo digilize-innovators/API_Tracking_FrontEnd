@@ -63,6 +63,7 @@ const Index = () => {
   const [auditLogMark, setAuditLogMark] = useState('');
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
   const [openModalApprove, setOpenModalApprove] = useState(false);
+ const [pendingAction, setPendingAction] = useState(null);
   const [formData,setFormData]=useState({})
   const apiAccess = useApiAccess(
     "user-create",
@@ -76,6 +77,18 @@ const Index = () => {
       setUserDataPdf(data);
       return () => { }
     }, [])
+
+     useEffect(() => {
+            if (formData && pendingAction) {
+                const esign_status = "approved";
+                if (pendingAction === "edit") {
+                  editUser() 
+                } else {
+                  addUser(esign_status);
+                }
+                setPendingAction(null);
+            }
+        }, [formData, pendingAction]);
 
   useEffect(() => {
     getDepartments()
@@ -96,7 +109,7 @@ const Index = () => {
      tableHeader: ['Sr.No.', 'User Id', 'User Name', 'Department Name', 'Designation Name', 'Email', 'Status', 'E-Sign'],
      tableHeaderText: 'User Master Report',
      tableBodyText: 'User Data',
-     departmentFilter:departmentFilter,
+     Filter:['department',departmentFilter],
      filename:"UserMaster"
    }), [departmentFilter]);
   useEffect(() => {
@@ -221,116 +234,12 @@ const Index = () => {
     resetForm()
     setOpenModal(false)
   }
-  const applyValidation = () => {
-    const MAX_LENGTH = 50;
-    const PHONE_LENGTH = 10;
-    const MIN_PASSWORD_LENGTH = 8;
-    const setError = (setter, condition, errorMessage) => {
-      setter({ isError: condition, message: condition ? errorMessage : '' });
-    };
-    const validateLength = (value, maxLength,) => value.length >= maxLength ? true : false;
-    const validateEmpty = (value) => value === '' ? true : false;
-    const errors = {
-      userIdLength: `User id length should be less than ${MAX_LENGTH} characters`,
-      userIdInvalid: `User id cannot contain special symbols`,
-      
-      userIdEmpty: "User id can't be empty",
-      userNameInvalid: 'Username cannot contain special symbols',
-      userNameLength: `User name length should be less than ${MAX_LENGTH} characters`,
-      userNameEmpty: "User Name can't be empty",
-      emailInvalid: 'Email is not valid',
-      phoneInvalid: `Phone number must be ${PHONE_LENGTH} digits`,
-      phoneContainsAlphabets: 'Phone number cannot contain alphabets',
-      departmentIdEmpty: 'Department Id cannot be empty',
-      designationIdEmpty: 'Designation Id cannot be empty',
-      locationIdEmpty: 'Location Id cannot be empty',
-      passwordShort: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
-      passwordInvalid: 'Password must contain at least 1 uppercase, 1 lowercase, 1 digit, and 1 special character (@#$%^&*)',
-    };
-    !userId ? setError(setErrorUserId, validateEmpty(userId), errors.userIdEmpty) : setError(setErrorUserId, validateLength(userId, MAX_LENGTH), errors.userIdLength);
-    !userName ? setError(setErrorUserName, validateEmpty(userName), errors.userNameEmpty) : setError(setErrorUserName, validateLength(userName, MAX_LENGTH), errors.userNameLength);
-    setError(setErrorUserId, (!(/^[a-zA-Z0-9]+\s*$/.test(userId))), errors.userIdInvalid);
-     setError(setErrorUserName, (!(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/.test(userName))), errors.userNameInvalid);
-    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-    setError(setErrorEmail, !emailRegex.test(email), errors.emailInvalid);
-    setError(
-      setErrorPhoneNumber,
-      phoneNumber.length !== PHONE_LENGTH || !/^\d+$/.test(phoneNumber),
-      phoneNumber.length !== PHONE_LENGTH ? errors.phoneInvalid : errors.phoneContainsAlphabets
-    );
-    setError(setErrorDepartmentId, validateEmpty(departmentId), errors.departmentIdEmpty);
-    setError(setErrorDesignationId, validateEmpty(designationId), errors.designationIdEmpty);
-    setError(setErrorLocationId, validateEmpty(locationId), errors.locationIdEmpty);
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@#$%^&*])[A-Za-z\d@#$%^&*()\-_=+]{8,}$/;
-    setError(
-      setErrorPassword,
-      password?.length < MIN_PASSWORD_LENGTH || !passwordRegex.test(password),
-      password?.length < MIN_PASSWORD_LENGTH ? errors.passwordShort : errors.passwordInvalid
-    );
-  };
-  const checkValidate = () => {
-    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-    const phoneRegex = /^\d{10}$/;
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@#$%^&*])[A-Za-z\d@#$%^&*()\-_=+]{8,}$/;
-    const isInvalid =
-      userId.length >= 50 || !userId ||
-      userName.length >= 50 || !userName ||
-      !(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/.test(userName)) ||!(/^[a-zA-Z0-9]+\s*$/.test(userId)) ||
-      !emailRegex.test(email) ||
-      !phoneRegex.test(phoneNumber) ||
-      !departmentId || !designationId || !locationId ||
-      !password || password.length < 8 || !passwordRegex.test(password);
-    return !isInvalid;
-  };
+ 
   const resetForm = () => {
-    // setUserId('')
-
-    // setUserName('')
-    // setEmail('')
-    // setPhoneNumber('')
-    // setPassword('')
-    // setDepartmentId('')
-    // setDesignationId('')
-    // setLocationId('')
-    // setIsEnabled(true)
-    // setErrorUserId({ isError: false, message: '' })
-    // setErrorUserName({ isError: false, message: '' })
-    // setErrorEmail({ isError: false, message: '' })
-    // setErrorPhoneNumber({ isError: false, message: '' })
-    // setErrorPassword({ isError: false, message: '' })
-    // setErrorDepartmentId({ isError: false, message: '' })
-    // setErrorDesignationId({ isError: false, message: '' })
-    // setErrorLocationId({ isError: false, message: '' })
+    
     setEditData({})
-    // setAllDesignation([])
     setProfilePhoto('/images/avatars/1.png')
   }
-  // const resetEditForm = () => {
-  //   console.log('REset edit field')
-  //   setEmail('')
-  //   setPhoneNumber('')
-  //   setDepartmentId('')
-  //   setDesignationId('')
-  //   setLocationId('')
-  //   setIsEnabled(true)
-  //   setErrorUserId({ isError: false, message: '' })
-  //   setErrorUserName({ isError: false, message: '' })
-  //   setErrorEmail({ isError: false, message: '' })
-  //   setErrorPhoneNumber({ isError: false, message: '' })
-  //   setErrorPassword({ isError: false, message: '' })
-  //   setErrorDepartmentId({ isError: false, message: '' })
-  //   setErrorDesignationId({ isError: false, message: '' })
-  //   setErrorLocationId({ isError: false, message: '' })
-  //   setEditData(prev => ({
-  //     ...prev,
-  //     email: '',
-  //     phone_number: '',
-  //     user_location_id: '',
-  //     user_department_id: '',
-  //     user_designation_id: '',
-  //     profile_photo: ''
-  //   }))
-  // }
   const handleSubmitForm = async (data) => {
     console.log("data",data)
     setFormData(data)
@@ -344,18 +253,12 @@ const Index = () => {
       approveAPImethod:"POST",
       approveAPIEndPoint:"/api/v1/user"
     })
-    // applyValidation();
-
-    // const isValid = checkValidate();
-    // if (!isValid) {
-    //   return true;
-    // }
+    
     if (config?.config?.esign_status) {
       setAuthModalOpen(true);
       return;
     }
-    const esign_status = "approved";
-    isEdit ? editUser() : addUser(esign_status);
+    setPendingAction(editData?.id ? "edit" : "add");
   };
   const addUser = async (esign_status, remarks) => {
     const uploadRes = await uploadUserImage();
@@ -379,7 +282,7 @@ const Index = () => {
       const audit_log = config?.config?.audit_logs ? {
         "audit_log": true,
         "performed_action": "add",
-        "remarks": auditlogRemark?.length > 0 ? auditlogRemark : `user added - ${userName}`,
+        "remarks": auditlogRemark?.length > 0 ? auditlogRemark : `user added - ${formData.userName}`,
       } : {
         "audit_log": false,
         "performed_action": "none",
@@ -443,7 +346,7 @@ const Index = () => {
         audit_log = {
           "audit_log": true,
           "performed_action": "edit",
-          "remarks": auditlogRemark > 0 ? auditlogRemark : `user edited - ${userName}`,
+          "remarks": auditlogRemark > 0 ? auditlogRemark : `user edited - ${formData.userName}`,
         };
       } else {
         audit_log = {

@@ -1,5 +1,5 @@
 'use-client'
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import Box from '@mui/material/Box'
 import Grid2 from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
@@ -11,8 +11,6 @@ import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import Head from 'next/head'
 import { LocalizationProvider, StaticDateTimePicker } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -24,18 +22,17 @@ import { useRouter } from 'next/router'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken';
-import SearchBar from 'src/components/SearchBarComponent'
-import { footerContent } from 'src/utils/footerContentPdf';
-import { headerContentFix } from 'src/utils/headerContentPdfFix';
+import CustomSearchBar from 'src/components/CustomSearchBar'
+import downloadPdf from 'src/utils/DownloadPdf'
 
 const Index = () => {
   const { settings } = useSettings()
-  const [tempSearchVal, setTempSearchVal] = useState('')
   const [startDate, setStartDate] = useState(null)
   const [endDate, setEndDate] = useState(null)
-  const [openSnackbar, setOpenSnackbar] = useState(false)
-  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' })
-  const [searchVal, setSearchVal] = useState('')
+  const [alertData, setAlertData] = useState({openSnackbar:false, type: '', message: '', variant: 'filled' })
+  const [tableHeaderData, setTableHeaderData] = useState({
+    searchVal: ''
+  });
   const [auditLogData, setAuditLogData] = useState([])
   const [totalCount, setTotalCount] = useState(0)
   const [sortDirection, setSortDirection] = useState('asc')
@@ -50,20 +47,35 @@ const Index = () => {
   const startPickerRef = useRef(null)
   const endPickerRef = useRef(null)
   const router = useRouter();
+  const tableBody = auditLogData.map((item, index) => [
+            index + 1, 
+            item.performed_action,
+            item.remarks,
+            item.user_name,
+            item.user_id,
+            item.performed_at
+          ]);
+          const tableData = useMemo(() => ({
+            tableHeader: ['Sr.No.', 'Action', 'Remarks', 'User Name', 'User ID', 'Timestamp'],
+            tableHeaderText: 'Audit Log Report',
+            tableBodyText: 'Audit Log Data',
+            filename:'Audit-log'
+          }), []);
   useEffect(() => {
     const data = getUserData()
     setUserDataPdf(data)
   }, [])
+
   useEffect(() => {
     getData()
-  }, [searchVal, startDate, endDate, page, rowsPerPage])
+  }, [tableHeaderData, startDate, endDate, page, rowsPerPage])
   const getData = async () => {
     setIsLoading(true)
     try {
       const params = new URLSearchParams({
         page: page + 1,
         limit: rowsPerPage === -1 ? -1 : rowsPerPage,
-        search: searchVal,
+        search: tableHeaderData.searchVal,
         startDate: startDate ? startDate.toISOString() : '',
         endDate: endDate ? endDate.toISOString() : ''
       })
@@ -80,21 +92,17 @@ const Index = () => {
       }
     } catch (error) {
       console.error('Error in fetching audit logs:', error)
-      setAlertData({ type: 'error', message: 'Error in fetching audit logs', variant: 'filled' })
-      setOpenSnackbar(true)
+      setAlertData({openSnackbar:true, type: 'error', message: 'Error in fetching audit logs', variant: 'filled' })
     } finally {
       setIsLoading(false)
     }
   }
   const closeSnackbar = () => {
-    setOpenSnackbar(false)
+    setAlertData({...alertData,openSnackbar:false})
   }
-  const handleSearch = () => {
-    setSearchVal(tempSearchVal.toLowerCase())
+  const handleSearch = (val) => {
+    setTableHeaderData({...tableHeaderData,searchVal:val.toLowerCase()})
     setPage(0)
-  }
-  const handleTempSearchValue = e => {
-    setTempSearchVal(e.target.value.toLowerCase())
   }
   const handleSortBy = property => {
     const isAsc = sortBy === property && sortDirection === 'asc'
@@ -102,8 +110,7 @@ const Index = () => {
     setSortBy(property)
   }
   const resetFilter = () => {
-    setSearchVal('')
-    setTempSearchVal('')
+    setTableHeaderData({...tableHeaderData,searchVal:""})
     setStartDate(null)
     setEndDate(null)
   }
@@ -115,67 +122,10 @@ const Index = () => {
     setRowsPerPage(newRowsPerPage)
     setPage(0)
   }
-  const downloadPdf = () => {
-    const doc = new jsPDF()
-    const headerContent = () => {
-      headerContentFix(doc, 'Audit Log Report');
 
-      if (searchVal) {
-        doc.setFontSize(10)
-        doc.text('Searched ' + `(Text : ${tempSearchVal} )`, 15, 25)
-      } else {
-        doc.setFontSize(10)
-        doc.text('Search' + '(N/A)', 15, 25)
-      }
-      doc.setFontSize(12).text('Audit Log Data', 15, 55)
-    }
-    const bodyContent = () => {
-      let currentPage = 1
-      let dataIndex = 0
-      const totalPages = Math.ceil(auditLogData.length / 25)
-      headerContent()
-      while (dataIndex < auditLogData.length) {
-        if (currentPage > 1) {
-          doc.addPage()
-        }
-
-        footerContent(currentPage, totalPages, userDataPdf, doc);
-
-        const body = auditLogData
-          .slice(dataIndex, dataIndex + 25)
-          .map((item, index) => [
-            index + 1,
-            item.performed_action,
-            item.remarks,
-            item.user_name,
-            item.user_id,
-            item.performed_at
-          ])
-        autoTable(doc, {
-          startY: currentPage === 1 ? 60 : 40,
-          styles: { halign: 'center' },
-          headStyles: { fontSize: 8, fillColor: [80, 189, 160] },
-          alternateRowStyles: { fillColor: [249, 250, 252] },
-          tableLineColor: [80, 189, 160],
-          tableLineWidth: 0.1,
-          head: [['Sr.No.', 'Action', 'Remarks', 'User Name', 'User ID', 'Timestamp']],
-          body: body,
-          columnWidth: 'wrap'
-        })
-        dataIndex += 25
-        currentPage++
-      }
-    }
-
-    bodyContent()
-    const currentDate = new Date()
-    const formattedDate = currentDate
-      .toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
-      .replace(/\//g, '-')
-    const formattedTime = currentDate.toLocaleTimeString('en-US', { hour12: false }).replace(/:/g, '-')
-    const fileName = `Audit-log_${formattedDate}_${formattedTime}.pdf`
-    doc.save(fileName)
-  }
+   const pdfDownload = () => {
+    downloadPdf(tableData,  tableHeaderData,tableBody,auditLogData,userDataPdf)
+   }
   useEffect(() => {
     const handleClickOutside = event => {
       if (startPickerRef.current && !startPickerRef.current.contains(event.target)) {
@@ -259,7 +209,7 @@ const Index = () => {
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <Box className='d-flex'>
                   <Box>
-                    <Button variant='contained' style={{ display: 'inline-flex' }} onClick={downloadPdf}>
+                    <Button variant='contained' style={{ display: 'inline-flex' }} onClick={pdfDownload}>
                       <Box style={{ display: 'flex', alignItems: 'baseline' }}>
                         <span>
                           <CiExport fontSize={20} />
@@ -275,11 +225,12 @@ const Index = () => {
                   </Box>
                 </Box>
                 <Box className='d-flex justify-content-between align-items-center '>
-                  <SearchBar
+                  {/* <SearchBar
                     searchValue={tempSearchVal}
                     handleSearchChange={handleTempSearchValue}
                     handleSearchClick={handleSearch}
-                  />
+                  /> */}
+                  <CustomSearchBar handleSearchClick={handleSearch}/>
                 </Box>
               </Box>
             </Grid2>
@@ -304,7 +255,7 @@ const Index = () => {
           </Box>
         </Grid2>
       </Grid2>
-      <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+      <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
       <AccessibilitySettings />
       <ChatbotComponent />
     </Box>

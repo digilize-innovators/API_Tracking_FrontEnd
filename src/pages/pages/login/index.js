@@ -1,4 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+
+
 import { useRouter } from 'next/router';
 import {
   Box,
@@ -10,11 +15,6 @@ import {
   styled,
   IconButton,
   Modal,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle
 } from '@mui/material';
 import MuiCard from '@mui/material/Card';
 import { Eye, EyeOff } from 'mdi-material-ui';
@@ -24,11 +24,13 @@ import BlankLayout from 'src/@core/layouts/BlankLayout';
 import FooterIllustrationsV1 from 'src/views/pages/auth/FooterIllustration';
 import { api } from 'src/utils/Rest-API.js';
 import { useAuth } from 'src/Context/AuthContext.js';
-import UserIcon from 'src/layouts/components/UserIcon.js';
 import { useLoading } from 'src/@core/hooks/useLoading.js';
 import SnackbarAlert from 'src/components/SnackbarAlert.js';
 import Head from 'next/head'
 import { useSettings } from 'src/@core/hooks/useSettings';
+import DialogBox from 'src/components/DialogBox';
+import PasswordResetModal from 'src/components/Modal/PasswordResetModal';
+import CustomTextField from 'src/components/CustomTextField';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   [theme.breakpoints.up('sm')]: { width: '28rem' }
@@ -54,16 +56,32 @@ const removeAuthToken = () => {
   Cookies.remove('screens');
 };
 const LoginPage = () => {
+
+  const Loginschema = yup.object().shape({
+    userId: yup.string().required('User ID cannot be empty'),
+    password: yup.string()
+      .min(8, 'Password must be at least 8 characters')
+      .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .matches(/\d/, 'Password must contain at least one number')
+      .matches(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character')
+      .required('Password is required'),
+  });
+ 
+  const { control, handleSubmit,reset } = useForm({
+    resolver: yupResolver(Loginschema),
+    defaultValues: { userId: '', password: '' },
+  });
   const [data, setData] = useState({ userId: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [userIdError, setUserIdError] = useState({ error: false, text: '' });
-  const [passwordError, setPasswordError] = useState({ error: false, text: '' });
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' });
+  // const [userIdError, setUserIdError] = useState({ error: false, text: '' });
+  // const [passwordError, setPasswordError] = useState({ error: false, text: '' });
+  // const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [alertData, setAlertData] = useState({ openSnackbar:false, type: '', message: '', variant: 'filled' });
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [openPasswordModal, setOpenPasswordModal] = useState(false);
-  const [passwords, setPasswords] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
-  const [errors, setErrors] = useState({})
+  // const [passwords, setPasswords] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+  // const [errors, setErrors] = useState({})
   const router = useRouter();
   const { login, setUserInfo } = useAuth();
   const { setIsLoading } = useLoading();
@@ -72,29 +90,21 @@ const LoginPage = () => {
   useEffect(() => {
     removeAuthToken();
   }, []);
-  const reset = () => {
-    setData({ userId: '', password: '' });
-    setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' })
-    setShowPassword(false);
-    setUserIdError({ error: false, text: '' });
-    setPasswordError({ error: false, text: '' });
-  };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    data.userId === ''
-      ? setUserIdError({ error: true, text: 'User ID cannot be empty' })
-      : setUserIdError({ error: false, text: '' });
-    data.password === ''
-      ? setPasswordError({ error: true, text: 'Password cannot be empty' })
-      : setPasswordError({ error: false, text: '' });
-    if (data.userId && data.password) {
+  
+  const showAlert = useCallback((message) => {
+    setAlertData({ openSnackbar: true, type: 'error', message, variant: 'filled' });
+}, [setAlertData]); 
+
+  
+  const onSubmit = async (data) => {
+    
       try {
+        setData({userId:data.userId,password:data.password})
         setIsLoading(true);
         const res = await api('/auth/login', data, 'post', false);
         console.log("Response of login: ", res.data)
         if (!res.data) {
-          setAlertData({ type: 'error', message: 'Unknown error occurred', variant: 'filled' });
-          setOpenSnackbar(true);
+          setAlertData({openSnackbar:true, type: 'error', message: 'Unknown error occurred', variant: 'filled' });
           setIsLoading(false);
           return;
         }
@@ -115,44 +125,46 @@ const LoginPage = () => {
         }
 
         switch (res.data.code) {
-          case 2002:
-            console.log('User not found');
-            setAlertData({ type: 'error', message: 'Invalid credentials', variant: 'filled' });
-            setOpenSnackbar(true);
-            break;
-          case 2010:
-            console.log('User disabled');
-            setAlertData({ type: 'error', message: 'User is disabled', variant: 'filled' });
-            setOpenSnackbar(true);
-            break;
-          case 2008:
-            console.log('Password does not match');
-            setAlertData({ type: 'error', message: 'Invalid credentials', variant: 'filled' });
-            setOpenSnackbar(true);
-            break;
-          case 2004:
-            console.log('User is already logged in');
-            setAlertData({ type: 'error', message: 'User is already logged in', variant: 'filled' });
-            setOpenConfirmDialog(true);
-            break;
-          case 401:
-            setAlertData({ type: 'error', message: 'Password expired, please reset your password', variant: 'filled' });
-            setOpenSnackbar(true);
-            setOpenPasswordModal(true);
-            break;
-          case 429:
-            setAlertData({ type: 'error', message: 'Too many login attempts, please try again later', variant: 'filled' });
-            setOpenSnackbar(true);
-            break;
-          case 418:
-            setAlertData({ type: 'error', message: `${res.data.message}`, variant: 'filled' });
-            setOpenSnackbar(true);
-            break;
-          default:
+
+     case 2002:
+     case 2008:
+        console.log('Invalid credentials');
+        showAlert('Invalid credentials');
+        break;
+    
+     case 2010:
+        console.log('User disabled');
+        showAlert('User is disabled');
+        break;
+
+     case 2004:
+        console.log('User is already logged in');
+        setAlertData({ openSnackbar: true, type: 'error', message: 'User is already logged in', variant: 'filled' });
+        setOpenConfirmDialog(true);
+        break;
+
+    case 401:
+        console.log('Password expired');
+        showAlert('Password expired, please reset your password');
+        setOpenPasswordModal(true);
+        break;
+
+    case 429:
+        console.log('Too many login attempts');
+        showAlert('Too many login attempts, please try again later');
+        break;
+
+    case 418:
+        console.log(res.data.message);
+        showAlert(res.data.message);
+        break;
+
+    
+       default:
             if (res.data.success) {
               setIsLoading(true);
-              setAlertData({ ...alertData, type: 'success', message: 'Login successful' });
-              setOpenSnackbar(true);
+              setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Login successful' });
+              // setOpenSnackbar(true);
               console.log("screens", res.data.data.screens);
               login(`Bearer ${res.data.data.token}`);
               Cookies.set('token', res.data.data.token);
@@ -163,21 +175,20 @@ const LoginPage = () => {
               setIsLoading(false);
               router.push('/home-screen');
             } else {
-              setAlertData({ type: 'error', message: res.data.message || 'Login failed', variant: 'filled' });
-              setOpenSnackbar(true);
+              setAlertData({openSnackbar:true, type: 'error', message: res.data.message || 'Login failed', variant: 'filled' });
             }
         }
         setIsLoading(false);
       } catch (e) {
         console.error('Error message', e);
-        setAlertData({ type: 'error', message: 'An error occurred. Please try again.', variant: 'filled' });
-        setOpenSnackbar(true);
+        setAlertData({openSnackbar:true, type: 'error', message: 'An error occurred. Please try again.', variant: 'filled' });
+        
         reset();
         setIsLoading(false);
       }
-    }
+    // }
   };
-  const handleConfirmLogin = async () => {
+  const handleConfirmLogin = useCallback(async () => {
     try {
       setIsLoading(true);``
       data.forceFully = true;
@@ -199,8 +210,8 @@ const LoginPage = () => {
         });
       }
       if (res.data.success) {
-        setAlertData({ ...alertData, type: 'success', message: 'Login successful' });
-        setOpenSnackbar(true);
+        setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Login successful' });
+        // setOpenSnackbar(true);
         login(`Bearer ${res.data.data.token}`);
         Cookies.set('token', res.data.data.token);
         Cookies.set('screens', JSON.stringify(res.data.data.screens));
@@ -209,8 +220,8 @@ const LoginPage = () => {
         setIsLoading(false);
         router.push('/home-screen');
       } else {
-        setAlertData({ type: 'error', message: res.data.message || 'Login failed', variant: 'filled' });
-        setOpenSnackbar(true);
+        setAlertData({ openSnackbar:true ,type: 'error', message: res.data.message || 'Login failed', variant: 'filled' });
+        // setOpenSnackbar(true);
       }
       setOpenConfirmDialog(false);
       setIsLoading(false);
@@ -218,53 +229,15 @@ const LoginPage = () => {
       console.log('Error during logout all: ', e);
       setIsLoading(false);
     }
-  };
-  const handlePasswordChangeSubmit = async (e) => {
-    e.preventDefault();
-    let errors = {};
-    if (passwords.newPassword !== passwords.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
-    }
-    const passwordRequirements = [
-      { test: passwords.newPassword.length >= 8, message: 'be at least 8 characters' },
-      { test: /[A-Z]/.test(passwords.newPassword), message: 'contain at least one uppercase letter' },
-      { test: /[a-z]/.test(passwords.newPassword), message: 'contain at least one lowercase letter' },
-      { test: /\d/.test(passwords.newPassword), message: 'contain at least one number' },
-      { test: /[!@#$%^&*(),.?":{}|<>]/.test(passwords.newPassword), message: 'contain at least one special character' },
-    ];
-    const errorMessages = passwordRequirements.filter(req => !req.test).map(req => req.message);
-    if (errorMessages.length > 0) {
-      errors.newPassword = `Password must: ${errorMessages.join(', ')}`;
-    }
-    if (Object.keys(errors).length > 0) {
-      setErrors(errors);
-      return;
-    }
-    setErrors({});
-    const password_data = {
-      userId: data.userId,
-      oldPassword: passwords.oldPassword,
-      newPassword: passwords.newPassword,
-    };
-    console.log("password_data", password_data);
-    const res = await api('/auth/reset-password', password_data, 'post', false);
-    if (res.data.success) {
-      setAlertData({ type: 'success', message: 'Reset password successful', variant: 'filled' });
-      setOpenSnackbar(true);
-      reset();
-    } else {
-      setAlertData({ type: 'error', message: res.data.message || 'Reset password failed', variant: 'filled' });
-      setOpenSnackbar(true);
-    }
-    setOpenPasswordModal(false);
-    reset();
-  };
-  const closeSnackbar = () => {
-    setOpenSnackbar(false);
-  };
+  },[openConfirmDialog]);
+  
+  
+  const closeSnackbar = useCallback(() => setAlertData({...alertData,openSnackbar:false}), []);
+
   return (
     <>
       <Head>
+        {console.log('hello')}
         <title>Login</title>
       </Head>
       <Box className='content-center'>
@@ -283,122 +256,30 @@ const LoginPage = () => {
               component="form"
               noValidate
               autoComplete="off"
-              onSubmit={handleSubmit}
-            >
-              <TextField
-                label='User ID'
-                value={data.userId}
-                id='auth-login-userId'
-                onChange={e => setData({ ...data, userId: e.target.value })}
-                required
-                error={userIdError.error}
-                helperText={userIdError.text}
-                fullWidth
-                variant='outlined'
-                sx={{ marginBottom: 4 }}
-              />
-              <FormControl fullWidth>
-                <TextField
-                  label='Password'
-                  value={data.password}
-                  id='auth-login-password'
-                  onChange={e => setData({ ...data, password: e.target.value })}
-                  required
-                  error={passwordError.error}
-                  helperText={passwordError.text}
-                  type={showPassword ? 'text' : 'password'}
-                  fullWidth
-                  variant='outlined'
-                />
-                <IconButton
-                  style={{ position: 'absolute', top: '8px', right: '19px', cursor: 'pointer' }}
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label='toggle visibility'
-                >
-                  {showPassword ? <UserIcon icon={Eye} /> : <UserIcon icon={EyeOff} />}
-                </IconButton>
-              </FormControl>
+              onSubmit={handleSubmit((onSubmit))}
+            >             
+              <CustomTextField  name="userId"label="User ID" control={control}   />
+              <CustomTextField  name="password"label="password" type="password" control={control}   />
               <Button fullWidth size='large' variant='contained' sx={{ marginTop: '10px' }} type='submit'>
                 Login
               </Button>
             </Box>
           </CardContent>
         </Card>
-        <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+        <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
         <FooterIllustrationsV1 />
       </Box>
-      <Dialog
-        open={openConfirmDialog}
-        onClose={() => setOpenConfirmDialog(false)}
-        aria-labelledby='confirm-dialog-title'
-        aria-describedby='confirm-dialog-description'
-      >
-        <DialogTitle id='confirm-dialog-title'>Confirm Logout</DialogTitle>
-        <DialogContent>
-          <DialogContentText id='confirm-dialog-description'>
-            You are already logged in on another device. Do you want to log out from all devices and log in here?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenConfirmDialog(false)}>Cancel</Button>
-          <Button onClick={handleConfirmLogin} >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Modal
+      <DialogBox open={openConfirmDialog} 
+      onClose={useCallback(() => setOpenConfirmDialog(false),[])} 
+      onConfirm={handleConfirmLogin} />
+
+      <PasswordResetModal
         open={openPasswordModal}
         onClose={() => setOpenPasswordModal(false)}
-        aria-labelledby='password-modal-title'
-        aria-describedby='password-modal-description'
-      >
-        <Box sx={{ ...style, width: 400 }}>
-          <Typography id='password-modal-title' variant='subtitle1' component='h2' sx={{ marginBottom: "5px" }}>
-            Your Password expired - Change Password
-          </Typography>
-          <Box component='form' noValidate autoComplete='off' onSubmit={handlePasswordChangeSubmit}>
-            <TextField
-              label='Old Password'
-              value={passwords.oldPassword}
-              onChange={e => setPasswords({ ...passwords, oldPassword: e.target.value })}
-              required
-              fullWidth
-              variant='outlined'
-              sx={{ marginBottom: 4 }}
-              type='password'
-              error={!!errors.oldPassword}
-              helperText={errors.oldPassword}
-            />
-            <TextField
-              label='New Password'
-              value={passwords.newPassword}
-              onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
-              required
-              fullWidth
-              variant='outlined'
-              sx={{ marginBottom: 4 }}
-              type='password'
-              error={!!errors.newPassword}
-              helperText={errors.newPassword}
-            />
-            <TextField
-              label='Confirm Password'
-              value={passwords.confirmPassword}
-              onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-              required
-              fullWidth
-              variant='outlined'
-              sx={{ marginBottom: 4 }}
-              type='password'
-              error={!!errors.confirmPassword}
-              helperText={errors.confirmPassword}
-            />
-            <Button fullWidth size='large' variant='contained' type='submit'>
-              Update Password
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
+        userId={data.userId} 
+        setAlertData
+        />
+      
     </>
   );
 };

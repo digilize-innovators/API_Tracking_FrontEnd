@@ -386,14 +386,10 @@ const Index = () => {
       searchBarRef.current.resetSearch();
     }
     setTableHeaderData({ ...tableHeaderData, esignStatus: "" ,searchVal:""})
-    // setSearchVal('');
   };
   const handleSearch = (val) => {
     setTableHeaderData({ ...tableHeaderData,searchVal:val.toLowerCase()});
     setPage(0);
-  };
-  const handleTempSearchValue = e => {
-    setTempSearchVal(e.target.value.toLowerCase());
   };
   const handleChangePage = (event, newPage) => {
     setPage(newPage);

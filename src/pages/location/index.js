@@ -8,8 +8,6 @@ import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import Head from 'next/head'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { useRouter } from 'next/router'
@@ -19,15 +17,13 @@ import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { getTokenValues } from 'src/utils/tokenUtils';
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
-import { footerContent } from 'src/utils/footerContentPdf';
-import { headerContentFix } from 'src/utils/headerContentPdfFix';
+
 import { validateToken } from 'src/utils/ValidateToken'
 import LocationModal from 'src/components/Modal/LocationModal'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import downloadPdf from 'src/utils/DownloadPdf'
 
-let render = 1;
 
 const Index = () => {
   const router = useRouter()
@@ -57,6 +53,9 @@ const Index = () => {
       esignStatus: '',
       searchVal: ''
     });
+    const [pendingAction, setPendingAction] = useState(null);
+    const searchBarRef = useRef(null);
+
   const apiAccess = useApiAccess(
     "location-create",
     "location-update",
@@ -69,6 +68,20 @@ const Index = () => {
     setUserDataPdf(data)
     return () => { }
   }, [])
+
+
+  useEffect(() => {
+    if (formData && pendingAction) {
+        const esign_status = "approved";
+        if (pendingAction === "edit") {
+          editLocation() ;
+        } else {
+          addLocation(esign_status);
+        }
+        setPendingAction(null);
+    }
+}, [formData, pendingAction]);
+
   const tableBody = locationData.map((item, index) => [
       index + 1, 
       item.location_id,
@@ -129,11 +142,13 @@ const Index = () => {
       approveAPIEndPoint:"/api/v1/location"
     })
      setEditData({})
+     setFormData({})
      setOpenModal(true)
 
   }
   const handleCloseModal = () => {
     setOpenModal(false)
+    setFormData({})
     setEditData({})
   }
 
@@ -145,8 +160,11 @@ const Index = () => {
   
   const handleSubmitForm = async (data) => {
     console.log("handle form data ", data);
-    setFormData(data);
-    console.log("afterSubmit",formData)
+    setFormData((prevData) => {
+      const updatedData = { ...prevData, ...data };
+      return updatedData
+    })   
+   console.log("afterSubmit",formData)
     if (editData?.location_id) {;
       setApproveAPI({
         approveAPIName:"location-update",
@@ -164,7 +182,8 @@ const Index = () => {
       setAuthModalOpen(true);
       return;
     }
-    editData?.location_id ? editLocation() : addLocation("approved");
+       setPendingAction(editData?.id ? "edit" : "add");
+    // editData?.location_id ? editLocation() : addLocation("approved");
   };
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     const resetState = () => {
@@ -302,6 +321,7 @@ const Index = () => {
   const editLocation = async (esign_status, remarks) => {
     try {
       const data = { ...formData };
+      console.log(data)
       delete data.locationId;
       const auditlogRemark = remarks
       let audit_log;
@@ -349,11 +369,11 @@ const Index = () => {
   // }
   const handleUpdate = item => {
     
-    setFormData({...FormData, locationId: item.location_id ,
-      locationName: item.location_name ,
-      mfgLicenceNo:item.mfg_licence_no, 
-      mfgName: item.mfg_name ,
-      address: item.address });
+    // setFormData({...FormData, locationId: item.location_id ,
+    //   locationName: item.location_name ,
+    //   mfgLicenceNo:item.mfg_licence_no, 
+    //   mfgName: item.mfg_name ,
+    //   address: item.address });
     setEditData(item)
     setOpenModal(true)
     
@@ -432,8 +452,11 @@ const Index = () => {
     const isAsc = sortBy === property && sortDirection === 'asc'
     setSortDirection(isAsc ? 'desc' : 'asc')
     setSortBy(property)
-  }
+  }  
   const resetFilter = () => {
+  if (searchBarRef.current) {
+            searchBarRef.current.resetSearch(); // Call the reset method in the child
+        }
     setTableHeaderData({...tableHeaderData,esignStatus:'',searchVal:""})
   }
   const handleChangePage = (event, newPage) => {
@@ -444,81 +467,7 @@ const Index = () => {
     setRowsPerPage(newRowsPerPage)
     setPage(0)
   }
-  // const downloadPdf = () => {
-  //   console.log('clicked on download btn')
-  //   const doc = new jsPDF()
-  //   const headerContent = () => {
-  //     headerContentFix(doc, 'Location Master Report');
-
-  //     if (searchVal) {
-  //       doc.setFontSize(10)
-  //       doc.text('Search : ' + `${tempSearchVal}`, 15, 25)
-  //     } else {
-  //       doc.setFontSize(10)
-  //       doc.text('Search : ' + '__', 15, 25)
-  //     }
-  //     doc.text('Filters :\n', 15, 30)
-  //     if (eSignStatus) {
-  //       doc.setFontSize(10)
-  //       doc.text('E-Sign : ' + `${eSignStatus}`, 20, 35)
-  //     } else {
-  //       doc.setFontSize(10)
-  //       doc.text('E-Sign : ' + '__', 20, 35)
-  //     }
-  //     doc.setFontSize(12)
-  //     doc.text('Location Data', 15, 55)
-  //   }
-  //   const bodyContent = () => {
-  //     let currentPage = 1
-  //     let dataIndex = 0
-  //     const totalPages = Math.ceil(locationData.length / 25)
-  //     headerContent()
-  //     while (dataIndex < locationData.length) {
-  //       if (currentPage > 1) {
-  //         doc.addPage()
-  //       }
-  //       footerContent(currentPage, totalPages, userDataPdf, doc);
-
-  //       const body = locationData
-  //         .slice(dataIndex, dataIndex + 25)
-  //         .map((item, index) => [
-  //           dataIndex + index + 1,
-  //           item.location_id,
-  //           item.location_name,
-  //           item.mfg_licence_no,
-  //           item.mfg_name,
-  //           item.address,
-  //           item.esign_status
-  //         ]);
-  //       autoTable(doc, {
-  //         startY: currentPage === 1 ? 60 : 40,
-  //         styles: { halign: 'center' },
-  //         headStyles: {
-  //           fontSize: 8,
-  //           fillColor: [80, 189, 160]
-  //         },
-  //         alternateRowStyles: { fillColor: [249, 250, 252] },
-  //         tableLineColor: [80, 189, 160],
-  //         tableLineWidth: 0.1,
-  //         head: [['Sr.No.', 'Id', 'Name', 'Mfg.Licence No.', 'Mfg Name', 'Address', 'E-Sign']],
-  //         body: body,
-  //         columnWidth: 'wrap'
-  //       })
-  //       dataIndex += 25
-  //       currentPage++
-  //     }
-  //   }
-
-  //   bodyContent()
-  //   const currentDate = new Date()
-  //   const formattedDate = currentDate
-  //     .toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  //     .replace(/\//g, '-')
-  //   const formattedTime = currentDate.toLocaleTimeString('en-US', { hour12: false }).replace(/:/g, '-')
-  //   const fileName = `Location_${formattedDate}_${formattedTime}.pdf`
-  //   doc.save(fileName)
-  // }
-  const handleAuthModalOpen = () => {
+    const handleAuthModalOpen = () => {
     console.log("OPen auth model");
     setApproveAPI({
       approveAPIName:"location-approve",
@@ -545,6 +494,7 @@ const Index = () => {
   }
   return (
     <Box padding={4}>
+      {console.log('config',config?.config?.esign_status)}
       <Head>
         <title>Location Master</title>
       </Head>
@@ -561,8 +511,9 @@ const Index = () => {
               <Grid2 item xs={12}>
                 <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
                   {/* <EsignStatusFilter esignStatus={eSignStatus} setEsignStatus={setESignStatus} /> */}
+                  {(config?.config?.esign_status) &&
                   <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
-
+                  }
                 </Box>
                 <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                   
@@ -573,7 +524,7 @@ const Index = () => {
                       handleSearchChange={handleTempSearchValue}
                       handleSearchClick={handleSearch}
                     /> */}
-             <CustomSearchBar handleSearchClick={handleSearch} />
+             <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch}  />
                     
                     {
                       apiAccess.addApiAccess && (

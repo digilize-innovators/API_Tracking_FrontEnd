@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useLayoutEffect } from 'react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Select from '@mui/material/Select'
@@ -19,7 +19,7 @@ import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken'
-import { decodeAndSetConfig } from 'src/utils/tokenUtils'
+import { decodeAndSetConfig, getTokenValues } from 'src/utils/tokenUtils'
 import Head from 'next/head'
 import { Grid2, Typography } from '@mui/material'
 
@@ -32,26 +32,26 @@ const BatchReport = () => {
   const [isReportGenerated, setIsReportGenerated] = useState(false)
   const [report, setReport] = useState(null)
   const router = useRouter()
-  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' })
-  const [openSnackbar, setOpenSnackbar] = useState(false)
+  const [alertData, setAlertData] = useState({ openSnackbar:false,type: '', message: '', variant: 'filled' })
   const { getUserData, removeAuthToken } = useAuth()
   const { setIsLoading } = useLoading()
   const [config, setConfig] = useState(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [esignModalForCreator, setEsignModalForCreator] = useState(true)
-  const [approveAPIName, setApproveAPIName] = useState('')
-  const [approveAPImethod, setApproveAPImethod] = useState('')
-  const [approveAPIEndPoint, setApproveAPIEndPoint] = useState('')
+ const [approveAPI,setApproveAPI]=useState({ approveAPIName:'',approveAPImethod:'',approveAPIEndPoint:''}) 
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [exportedBy, setExportedBy] = useState('')
   const [approvedBy, setApprovedBy] = useState('')
 
-  useEffect(() => {
-    fetchProducts()
-    decodeAndSetConfig(setConfig)
-    let data = getUserData()
-    setExportedBy(data)
-  }, [])
+  useLayoutEffect(() => {
+        let data = getUserData();
+        const decodedToken = getTokenValues();
+        setConfig(decodedToken);
+        setExportedBy(data);
+        fetchProducts()
+        return () => { }
+      }, [])
+      
   useEffect(() => {
     if (selectedProduct) {
       getAllBatches()
@@ -76,8 +76,7 @@ const BatchReport = () => {
     } catch (error) {
       setIsLoading(false)
       console.error('Error fetching products:', error)
-      setAlertData({ type: 'error', message: 'Failed to fetch products', variant: 'filled' })
-      setOpenSnackbar(true)
+      setAlertData({openSnackbar:true, type: 'error', message: 'Failed to fetch products', variant: 'filled' })
     }
   }
   const getAllBatches = async () => {
@@ -93,8 +92,7 @@ const BatchReport = () => {
         setIsLoading(false)
         console.log('Error to get all batches ', res.data)
         setBatches([])
-        setAlertData({ type: 'warning', message: 'No batches found for selected product.', variant: 'filled' })
-        setOpenSnackbar(true)
+        setAlertData({openSnackbar:true, type: 'warning', message: 'No batches found for selected product.', variant: 'filled' })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
@@ -102,8 +100,7 @@ const BatchReport = () => {
       }
     } catch (error) {
       console.log('Error in get batches ', error)
-      setAlertData({ type: 'error', message: 'Failed to fetch batches', variant: 'filled' })
-      setOpenSnackbar(true)
+      setAlertData({openSnackbar:true, type: 'error', message: 'Failed to fetch batches', variant: 'filled' })
     } finally {
       setIsLoading(false)
     }
@@ -129,9 +126,9 @@ const BatchReport = () => {
       setAlertData({
         type: 'warning',
         message: 'Please select both product,batch,Report Format before generating report.',
-        variant: 'filled'
+        variant: 'filled',
+        openSnackbar:true,
       })
-      setOpenSnackbar(true)
       return
     }
     try {
@@ -147,36 +144,40 @@ const BatchReport = () => {
       )
       console.log('BAtch report res ', response.data.data.batch)
       if (response.data.success && response.data.data === null) {
-        setAlertData({ type: 'error', message: response.data.message, variant: 'filled' })
-        setOpenSnackbar(true)
+        setAlertData({ openSnackbar:true,type: 'error', message: response.data.message, variant: 'filled' })
       }
       if (response.data.success && response.data.data !== null) {
         setReport(response.data.data)
         console.log(response.data.data.AggregationXml)
         setIsReportGenerated(true)
-        setAlertData({ type: 'success', message: 'Report generated successfully.', variant: 'filled' })
-        setOpenSnackbar(true)
+        setAlertData({openSnackbar:true, type: 'success', message: 'Report generated successfully.', variant: 'filled' })
       }
       if (!response.data.success) {
-        setAlertData({ type: 'error', message: 'Failed to generate report.', variant: 'filled' })
-        setOpenSnackbar(true)
+        setAlertData({openSnackbar:true, type: 'error', message: 'Failed to generate report.', variant: 'filled' })
       }
     } catch (error) {
+      console.log(error)
       console.error('Error generating report:', error)
-      setAlertData({ type: 'error', message: 'Error generating report: ' + error.message, variant: 'filled' })
-      setOpenSnackbar(true)
+      setAlertData({openSnackbar:true, type: 'error', message: 'Error generating report: ' + error.message, variant: 'filled' })
     }
   }
   const handleDownloadReport = () => {
     setIsReportGenerated(false)
     if (esignModalForCreator) {
-      setApproveAPIName('batch-report-create')
-      setApproveAPImethod('POST')
-      setApproveAPIEndPoint('/api/v1/batch-report')
+     
+      setApproveAPI({
+        approveAPIName:"batch-report-create",
+        approveAPImethod:"POST",
+        approveAPIEndPoint:"/api/v1/batch-report"
+      })
+
     } else {
-      setApproveAPIName('batch-report-approve')
-      setApproveAPImethod('PATCH')
-      setApproveAPIEndPoint('/api/v1/batch-report')
+     
+      setApproveAPI({
+        approveAPIName:"batch-report-approve",
+        approveAPImethod:"PATCH",
+        approveAPIEndPoint:"/api/v1/batch-report"
+      })
     }
     if (config?.config?.esign_status) {
       setAuthModalOpen(true)
@@ -246,8 +247,7 @@ const BatchReport = () => {
       }
     }
     if (!AggregationFile) {
-      setAlertData({ type: 'warning', message: 'file Name not found', variant: 'filled' })
-      setOpenSnackbar(true)
+      setAlertData({openSnackbar:true, type: 'warning', message: 'file Name not found', variant: 'filled' })
       return
     }
 
@@ -318,8 +318,7 @@ const BatchReport = () => {
       }
 
       if (!BatchFileName) {
-        setAlertData({ type: 'warning', message: 'file Name not found', variant: 'filled' })
-        setOpenSnackbar(true)
+        setAlertData({openSnackbar:true, type: 'warning', message: 'file Name not found', variant: 'filled' })
 
         return
       }
@@ -398,8 +397,7 @@ const BatchReport = () => {
         }
       }
       if (!ProductFile) {
-        setAlertData({ type: 'warning', message: 'file Name not found', variant: 'filled' })
-        setOpenSnackbar(true)
+        setAlertData({openSnackbar:true, type: 'warning', message: 'file Name not found', variant: 'filled' })
 
         return
       }
@@ -448,9 +446,9 @@ const BatchReport = () => {
       setAlertData({
         type: 'warning',
         message: 'Please generate the report before downloading.',
-        variant: 'filled'
+        variant: 'filled',
+        openSnackbar:true
       })
-      setOpenSnackbar(true)
       return
     }
     const data = report
@@ -675,8 +673,7 @@ const BatchReport = () => {
     }
 
     if (!BatchRecordFile) {
-      setAlertData({ type: 'warning', message: 'file Name not found', variant: 'filled' })
-      setOpenSnackbar(true)
+      setAlertData({openSnackbar:true, type: 'warning', message: 'file Name not found', variant: 'filled' })
 
       return
     }
@@ -702,9 +699,9 @@ const BatchReport = () => {
       setAlertData({
         type: 'warning',
         message: 'Please generate the report before downloading.',
-        variant: 'filled'
+        variant: 'filled',
+        openSnackbar:true,
       })
-      setOpenSnackbar(true)
       return
     }
     const data = report
@@ -832,8 +829,7 @@ const BatchReport = () => {
     }
 
     if (!BatchSummaryFile) {
-      setAlertData({ type: 'warning', message: 'file Name not found', variant: 'filled' })
-      setOpenSnackbar(true)
+      setAlertData({openSnackbar:true, type: 'warning', message: 'file Name not found', variant: 'filled' })
 
       return
     }
@@ -862,14 +858,15 @@ const BatchReport = () => {
     console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
     console.log('handleAuthResult 02', config.userId, user.user_id)
     const resetState = () => {
-      setApproveAPIName('')
-      setApproveAPImethod('')
-      setApproveAPIEndPoint('')
+      setApproveAPI({
+        approveAPIName:"",
+        approveAPImethod:"",
+        approveAPIEndPoint:""
+      })
       setAuthModalOpen(false)
     }
     if (!isAuthenticated) {
-      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.' })
-      setOpenSnackbar(true)
+      setAlertData({openSnackbar:true, type: 'error', message: 'Authentication failed, Please try again.' })
       resetState()
       return
     }
@@ -942,9 +939,11 @@ const BatchReport = () => {
   }
   const handleAuthModalOpen = () => {
     console.log('OPen auth model')
-    setApproveAPIName('batch-report-approve')
-    setApproveAPImethod('PATCH')
-    setApproveAPIEndPoint('/api/v1/batch-report')
+    setApproveAPI({
+      approveAPIName:"batch-report-approve",
+      approveAPImethod:"PATCH",
+      approveAPIEndPoint:"/api/v1/batch-report"
+    })
     setAuthModalOpen(true)
     setEsignModalForCreator(true)
   }
@@ -1009,13 +1008,13 @@ const BatchReport = () => {
           Download Report
         </Button>
       </Box>
-      <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={() => setOpenSnackbar(false)} alertData={alertData} />
+      <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={() => setAlertData({...alertData,openSnackbar:false})} alertData={alertData} />
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}
-        approveAPIName={approveAPIName}
-        approveAPImethod={approveAPImethod}
-        approveAPIEndPoint={approveAPIEndPoint}
+        approveAPIName={approveAPI.approveAPIName}
+        approveAPImethod={approveAPI.approveAPImethod}
+        approveAPIEndPoint={approveAPI.approveAPIEndPoint}
         handleAuthResult={handleAuthResult}
         config={config}
         handleAuthModalOpen={handleAuthModalOpen}
