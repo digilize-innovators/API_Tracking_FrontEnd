@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState, Fragment ,useMemo, useEffect} from 'react';
 import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
@@ -19,6 +19,10 @@ import { getSortIcon } from 'src/utils/sortUtils';
 import { handleRowToggleHelper } from 'src/utils/rowUtils';
 import StatusChip from 'src/components/StatusChip';
 import moment from 'moment';
+import { useSettings } from 'src/@core/hooks/useSettings';
+import { api } from 'src/utils/Rest-API';
+import { useLoading } from 'src/@core/hooks/useLoading';
+import { useAuth } from 'src/Context/AuthContext';
 
 const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, historyData, config, handleAuthCheck, handleUpdate, apiAccess }) => {
   const isOpen = openRows[row.id];
@@ -127,37 +131,97 @@ Row.propTypes = {
   apiAccess: PropTypes.any,
 };
 const TableAreaCategory = ({
-  areaCategoryData,
+  pendingAction,
   handleUpdate,
-  handleSortByName,
-  sortDirection,
-  page,
-  rowsPerPage,
-  totalRecords,
-  handleChangePage,
-  handleChangeRowsPerPage,
+  setAreaCat,
   apiAccess,
   config,
-  handleAuthCheck
+  handleAuthCheck,
+  tableHeaderData
 }) => {
+   const { settings } = useSettings()
   const [sortBy, setSortBy] = useState('');
   const [openRows, setOpenRows] = useState({});
   const [historyData, setHistoryData] = useState({});
+  const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
+    const [page, setPage] = useState(0)
+    const [sortDirection, setSortDirection] = useState('asc')
+    const [areaCategoryData, setAllAreaCategoryData] =  useState({data:[],total:0})
+    const { setIsLoading } = useLoading()
+      const { getUserData, removeAuthToken } = useAuth()
   const handleRowToggle = async (rowId) => {
     await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/area-category/history');
   };
-  const handleSortBy = (value) => {
-    if (value === 'Name') {
-      handleSortByName();
-      setSortBy('Name');
-    }
-  };
+
+  useMemo(()=>{
+      setPage(0)
+    },[tableHeaderData])
+    useEffect(() => {
+        getData()
+      }, [tableHeaderData,tableHeaderData, rowsPerPage, page,pendingAction])
+
+    const getData = async () => {
+      try {
+        setIsLoading(true)
+        const params = new URLSearchParams({
+          page: page + 1,
+          limit: rowsPerPage === -1 ? -1 : rowsPerPage,
+          search: tableHeaderData.searchVal,
+          esign_status: tableHeaderData.esignStatus,
+        });
+        const res = await api(`/area-category/?${params.toString()}`, {}, 'get', true);
+        console.log("get area category ", res?.data)
+        if (res.data.success) {
+          setAllAreaCategoryData({data:res.data.data.areaCategories,total:res.data.data.total})
+          setAreaCat(res.data.data.areaCategories)
+        } else {
+          console.log('Error to get all area categories ', res.data)
+          if (res.data.code === 401) {
+            removeAuthToken();
+            router.push('/401');
+          }
+        }
+      } catch (error) {
+        console.log('Error in get area categories ', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }  
+
+  // const handleSortBy = (value) => {
+  //   if (value === 'Name') {
+  //     handleSortByName();
+  //     ;
+  //   }
+  // };
+  const handleSortByName = () => {
+    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+    const sorted = [...areaCategoryData.data].sort((a, b) => {
+      if (a.area_category_name > b.area_category_name) {
+        return newSortDirection === 'asc' ? 1 : -1
+      }
+      if (a.area_category_name < b.area_category_name) {
+        return newSortDirection === 'asc' ? -1 : 1
+      }
+      return 0
+    })
+    setAllAreaCategoryData({...areaCategoryData,data:sorted})
+    setSortDirection(newSortDirection)
+    setSortBy('Name')
+  }
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage)
+  }
+  const handleChangeRowsPerPage = event => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
   return (
     <CustomTable
-      data={areaCategoryData}
+      data={areaCategoryData?.data}
       page={page}
       rowsPerPage={rowsPerPage}
-      totalRecords={totalRecords}
+      totalRecords={areaCategoryData?.total}
       handleChangePage={handleChangePage}
       handleChangeRowsPerPage={handleChangeRowsPerPage}
     >
@@ -167,7 +231,7 @@ const TableAreaCategory = ({
             <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
               <TableCell className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} />
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >Sr.No.</TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('Name')}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortByName('Name')}>
                 Area Category
                 <IconButton align='center' aria-label='expand row' size='small'>
                   {getSortIcon(sortBy, 'Name', sortDirection)}
@@ -179,7 +243,7 @@ const TableAreaCategory = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {areaCategoryData?.map((item, index) => (
+            {areaCategoryData?.data?.map((item, index) => (
               <Row
                 key={item.id}
                 row={item}
@@ -195,7 +259,7 @@ const TableAreaCategory = ({
                 apiAccess={apiAccess}
               />
             ))}
-            {areaCategoryData?.length === 0 && (
+            {areaCategoryData?.data.length === 0 && (
               <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 <TableCell colSpan={12} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >
                   No data
@@ -209,17 +273,11 @@ const TableAreaCategory = ({
   );
 };
 TableAreaCategory.propTypes = {
-  areaCategoryData: PropTypes.any,
-  handleUpdate: PropTypes.any,
-  handleSortByName: PropTypes.any,
-  sortDirection: PropTypes.any,
-  page: PropTypes.any,
-  rowsPerPage: PropTypes.any,
-  totalRecords: PropTypes.any,
-  handleChangePage: PropTypes.any,
-  handleChangeRowsPerPage: PropTypes.any,
-  apiAccess: PropTypes.any,
-  config: PropTypes.any,
-  handleAuthCheck: PropTypes.any
+    pendingAction:PropTypes.any,
+    handleUpdate: PropTypes.any,
+    setAreaCat:PropTypes.any,
+    apiAccess: PropTypes.any,
+    config: PropTypes.any,
+    handleAuthCheck: PropTypes.any,
 };
 export default TableAreaCategory;

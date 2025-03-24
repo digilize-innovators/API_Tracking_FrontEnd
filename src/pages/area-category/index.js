@@ -30,7 +30,7 @@ const Index = () => {
   const { settings } = useSettings()
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({openSnackbar:false, type: '', message: '', variant: 'filled' })
-  const [allAreaCategoryData, setAllAreaCategoryData] = useState([])
+  const [allAreaCategoryData, setAreaCat] = useState([])
   const [editData, setEditData] = useState({})
   const [sortDirection, setSortDirection] = useState('asc')
   const { setIsLoading } = useLoading();
@@ -68,11 +68,11 @@ const tableBody = allAreaCategoryData.map((item, index) =>
 
   useEffect(() => {
       if (formData && pendingAction) {
-        const esign_status = "approved";
+        const esign_status = config?.config.esign_status?"pending":"approved";
         if (pendingAction === "edit") {
-          editAreaCategory() ;
+          editAreaCategory(esign_status) ;
         }
-        else {
+        else if(pendingAction=="add") {
           addAreaCategory(esign_status)
         }
         setPendingAction(null);
@@ -86,36 +86,7 @@ const tableBody = allAreaCategoryData.map((item, index) =>
     setUserDataPdf(data);
     return () => { }
   }, [])
-  useEffect(() => {
-    getData()
-  }, [tableHeaderData.esignStatus,tableHeaderData.searchVal, rowsPerPage, page])
-  const getData = async () => {
-    try {
-      setIsLoading(true)
-      const params = new URLSearchParams({
-        page: page + 1,
-        limit: rowsPerPage === -1 ? -1 : rowsPerPage,
-        search: tableHeaderData.searchVal,
-        esign_status: tableHeaderData.esignStatus,
-      });
-      const res = await api(`/area-category/?${params.toString()}`, {}, 'get', true);
-      console.log("get area category ", res?.data)
-      if (res.data.success) {
-        setAllAreaCategoryData(res.data.data.areaCategories)
-        setTotalRecords(res.data.data.total)
-      } else {
-        console.log('Error to get all area categories ', res.data)
-        if (res.data.code === 401) {
-          removeAuthToken();
-          router.push('/401');
-        }
-      }
-    } catch (error) {
-      console.log('Error in get area categories ', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+ 
   const closeSnackbar = () => {
     setAlertData({...alertData,openSnackbar:false})
   }
@@ -138,8 +109,7 @@ const tableBody = allAreaCategoryData.map((item, index) =>
     setOpenModalApprove(false);
   };
  
-  const resetForm = () => {
-    
+  const resetForm = () => { 
     setEditData({});
   }
   
@@ -186,7 +156,6 @@ const tableBody = allAreaCategoryData.map((item, index) =>
       if (res?.data?.success) {
         console.log('res data', res?.data)
         setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Area category added successfully' });
-        getData();
         resetForm();
       } else {
         console.log('error to add area category ', res.data)
@@ -233,9 +202,7 @@ const tableBody = allAreaCategoryData.map((item, index) =>
         console.log('res ', res.data)
         setAlertData({ ...alertData, openSnackbar:true,type: 'success', message: 'Area category updated successfully' })
         resetForm();
-        getData()
         setOpenModal(false);
-
       } else {
         console.log('error to edit area category ', res.data)
         setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: res.data.message })
@@ -272,6 +239,10 @@ const tableBody = allAreaCategoryData.map((item, index) =>
      })
       setAuthModalOpen(false);
     };
+    if (!isAuthenticated) {
+      setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' });
+      return;
+    }
     const handleApproverActions = async () => {
       const data = {
         modelName: "areacategory",
@@ -292,8 +263,9 @@ const tableBody = allAreaCategoryData.map((item, index) =>
         return;
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true);
-      console.log("esign status update", res?.data);
-      if (esignStatus === "rejected" && esignDownloadPdf) {
+      console.log("esign status update",esignStatus, res?.data);
+      setPendingAction(true)
+      if (res?.data.esign_status === "rejected" && esignDownloadPdf) {
         console.log("approver rejected");
         setOpenModalApprove(false);
         resetState();
@@ -310,22 +282,16 @@ const tableBody = allAreaCategoryData.map((item, index) =>
           setOpenModalApprove(true);
         } else {
           console.log("esign is approved for creator");
-          const esign_status = "pending";
-          editData?.id ? editAreaCategory(esign_status, remarks) : addAreaCategory(esign_status, remarks);
+          setPendingAction(editData?.id?"edit":"add")
         }
       }
     };
-    if (!isAuthenticated) {
-      setAlertData({...alertData,openSnackbar:true, type: 'error', message: 'Authentication failed, Please try again.' });
-      return;
-    }
     if (isApprover) {
       await handleApproverActions();
     } else {
       handleCreatorActions();
     }
     resetState();
-    getData();
   };
   const handleAuthCheck = async (row) => {
     console.log("handleAuthCheck", row)
@@ -362,18 +328,6 @@ const tableBody = allAreaCategoryData.map((item, index) =>
    
     setTableHeaderData({ ...tableHeaderData,searchVal:val.toLowerCase()});
     setPage(0);
-  }
-  const handleTempSearchValue = (e) => {
-    let currentVal = e.target.value
-    currentVal = currentVal.toLowerCase()
-    setTempSearchVal(currentVal)
-  }
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage)
-  }
-  const handleChangeRowsPerPage = event => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
   }
   const handleAuthModalOpen = () => {
     console.log("OPen auth model");
@@ -447,19 +401,26 @@ const tableBody = allAreaCategoryData.map((item, index) =>
               </Typography>
               <TableContainer component={Paper}>
                 <TableAreaCategory
-                  areaCategoryData={allAreaCategoryData}
+                  // areaCategoryData={allAreaCategoryData}
+                  // handleUpdate={handleUpdate}
+                  // handleSortByName={handleSortByName}
+                  // sortDirection={sortDirection}
+                  // page={page}
+                  // rowsPerPage={rowsPerPage}
+                  // totalRecords={totalRecords}
+                  // handleChangePage={handleChangePage}
+                  // handleChangeRowsPerPage={handleChangeRowsPerPage}
+                  // editable={apiAccess.editApiAccess}
+                  // handleAuthCheck={handleAuthCheck}
+                  // apiAccess={apiAccess}
+                  // config={config}
+                  pendingAction={pendingAction}
                   handleUpdate={handleUpdate}
-                  handleSortByName={handleSortByName}
-                  sortDirection={sortDirection}
-                  page={page}
-                  rowsPerPage={rowsPerPage}
-                  totalRecords={totalRecords}
-                  handleChangePage={handleChangePage}
-                  handleChangeRowsPerPage={handleChangeRowsPerPage}
-                  editable={apiAccess.editApiAccess}
+                  setAreaCat={setAreaCat}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}
+                  tableHeaderData={tableHeaderData}
                 />
               </TableContainer>
             </Grid2>

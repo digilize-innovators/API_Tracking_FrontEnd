@@ -37,19 +37,12 @@ import downloadPdf from 'src/utils/DownloadPdf'
 
 const Index = () => {
   const { settings } = useSettings()
-  const [eSignStatus, setESignStatus] = useState('')
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [searchVal, setSearchVal] = useState('')
-  const [areaData, setAreaData] = useState([])
+  const [areaData, setArea] = useState([])
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData, removeAuthToken } = useAuth()
   const { setIsLoading } = useLoading()
-  const [tempSearchVal, setTempSearchVal] = useState('')
-  const [totalCount, setTotalCount] = useState(0)
-  const [sortDirection, setSortDirection] = useState('asc')
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
   const [editData, setEditData] = useState({})
   const router = useRouter();
   const [config, setConfig] = useState(null);
@@ -61,11 +54,28 @@ const Index = () => {
   const [openModalApprove, setOpenModalApprove] = useState(false);
   const apiAccess = useApiAccess("area-create", "area-update", "area-approve");
   const [formData, setFormData] = useState({})
+  const [pendingAction, setPendingAction] = useState(null);
   const [tableHeaderData, setTableHeaderData] = useState({
     esignStatus: '',
     searchVal: ''
-  });
-  // const inputRef = useRef(null); // Ref to track input field
+  });  
+  const searchBarRef = useRef(null);
+
+
+  useEffect(() => {
+    if (formData && pendingAction) {
+     
+      const esign_status = config?.config.esign_status?"pending":"approved";
+      if (pendingAction === "edit") {
+        editArea(esign_status)   
+          }
+      else if(pendingAction=='add') {
+    
+        addArea(esign_status)
+            }
+      setPendingAction(null);
+    }
+  }, [formData, pendingAction]);
 
   useLayoutEffect(() => {
     let data = getUserData();
@@ -74,6 +84,7 @@ const Index = () => {
     setUserDataPdf(data);
     return () => { }
   }, [])
+
   const tableBody = areaData.map((item, index) =>
     [index + 1, item.area_id, item.area_name, item.area_category?.area_category_name, item.esign_status]);
 
@@ -83,36 +94,6 @@ const Index = () => {
     tableBodyText: 'Area Master Data',
     filename: 'AreaMaster'
   };
-  const getData = async () => {
-    setIsLoading(true)
-    try {
-      const params = new URLSearchParams({
-        page: page + 1,
-        limit: rowsPerPage === -1 ? -1 : rowsPerPage,
-        search: tableHeaderData.searchVal,
-        esign_status: tableHeaderData.esignStatus
-      })
-      const response = await api(`/area/?${params.toString()}`, {}, 'get', true)
-      if (response.data.success) {
-        setAreaData(response.data.data.areas)
-        setTotalCount(response.data.data.total)
-      }
-      else {
-        console.log('Error to get all areas ', response.data)
-        if (response.data.code === 401) {
-          removeAuthToken();
-          router.push('/401');
-        }
-      }
-    } catch (error) {
-      console.log('Error in get areas ', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-  useEffect(() => {
-    getData();
-  }, [tableHeaderData.esignStatus, tableHeaderData.searchVal, page, rowsPerPage])
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
@@ -129,50 +110,8 @@ const Index = () => {
     setEditData({})
     setOpenModal(false)
   }
-  const applyValidation = () => {
-    if (areaId.length > 51) {
-      setErrorAreaId({ isError: true, message: 'Area id length should be less than 51' })
-    } else if (areaId.trim() === '') {
-      setErrorAreaId({ isError: true, message: "Area id can't be empty" })
-    } else {
-      setErrorAreaId({ isError: false, message: '' })
-    }
-    if (areaName.length > 256) {
-      setErrorAreaName({ isError: true, message: 'Area name length should be less than 256' })
-    } else if (areaName.trim() === '') {
-      setErrorAreaName({ isError: true, message: "Area name can't be empty" })
-    }
-    else if (!(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/.test(areaName))) {
-      setErrorAreaName({ isError: true, message: "Area name cannot contain any special symbols" })
-    }
-    else {
-      setErrorAreaName({ isError: false, message: '' })
-    }
-    if (areaCategoryId.trim() === '') {
-      setErrorAreaCategory({ isError: true, message: 'Select area category' })
-    } else {
-      setErrorAreaCategory({ isError: false, message: '' })
-    }
-    if (location_uuid.trim() === '') {
-      setErrorLocation({ isError: true, message: 'Select location' })
-    }
-    else {
-      setErrorLocation({ isError: false, message: '' })
-    }
-  }
-  const checkValidate = () => {
-    return areaId.trim() !== '' && areaId.length <= 51 && areaName.trim() !== '' && areaName.length <= 256 && areaCategoryId !== '' && location_uuid.trim() != '' && /^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/.test(areaName);
-  };
   const resetForm = () => {
     setEditData({})
-  }
-  const resetEditForm = () => {
-    setEditData(prev => ({
-      ...prev,
-      area_name: '',
-      area_category_id: '',
-      area_id: ''
-    }))
   }
   const handleSubmitForm = async (data) => {
     console.log('form data ', data);
@@ -184,17 +123,14 @@ const Index = () => {
     } else {
       setApproveAPI({ approveAPIName: 'area-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/area' })
     }
-    //   applyValidation()
-    //   const validate = checkValidate()
-    //   if (!validate) {
-    //     return true
-    //   }
+   
     if (config?.config?.esign_status) {
       setAuthModalOpen(true);
       return;
     }
-    const esign_status = "approved";
-    editData?.area_id ? editArea() : addArea(esign_status)
+
+    setPendingAction(editData?.id ? "edit" : "add");
+
   }
   const addArea = async (esign_status, remarks) => {
     console.log("add form ", formData);
@@ -211,7 +147,7 @@ const Index = () => {
       const audit_log = config?.config?.audit_logs ? {
         "audit_log": true,
         "performed_action": "add",
-        "remarks": auditlogRemark?.length > 0 ? auditlogRemark : `area added - ${areaName}`,
+        "remarks": auditlogRemark?.length > 0 ? auditlogRemark : `area added - ${formData.areaName}`,
       } : {
         "audit_log": false,
         "performed_action": "none",
@@ -224,9 +160,10 @@ const Index = () => {
       const res = await api('/area/', data, 'post', true)
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Area added successfully' })
+        
         resetForm()
-        getData()
-      } else {
+        setRenderGetData(true)
+     } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message });
         if (res.data.code === 401) {
           removeAuthToken();
@@ -238,8 +175,8 @@ const Index = () => {
     } finally {
       setOpenModal(false);
       setIsLoading(false);
-
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
+      setRenderGetData(false)
 
     }
   }
@@ -259,7 +196,7 @@ const Index = () => {
         audit_log = {
           "audit_log": true,
           "performed_action": "edit",
-          "remarks": auditlogRemark > 0 ? auditlogRemark : `area edited - ${areaName}`,
+          "remarks": auditlogRemark > 0 ? auditlogRemark : `area edited - ${formData.areaName}`,
         };
       } else {
         audit_log = {
@@ -274,9 +211,9 @@ const Index = () => {
       setIsLoading(true)
       const res = await api(`/area/${editData.id}`, data, 'put', true)
       if (res.data.success) {
+        setRenderGetData(true)
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Area updated successfully' })
         resetForm()
-        getData()
       }
       else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
@@ -286,12 +223,13 @@ const Index = () => {
         }
       }
     } catch (error) {
+      console.log(error,'error while edit')
       router.push('/500');
     } finally {
       setOpenModal(false);
       setIsLoading(false);
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-
+      setRenderGetData(false)
     }
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
@@ -309,21 +247,25 @@ const Index = () => {
     }
     const handleEsignApproved = () => {
       if (esignDownloadPdf) {
+        console.log('if EsignDownloadpdf is true')
         console.log("esign is approved for download.");
         setOpenModalApprove(true);
         console.log(tableData, "tabledata")
         downloadPdf(tableData, tableHeaderData, tableBody, areaData, userDataPdf)
 
       } else {
+        console.log('else EsignDownloadpdf is false')
         console.log("esign is approved for creator.");
-        const esign_status = "pending";
-        editData?.id ? editArea(esign_status, remarks) : addArea(esign_status, remarks);
+        setPendingAction(editData?.id?"edit":"add")
+        // editData?.id ? editArea(esign_status, remarks) : addArea(esign_status, remarks);
+
       }
     };
     const handleApproverActions = async () => {
+      console.log('Handle Aprove Action ()')
       const data = {
         modelName: "area",
-        esignStatus: tableHeaderData.esignStatus,
+        esignStatus,
         id: eSignStatusId,
         audit_log: config?.config?.audit_logs ? {
           "user_id": user.userId,
@@ -332,6 +274,8 @@ const Index = () => {
           "remarks": remarks.length > 0 ? remarks : `area approved - ${auditLogMark}`,
         } : {}
       };
+      console.log("esignAppprove",data)
+      console.log("EsignStatus is Approved ",esignStatus === "approved" ,"EsignDownloadPdf is ",esignDownloadPdf)
       if (esignStatus === "approved" && esignDownloadPdf) {
         setOpenModalApprove(false);
         console.log("esign is approved for approver");
@@ -342,13 +286,17 @@ const Index = () => {
         return;
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true);
-      console.log("esign status update", res?.data);
+      setPendingAction(true)
+      console.log("esign status update",esignStatus, esignDownloadPdf, res?.data);
+      console.log("EsignStatus is Rejected ",esignStatus === "rejected" ,"EsignDownloadPdf is ",esignDownloadPdf)
       if (esignStatus === "rejected" && esignDownloadPdf) {
         console.log("approver rejected");
         setOpenModalApprove(false);
         resetState();
       }
     };
+    console.log("isApproved :",isApprover)
+    console.log("Esign is rejected :",esignStatus === "rejected")
     if (isApprover) {
       await handleApproverActions();
     } else if (esignStatus === "rejected") {
@@ -359,7 +307,6 @@ const Index = () => {
       handleEsignApproved();
     }
     resetState();
-    getData();
   };
   const handleAuthCheck = async (row) => {
     console.log("handleAuthCheck", row)
@@ -369,39 +316,27 @@ const Index = () => {
     setESignStatusId(row.id);
     setAuditLogMark(row.area_name)
     console.log("row", row)
+    setPendingAction(false)
   }
 
-  const handleSearchClick = (val) => {
+  const handleSearch = (val) => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.toLowerCase() });
-    setPage(0);
   }
   // }
-  const handleTempSearchValue = e => {
-    setTempSearchVal(e.target.value.toLowerCase())
-  }
+  
   const handleUpdate = item => {
     setOpenModal(true)
     setEditData(item)
 
   }
-  const handleSort = (key) => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    const sorted = [...areaData].sort((a, b) => {
-      if (a[key] > b[key]) {
-        return newSortDirection === 'asc' ? 1 : -1;
-      }
-      if (a[key] < b[key]) {
-        return newSortDirection === 'asc' ? -1 : 1;
-      }
-      return 0;
-    });
-    setAreaData(sorted);
-    setSortDirection(newSortDirection);
-  };
-  const handleSortByName = () => handleSort('area_name');
-  const handleSortByAreaCateName = () => handleSort('area_category_name');
-  const handleSortByID = () => handleSort('area_id');
+  
+  // const handleSortByName = () => handleSort('area_name');
+  // const handleSortByAreaCateName = () => handleSort('area_category_name');
+  // const handleSortByID = () => handleSort('area_id');
   const resetFilter = () => {
+    if (searchBarRef.current) {
+      searchBarRef.current.resetSearch();
+    }
     setTableHeaderData({
       ...tableHeaderData, esignStatus: "", searchVal: ""
     })
@@ -409,13 +344,7 @@ const Index = () => {
     // setSearchVal('')
     // setTempSearchVal('')
   }
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage)
-  }
-  const handleChangeRowsPerPage = event => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
+  
   const handleAuthModalOpen = () => {
     console.log("OPen auth model");
     setApproveAPI({ approveAPIName: 'area-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/area' })
@@ -450,22 +379,14 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12} >
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                {/* <EsignStatusFilter esignStatus={eSignStatus} setEsignStatus={setESignStatus} /> */}
-                <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
-
+             {(config?.config?.esign_status) &&
+              <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+              }
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
-                  {/* <SearchBar
-                    searchValue={tempSearchVal}
-                    // handleSearchChange={handleTempSearchValue}
-                    inputRef={inputRef}
-                    handleSearchClick={handleSearchClick}
-
-                  /> */}
-                  <CustomSearchBar handleSearchClick={handleSearchClick} />
-
+                 <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
                   {
                     apiAccess.addApiAccess && (
                       <Box className='mx-2'>
@@ -487,21 +408,13 @@ const Index = () => {
               </Typography>
               <TableContainer component={Paper}>
                 <TableArea
-                  areaData={areaData}
+                  pendingAction={pendingAction}
                   handleUpdate={handleUpdate}
-                  handleSortByID={handleSortByID}
-                  handleSortByName={handleSortByName}
-                  handleSortByAreaCateName={handleSortByAreaCateName}
-                  sortDirection={sortDirection}
-                  page={page}
-                  rowsPerPage={rowsPerPage}
-                  totalRecords={totalCount}
-                  handleChangePage={handleChangePage}
-                  handleChangeRowsPerPage={handleChangeRowsPerPage}
-                  editable={apiAccess.editApiAccess}
+                  setArea={setArea}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}
+                  tableHeaderData={tableHeaderData}
                 />
               </TableContainer>
             </Grid2>
@@ -519,9 +432,13 @@ const Index = () => {
         open={authModalOpen}
         handleClose={handleAuthModalClose}
         handleAuthResult={handleAuthResult}
+        approveAPIName={approveAPI.approveAPIName}
+        approveAPIEndPoint={approveAPI.approveAPIEndPoint}
+        approveAPImethod={approveAPI.approveAPImethod}
         config={config}
         handleAuthModalOpen={handleAuthModalOpen}
         openModalApprove={openModalApprove}
+       
       />
       <AccessibilitySettings />
       <ChatbotComponent />

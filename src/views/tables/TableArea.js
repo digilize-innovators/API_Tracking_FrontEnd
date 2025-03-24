@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState, Fragment, useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import Collapse from '@mui/material/Collapse';
@@ -19,6 +19,11 @@ import { getSortIcon } from 'src/utils/sortUtils';
 import { handleRowToggleHelper } from 'src/utils/rowUtils';
 import StatusChip from 'src/components/StatusChip';
 import moment from 'moment';
+import { useSettings } from 'src/@core/hooks/useSettings';
+import { api } from 'src/utils/Rest-API';
+import { useLoading } from 'src/@core/hooks/useLoading';
+import { useAuth } from 'src/Context/AuthContext';
+
 
 const Row = ({ row, index, isOpen, handleRowToggle, page, rowsPerPage, historyData, config, handleAuthCheck, handleUpdate, apiAccess }) => {
   return (
@@ -145,46 +150,108 @@ Row.propTypes = {
   apiAccess: PropTypes.any
 };
 const TableArea = ({
-  areaData,
+  pendingAction,
   handleUpdate,
-  handleSortByName,
-  handleSortByID,
-  sortDirection,
-  handleSortByAreaCateName,
-  page,
-  rowsPerPage,
-  totalRecords,
-  handleChangePage,
-  handleChangeRowsPerPage,
+  setArea,
   apiAccess,
   config,
-  handleAuthCheck
+  handleAuthCheck,
+  tableHeaderData
+
 }) => {
+  const { settings } = useSettings()
   const [sortBy, setSortBy] = useState('');
   const [openRows, setOpenRows] = useState({});
   const [historyData, setHistoryData] = useState({});
+  const [page, setPage] = useState(0)
+  const [sortDirection, setSortDirection] = useState('asc')
+const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
+const [areaData, setAreaData] = useState({data:[],total:0})
+const { setIsLoading } = useLoading()
+  const { getUserData, removeAuthToken } = useAuth()
+
+
+
   const handleRowToggle = async (rowId) => {
     await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/area/history');
   };
-  const handleSortBy = (value) => {
-    if (value === 'ID') {
-      handleSortByID();
-      setSortBy('ID');
-    } else if (value === 'Name') {
-      handleSortByName();
-      setSortBy('Name');
-    } else if (value === 'AreaCate') {
-      handleSortByAreaCateName();
-      setSortBy('AreaCate');
+  // const handleSortBy = (value) => {
+  //   if (value === 'ID') {
+  //     handleSortByID();
+  //     setSortBy('ID');
+  //   } else if (value === 'Name') {
+  //     handleSortByName();
+  //     setSortBy('Name');
+  //   } else if (value === 'AreaCate') {
+  //     handleSortByAreaCateName();
+  //     setSortBy('AreaCate');
+  //   }
+  // };
+  useMemo(()=>{
+    setPage(0)
+  },[tableHeaderData])
+  const getData = async () => {
+    setIsLoading(true)
+    try {
+      const params = new URLSearchParams({
+        page: page + 1,
+        limit: rowsPerPage === -1 ? -1 : rowsPerPage,
+        search: tableHeaderData.searchVal,
+        esign_status: tableHeaderData.esignStatus
+      })
+      const response = await api(`/area/?${params.toString()}`, {}, 'get', true)
+      if (response.data.success) {
+        console.log("after add",response.data.data.areas)
+        setAreaData({data:response.data.data.areas,total:response.data.data.total})
+        setArea(response.data.data.areas)
+      }
+      else {
+        console.log('Error to get all areas ', response.data)
+        if (response.data.code === 401) {
+          removeAuthToken();
+          router.push('/401');
+        }
+      }
+    } catch (error) {
+      console.log('Error in get areas ', error)
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  
+  useEffect(() => {
+    getData();
+  }, [tableHeaderData,page,rowsPerPage,pendingAction])
+  const handleSort = (key) => {
+    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    const sorted = [...areaData.data].sort((a, b) => {
+      if (a[key] > b[key]) {
+        return newSortDirection === 'asc' ? 1 : -1;
+      }
+      if (a[key] < b[key]) {
+        return newSortDirection === 'asc' ? -1 : 1;
+      }
+      return 0;
+    });
+    setAreaData({...setAreaData,data:sorted});
+    setSortDirection(newSortDirection);
+    setSortBy(key);
   };
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage)
+  }
+  const handleChangeRowsPerPage = event => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
 
   return (
     <CustomTable
-      data={areaData}
+      data={areaData.data}
       page={page}
       rowsPerPage={rowsPerPage}
-      totalRecords={totalRecords}
+      totalRecords={areaData.total}
       handleChangePage={handleChangePage}
       handleChangeRowsPerPage={handleChangeRowsPerPage}
     >
@@ -194,28 +261,28 @@ const TableArea = ({
             <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
               <TableCell className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} />
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Sr.No.</TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} onClick={() => handleSortBy('ID')}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} onClick={() => handleSort('area_id')}>
                 Area ID
                 <IconButton align='center' aria-label='expand row' size='small' data-testid={`sort-icon-${sortBy}`}>
-                  {getSortIcon(sortBy, 'ID', sortDirection)}
+                  {getSortIcon(sortBy, 'area_id', sortDirection)}
                 </IconButton>
               </TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} onClick={() => handleSortBy('Name')}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} onClick={() => handleSort('area_name')}>
                 Area Name
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'Name', sortDirection)}
+                  {getSortIcon(sortBy, 'area_name', sortDirection)}
                 </IconButton>
               </TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} onClick={() => handleSortBy('AreaCate')}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} onClick={() => handleSort('area_category_name')}>
                 Area Category
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'AreaCate', sortDirection)}
+                  {getSortIcon(sortBy, 'area_category_name', sortDirection)}
                 </IconButton>
               </TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} onClick={() => handleSortBy('AreaCate')}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} onClick={() => handleSort('area_category_name')}>
                 Location Name
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'AreaCate', sortDirection)}
+                  {getSortIcon(sortBy, 'area_category_name', sortDirection)}
                 </IconButton>
               </TableCell>
               {config?.config?.esign_status === true && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>E-Sign</TableCell>}
@@ -224,7 +291,7 @@ const TableArea = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {areaData?.map((item, index) => (
+            {areaData.data?.map((item, index) => (
               <Row
                 key={item.id}
                 row={item}
@@ -254,17 +321,9 @@ const TableArea = ({
   );
 };
 TableArea.propTypes = {
-  areaData: PropTypes.any,
+  pendingAction:PropTypes.any,
   handleUpdate: PropTypes.any,
-  handleSortByName: PropTypes.any,
-  handleSortByID: PropTypes.any,
-  sortDirection: PropTypes.any,
-  handleSortByAreaCateName: PropTypes.any,
-  page: PropTypes.any,
-  rowsPerPage: PropTypes.any,
-  totalRecords: PropTypes.any,
-  handleChangePage: PropTypes.any,
-  handleChangeRowsPerPage: PropTypes.any,
+  setArea:PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
   handleAuthCheck: PropTypes.any,
