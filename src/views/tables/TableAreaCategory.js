@@ -148,7 +148,8 @@ const TableAreaCategory = ({
     const [sortDirection, setSortDirection] = useState('asc')
     const [areaCategoryData, setAllAreaCategoryData] =  useState({data:[],total:0})
     const { setIsLoading } = useLoading()
-      const { getUserData, removeAuthToken } = useAuth()
+      const { removeAuthToken } = useAuth()
+
   const handleRowToggle = async (rowId) => {
     await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/area-category/history');
   };
@@ -156,9 +157,10 @@ const TableAreaCategory = ({
   useMemo(()=>{
       setPage(0)
     },[tableHeaderData])
+
     useEffect(() => {
         getData()
-      }, [tableHeaderData,tableHeaderData, rowsPerPage, page,pendingAction])
+      }, [tableHeaderData, rowsPerPage, page,pendingAction])
 
     const getData = async () => {
       try {
@@ -188,12 +190,6 @@ const TableAreaCategory = ({
       }
     }  
 
-  // const handleSortBy = (value) => {
-  //   if (value === 'Name') {
-  //     handleSortByName();
-  //     ;
-  //   }
-  // };
   const handleSortByName = () => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
     const sorted = [...areaCategoryData.data].sort((a, b) => {

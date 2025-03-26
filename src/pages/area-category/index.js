@@ -34,9 +34,6 @@ const Index = () => {
   const [editData, setEditData] = useState({})
   const [sortDirection, setSortDirection] = useState('asc')
   const { setIsLoading } = useLoading();
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
-  const [totalRecords, setTotalRecords] = useState(0)
   const { getUserData, removeAuthToken } = useAuth();
   const [userDataPdf, setUserDataPdf] = useState();
   const router = useRouter();
@@ -68,6 +65,7 @@ const tableBody = allAreaCategoryData.map((item, index) =>
 
   useEffect(() => {
       if (formData && pendingAction) {
+        
         const esign_status = config?.config.esign_status?"pending":"approved";
         if (pendingAction === "edit") {
           editAreaCategory(esign_status) ;
@@ -237,6 +235,7 @@ const tableBody = allAreaCategoryData.map((item, index) =>
       setApproveAPI({
         approveAPIName:'',approveAPImethod:'',approveAPIEndPoint:''
      })
+     setEsignDownloadPdf(false)
       setAuthModalOpen(false);
     };
     if (!isAuthenticated) {
@@ -258,14 +257,14 @@ const tableBody = allAreaCategoryData.map((item, index) =>
       if (esignStatus === "approved" && esignDownloadPdf) {
         setOpenModalApprove(false);
         console.log("esign is approved for approver");
-        resetState();
         downloadPdf(tableData,tableHeaderData,tableBody,allAreaCategoryData,userDataPdf);
+        resetState();
         return;
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true);
       console.log("esign status update",esignStatus, res?.data);
       setPendingAction(true)
-      if (res?.data.esign_status === "rejected" && esignDownloadPdf) {
+      if (res?.data.esign_status === "rejected") {
         console.log("approver rejected");
         setOpenModalApprove(false);
         resetState();
@@ -286,6 +285,16 @@ const tableBody = allAreaCategoryData.map((item, index) =>
         }
       }
     };
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: "Access denied: Download pdf disabled for this user."
+      })
+      resetState()
+      return
+    }
     if (isApprover) {
       await handleApproverActions();
     } else {
@@ -304,20 +313,7 @@ const tableBody = allAreaCategoryData.map((item, index) =>
     console.log("row", row)
     
   }
-  const handleSortByName = () => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const sorted = [...allAreaCategoryData].sort((a, b) => {
-      if (a.area_category_name > b.area_category_name) {
-        return newSortDirection === 'asc' ? 1 : -1
-      }
-      if (a.area_category_name < b.area_category_name) {
-        return newSortDirection === 'asc' ? -1 : 1
-      }
-      return 0
-    })
-    setAllAreaCategoryData(sorted)
-    setSortDirection(newSortDirection)
-  }
+
   const resetFilter = () => {
     if (searchBarRef.current) {
       searchBarRef.current.resetSearch();
@@ -325,9 +321,7 @@ const tableBody = allAreaCategoryData.map((item, index) =>
     setTableHeaderData({ ...tableHeaderData, esignStatus: "",searchVal:"" })
   }
   const handleSearch = (val) => {
-   
-    setTableHeaderData({ ...tableHeaderData,searchVal:val.toLowerCase()});
-    setPage(0);
+    setTableHeaderData({ ...tableHeaderData,searchVal:val.trim().toLowerCase()});
   }
   const handleAuthModalOpen = () => {
     console.log("OPen auth model");
@@ -351,7 +345,9 @@ const tableBody = allAreaCategoryData.map((item, index) =>
       setAuthModalOpen(true);
       return;
     }
+  
     downloadPdf(tableData,tableHeaderData,tableBody,allAreaCategoryData,userDataPdf);
+    
   }
   return (
     <Box padding={4}>
@@ -401,19 +397,6 @@ const tableBody = allAreaCategoryData.map((item, index) =>
               </Typography>
               <TableContainer component={Paper}>
                 <TableAreaCategory
-                  // areaCategoryData={allAreaCategoryData}
-                  // handleUpdate={handleUpdate}
-                  // handleSortByName={handleSortByName}
-                  // sortDirection={sortDirection}
-                  // page={page}
-                  // rowsPerPage={rowsPerPage}
-                  // totalRecords={totalRecords}
-                  // handleChangePage={handleChangePage}
-                  // handleChangeRowsPerPage={handleChangeRowsPerPage}
-                  // editable={apiAccess.editApiAccess}
-                  // handleAuthCheck={handleAuthCheck}
-                  // apiAccess={apiAccess}
-                  // config={config}
                   pendingAction={pendingAction}
                   handleUpdate={handleUpdate}
                   setAreaCat={setAreaCat}
