@@ -20,7 +20,6 @@ import { validateToken } from 'src/utils/ValidateToken';
 import { getTokenValues } from '../../utils/tokenUtils';
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
-import SearchBar from 'src/components/SearchBarComponent'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import UomModal from "src/components/Modal/UomModal";
@@ -28,18 +27,13 @@ import CustomSearchBar from 'src/components/CustomSearchBar'
 import downloadPdf from 'src/utils/DownloadPdf'
 
 const Index = () => {
-
   const [openModal, setOpenModal] = useState(false);
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [uomData, setUomData] = useState([])
   const [editData, setEditData] = useState({})
-  const [sortDirection, setSortDirection] = useState('asc')
+  const [allUOMData, setAllUOM] = useState([])
   const { setIsLoading } = useLoading();
   const { getUserData, removeAuthToken } = useAuth();
   const [userDataPdf, setUserDataPdf] = useState();
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalRecords, setTotalRecords] = useState(0);
   const router = useRouter();
   const [config, setConfig] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -49,7 +43,7 @@ const Index = () => {
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
   const [openModalApprove, setOpenModalApprove] = useState(false);
   const searchBarRef = useRef(null);
- const [pendingAction, setPendingAction] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
   const { settings } = useSettings()
   const [tableHeaderData, setTableHeaderData] = useState({
     esignStatus: '',
@@ -69,58 +63,29 @@ const Index = () => {
   }, [])
 
   useEffect(() => {
-      if (formData && pendingAction) {
-        const esign_status = "approved";
-        if (pendingAction === "edit") {
-          editUOM() ;
-        }
-        else {
-          addUOM(esign_status)
-        }
-        setPendingAction(null);
+    if (formData && pendingAction) {
+      const esign_status = config?.config?.esign_status?"pending":"approved";
+      if (pendingAction === "edit") {
+        editUOM(esign_status);
       }
-    }, [formData, pendingAction]);
+      else if(pendingAction==='add') {
+        addUOM(esign_status)
+      }
+      setPendingAction(null);
+    }
+  }, [formData, pendingAction]);
 
-  useEffect(() => {
-    getData();
-  }, [ page, rowsPerPage, tableHeaderData.esignStatus,tableHeaderData.searchVal]);
-  const tableBody = uomData.map((item, index) => [
-    index + 1, 
-    item.uom_name, 
+  const tableBody = allUOMData.map((item, index) => [
+    index + 1,
+    item.uom_name,
     item.esign_status || "N/A"
   ]);
   const tableData = useMemo(() => ({
     tableHeader: ['Sr.No.', 'UOM Name', 'E-Sign'],
     tableHeaderText: 'UOM Report',
     tableBodyText: 'UOM Data',
-    filename:'UOM'
+    filename: 'UOM'
   }), []);
-  const getData = async () => {
-    try {
-      setIsLoading(true);
-      const params = new URLSearchParams({
-        page: page + 1,
-        limit: rowsPerPage === -1 ? -1 : rowsPerPage,
-        search: tableHeaderData.searchVal,
-        esign_status: tableHeaderData.esignStatus,
-      });
-      const res = await api(`/uom/?${params.toString()}`, {}, 'get', true);
-      console.log("get data res uom ", res.data);
-      if (res?.data?.success) {
-        setUomData(res.data.data.uoms);
-        setTotalRecords(res.data.data.total);
-      }
-      else if (res?.data?.code === 401) {
-        console.log('Error to get all units', res.data);
-        removeAuthToken();
-        router.push('/401');
-      }
-    } catch (error) {
-      console.log('Error in get units', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
@@ -150,9 +115,9 @@ const Index = () => {
   };
 
   const handleSubmitForm = async (UomData) => {
-    console.log(UomData, ':-unit measure')
+    console.log("UomData :-",UomData)
     setFormData(UomData);
-    console.log(editData)
+    console.log("edit data",editData)
     if (editData?.id) {
       setApproveAPI({
         approveAPIName: "uom-update",
@@ -166,7 +131,6 @@ const Index = () => {
         approveAPIEndPoint: "/api/v1/uom"
       })
     }
-  
     if (config?.config?.esign_status) {
       setAuthModalOpen(true);
       return;
@@ -177,6 +141,14 @@ const Index = () => {
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log("handleAuthResult 01", isAuthenticated, isApprover, esignStatus, user);
     console.log("handleAuthResult 02", config.userId, user.user_id);
+    const resetApprovalState = () => {
+      setApproveAPI(({
+        approveAPIName: "",
+        approveAPImethod: "",
+        approveAPIEndPoint: ""
+      }))
+      setAuthModalOpen(false);
+    };
     const handleAuthenticationError = () => {
       setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' });
     };
@@ -192,6 +164,9 @@ const Index = () => {
       } catch (error) {
         console.error("Error updating e-sign status:", error);
       }
+      setPendingAction(true)
+
+      
       if (esignStatus === "rejected" && esignDownloadPdf) {
         handleRejectDownload();
       }
@@ -213,7 +188,7 @@ const Index = () => {
       setOpenModalApprove(false);
       console.log("esign is approved for approver");
       resetApprovalState();
-      downloadPdf(tableData,tableHeaderData,tableBody,uomData,userDataPdf);
+      downloadPdf(tableData, tableHeaderData, tableBody, allUOMData, userDataPdf);
     };
     const handleRejectDownload = () => {
       console.log("approver rejected");
@@ -231,35 +206,39 @@ const Index = () => {
       } else if (esignStatus === "approved") {
         console.log("esign is approved for creator");
         const esign_status = "pending";
-        editData?.id ? editUOM(esign_status, remarks) : addUOM(esign_status, remarks);
+        setPendingAction(editData?.id ? "edit" : "add");
+        // editData?.id ? editUOM(esign_status, remarks) : addUOM(esign_status, remarks);
       }
     };
-    const resetApprovalState = () => {
-      setApproveAPI(({
-        approveAPIName: "",
-        approveAPImethod: "",
-        approveAPIEndPoint: ""
-      }))
-      setAuthModalOpen(false);
-    };
+   
     if (!isAuthenticated) {
       handleAuthenticationError();
       return;
     }
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+      ...alertData,
+      openSnackbar: true,
+      type: 'error',
+      message: "Access denied: Download pdf disabled for this user."
+      })
+      resetApprovalState()
+      return
+      }
     if (isApprover) {
       await handleApproverActions(user, esignStatus, remarks);
     } else {
       handleCreatorActions(esignStatus, remarks);
     }
     resetApprovalState();
-    getData();
+    //getData();
   };
   const handleAuthCheck = async (row) => {
     console.log("handleAuthCheck", row);
     setApproveAPI({
       approveAPIName: "uom-approve",
-      approveAPIEndPoint: "PATCH",
-      approveAPIMethod: "/api/v1/uom"
+      approveAPIEndPoint: "/api/v1/uom",
+      approveAPImethod: "PATCH"
     })
     setAuthModalOpen(true);
     setESignStatusId(row.id);
@@ -283,31 +262,30 @@ const Index = () => {
       console.log('data add uom ', data);
       setIsLoading(true);
       const res = await api('/uom/', data, 'post', true);
+      setIsLoading(false);
       console.log('add res uom', res);
       if (res?.data?.success) {
-        setAlertData({...alertData ,openSnackbar: true, type: 'success', message: 'Unit added successfully' });
-        getData();
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Unit added successfully' });
+        //getData();
         setOpenModal(false);
       } else {
-        setAlertData({...alertData, openSnackbar:true,type: 'error', message: res.data?.message });
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message });
         if (res.data?.code === 401) {
           removeAuthToken();
           router.push('/401');
         }
       }
     } catch (error) {
-
       router.push('/500');
       setOpenModal(false);
 
     } finally {
+      setIsLoading(false);
       setApproveAPI({
         approveAPIName: "",
         approveAPIEndPoint: "",
-        approveAPIMethod: ""
-
+        approveAPImethod: ""
       })
-      setIsLoading(false);
     }
   };
   const editUOM = async (esign_status, remarks) => {
@@ -333,12 +311,12 @@ const Index = () => {
       data.esign_status = esign_status;
       setIsLoading(true);
       const res = await api(`/uom/${editData.id}`, data, 'put', true);
-      console.log(res,'editdata')
+      setIsLoading(false);
+      console.log(res, 'editdata');
       if (res.data.success) {
-
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Unit updated successfully' });
         resetForm();
-        getData();
+        //getData();
         setOpenModal(false);
 
       } else {
@@ -356,64 +334,37 @@ const Index = () => {
       setIsLoading(false);
     }
   };
-  // const resetData = () => {
-  //   setUnitName('');
-  //   setErrorUnitName({ isError: false, message: '' });
-  // }
   const handleUpdate = item => {
-    // console.log(item, "aaaaa")
     setEditData(item);
-    setFormData({...FormData,unitName:item.uom_name});
+    setFormData({ ...FormData, unitName: item.uom_name });
     setOpenModal(true);
+  };
 
-  };
-  const handleSortByName = () => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    const sorted = [...uomData].sort((a, b) => {
-      if (a.uom_name > b.uom_name) {
-        return newSortDirection === 'asc' ? 1 : -1;
-      }
-      if (a.uom_name < b.uom_name) {
-        return newSortDirection === 'asc' ? -1 : 1;
-      }
-      return 0;
-    });
-    setUomData(sorted);
-    setSortDirection(newSortDirection);
-  };
   const resetFilter = () => {
     if (searchBarRef.current) {
       searchBarRef.current.resetSearch();
     }
-    setTableHeaderData({ ...tableHeaderData, esignStatus: "" ,searchVal:""})
+    setTableHeaderData({ ...tableHeaderData, esignStatus: "", searchVal: "" })
   };
   const handleSearch = (val) => {
-    setTableHeaderData({ ...tableHeaderData,searchVal:val.toLowerCase()});
-    setPage(0);
+    setTableHeaderData({ ...tableHeaderData, searchVal: val.toLowerCase() });
+    //setPage(0);
   };
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-  const handleChangeRowsPerPage = event => {
-    const newRowsPerPage = parseInt(event.target.value, 10);
-    setRowsPerPage(newRowsPerPage);
-    setPage(0);
-  };
- 
+
   const handleAuthModalOpen = () => {
     console.log("OPen auth model");
     setApproveAPI({
       approveAPIName: "uom-approve",
-      approveAPIEndPoint: "PATCH",
-      approveAPIMethod: "/api/v1/uom"
+      approveAPImethod: "PATCH",
+      approveAPIEndPoint: "/api/v1/uom"
     })
     setAuthModalOpen(true);
   };
   const handleDownloadPdf = () => {
     setApproveAPI({
       approveAPIName: "uom-create",
-      approveAPIEndPoint: "POST",
-      approveAPIMethod: "/api/v1/uom"
+      approveAPImethod: "POST",
+      approveAPIEndPoint: "/api/v1/uom"
     })
     if (config?.config?.esign_status) {
       console.log("Esign enabled for download pdf");
@@ -421,7 +372,9 @@ const Index = () => {
       setAuthModalOpen(true);
       return;
     }
-    downloadPdf(tableData,tableHeaderData,tableBody,uomData,userDataPdf);
+    downloadPdf(tableData, tableHeaderData, tableBody, uomData, userDataPdf);
+    resetApprovalState()
+    
   }
   return (
     <Box padding={4}>
@@ -439,22 +392,15 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                 {(config?.config?.esign_status) &&
-             <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
-                  }
+                {(config?.config?.esign_status) &&
+                  <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+                }
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
-                  {/* <SearchBar
-                    searchValue={tempSearchVal}
-                    handleSearchChange={handleTempSearchValue}
-                    handleSearchClick={handleSearch}
-                  /> */}
 
-                 <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
-               
-
+                  <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
                   {
                     apiAccess.addApiAccess && (
                       <Box className='mx-2'>
@@ -475,19 +421,13 @@ const Index = () => {
                 Unit Of Measurement Data
               </Typography>
               <TableUOM
-                uomData={uomData}
+                setAllUOM={setAllUOM}
                 handleUpdate={handleUpdate}
-                handleSortByName={handleSortByName}
-                sortDirection={sortDirection}
-                totalRecords={totalRecords}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                handleChangePage={handleChangePage}
-                handleChangeRowsPerPage={handleChangeRowsPerPage}
-                editable={apiAccess.editApiAccess}
+                tableHeaderData={tableHeaderData}
                 handleAuthCheck={handleAuthCheck}
                 apiAccess={apiAccess}
                 config={config}
+                pendingAction={pendingAction}
               />
             </Grid2>
           </Box>
@@ -501,7 +441,6 @@ const Index = () => {
         editData={editData}
         handleSubmitForm={handleSubmitForm}
       />
-
 
       <AuthModal
         open={authModalOpen}
@@ -523,4 +462,5 @@ const Index = () => {
 export async function getServerSideProps(context) {
   return validateToken(context, 'Unit Of Measurement')
 }
+
 export default ProtectedRoute(Index)

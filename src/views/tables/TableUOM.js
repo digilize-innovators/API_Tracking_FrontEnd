@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState, Fragment, useEffect,useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import Collapse from '@mui/material/Collapse';
@@ -20,6 +20,9 @@ import { getSerialNumber } from 'src/configs/generalConfig';
 import { handleRowToggleHelper } from 'src/utils/rowUtils';
 import StatusChip from 'src/components/StatusChip';
 import moment from 'moment';
+import { useSettings } from 'src/@core/hooks/useSettings';
+import { useLoading } from 'src/@core/hooks/useLoading';
+import { api } from 'src/utils/Rest-API';
 
 const Row = ({
   row,
@@ -138,35 +141,97 @@ Row.propTypes = {
   apiAccess: PropTypes.any,
 };
 const TableUOM = ({
-  uomData,
   handleUpdate,
-  handleSortByName,
-  sortDirection,
-  totalRecords,
-  rowsPerPage,
-  page,
-  handleChangePage,
-  handleChangeRowsPerPage,
   apiAccess,
   config,
   handleAuthCheck,
+  tableHeaderData,
+  setAllUOM,
+  pendingAction,
 }) => {
   const [sortBy, setSortBy] = useState('');
   const [openRows, setOpenRows] = useState({});
   const [historyData, setHistoryData] = useState({});
+
+  const { settings } = useSettings()
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
+  const [allUOMData, setAllUOMData] = useState({ data: [], total: 0 })
+  const [sortDirection, setSortDirection] = useState('asc')
+  const { setIsLoading } = useLoading();
+
   const handleRowToggle = async (rowId) => {
     await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/uom/history');
   };
-  const handleSortBy = (value) => {
-    if (value === 'Name') {
-      handleSortByName();
-      setSortBy('Name');
+
+   useMemo(()=>{
+      setPage(0);  
+    },[tableHeaderData]);
+
+  const handleSort = key => {
+    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+    const sorted = [...allUOMData?.data].sort((a, b) => {
+      if (a[key] > b[key]) {
+        return newSortDirection === 'asc' ? 1 : -1
+      }
+      if (a[key] < b[key]) {
+        return newSortDirection === 'asc' ? -1 : 1
+      }
+      return 0
+    })
+    console.log(allUOMData)
+    setAllUOMData({ ...allUOMData, data: sorted })
+    setSortDirection(newSortDirection)
+    setSortBy(key)
+  }
+
+  const getData = async () => {
+    console.log("AAA");
+    
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        page: page + 1,
+        limit: rowsPerPage === -1 ? -1 : rowsPerPage,
+        search: tableHeaderData.searchVal,
+        esign_status: tableHeaderData.esignStatus,
+      });
+      const res = await api(`/uom/?${params.toString()}`, {}, 'get', true);
+      console.log("get data res uom ", res.data);
+      if (res?.data?.success) {
+        setAllUOMData({ data:res.data.data.uoms, total:res.data.data.total})
+        setAllUOM(res.data.data.uoms);
+      }
+      else if (res?.data?.code === 401) {
+        console.log('Error to get all units', res.data);
+        removeAuthToken();
+        router.push('/401');
+      }
+    } catch (error) {
+      console.log('Error in get units', error);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    getData()
+  }, [rowsPerPage, page, tableHeaderData,pendingAction])
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = event => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setPage(0);
+  };
+ 
   return (
     <CustomTable
-      data={uomData}
-      totalRecords={totalRecords}
+      data={allUOMData?.data}
+      totalRecords={allUOMData?.total}
       rowsPerPage={rowsPerPage}
       page={page}
       handleChangePage={handleChangePage}
@@ -176,10 +241,10 @@ const TableUOM = ({
         <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} />
           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Sr.No.</TableCell>
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('Name')}>
+          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('uom_name')}>
             Unit Of Measurement
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'Name', sortDirection)}
+              {getSortIcon(sortBy, 'uom_name', sortDirection)}
             </IconButton>
           </TableCell>
           {config?.config?.esign_status === true && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>E-Sign</TableCell>}
@@ -188,7 +253,7 @@ const TableUOM = ({
         </TableRow>
       </TableHead>
       <TableBody>
-        {uomData?.map((item, index) => (
+        {allUOMData?.data?.map((item, index) => (
           <Row
             key={item.id}
             row={item}
@@ -204,7 +269,7 @@ const TableUOM = ({
             apiAccess={apiAccess}
           />
         ))}
-        {uomData?.length === 0 && (
+        {allUOMData?.data?.length === 0 && (
           <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
             <TableCell colSpan={12} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
               No data
@@ -216,15 +281,10 @@ const TableUOM = ({
   );
 };
 TableUOM.propTypes = {
-  uomData: PropTypes.any,
+  setAllUOM: PropTypes.any,
   handleUpdate: PropTypes.any,
-  handleSortByName: PropTypes.any,
-  sortDirection: PropTypes.any,
-  totalRecords: PropTypes.any,
-  rowsPerPage: PropTypes.any,
-  page: PropTypes.any,
-  handleChangePage: PropTypes.any,
-  handleChangeRowsPerPage: PropTypes.any,
+  tableHeaderData: PropTypes.any,
+  pendingAction:PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
   handleAuthCheck: PropTypes.any,
