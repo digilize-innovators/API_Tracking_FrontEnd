@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState, Fragment,useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
@@ -19,6 +19,11 @@ import { getSortIcon } from 'src/utils/sortUtils';
 import { handleRowToggleHelper } from 'src/utils/rowUtils';
 import StatusChip from 'src/components/StatusChip';
 import moment from 'moment';
+import { useSettings } from 'src/@core/hooks/useSettings';
+import { api } from 'src/utils/Rest-API';
+import { useLoading } from 'src/@core/hooks/useLoading';
+import { useAuth } from 'src/Context/AuthContext';
+import { useRouter } from 'next/router';
 
 const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, historyData, config, handleAuthCheck, handleUpdate, apiAccess }) => {
     const isOpen = openRows[row.id];
@@ -182,59 +187,116 @@ Row.propTypes = {
     apiAccess: PropTypes.any,
 };
 const TablePrinterLineConfiguration = ({
-    printerLineConfigurationData,
+    setAllPrinterLineConfiguration,
     handleUpdate,
-    handleSortByPrinterLineName,
-    handleSortByPrinter,
-    handleSortByAreaCategoryId,
-    handleSortByAreaId,
-    handleSortByLocationId,
-    sortDirection,
-    page,
-    rowsPerPage,
-    totalRecords,
-    handleChangePage,
-    handleChangeRowsPerPage,
     apiAccess,
+    tableHeaderData,
     config,
-    handleAuthCheck
+    handleAuthCheck,
+    pendingAction
 }) => {
     const [sortBy, setSortBy] = useState('');
     const [openRows, setOpenRows] = useState({});
     const [historyData, setHistoryData] = useState({});
+    const [page,setPage]=useState(0)
+    const {settings}=useSettings()
+    const [sortDirection,setSortDirection]=useState('asc')
+    const [rowsPerPage,setRowsPerPage]=useState(settings.rowsPerPage)
+    const {setIsLoading}=useLoading()
+    const {removeAuthToken}=useAuth()
+    const router=useRouter()
+
+    const [allPrinterLineConfigurationData,setAllPrinterLineConfigurationData]=useState({data:[],total:0})
     const handleRowToggle = async (rowId) => {
         await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/printerlineconfiguration/history');
     };
-    const handleSortBy = (value) => {
-        if (value === 'PrinterLineName') {
-            handleSortByPrinterLineName();
-            setSortBy('PrinterLineName');
+
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage)
+    }
+    const handleChangeRowsPerPage = event => {
+        setRowsPerPage(parseInt(event.target.value, 10))
+        setPage(0)
+    }
+
+    const getAllPrinterLineConfigurationData = async () => {
+            try {
+                setIsLoading(true)
+                const params = new URLSearchParams({
+                    page: page + 1,
+                    limit: rowsPerPage === -1 ? -1 : rowsPerPage,
+                    search: tableHeaderData.searchVal,
+                    esign_status: tableHeaderData.esignStatus,
+                });
+                const res = await api(`/printerlineconfiguration/?${params.toString()}`, {}, 'get', true);
+                console.log("get printer line configuration", res?.data)
+                if (res.data.success) {
+                    setAllPrinterLineConfigurationData({data:res.data.data.printerLineConfigs,total:res.data.data.total})
+                    setAllPrinterLineConfiguration(res.data.data.printerLineConfigs)
+                } else {
+                    console.log('Error to get all printer line configuration', res.data)
+                    if (res.data.code === 401) {
+                        removeAuthToken();
+                        router.push('/401');
+                    }
+                }
+            } catch (error) {
+                console.log('Error in get printer line configuration', error)
+            } finally {
+                setIsLoading(false)
+            }
         }
-        else if (value === 'Printer') {
-            handleSortByPrinter();
-            setSortBy('Printer');
-        }
-        else if (value === 'AreaCategoryId') {
-            handleSortByAreaCategoryId();
-            setSortBy('AreaCategoryId');
-        }
-        else if (value === 'AreaId') {
-            handleSortByAreaId();
-            setSortBy('AreaId');
-        }
-        else if (value === 'LocationId') {
-            handleSortByLocationId();
-            setSortBy('LocationId');
-        }
-    };
+
+        useMemo(()=>{
+          setPage(0)
+        },[tableHeaderData])
+
+        useEffect(() => {
+            getAllPrinterLineConfigurationData()
+        }, [tableHeaderData, rowsPerPage, page,pendingAction])
+
+    const handleSort = (key,child) => {
+            const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            const data=allPrinterLineConfigurationData?.data
+       
+            const sorted = [...data].sort((a, b) => {
+                if(!child){
+                    if (a[key] > b[key]) {
+                    return newSortDirection === 'asc' ? 1 : -1
+                  }
+        
+                  if (a[key] < b[key]) {
+                    return newSortDirection === 'asc' ? -1 : 1
+                  }
+                  return 0
+                }
+                else{
+                    if (a[key][child] > b[key][child]) {
+                        return newSortDirection === 'asc' ? 1 : -1
+                      }
+            
+                      if (a[key][child] < b[key][child]) {
+                        return newSortDirection === 'asc' ? -1 : 1
+                      }
+                      return 0
+                }
+            })
+            setAllPrinterLineConfigurationData({...allPrinterLineConfigurationData,data:sorted});
+            setSortDirection(newSortDirection);
+            setSortBy(sortBy)
+        };
+
+    
     return (
         <CustomTable
-            data={printerLineConfigurationData}
-            page={page}
-            rowsPerPage={rowsPerPage}
-            totalRecords={totalRecords}
-            handleChangePage={handleChangePage}
-            handleChangeRowsPerPage={handleChangeRowsPerPage}
+        data={allPrinterLineConfigurationData?.data}
+        totalRecords={allPrinterLineConfigurationData?.total}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        setPage={setPage}
+        setRowsPerPage={setRowsPerPage}
+        handleChangePage={handleChangePage}
+        handleChangeRowsPerPage={handleChangeRowsPerPage}
         >
             <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', width: '100%' }}>
                 <Table stickyHeader sx={{ width: '100%' }}>
@@ -242,52 +304,52 @@ const TablePrinterLineConfiguration = ({
                         <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             <TableCell className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} />
                             <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >Sr.No.</TableCell>
-                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('PrinterLineName')}>
+                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('printer_line_name')}>
                                 Printer Line Name
                                 <IconButton align='center' aria-label='expand row' size='small'>
                                     {getSortIcon(sortBy, 'PrinterLineName', sortDirection)}
                                 </IconButton>
                             </TableCell>
-                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('Printer')}>
+                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('PrinterMaster','printer_id')}>
                                 Printer Name
                                 <IconButton align='center' aria-label='expand row' size='small'>
-                                    {getSortIcon(sortBy, 'Printer', sortDirection)}
+                                    {getSortIcon(sortBy, 'PrinterMaster', sortDirection)}
                                 </IconButton>
                             </TableCell>
-                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('AreaCategoryId')}>
+                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('area_category','area_category_name')}>
                                 Area Category
                                 <IconButton align='center' aria-label='expand row' size='small'>
-                                    {getSortIcon(sortBy, 'AreaCategoryId', sortDirection)}
+                                    {getSortIcon(sortBy, 'area_category', sortDirection)}
                                 </IconButton>
                             </TableCell>
-                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('AreaId')}>
+                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('area','area_name')}>
                                 Area
                                 <IconButton align='center' aria-label='expand row' size='small'>
-                                    {getSortIcon(sortBy, 'AreaId', sortDirection)}
+                                    {getSortIcon(sortBy, 'area', sortDirection)}
                                 </IconButton>
                             </TableCell>
-                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('AreaId')}>
+                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('PrinterCategory','printer_category_name')}>
                                 Printer Category
                                 <IconButton align='center' aria-label='expand row' size='small'>
                                     {getSortIcon(sortBy, 'PrinterCategory', sortDirection)}
                                 </IconButton>
                             </TableCell>
-                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('LocationId')}>
+                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('locations','location_name')}>
                                 Location
                                 <IconButton align='center' aria-label='expand row' size='small'>
-                                    {getSortIcon(sortBy, 'LocationId', sortDirection)}
+                                    {getSortIcon(sortBy, 'locations', sortDirection)}
                                 </IconButton>
                             </TableCell>
-                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('LocationId')}>
+                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('ControlPanel','name')}>
                                 Control Panel
                                 <IconButton align='center' aria-label='expand row' size='small'>
-                                    {getSortIcon(sortBy, 'LocationId', sortDirection)}
+                                    {getSortIcon(sortBy, 'ControlPanel', sortDirection)}
                                 </IconButton>
                             </TableCell>
-                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('LocationId')}>
+                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('line_no')}>
                                 Line No
                                 <IconButton align='center' aria-label='expand row' size='small'>
-                                    {getSortIcon(sortBy, 'LocationId', sortDirection)}
+                                    {getSortIcon(sortBy, 'line_no', sortDirection)}
                                 </IconButton>
                             </TableCell>
                             {config?.config?.esign_status === true && <TableCell align='center'>E-Sign</TableCell>}
@@ -296,8 +358,7 @@ const TablePrinterLineConfiguration = ({
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {/* {console.log(printerLineConfigurationData)} */}
-                        {printerLineConfigurationData?.map((item, index) => (
+                        {allPrinterLineConfigurationData?.data?.map((item, index) => (
                             <Row
                                 key={item.id}
                                 row={item}
@@ -313,7 +374,7 @@ const TablePrinterLineConfiguration = ({
                                 apiAccess={apiAccess}
                             />
                         ))}
-                        {printerLineConfigurationData?.length === 0 && (
+                        {allPrinterLineConfigurationData?.data?.length === 0 && (
                             <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                                 <TableCell colSpan={12} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >
                                     No data
@@ -327,15 +388,10 @@ const TablePrinterLineConfiguration = ({
     );
 };
 TablePrinterLineConfiguration.propTypes = {
-    printerLineConfigurationData: PropTypes.any,
     handleUpdate: PropTypes.any,
-    handleSortByName: PropTypes.any,
-    sortDirection: PropTypes.any,
-    page: PropTypes.any,
-    rowsPerPage: PropTypes.any,
-    totalRecords: PropTypes.any,
-    handleChangePage: PropTypes.any,
-    handleChangeRowsPerPage: PropTypes.any,
+    tableHeaderData:PropTypes.any,
+    setAllPrinterLineConfiguration:PropTypes.any,
+    pendingAction:PropTypes.any,
     apiAccess: PropTypes.any,
     config: PropTypes.any,
     handleAuthCheck: PropTypes.any
