@@ -1,4 +1,5 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState, Fragment, useEffect, useMemo } from 'react';
+import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import Collapse from '@mui/material/Collapse';
@@ -13,15 +14,19 @@ import ChevronUp from 'mdi-material-ui/ChevronUp';
 import ChevronDown from 'mdi-material-ui/ChevronDown';
 import CustomTable from 'src/components/CustomTable';
 import { Tooltip } from '@mui/material';
-import PropTypes from 'prop-types';
 import { statusObj } from 'src/configs/statusConfig';
 import { getSortIcon } from 'src/utils/sortUtils';
 import { getSerialNumber } from 'src/configs/generalConfig';
 import { handleRowToggleHelper } from 'src/utils/rowUtils';
 import StatusChip from 'src/components/StatusChip';
 import moment from 'moment';
+import { useSettings } from 'src/@core/hooks/useSettings'
+import { api } from 'src/utils/Rest-API'
+import { useAuth } from 'src/Context/AuthContext'
+import { useLoading } from 'src/@core/hooks/useLoading'
+import { useRouter } from 'next/router'
 
-const Row = ({ row, index, openRows, handleRowToggle, page, rowsPerPage, historyData, config, handleAuthCheck, handleUpdate, apiAccess,
+const Row = ({ row, index,page,rowsPerPage, openRows, handleRowToggle, historyData, config, handleAuthCheck, handleUpdate, apiAccess,
 }) => {
   const isOpen = openRows[row.id];
   const serialNumber = getSerialNumber(index, page, rowsPerPage);
@@ -196,10 +201,10 @@ const Row = ({ row, index, openRows, handleRowToggle, page, rowsPerPage, history
 Row.propTypes = {
   row: PropTypes.any,
   index: PropTypes.any,
-  openRows: PropTypes.any,
-  handleRowToggle: PropTypes.any,
   page: PropTypes.any,
   rowsPerPage: PropTypes.any,
+  openRows: PropTypes.any,
+  handleRowToggle: PropTypes.any,
   historyData: PropTypes.any,
   config: PropTypes.any,
   handleAuthCheck: PropTypes.any,
@@ -207,134 +212,172 @@ Row.propTypes = {
   apiAccess: PropTypes.any,
 };
 const TableCompany = ({
-  companyData,
+  setCompany,
+  pendingAction,
   handleUpdate,
-  sortDirection,
-  handleSortByID,
-  handleSortByName,
-  handleSortByLicNo,
-  handleSortByEmail,
-  handleSortByContact,
-  handleSortByAddress,
-  handleSortByFirstGsprefix,
-  handleSortBySecondGsprefix,
-  handleSortByThirdGsprefix,
-  page,
-  rowsPerPage,
-  setPage,
-  setRowsPerPage,
-  handleChangePage,
-  totalRecords,
-  handleChangeRowsPerPage,
+  tableHeaderData,
   apiAccess,
   config,
   handleAuthCheck,
-}) => {
-  console.log(companyData,'check224');
+}) => { 
   
   const [sortBy, setSortBy] = useState('');
   const [openRows, setOpenRows] = useState({});
   const [historyData, setHistoryData] = useState({});
-  const handleRowToggle = async (rowId) => {
-    await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/company/history');
-  };
-  const handleSortBy = (value) => {
-    if (value === 'ID') {
-      handleSortByID();
-      setSortBy('ID');
-    } else if (value === 'Name') {
-      handleSortByName();
-      setSortBy('Name');
-    } else if (value === 'LicNo') {
-      handleSortByLicNo();
-      setSortBy('LicNo');
-    } else if (value === 'Email') {
-      handleSortByEmail();
-      setSortBy('Email');
-    } else if (value === 'Contact') {
-      handleSortByContact();
-      setSortBy('Contact');
-    } else if (value === 'Address') {
-      handleSortByAddress();
-      setSortBy('Address');
-    }else if( value === 'GS1 Prefix'){
-      handleSortByFirstGsprefix(),
-      setSortBy('GS1 Prefix');
-    }else if( value === 'GS2 Prefix'){
-      handleSortBySecondGsprefix(),
-      setSortBy('GS2 Prefix');
-    }else if( value === 'GS3 Prefix'){
-      handleSortByThirdGsprefix(),
-      setSortBy('GS3 Prefix');
-    }
-  };
+  const [page, setPage] = useState(0)
+  const { settings } = useSettings()
+  const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
+  const [companyData,setCompanyData] = useState({data:[],total:0})
+  const [sortDirection,setSortDirection] = useState('asc')
+  const {removeAuthToken} = useAuth()
+  const {setIsLoading} = useLoading();
+  const router = useRouter();
+  
+  useEffect(() => {
+    getData()
+  }, [page, rowsPerPage, tableHeaderData, pendingAction])
 
+  useMemo(()=>{
+    setPage(0)
+  },[tableHeaderData])
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage)
+  }
+  const handleChangeRowsPerPage = event => {
+    setRowsPerPage(parseInt(event.target.value))
+  }
+
+  const handleSort = (key,child) => {
+    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+    console.log("Code generation data :",companyData.data)
+    const data=companyData?.data
+    const sorted = [...data].sort((a, b) => {
+        if(!child){
+            if (a[key] > b[key]) {
+            return newSortDirection === 'asc' ? 1 : -1
+          }
+
+          if (a[key] < b[key]) {
+            return newSortDirection === 'asc' ? -1 : 1
+          }
+          return 0
+        }
+        else{
+            if (a[key][child] > b[key][child]) {
+                return newSortDirection === 'asc' ? 1 : -1
+              }
+    
+              if (a[key][child] < b[key][child]) {
+                return newSortDirection === 'asc' ? -1 : 1
+              }
+              return 0
+        }
+    })
+    setCompanyData({...companyData,data:sorted})
+    setSortDirection(newSortDirection)
+    setSortBy(key)
+  }
+
+    const getData = async (pageNumber, rowsNumber, status, search) => {
+     
+      try {
+        const params = new URLSearchParams({
+          page: page + 1,
+          limit: rowsPerPage === -1 ? -1 : rowsPerPage,
+          search: tableHeaderData.searchVal,
+          esign_status: tableHeaderData.esignStatus,
+  
+        });
+        console.log('params', params.toString());
+        const res = await api(`/company/?${params.toString()}`, {}, 'get', true)
+        console.log('All company ', res.data)
+
+        if (res.data.success) {
+          setCompanyData({data:res.data.data.companies , total:res.data.data.totalRecords})
+          setCompany(res.data.data.companies)
+          console.log("All Company Data",res.data);
+        } else {
+          console.log('Error to get all company ', res.data)
+          if (res.data.code === 401) {
+            removeAuthToken()
+            router.push('/401')
+          }
+        }
+      } catch (error) {
+        console.log('Error in get company ', error)
+      }
+    }
+
+    const handleRowToggle = async (rowId) => {
+      await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/company/history');
+    };
+    
   return (
     <CustomTable
-      totalRecords={totalRecords}
-      page={page}
-      rowsPerPage={rowsPerPage}
-      setPage={setPage}
-      setRowsPerPage={setRowsPerPage}
-      handleChangePage={handleChangePage}
-      handleChangeRowsPerPage={handleChangeRowsPerPage}
+    data ={companyData.data}
+    page={page}
+    rowsPerPage={rowsPerPage}
+    totalRecords={companyData.total}
+    handleChangePage={handleChangePage}
+    handleChangeRowsPerPage={handleChangeRowsPerPage}
     >
       <TableHead>
         <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} />
           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >Sr.No.</TableCell>
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('ID')}>
+          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('company_id')}>
             Company ID
             <IconButton align='center' aria-label='expand row' size='small' data-testid={`sort-icon-${sortBy}`}>
-              {getSortIcon(sortBy, 'ID', sortDirection)}
+              {getSortIcon(sortBy, 'company_id', sortDirection)}
             </IconButton>
           </TableCell>
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('Name')}>
+          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('company_name')}>
             Company Name
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'Name', sortDirection)}
+              {getSortIcon(sortBy, 'company_name', sortDirection)}
             </IconButton>
           </TableCell>
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('LicNo')}>
+          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('mfg_licence_no')}>
             Mfg.Lic
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'LicNo', sortDirection)}
+              {getSortIcon(sortBy, 'mfg_licence_no', sortDirection)}
             </IconButton>
           </TableCell>
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('Email')}>
+          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('email')}>
             Email
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'Email', sortDirection)}
+              {getSortIcon(sortBy, 'email', sortDirection)}
             </IconButton>
           </TableCell>
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('Contact')}>
+          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('contact')}>
             Contact No.
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'Contact', sortDirection)}
+              {getSortIcon(sortBy, 'contact', sortDirection)}
             </IconButton>
           </TableCell>
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('Address')}>
+          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('address')}>
             Address
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'Address', sortDirection)}
+              {getSortIcon(sortBy, 'address', sortDirection)}
             </IconButton>
           </TableCell>
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('GS1 Prefix')}>
+          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('gs1_prefix')}>
           GS1 Prefix
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'GS1 Prefix', sortDirection)}
+              {getSortIcon(sortBy, 'gs1_prefix', sortDirection)}
             </IconButton>
           </TableCell>
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('GS2 Prefix')}>
+          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('gs2_prefix')}>
           GS2 Prefix
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'GS2 Prefix', sortDirection)}
+              {getSortIcon(sortBy, 'gs2_prefix', sortDirection)}
             </IconButton>
           </TableCell>
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('GS3 Prefix')}>
+          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('gs3_prefix')}>
           GS3 Prefix
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'GS3 Prefix', sortDirection)}
+              {getSortIcon(sortBy, 'gs3_prefix', sortDirection)}
             </IconButton>
           </TableCell>
           {config?.config?.esign_status === true && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >E-Sign</TableCell>}
@@ -345,7 +388,7 @@ const TableCompany = ({
         </TableRow>
       </TableHead>
       <TableBody>
-        {companyData?.map((item, index) => (
+        {companyData?.data?.map((item, index) => (
           <Row
             key={index + 1}
             row={item}
@@ -361,7 +404,7 @@ const TableCompany = ({
             apiAccess={apiAccess}
           />
         ))}
-        {companyData?.length === 0 && (
+        {companyData?.data?.length === 0 && (
           <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
             <TableCell colSpan={12} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >
               No data
@@ -373,27 +416,12 @@ const TableCompany = ({
   );
 };
 TableCompany.propTypes = {
-  companyData: PropTypes.any,
+  setCompany:PropTypes.any,
+  pendingAction:PropTypes.any,
   handleUpdate: PropTypes.any,
-  sortDirection: PropTypes.any,
-  handleSortByID: PropTypes.any,
-  handleSortByName: PropTypes.any,
-  handleSortByLicNo: PropTypes.any,
-  handleSortByEmail: PropTypes.any,
-  handleSortByContact: PropTypes.any,
-  handleSortByAddress: PropTypes.any,
-  handleSortByFirstGsprefix: PropTypes.any,
-  handleSortBySecondGsprefix: PropTypes.any,
-  handleSortByThirdGsprefix: PropTypes.any,
-  page: PropTypes.any,
-  rowsPerPage: PropTypes.any,
-  setPage: PropTypes.any,
-  setRowsPerPage: PropTypes.any,
-  handleChangePage: PropTypes.any,
-  totalRecords: PropTypes.any,
-  handleChangeRowsPerPage: PropTypes.any,
+  tableHeaderData:PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
-  handleAuthCheck: PropTypes.any,
+  handleAuthCheck: PropTypes.any
 };
 export default TableCompany;
