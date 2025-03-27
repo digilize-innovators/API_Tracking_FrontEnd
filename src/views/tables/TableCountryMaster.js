@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import Collapse from '@mui/material/Collapse';
@@ -20,6 +20,11 @@ import { getSerialNumber } from 'src/configs/generalConfig';
 import { handleRowToggleHelper } from 'src/utils/rowUtils';
 import StatusChip from 'src/components/StatusChip';
 import moment from 'moment';
+import { useLoading } from 'src/@core/hooks/useLoading';
+import { useAuth } from 'src/Context/AuthContext';
+import { api } from 'src/utils/Rest-API';
+import { useRouter } from 'next/router';
+import { useSettings } from 'src/@core/hooks/useSettings';
 
 const Row = ({
     row,
@@ -30,7 +35,6 @@ const Row = ({
     rowsPerPage,
     historyData,
     config,
-    handleAuthCheck,
     handleUpdate,
     apiAccess
 }) => {
@@ -63,7 +67,6 @@ const Row = ({
                             <MdOutlineDomainVerification
                                 fontSize={20}
                                 data-testid={`auth-check-icon-${row.id}`}
-                                onClick={() => handleAuthCheck(row)}
                             />
                         </span>
                     ) : (
@@ -158,49 +161,111 @@ Row.propTypes = {
     rowsPerPage: PropTypes.any,
     historyData: PropTypes.any,
     config: PropTypes.any,
-    handleAuthCheck: PropTypes.any,
     handleUpdate: PropTypes.any,
     apiAccess: PropTypes.any,
 };
 const TableCountryMaster = ({
-    countryMasterData,
+    openModal,
     handleUpdate,
-    sortDirection,
-    handleSortByCountry,
-    handleSortByCodeStructure,
-    totalRecords,
-    rowsPerPage,
-    page,
-    handleChangePage,
-    handleChangeRowsPerPage,
-    apiAccess,
     config,
-    handleAuthCheck
 }) => {
     const [sortBy, setSortBy] = useState('');
     const [openRows, setOpenRows] = useState({});
     const [historyData, setHistoryData] = useState({});
+    const [countryMasterData,setCountryMasterData]=useState({data:[],total:0})
     const handleRowToggle = async (rowId) => {
         await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/product/history');
     };
+
+    const {setIsLoading}=useLoading()
+    const {removeAuthToken}=useAuth()
+    const router=useRouter()
+    const [page,setPage]=useState(0)
+    const {settings}=useSettings()
+    const [sortDirection,setSortDirection]=useState('asc')
+    const [rowsPerPage,setRowsPerPage]=useState(settings.rowsPerPage)
+
+    useMemo(()=>[
+        setPage(0)
+    ],[page]);
+
+    useEffect(() => {
+        getCountryMasterData()
+      }, [page,openModal,rowsPerPage]);
+
+      const handleChangePage = (event, newPage) => {
+        setPage(newPage)
+      }
+
+          
+      const handleSort = (key,child) => {
+        const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+        const data=countryMasterData?.data
+        const sorted = [...data].sort((a, b) => {
+            if(!child){
+                if (a[key] > b[key]) {
+                return newSortDirection === 'asc' ? 1 : -1
+              }
     
-    const handleSortBy = (value) => {
-        if (value === 'country') {
-            handleSortByCountry();
-            setSortBy('country');
-        } else if (value === 'codeStructure') {
-            handleSortByCodeStructure();
-            setSortBy('codeStructure');
+              if (a[key] < b[key]) {
+                return newSortDirection === 'asc' ? -1 : 1
+              }
+              return 0
+            }
+            else{
+                if (a[key][child] > b[key][child]) {
+                    return newSortDirection === 'asc' ? 1 : -1
+                  }
+        
+                  if (a[key][child] < b[key][child]) {
+                    return newSortDirection === 'asc' ? -1 : 1
+                  }
+                  return 0
+            }
+        })
+        setCountryMasterData({...countryMasterData,data:sorted})
+        setSortDirection(newSortDirection)
+        setSortBy(key)
+      }
+    
+      const handleChangeRowsPerPage = event => {
+        const newRowsPerPage = parseInt(event.target.value, 10)
+        setRowsPerPage(newRowsPerPage)
+        setPage(0)
+      }
+
+    const getCountryMasterData = async () => {
+        try {
+          setIsLoading(true)
+          const res = await api('/country-master/', {}, 'get', true)
+          setIsLoading(false)
+          console.log('All Country Master Data : ', res?.data?.data)
+          if (res.data.success) {
+            setCountryMasterData({data:res.data.data.countryMaster,total:res.data.data.totalRecords})
+
+          } else {
+            console.log('Error to get all country master ', res.data)
+            if (res.data.code === 401) {
+              removeAuthToken()
+              router.push('/401')
+            }
+          }
+        } catch (error) {
+          console.log('Error in get country master ', error)
+          setIsLoading(false)
         }
-    };
+      }
+
     return (
         <CustomTable
-            data={countryMasterData}
-            totalRecords={totalRecords}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            handleChangePage={handleChangePage}
-            handleChangeRowsPerPage={handleChangeRowsPerPage}
+        data={countryMasterData?.data}
+        totalRecords={countryMasterData?.total}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        setPage={setPage}
+        setRowsPerPage={setRowsPerPage}
+        handleChangePage={handleChangePage}
+        handleChangeRowsPerPage={handleChangeRowsPerPage}
         >
             <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
                 <Table stickyHeader>
@@ -208,7 +273,7 @@ const TableCountryMaster = ({
                         <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} />
                             <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Sr.No.</TableCell>
-                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSortBy('country')}>
+                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSort('country')}>
                                 <Box display='flex' alignItems='center' justifyContent='center'>
                                     Country
                                     <IconButton aria-label='expand row' size='small'>
@@ -216,7 +281,7 @@ const TableCountryMaster = ({
                                     </IconButton>
                                 </Box>
                             </TableCell>
-                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSortBy('codeStructure')}>
+                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSort('codeStructure')}>
                                 <Box display='flex' alignItems='center' justifyContent='center'>
                                     Code Structure
                                     <IconButton aria-label='expand row' size='small'>
@@ -233,7 +298,7 @@ const TableCountryMaster = ({
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {countryMasterData?.map((item, index) => (
+                        {countryMasterData?.data?.map((item, index) => (
                             <Row
                                 key={item.id}
                                 row={item}
@@ -244,9 +309,8 @@ const TableCountryMaster = ({
                                 rowsPerPage={rowsPerPage}
                                 historyData={historyData}
                                 config={config}
-                                handleAuthCheck={handleAuthCheck}
                                 handleUpdate={handleUpdate}
-                                apiAccess={apiAccess}
+                                apiAccess={{editApiAccess:true}}
                             />
                         ))}
                         {countryMasterData?.length === 0 && (
@@ -263,18 +327,8 @@ const TableCountryMaster = ({
     );
 };
 TableCountryMaster.propTypes = {
-    countryMasterData: PropTypes.any,
     handleUpdate: PropTypes.any,
-    sortDirection: PropTypes.any,
-    handleSortByCountry: PropTypes.any,
-    handleSortByCodeStructure: PropTypes.any,
-    totalRecords: PropTypes.any,
-    rowsPerPage: PropTypes.any,
-    page: PropTypes.any,
-    handleChangePage: PropTypes.any,
-    handleChangeRowsPerPage: PropTypes.any,
-    apiAccess: PropTypes.any,
+    openModal:PropTypes.any,
     config: PropTypes.any,
-    handleAuthCheck: PropTypes.any
 };
 export default TableCountryMaster;
