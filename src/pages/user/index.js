@@ -74,7 +74,7 @@ const Index = () => {
 
   useEffect(() => {
     if (userFormData && pendingAction) {
-      const esign_status = config?.config?.esign_status ? "pending" : "approved";
+      const esign_status = config?.config?.esign_status && config?.role!='admin' ? "pending" : "approved";
       if (pendingAction === "edit") {
         editUser(esign_status)
       } else if (pendingAction == 'add') {
@@ -104,7 +104,6 @@ const Index = () => {
     Filter: ['department', departmentFilter],
     filename: "UserMaster"
   }), [departmentFilter]);
-
 
 
   const getDepartments = async () => {
@@ -165,7 +164,7 @@ const Index = () => {
       approveAPIEndPoint: "/api/v1/user"
     })
 
-    if (config?.config?.esign_status) {
+    if (config?.config?.esign_status && config?.role!='admin') {
       setAuthModalOpen(true);
       return;
     }
@@ -526,7 +525,7 @@ const Index = () => {
       approveAPImethod: "POST",
       approveAPIEndPoint: "/api/v1/user"
     })
-    if (config?.config?.esign_status) {
+    if (config?.config?.esign_status && config?.role!=='admin') {
       console.log("Esign enabled for download pdf");
       setEsignDownloadPdf(true);
       setAuthModalOpen(true);
@@ -551,7 +550,7 @@ const Index = () => {
             <Grid2 item xs={12}>
 
               <Box className='d-flex-row justify-content-start align-items-center mx-4 my-3 '>
-                {(config?.config?.esign_status) &&
+                {(config?.config?.esign_status && config?.role!=='admin') &&
                   <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
                 }
                 <FormControl className='w-25 mx-2'>

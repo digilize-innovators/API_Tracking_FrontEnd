@@ -52,7 +52,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
           {row.address}
         </TableCell>
 
-        {config?.config?.esign_status === true && (
+        {config?.config?.esign_status === true && config?.role!=='admin' && (
           <StatusChip
             label={row.esign_status}
             color={statusObj[row.esign_status]?.color || 'default'}
@@ -62,7 +62,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
           {moment(row?.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
         </TableCell>
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
-          {row.esign_status === 'pending' && config?.config?.esign_status === true ? (
+          {row.esign_status === 'pending' && config?.config?.esign_status === true && config?.role!=='admin' ? (
             <span>
               <MdOutlineDomainVerification
                 fontSize={20}
@@ -102,7 +102,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Mfg. Licence No.</TableCell>
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Mfg. Name</TableCell>
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Address</TableCell>
-                        {config?.config?.esign_status === true && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>E-Sign</TableCell>}
+                        {config?.config?.esign_status === true  && config?.role!=='admin' && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>E-Sign</TableCell>}
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Updated At</TableCell>
                       </TableRow>
                     </TableHead>
@@ -117,7 +117,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.mfg_licence_no}</TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.mfg_name}</TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.address}</TableCell>
-                          {config?.config?.esign_status === true && (
+                          {config?.config?.esign_status === true && config?.role!=='admin' && (
                             <StatusChip
                               label={historyRow.esign_status}
                               color={statusObj[historyRow.esign_status]?.color || 'default'}
@@ -308,7 +308,7 @@ const TableCollapsiblelocation = ({
                   {getSortIcon(sortBy, 'address', sortDirection)}
                 </IconButton>
               </TableCell>
-              {config?.config?.esign_status === true && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >E-Sign</TableCell>}
+              {config?.config?.esign_status === true && config?.role!=='admin' && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >E-Sign</TableCell>}
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >Created At</TableCell>
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >Action</TableCell>
             </TableRow>

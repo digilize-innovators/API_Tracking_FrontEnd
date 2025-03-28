@@ -147,6 +147,7 @@ const Index = () => {
         approveAPImethod: "",
         approveAPIEndPoint: ""
       }))
+      setEsignDownloadPdf(false)
       setAuthModalOpen(false);
     };
     const handleAuthenticationError = () => {
@@ -165,8 +166,6 @@ const Index = () => {
         console.error("Error updating e-sign status:", error);
       }
       setPendingAction(true)
-
-      
       if (esignStatus === "rejected" && esignDownloadPdf) {
         handleRejectDownload();
       }
@@ -207,7 +206,6 @@ const Index = () => {
         console.log("esign is approved for creator");
         const esign_status = "pending";
         setPendingAction(editData?.id ? "edit" : "add");
-        // editData?.id ? editUOM(esign_status, remarks) : addUOM(esign_status, remarks);
       }
     };
    
@@ -266,7 +264,6 @@ const Index = () => {
       console.log('add res uom', res);
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Unit added successfully' });
-        //getData();
         setOpenModal(false);
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message });
@@ -316,7 +313,6 @@ const Index = () => {
       if (res.data.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Unit updated successfully' });
         resetForm();
-        //getData();
         setOpenModal(false);
 
       } else {

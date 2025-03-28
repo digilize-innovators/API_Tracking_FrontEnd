@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react'
+import { useState, Fragment, useEffect } from 'react'
 import Box from '@mui/material/Box'
 import Table from '@mui/material/Table'
 import Collapse from '@mui/material/Collapse'
@@ -18,6 +18,10 @@ import { statusObj } from 'src/configs/statusConfig';
 import { getSortIcon } from 'src/utils/sortUtils';
 import { handleRowToggleHelper } from 'src/utils/rowUtils'
 import StatusChip from 'src/components/StatusChip'
+import { useLoading } from 'src/@core/hooks/useLoading'
+import { useAuth } from 'src/Context/AuthContext'
+import { api } from 'src/utils/Rest-API'
+import { useRouter } from 'next/router'
 
 const Row = ({
   row,
@@ -50,13 +54,13 @@ const Row = ({
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.designation_id}</TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.designation_name}</TableCell>
-        {config_dept?.config?.esign_status === true && (
+        {config_dept?.config?.esign_status === true && config_dept?.role!=='admin' && (
           <StatusChip
             label={row.esign_status}
             color={statusObj[row.esign_status]?.color || 'default'} />
         )}
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
-          {row.esign_status === 'pending' && config_dept?.config?.esign_status === true ? (
+          {row.esign_status === 'pending' && config_dept?.config?.esign_status === true && config_dept?.role!=='admin' ? (
             <span>
               <MdOutlineDomainVerification
                 fontSize={20}
@@ -99,13 +103,13 @@ const Row = ({
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                           Designation Name
                         </TableCell>
-                       {
-                       
-                                   config_dept?.config?.esign_status === true &&
-                                   <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          E-Sign
-                        </TableCell>
-}
+                        {
+
+                          config_dept?.config?.esign_status === true  && config_dept?.role!=='admin' &&
+                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
+                            E-Sign
+                          </TableCell>
+                        }
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)', width: '20%' }}>
                           Updated At
                         </TableCell>
@@ -124,12 +128,12 @@ const Row = ({
                             {historyRow.designation_name}
                           </TableCell>
                           {
-                                        config_dept?.config?.esign_status === true &&
-                          <StatusChip
-                            label={historyRow.esign_status}
-                            color={statusObj[historyRow.esign_status]?.color || 'default'}
-                          />
-}
+                            config_dept?.config?.esign_status === true  && config_dept?.role!=='admin' &&
+                            <StatusChip
+                              label={historyRow.esign_status}
+                              color={statusObj[historyRow.esign_status]?.color || 'default'}
+                            />
+                          }
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             {moment(historyRow.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
                           </TableCell>
@@ -159,55 +163,99 @@ Row.propTypes = {
 };
 const TableDesignation = ({
   handleUpdateDes,
-  arrayDesignation,
-  handleSortById,
-  handleSortByName,
-  sortDirection,
+  departmentId,
   handleAuthCheck,
   apiAccess,
-  config_dept
+  config_dept,
+  openModalDes,
+  setArrayDesignation
 }) => {
   const [sortBy, setSortBy] = useState('');
+  const [sortDirection, setSortDirection] = useState('asc')
   const [openRows, setOpenRows] = useState({});
   const [historyData, setHistoryData] = useState({});
+  const [designationData, setDesignationData] = useState([])
   const handleRowToggle = async (rowId) => {
     await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/designation/history');
   };
-  const handleSortBy = value => {
-    if (value === 'Name') {
-      handleSortByName();
-      setSortBy('Name');
-    } else if (value === 'ID') {
-      handleSortById();
-      setSortBy('ID');
+
+  const { setIsLoading } = useLoading()
+  const { removeAuthToken } = useAuth()
+  const router = useRouter()
+
+
+
+  const getDesignations = async () => {
+    try {
+      setIsLoading(true)
+      const res = await api(`/designation/${departmentId}`, {}, 'get', true)
+      setIsLoading(false)
+      console.log('All designations ', res.data)
+      if (res.data.success) {
+        setDesignationData(res.data.data.designations)
+        setArrayDesignation(res.data.data.designations)
+      } else if (res.data.code === 401) {
+        removeAuthToken()
+        router.push('/401')
+      }
+    } catch (error) {
+      console.log('Error in get designation ', error)
+      setIsLoading(false)
     }
+  }
+  useEffect(() => {
+    getDesignations()
+  }, [departmentId, openModalDes])
+  const handleSort = (key, isBoolean = false) => {
+    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    const booleanSort = (a, b) => {
+      if (a[key] === b[key]) return 0;
+      let comparison = a[key] ? 1 : -1;
+      if (newSortDirection !== 'asc') {
+        comparison = a[key] ? -1 : 1;
+      }
+      return comparison;
+    };
+    const regularSort = (a, b) => {
+      if (a[key] === b[key]) return 0;
+      let comparison = a[key] > b[key] ? 1 : -1;
+      if (newSortDirection !== 'asc') {
+        comparison = a[key] > b[key] ? -1 : 1;
+      }
+      return comparison;
+    };
+    const sorted = [...designationData].sort(isBoolean ? booleanSort : regularSort);
+    setDesignationData(sorted);
+    setSortDirection(newSortDirection);
+    setSortBy(key)
   };
   return (
     <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', marginTop: '30px' }}>
+      {console.log(designationData)}
       <Box style={{ padding: '40px' }}>
         <Table stickyHeader style={{ border: '1px solid #eeeeee' }}>
           <TableHead>
             <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
               <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} />
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Sr.No.</TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('ID')}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('designation_id')}>
                 Designation ID
                 <IconButton align='center' aria-label='expand row' size='small' data-testid={`sort-icon-${sortBy}`}>
-                  {getSortIcon(sortBy, 'ID', sortDirection)}
+                  {getSortIcon(sortBy, 'designation_id', sortDirection)}
                 </IconButton>
               </TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSortBy('Name')}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('designation_name')}>
                 Designation Name
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'Name', sortDirection)}
+                  {getSortIcon(sortBy, 'designation_name', sortDirection)}
                 </IconButton>
               </TableCell>
-              {config_dept?.config?.esign_status === true && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>E-Sign</TableCell>}
+              {config_dept?.config?.esign_status === true && config_dept?.role!=='admin' && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>E-Sign</TableCell>}
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {arrayDesignation?.map((item, index) => (
+            {designationData?.map((item, index) => (
               <Row
                 key={index + 1}
                 row={item}
@@ -221,7 +269,7 @@ const TableDesignation = ({
                 config_dept={config_dept}
               />
             ))}
-            {arrayDesignation?.length === 0 && (
+            {designationData?.length === 0 && (
               <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 <TableCell colSpan={12} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                   No data
@@ -236,12 +284,11 @@ const TableDesignation = ({
 };
 TableDesignation.propTypes = {
   handleUpdateDes: PropTypes.any,
-  arrayDesignation: PropTypes.any,
-  handleSortById: PropTypes.any,
-  handleSortByName: PropTypes.any,
-  sortDirection: PropTypes.any,
   handleAuthCheck: PropTypes.any,
   apiAccess: PropTypes.any,
-  config_dept: PropTypes.any
+  config_dept: PropTypes.any,
+  departmentId: PropTypes.any,
+  setArrayDesignation: PropTypes.any,
+  openModalDes: PropTypes.any
 };
 export default TableDesignation;

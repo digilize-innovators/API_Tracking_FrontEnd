@@ -1,9 +1,8 @@
-import React from 'react'
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Modal, Box, Typography, Button, TextField, Grid2, FormControlLabel, Switch } from '@mui/material';
+import { Modal, Box, Typography, Button, Grid2, FormControlLabel, Switch } from '@mui/material';
 import { style } from 'src/configs/generalConfig'
 import CustomTextField from 'src/components/CustomTextField';
 const departmentSchema = yup.object().shape({
@@ -119,5 +118,4 @@ const DepartmentModel = ({ open, onClose, editData, handleSubmitForm }) => {
 
   )
 }
-
 export default DepartmentModel

@@ -62,7 +62,7 @@ const Index = () => {
 
   useEffect(() => {
     if (formData && pendingAction) {
-      const esign_status = config?.config.esign_status ? 'pending' : 'approved'
+      const esign_status = config?.config.esign_status && config?.role !='admin'  ? 'pending' : 'approved'
       if (pendingAction === 'edit') {
         editLocation(esign_status)
       } else if (pendingAction === 'add') {
@@ -135,7 +135,7 @@ const Index = () => {
         approveAPIEndPoint: '/api/v1/location'
       })
     }
-    if (config?.config?.esign_status) {
+    if (config?.config?.esign_status && config?.role!=='admin') {
       setAuthModalOpen(true)
       return
     }
@@ -378,7 +378,7 @@ const Index = () => {
   const handleUpdate = item => {
     setEditData(item)
     setOpenModal(true)
-    if (config?.config?.esign_status) {
+    if (config?.config?.esign_status ) {
       setESignStatusId(item.id)
     }
   }
@@ -407,7 +407,7 @@ const Index = () => {
     })
     let data = getUserData()
     setUserDataPdf(data)
-    if (config?.config?.esign_status) {
+    if (config?.config?.esign_status && config?.role!=='admin') {
       console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
@@ -427,14 +427,14 @@ const Index = () => {
         <Grid2 item xs={12}>
           <Box sx={{ backgroundColor: settings.mode === 'dark' ? '#212121' : 'white', borderRadius: 1 }}>
             <Grid2 item xs={12}>
-              {config?.config?.esign_status && (
+              {config?.config?.esign_status  && (
                 <Typography variant='h4' className='mx-4 my-2 mx-2' sx={{ paddingTop: '1%' }}>
                   Filter
                 </Typography>
               )}
               <Grid2 item xs={12}>
                 <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                  {config?.config?.esign_status && (
+                  {config?.config?.esign_status && config?.role!=='admin' && (
                     <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
                   )}
                 </Box>
