@@ -97,8 +97,10 @@ const Index = () => {
     tableHeader: ['Sr.No.', 'Batch No', 'Product Name', 'Location Name', 'Manufacturing Date', 'Expiry Date', 'Quantity', 'E-Sign'],
     tableHeaderText: 'Batch Master Report',
     tableBodyText: 'Batch Master Data',
-    filename: "BatchMaster"
-  }), []);
+    filename: "BatchMaster",
+    Filter:['location',filterLocationVal],
+
+  }), [filterLocationVal]);
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
