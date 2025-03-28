@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from 'react'
+import React, { useState, Fragment,useEffect, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import Box from '@mui/material/Box'
 import Table from '@mui/material/Table'
@@ -19,6 +19,9 @@ import { getSortIcon } from 'src/utils/sortUtils'
 import { handleRowToggleHelper } from 'src/utils/rowUtils'
 import StatusChip from 'src/components/StatusChip'
 import moment from 'moment'
+import { useSettings } from 'src/@core/hooks/useSettings'
+import { useLoading } from 'src/@core/hooks/useLoading'
+import { api } from 'src/utils/Rest-API'
 
 const Row = ({
   row,
@@ -202,37 +205,97 @@ Row.propTypes = {
   apiAccess: PropTypes.any
 }
 const TablePrinterCategory = ({
-  printerCategoryData,
   handleUpdate,
-  handleSortByName,
-  sortDirection,
-  page,
-  rowsPerPage,
-  totalRecords,
-  handleChangePage,
-  handleChangeRowsPerPage,
+  setAllPrinterCategory,
+  tableHeaderData,
   apiAccess,
   config,
-  handleAuthCheck
+  handleAuthCheck,
+  pendingAction
 }) => {
   const [sortBy, setSortBy] = useState('')
   const [openRows, setOpenRows] = useState({})
   const [historyData, setHistoryData] = useState({})
+
+  const {settings}=useSettings()
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
+  const [allPrinterCategoryData, setAllPrinterCategoryData]=useState({data:[], total:0})
+  const [sortDirection, setSortDirection] = useState('asc')
+  const {setIsLoading} = useLoading()
   const handleRowToggle = async rowId => {
     await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/printercategory/history')
   }
-  const handleSortBy = value => {
-    if (value === 'Name') {
-      handleSortByName()
-      setSortBy('Name')
+
+  useMemo(()=>{
+    setPage(0);
+    console.log(tableHeaderData.searchVal)
+
+  },[tableHeaderData]);
+
+  const handleSort = key => {
+    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+    const sorted = [...allPrinterCategoryData?.data].sort((a, b) => {
+      if (a[key] > b[key]) {
+        return newSortDirection === 'asc' ? 1 : -1
+      }
+      if (a[key] < b[key]) {
+        return newSortDirection === 'asc' ? -1 : 1
+      }
+      return 0
+    })
+    setAllPrinterCategoryData({...allPrinterCategoryData,data:sorted})
+    setSortDirection(newSortDirection)
+    setSortBy(key)
+  }
+
+  const getData = async () => {
+    try {
+      setIsLoading(true)
+      
+      const params = new URLSearchParams({
+        page: page + 1,
+        limit: rowsPerPage === -1 ? -1 : rowsPerPage,
+        search: tableHeaderData.searchVal,
+        esign_status: tableHeaderData.esignStatus
+      })
+      console.log("Params",params)
+      const res = await api(`/printercategory/?${params.toString()}`, {}, 'get', true)
+      if (res.data.success) {
+        console.log(res.data.data.printerCategories)
+        setAllPrinterCategoryData({...allPrinterCategoryData, data:res.data.data.printerCategories, total:res.data.data.total})
+        setAllPrinterCategory(res.data.data.printerCategories)
+      } else {
+        console.log('Error to get all printer categories ', res.data)
+        if (res.data.code === 401) {
+          removeAuthToken()
+          router.push('/401')
+        }
+      }
+    } catch (error) {
+      console.log('Error in get printer categories ', error)
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  useEffect(() => {
+    getData()
+  }, [rowsPerPage, page, tableHeaderData,pendingAction])
+  
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage)
+  }
+  const handleChangeRowsPerPage = event => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
   }
   return (
     <CustomTable
-      data={printerCategoryData}
+      data={allPrinterCategoryData?.data}
       page={page}
       rowsPerPage={rowsPerPage}
-      totalRecords={totalRecords}
+      totalRecords={allPrinterCategoryData?.total}
       handleChangePage={handleChangePage}
       handleChangeRowsPerPage={handleChangeRowsPerPage}
     >
@@ -248,22 +311,22 @@ const TablePrinterCategory = ({
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSortBy('CategoryID')}
+                onClick={() => handleSort('printer_category_id')}
               >
                 Printer Category ID
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'CategoryID', sortDirection)}
+                  {getSortIcon(sortBy, 'printer_category_id', sortDirection)}
                 </IconButton>
               </TableCell>
               <TableCell
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSortBy('Name')}
+                onClick={() => handleSort('printer_category_name')}
               >
                 Printer Category Name
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'Name', sortDirection)}
+                  {getSortIcon(sortBy, 'printer_category_name', sortDirection)}
                 </IconButton>
               </TableCell>
               {config?.config?.esign_status === true && <TableCell align='center'>E-Sign</TableCell>}
@@ -280,7 +343,7 @@ const TablePrinterCategory = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {printerCategoryData?.map((item, index) => (
+            {allPrinterCategoryData?.data?.map((item, index) => (
               <Row
                 key={item.id}
                 row={item}
@@ -296,7 +359,7 @@ const TablePrinterCategory = ({
                 apiAccess={apiAccess}
               />
             ))}
-            {printerCategoryData?.length === 0 && (
+            {allPrinterCategoryData?.data?.length === 0 && (
               <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 <TableCell colSpan={12} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                   No data
@@ -310,15 +373,9 @@ const TablePrinterCategory = ({
   )
 }
 TablePrinterCategory.propTypes = {
-  printerCategoryData: PropTypes.any,
+  setAllPrinterCategory: PropTypes.any,
   handleUpdate: PropTypes.any,
-  handleSortByName: PropTypes.any,
-  sortDirection: PropTypes.any,
-  page: PropTypes.any,
-  rowsPerPage: PropTypes.any,
-  totalRecords: PropTypes.any,
-  handleChangePage: PropTypes.any,
-  handleChangeRowsPerPage: PropTypes.any,
+  tableHeaderData: PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
   handleAuthCheck: PropTypes.any

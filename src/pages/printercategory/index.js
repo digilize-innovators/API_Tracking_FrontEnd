@@ -40,11 +40,7 @@ const Index = () => {
   const [formData, setFormData] = useState({})
   const [allPrinterCategoryData, setAllPrinterCategoryData] = useState([])
   const [editData, setEditData] = useState({})
-  const [sortDirection, setSortDirection] = useState('asc')
   const { setIsLoading } = useLoading()
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
-  const [totalRecords, setTotalRecords] = useState(0)
   const { getUserData, removeAuthToken } = useAuth()
   const [userDataPdf, setUserDataPdf] = useState()
   const router = useRouter()
@@ -52,10 +48,10 @@ const Index = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
   const [eSignStatusId, setESignStatusId] = useState('')
-  const [printerType, setPrinterType] = useState('')
   const [auditLogMark, setAuditLogMark] = useState('')
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
+  const [pendingAction, setPendingAction] = useState()
   const apiAccess = useApiAccess('printercategory-create', 'printercategory-update', 'printercategory-approve')
 
   const tableBody = allPrinterCategoryData.map((item, index) => [
@@ -75,42 +71,26 @@ const Index = () => {
   )
 
   useEffect(() => {
+    console.log(pendingAction)
+    if (formData && pendingAction) {
+      const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
+      if (pendingAction === 'edit') {
+        editPrinterCategory(esign_status)
+      } else if (pendingAction === 'add') {
+        addPrinterCategory(esign_status)
+      }
+      setPendingAction(null)
+    }
+  }, [formData, pendingAction])
+
+  useEffect(() => {
     let data = getUserData()
 
     decodeAndSetConfig(setConfig)
     setUserDataPdf(data)
     return () => {}
   }, [])
-  useEffect(() => {
-    getData()
-  }, [rowsPerPage, page, tableHeaderData.esignStatus, tableHeaderData.searchVal])
-  const getData = async () => {
-    try {
-      setIsLoading(true)
-      const params = new URLSearchParams({
-        page: page + 1,
-        limit: rowsPerPage === -1 ? -1 : rowsPerPage,
-        search: tableHeaderData.searchVal,
-        esign_status: tableHeaderData.esignStatus
-      })
-      const res = await api(`/printercategory/?${params.toString()}`, {}, 'get', true)
-      console.log('get print category ', res?.data)
-      if (res.data.success) {
-        setAllPrinterCategoryData(res.data.data.printerCategories)
-        setTotalRecords(res.data.data.total)
-      } else {
-        console.log('Error to get all printer categories ', res.data)
-        if (res.data.code === 401) {
-          removeAuthToken()
-          router.push('/401')
-        }
-      }
-    } catch (error) {
-      console.log('Error in get printer categories ', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
@@ -132,15 +112,6 @@ const Index = () => {
     setOpenModalApprove(false)
   }
 
-  const checkValidate = () => {
-    return (
-      printerCategoryName !== '' &&
-      printerCategoryName.length <= 101 &&
-      printerCategoryID !== '' &&
-      printerCategoryID.length < 50 &&
-      /^[a-zA-Z0-9\s-]+$/.test(printerCategoryName)
-    )
-  }
   const resetForm = () => {
     setEditData({})
   }
@@ -148,6 +119,7 @@ const Index = () => {
   const handleSubmitForm = async data => {
     console.log(data)
     setFormData(data)
+    console.log('form Data :', formData)
     if (editData?.id) {
       setApproveAPI({
         approveAPIName: 'printercategory-update',
@@ -161,20 +133,25 @@ const Index = () => {
         approveAPIEndPoint: '/api/v1/printercategory'
       })
     }
-    const validate = checkValidate()
-    if (!validate) {
-      return true
-    }
+
     if (config?.config?.esign_status) {
       setAuthModalOpen(true)
       return
     }
-    const esign_status = 'approved'
-    editData?.id ? editPrinterCategory() : addPrinterCategory(esign_status)
+    setPendingAction(editData?.id ? 'edit' : 'add')
+    // editData?.id ? editPrinterCategory() : addPrinterCategory(esign_status)
   }
   const addPrinterCategory = async (esign_status, remarks) => {
     try {
-      const data = { ...formData }
+      const printerType=formData.printerType
+      const data = {
+        categoryId: formData.printerCategoryID,
+        printerCategoryName: formData.printerCategoryName,
+        printerType: printerType,
+        esign_status
+      }
+
+      console.log("Add ",data)
       const auditlogRemark = remarks
       const audit_log = config?.config?.audit_logs
         ? {
@@ -202,8 +179,9 @@ const Index = () => {
           type: 'success',
           message: 'Printer category added successfully'
         })
-        getData()
         resetForm()
+        setOpenModal(false)
+
       } else {
         console.log('error to add printer category ', res.data)
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
@@ -215,22 +193,30 @@ const Index = () => {
     } catch (error) {
       console.log('Error to add printer category ', error)
       router.push('/500')
-    } finally {
       setOpenModal(false)
-      setPrinterType('')
+
+    } finally {
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
     }
   }
   const editPrinterCategory = async (esign_status, remarks) => {
     try {
-      const data = { ...formData }
+      const printerType=formData.printerType
+      const data = {
+        categoryId: formData.printerCategoryID,
+        printerCategoryName: formData.printerCategoryName,
+        printerType: printerType,
+        esign_status
+      }
+      console.log("Edit Data ",data)
       const auditlogRemark = remarks
       let audit_log
       if (config?.config?.audit_logs) {
         audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Printer category edited - ${formData.printerCategoryName}`
+          remarks:
+            auditlogRemark?.length > 0 ? auditlogRemark : `Printer category edited - ${formData.printerCategoryName}`
         }
       } else {
         audit_log = {
@@ -254,7 +240,8 @@ const Index = () => {
           message: 'Printer category updated successfully'
         })
         resetForm()
-        getData()
+        setOpenModal(false)
+
       } else {
         console.log('error to edit printer category ', res.data)
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
@@ -266,8 +253,9 @@ const Index = () => {
     } catch (error) {
       console.log('Erorr to edit printer category ', error)
       router.push('/500')
-    } finally {
       setOpenModal(false)
+
+    } finally {
       setIsLoading(false)
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
     }
@@ -275,17 +263,15 @@ const Index = () => {
   const handleUpdate = item => {
     resetForm()
     setOpenModal(true)
-    setPrinterCategoryID(item.printer_category_id)
     setEditData(item)
 
-    setPrinterType(item.printingTechnology)
     console.log('edi t printer category ', item)
-    setPrinterCategoryName(item.printer_category_name)
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     const resetState = () => {
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
       setAuthModalOpen(false)
+      setEsignDownloadPdf(false)
     }
     const handleApproverActions = async () => {
       const data = {
@@ -301,22 +287,50 @@ const Index = () => {
             }
           : {}
       }
-      if (esignStatus === 'approved' && esignDownloadPdf) {
-        setOpenModalApprove(false)
-        console.log('esign is approved for approver')
+
+      if (!esignDownloadPdf && isApprover && approveAPI.approveAPIName !== 'printercategory-approve') {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied for this user.'
+        })
         resetState()
-        downloadPdf(tableData, tableHeaderData, tableBody, allPrinterCategoryData, userDataPdf)
         return
       }
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('esign status update', res?.data)
-      if (esignStatus === 'rejected' && esignDownloadPdf) {
-        console.log('approver rejected')
-        setOpenModalApprove(false)
-        resetState()
+
+      if (esignDownloadPdf) {
+        if (esignStatus === 'approved' && esignDownloadPdf) {
+          setOpenModalApprove(false)
+          console.log('esign is approved for approver')
+          resetState()
+          downloadPdf(tableData, tableHeaderData, tableBody, allPrinterCategoryData, userDataPdf)
+          return
+        }
+        if (esignStatus === 'rejected' && esignDownloadPdf) {
+          console.log('approver rejected')
+          setOpenModalApprove(false)
+          resetState()
+        }
+      } else if (isApprover && approveAPI.approveAPIName === 'printercategory-approve') {
+        const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+        console.log('esign status update', res?.data)
+        setPendingAction(true)
+        if (esignStatus === 'approved') {
+          setOpenModalApprove(false)
+          console.log('esign is approved for approver')
+          resetState()
+          return
+        }
+        if (esignStatus === 'rejected') {
+          console.log('approver rejected')
+          setOpenModalApprove(false)
+          resetState()
+        }
       }
     }
     const handleCreatorActions = () => {
+      console.log('handleCreator')
       if (esignStatus === 'rejected') {
         setAuthModalOpen(false)
         setOpenModalApprove(false)
@@ -327,8 +341,7 @@ const Index = () => {
           setOpenModalApprove(true)
         } else {
           console.log('esign is approved for creator')
-          const esign_status = 'pending'
-          editData?.id ? editPrinterCategory(esign_status, remarks) : addPrinterCategory(esign_status, remarks)
+          setPendingAction(editData?.id ? 'edit' : 'add')
         }
       }
     }
@@ -336,13 +349,32 @@ const Index = () => {
       setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
       return
     }
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied: Download pdf disabled for this user.'
+      })
+      resetState()
+      return
+    }
     if (isApprover) {
       await handleApproverActions()
     } else {
+      if(approveAPI.approveAPIName==="printercategory-approve"){
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied: Download pdf disabled for this user.'
+        })
+        resetState()
+        return 
+      }
       handleCreatorActions()
     }
     resetState()
-    getData()
   }
   const handleAuthCheck = async row => {
     console.log('handleAuthCheck', row)
@@ -351,25 +383,12 @@ const Index = () => {
       approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/printercategory'
     })
-    console.log("id",row.id)
+    console.log('id', row.id)
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.printer_category_name)
   }
-  const handleSortByName = () => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const sorted = [...allPrinterCategoryData].sort((a, b) => {
-      if (a.printer_category_name > b.printer_category_name) {
-        return newSortDirection === 'asc' ? 1 : -1
-      }
-      if (a.printer_category_name < b.printer_category_name) {
-        return newSortDirection === 'asc' ? -1 : 1
-      }
-      return 0
-    })
-    setAllPrinterCategoryData(sorted)
-    setSortDirection(newSortDirection)
-  }
+  
   const resetFilter = () => {
     setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '' })
   }
@@ -379,13 +398,6 @@ const Index = () => {
     setPage(0)
   }
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage)
-  }
-  const handleChangeRowsPerPage = event => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
   const handleAuthModalOpen = () => {
     console.log('Open auth model')
     setApproveAPI({
@@ -451,19 +463,13 @@ const Index = () => {
               </Typography>
               <TableContainer component={Paper}>
                 <TablePrinterCategory
-                  printerCategoryData={allPrinterCategoryData}
+                  setAllPrinterCategory={setAllPrinterCategoryData}
                   handleUpdate={handleUpdate}
-                  handleSortByName={handleSortByName}
-                  sortDirection={sortDirection}
-                  page={page}
-                  rowsPerPage={rowsPerPage}
-                  totalRecords={totalRecords}
-                  handleChangePage={handleChangePage}
-                  handleChangeRowsPerPage={handleChangeRowsPerPage}
-                  editable={apiAccess.editApiAccess}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}
+                  pendingAction={pendingAction}
+                  tableHeaderData={tableHeaderData}
                 />
               </TableContainer>
             </Grid2>
