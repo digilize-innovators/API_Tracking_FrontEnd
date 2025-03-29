@@ -1,23 +1,24 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import Box from '@mui/material/Box';
 import { TextField, Button } from '@mui/material';
 import { IoMdSearch } from 'react-icons/io';
 import PropTypes from 'prop-types';
 
 const CustomSearchBar = forwardRef(({ handleSearchClick }, ref) => {
-    const [searchVal, setSearchVal] = useState('');
-
-    const handleSearchChange = (e) => {
-        setSearchVal(e.target.value);
-    };
+    const searchInputRef = useRef(null);
 
     const handleClick = () => {
-        handleSearchClick(searchVal);
+        if (searchInputRef.current) {
+            handleSearchClick(searchInputRef.current.value);
+        }
     };
 
-    // Expose reset method to parent using useImperativeHandle
     useImperativeHandle(ref, () => ({
-        resetSearch: () => setSearchVal('')
+        resetSearch: () => {
+            if (searchInputRef.current) {
+                searchInputRef.current.value = '';
+            }
+        }
     }));
 
     return (
@@ -25,14 +26,13 @@ const CustomSearchBar = forwardRef(({ handleSearchClick }, ref) => {
             {console.log('renderCustom search bar')}
             <Box className='mx-2'>
                 <TextField
+                    inputRef={searchInputRef}
                     type='search'
                     size='small'
                     style={{ height: '40px' }}
                     id='outlined-basic'
                     label='Search'
                     variant='outlined'
-                    value={searchVal}
-                    onChange={handleSearchChange}
                 />
             </Box>
             <Box className='mx-2'>

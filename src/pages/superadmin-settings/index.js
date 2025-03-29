@@ -31,8 +31,7 @@ const Index = () => {
     const [productCodeLength, setProductCodeLength] = useState('');
     const [generateCode, setGenerateCode] = useState({ type: 'random', length: '', productCodeLength: '', errorMessage: '', isError: false, errorMessageProduct: '', isErrorProduct: false });
     const [crmUrl, setCrmUrl] = useState('');
-    const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' });
-    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [alertData, setAlertData] = useState({openSnackbar:false, type: '', message: '', variant: 'filled' });
     const { setIsLoading } = useLoading();
     const { removeAuthToken } = useAuth();
     const router = useRouter();
@@ -81,7 +80,7 @@ const Index = () => {
         setOpenConfirm(false);
     };
     const closeSnackbar = () => {
-        setOpenSnackbar(false);
+        setAlertData({...alertData,openSnackbar:false})
     };
     const confirmSaveChanges = async () => {
         setOpenConfirm(false);
@@ -91,12 +90,10 @@ const Index = () => {
                 audit_logs: auditLogs
             }, 'put', true);
             if (response?.data?.success) {
-                setOpenSnackbar(true);
-                setAlertData({ ...alertData, type: 'success', message: 'Configuration updated successfully' });
+                setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Configuration updated successfully' });
                 getData();
             } else {
-                setOpenSnackbar(true);
-                setAlertData({ ...alertData, type: 'error', message: response.data?.message });
+                setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: response.data?.message });
                 if (response.data.code === 401) {
                     removeAuthToken();
                     router.push('/401');
@@ -169,13 +166,11 @@ const Index = () => {
             }, 'post', true);
             console.log("Response of code generate ", response.data)
             if (response?.data?.success) {
-                setOpenSnackbar(true);
-                setAlertData({ ...alertData, type: 'success', message: 'Codes generated successfully' });
+                setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Codes generated successfully' });
                 setCodesGenerated(true);
                 getData();
             } else {
-                setOpenSnackbar(true);
-                setAlertData({ ...alertData, type: 'error', message: 'Error generating codes' });
+                setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: 'Error generating codes' });
                 if (response.data.code === 401) {
                     removeAuthToken();
                     router.push('/401');
@@ -194,11 +189,9 @@ const Index = () => {
             const response = await api(`/superadmin-configuration/crm-url`, { url: crmUrl }, 'post', true);
 
             if (response?.data?.success) {
-                setOpenSnackbar(true);
-                setAlertData({ ...alertData, type: 'success', message: 'CRM URL saved successfully' });
+                setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'CRM URL saved successfully' });
             } else {
-                setOpenSnackbar(true);
-                setAlertData({ ...alertData, type: 'error', message: 'Error saved crm url' });
+                setAlertData({ ...alertData,openSnackbar:true, type: 'error', message: 'Error saved crm url' });
                 if (response.data.code === 401) {
                     removeAuthToken();
                     router.push('/401');
@@ -357,7 +350,7 @@ const Index = () => {
                 </DialogActions>
             </Dialog>
 
-            <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+            <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
             <AccessibilitySettings />
             <ChatbotComponent />
         </Box>

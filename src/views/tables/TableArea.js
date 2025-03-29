@@ -226,11 +226,14 @@ const { setIsLoading } = useLoading()
   const handleSort = (key) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
     const sorted = [...areaData.data].sort((a, b) => {
-      if (a[key] > b[key]) {
-        return newSortDirection === 'asc' ? 1 : -1;
+      const valueA = String(a[key]).toLowerCase();  // Convert to lowercase
+      const valueB = String(b[key]).toLowerCase();  // Convert to lowercase
+
+      if (valueA > valueB) {
+          return newSortDirection === 'asc' ? 1 : -1;
       }
-      if (a[key] < b[key]) {
-        return newSortDirection === 'asc' ? -1 : 1;
+      if (valueA < valueB) {
+          return newSortDirection === 'asc' ? -1 : 1;
       }
       return 0;
     });

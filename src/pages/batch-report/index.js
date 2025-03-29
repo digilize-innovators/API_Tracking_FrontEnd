@@ -124,14 +124,14 @@ const BatchReport = () => {
   const handleGenerateReport = async () => {
     if (!selectedProduct || !selectedBatch || !selectedFormat) {
       setAlertData({
-        type: 'warning',
+        type: 'error',
         message: 'Please select both product,batch,Report Format before generating report.',
         variant: 'filled',
         openSnackbar:true,
       })
       return
     }
-    try {
+   try {
       const response = await api(
         '/batch/getbatchreportbyproduct',
         {
@@ -829,7 +829,7 @@ const BatchReport = () => {
     }
 
     if (!BatchSummaryFile) {
-      setAlertData({openSnackbar:true, type: 'warning', message: 'file Name not found', variant: 'filled' })
+      setAlertData({openSnackbar:true, type: 'error', message: 'file Name not found', variant: 'filled' })
 
       return
     }

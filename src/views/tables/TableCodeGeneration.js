@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import Collapse from '@mui/material/Collapse';
@@ -19,6 +19,9 @@ import { getSerialNumber } from 'src/configs/generalConfig';
 import { handleRowToggleHelper } from 'src/utils/rowUtils';
 import moment from 'moment';
 import { IoMdEye } from "react-icons/io";
+import { useSettings } from 'src/@core/hooks/useSettings';
+import { api } from 'src/utils/Rest-API';
+import { useLoading } from 'src/@core/hooks/useLoading';
 
 const Row = ({
     row,
@@ -52,7 +55,7 @@ const Row = ({
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.no_of_codes}</TableCell>
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.status}</TableCell>
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                    {moment(row?.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
+                    {moment(row?.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
                 </TableCell>
                 <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
                     {row.esign_status === 'pending' && config?.config?.esign_status === true ? (
@@ -142,21 +145,9 @@ Row.propTypes = {
 };
 
 const TableCodeGeneration = ({
-    codeRequestData,
+    setCodeRequest,
+    tableHeaderData,
     handleUpdate,
-    sortDirection,
-    handleSortById,
-    handleSortByName,
-    handleSortByGTIN,
-    handleSortByPLevel,
-    handleSortByNDC,
-    handleSortByMRP,
-    handleSortByGenericName,
-    totalRecords,
-    rowsPerPage,
-    page,
-    handleChangePage,
-    handleChangeRowsPerPage,
     apiAccess,
     config,
     handleAuthCheck,
@@ -165,38 +156,116 @@ const TableCodeGeneration = ({
     const [sortBy, setSortBy] = useState('');
     const [openRows, setOpenRows] = useState({});
     const [historyData, setHistoryData] = useState({});
+    const [page, setPage] = useState(0);
+    const {settings} = useSettings();
+    const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
+    const [codeRequestData, setCodeRequestData] = useState({data:[],total: 0})
+    const [sortDirection,setSortDirection] = useState('asc');
+    const {setIsLoading} = useLoading();
+
+    useMemo(()=>{
+          setPage(0)
+    },[tableHeaderData])
+    
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage)
+    }
     const handleRowToggle = async (rowId) => {
         await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/codegeneration/history');
     };
-    
-    const handleSortBy = (value) => {
-        if (value === 'Id') {
-            handleSortById();
-            setSortBy('Id');
-        } else if (value === 'Name') {
-            handleSortByName();
-            setSortBy('Name');
-        } else if (value === 'GTIN') {
-            handleSortByGTIN();
-            setSortBy('GTIN');
-        } else if (value === 'NDC') {
-            handleSortByNDC();
-            setSortBy('NDC');
-        } else if (value === 'MRP') {
-            handleSortByMRP();
-            setSortBy('MRP');
-        } else if (value === 'PLevel') {
-            handleSortByPLevel();
-            setSortBy('PLevel');
-        } else if (value === 'GenericName') {
-            handleSortByGenericName();
-            setSortBy('GenericName');
+
+     const handleChangeRowsPerPage = event => {
+    const newRowsPerPage = parseInt(event.target.value, 10)
+    setRowsPerPage(newRowsPerPage)
+    setPage(0)
+  }
+      const getCodeRequestData = async (pageNumber, rowsNumber, status, search) => {
+        const paramsPage = pageNumber || page
+        const paramsRows = rowsNumber || rowsPerPage
+        const paramsEsignStatus = status === '' ? status : tableHeaderData.eSignStatus
+        const paramsSearchVal = search === '' ? search : tableHeaderData.searchVal
+        let query = `/codegeneration?page=${paramsPage}&limit=${paramsRows}`
+        if (paramsSearchVal) query += `&search=${paramsSearchVal}`
+        if (paramsEsignStatus) query += `&esign_status=${paramsEsignStatus}`
+        console.log('query ', query)
+        try {
+          setIsLoading(true)
+          const res = await api(query, {}, 'get', true)
+          setIsLoading(false)
+          console.log('Code Request Data ', res.data)
+          if (res.data.success) {
+            setCodeRequestData({data: res.data.data.result , total:res.data.data.total})
+            setCodeRequest(res.data.data.result)
+          }
+        } catch (error) {
+          setIsLoading(false)
+          console.log('Error to get code request data ', error)
         }
-    };
+      }
+      useEffect(() => {
+        getCodeRequestData()
+      }, [page, rowsPerPage, tableHeaderData])
+    
+      const handleSort = (key,child) => {
+        const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+        console.log("Code generation data :",codeRequestData.data)
+        const data=codeRequestData?.data
+        const sorted = [...data].sort((a, b) => {
+            if(!child){
+                if (a[key] > b[key]) {
+                return newSortDirection === 'asc' ? 1 : -1
+              }
+    
+              if (a[key] < b[key]) {
+                return newSortDirection === 'asc' ? -1 : 1
+              }
+              return 0
+            }
+            else{
+                if (a[key][child] > b[key][child]) {
+                    return newSortDirection === 'asc' ? 1 : -1
+                  }
+        
+                  if (a[key][child] < b[key][child]) {
+                    return newSortDirection === 'asc' ? -1 : 1
+                  }
+                  return 0
+            }
+        })
+        setCodeRequestData({...codeRequestData,data:sorted})
+        setSortDirection(newSortDirection)
+        setSortBy(sortDirection)
+      }
+
+    // const handleSortBy = (value) => {
+    //     if (value === 'Id') {
+    //         handleSortById();
+    //         setSortBy('Id');
+    //     } else if (value === 'Name') {
+    //         handleSortByName();
+    //         setSortBy('Name');
+    //     } else if (value === 'GTIN') {
+    //         handleSortByGTIN();
+    //         setSortBy('GTIN');
+    //     } else if (value === 'NDC') {
+    //         handleSortByNDC();
+    //         setSortBy('NDC');
+    //     } else if (value === 'MRP') {
+    //         handleSortByMRP();
+    //         setSortBy('MRP');
+    //     } else if (value === 'PLevel') {
+    //         handleSortByPLevel();
+    //         setSortBy('PLevel');
+    //     } else if (value === 'GenericName') {
+    //         handleSortByGenericName();
+    //         setSortBy('GenericName');
+    //     }
+    // };
+    
     return (
         <CustomTable
-            data={codeRequestData}
-            totalRecords={totalRecords}
+            data={codeRequestData.data}
+            totalRecords={codeRequestData.total}
             rowsPerPage={rowsPerPage}
             page={page}
             handleChangePage={handleChangePage}
@@ -208,7 +277,7 @@ const TableCodeGeneration = ({
                         <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} />
                             <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Sr.No.</TableCell>
-                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSortBy('Name')}>
+                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSort('product_id')}>
                                 <Box display='flex' alignItems='center' justifyContent='center'>
                                     Product Name
                                     <IconButton aria-label='expand row' size='small'>
@@ -216,14 +285,14 @@ const TableCodeGeneration = ({
                                     </IconButton>
                                 </Box>
                             </TableCell>
-                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSortBy('Name')}>
+                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSort('batch','batch_no')}>
                                 <Box display='flex' alignItems='center' justifyContent='center'>
                                     Batch No                                    <IconButton aria-label='expand row' size='small'>
                                         {getSortIcon(sortBy, 'Name', sortDirection)}
                                     </IconButton>
                                 </Box>
                             </TableCell>
-                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSortBy('GTIN')}>
+                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSort('locations','location_name')}>
                                 <Box display='flex' alignItems='center' justifyContent='center'>
                                     Location
                                     <IconButton aria-label='expand row' size='small'>
@@ -231,7 +300,7 @@ const TableCodeGeneration = ({
                                     </IconButton>
                                 </Box>
                             </TableCell>
-                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSortBy('NDC')}>
+                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSort('batch','qty')}>
                                 <Box display='flex' alignItems='center' justifyContent='center'>
                                     Batch Qty
                                     <IconButton aria-label='expand row' size='small'>
@@ -239,7 +308,7 @@ const TableCodeGeneration = ({
                                     </IconButton>
                                 </Box>
                             </TableCell>
-                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSortBy('MRP')}>
+                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSort('no_of_codes')}>
                                 <Box display='flex' alignItems='center' justifyContent='center'>
                                     Codes Generated
                                     <IconButton aria-label='expand row' size='small'>
@@ -247,7 +316,7 @@ const TableCodeGeneration = ({
                                     </IconButton>
                                 </Box>
                             </TableCell>
-                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSortBy('MRP')}>
+                            <TableCell align='center' sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSort('status')}>
                                 <Box display='flex' alignItems='center' justifyContent='center'>
                                     Status
                                     <IconButton aria-label='expand row' size='small'>
@@ -261,7 +330,8 @@ const TableCodeGeneration = ({
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {codeRequestData?.map((item, index) => (
+                        {console.log(handleOpenModal2)}
+                        {codeRequestData?.data?.map((item, index) => (
                             <Row
                                 key={item.id}
                                 row={item}
@@ -278,7 +348,7 @@ const TableCodeGeneration = ({
                                 handleOpenModal2={handleOpenModal2}
                             />
                         ))}
-                        {codeRequestData?.length === 0 && (
+                        {codeRequestData.data?.length === 0 && (
                             <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                                 <TableCell colSpan={12} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                                     No data
@@ -292,23 +362,11 @@ const TableCodeGeneration = ({
     );
 };
 TableCodeGeneration.propTypes = {
+    setCodeRequest: PropTypes.any,
     codeRequestData: PropTypes.any,
-    handleUpdate: PropTypes.any,
-    sortDirection: PropTypes.any,
-    handleSortById: PropTypes.any,
-    handleSortByName: PropTypes.any,
-    handleSortByGTIN: PropTypes.any,
-    handleSortByPLevel: PropTypes.any,
-    handleSortByNDC: PropTypes.any,
-    handleSortByMRP: PropTypes.any,
-    handleSortByGenericName: PropTypes.any,
-    totalRecords: PropTypes.any,
-    rowsPerPage: PropTypes.any,
-    page: PropTypes.any,
-    handleChangePage: PropTypes.any,
-    handleChangeRowsPerPage: PropTypes.any,
     apiAccess: PropTypes.any,
     config: PropTypes.any,
+    tableHeaderData:PropTypes.any,
     handleAuthCheck: PropTypes.any
 };
 export default TableCodeGeneration;
