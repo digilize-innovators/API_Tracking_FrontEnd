@@ -1,5 +1,5 @@
 'use-client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Checkbox from '@mui/material/Checkbox'
 import TableContainer from '@mui/material/TableContainer'
 import Table from '@mui/material/Table'
@@ -16,31 +16,30 @@ import SnackbarAlert from 'src/components/SnackbarAlert'
 import ProtectedRoute from '../../components/ProtectedRoute'
 import { useRouter } from 'next/router'
 import { useAuth } from 'src/Context/AuthContext'
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import Cookies from 'js-cookie'
-import { validateToken } from 'src/utils/ValidateToken';
+import { validateToken } from 'src/utils/ValidateToken'
 import { useSettings } from 'src/@core/hooks/useSettings'
 
 const Index = () => {
-  const router = useRouter();
-  const [checkboxes, setCheckboxes] = useState([]);
-  const [allCheckboxes, setAllCheckboxes] = useState([]);
-  const [filteredDepartments, setFilteredDepartments] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const { setIsLoading } = useLoading();
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' });
-  const [selectScreenName, setSelectScreenName] = useState(null);
-  const [selectedDeptValue, setSelectedDeptValue] = useState(null);
-  const { removeAuthToken } = useAuth();
-  const { settings } = useSettings();
+  const router = useRouter()
+  const [checkboxes, setCheckboxes] = useState([])
+  const [allCheckboxes, setAllCheckboxes] = useState([])
+  const [filteredDepartments, setFilteredDepartments] = useState([])
+  const [departments, setDepartments] = useState([])
+  const { setIsLoading } = useLoading()
+  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled',openSnackbar:false })
+  const [selectScreenName, setSelectScreenName] = useState(null)
+  const [selectedDeptValue, setSelectedDeptValue] = useState(null)
+  const { removeAuthToken } = useAuth()
+  const { settings } = useSettings()
 
   useEffect(() => {
-    getDesignationDepartmentWise();
-    getScreenPrivilige();
-    return () => { }
+    getDesignationDepartmentWise()
+    getScreenPrivilige()
+    return () => {}
   }, [])
   const getDesignationDepartmentWise = async () => {
     try {
@@ -51,8 +50,8 @@ const Index = () => {
         setDepartments(res.data.data.departments)
         setFilteredDepartments(res.data.data.departments)
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       }
       setIsLoading(false)
     } catch (error) {
@@ -66,31 +65,55 @@ const Index = () => {
       setIsLoading(false)
       console.log('All screen-access ', res.data)
       if (res.data.success) {
-        const data = res.data.data.filter(item => !(["Super Admin", "API Privilege", "Screen Privilege", "API-Screen Relation", "SuperAdmin Configuration"].includes(item.screenName)))
-        setCheckboxes(data);
-        setAllCheckboxes(data);
+        const data = res.data.data.filter(
+          item =>
+            ![
+              'Super Admin',
+              'API Privilege',
+              'Screen Privilege',
+              'API-Screen Relation',
+              'SuperAdmin Configuration'
+            ].includes(item.screenName)
+        )
+        setCheckboxes(data)
+        setAllCheckboxes(data)
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       }
     } catch (error) {
       console.log('Error in get screen-access ', error)
     }
   }
-  const handleCheckboxChange = (masterIndex, innerIndex) => {
-    console.log(masterIndex, innerIndex)
-    setCheckboxes(prevCheckboxes => {
-      const updatedCheckboxes = [...prevCheckboxes]
-      updatedCheckboxes[masterIndex].checkboxes[innerIndex].checked =
-        !updatedCheckboxes[masterIndex].checkboxes[innerIndex].checked
-      return updatedCheckboxes
+  const handleCheckboxChange = useCallback((groupIndex, checkboxIndex) => {
+    setCheckboxes(prevGroups => {
+      const updatedGroups = [...prevGroups]
+      const currentGroup = updatedGroups[groupIndex]
+      const updatedCheckboxes = currentGroup.checkboxes.map((checkbox, index) =>
+        index === checkboxIndex ? { ...checkbox, checked: !checkbox.checked } : checkbox
+      )
+
+      // Only update selectAll if the checkboxes have changed
+      const allChecked = updatedCheckboxes.every(cb => cb.checked)
+
+      if (currentGroup.selectAll !== allChecked) {
+        updatedGroups[groupIndex] = {
+          ...currentGroup,
+          checkboxes: updatedCheckboxes,
+          selectAll: allChecked
+        }
+      } else {
+        updatedGroups[groupIndex] = { ...currentGroup, checkboxes: updatedCheckboxes }
+      }
+
+      return updatedGroups
     })
-  }
+  }, [])
   const handleSaveChanges = () => {
     console.log('Changes saved!')
     console.log('checkboxes ', allCheckboxes)
     let onlyChecked = []
-    allCheckboxes.forEach(item => {
+    checkboxes.forEach(item => {
       item.checkboxes.forEach(row => {
         if (row.checked) {
           onlyChecked.push({
@@ -109,33 +132,32 @@ const Index = () => {
   }
   const saveChanges = async screenIdsByDesignation => {
     try {
-      const token = Cookies.get('token');
-      const decodedToken = jwtDecode(token);
-      const config = decodedToken.config.audit_logs;
-      let audit_log;
+      const token = Cookies.get('token')
+      const decodedToken = jwtDecode(token)
+      const config = decodedToken.config.audit_logs
+      let audit_log
       if (config === true) {
         audit_log = {
-          "audit_log": true,
-          "performed_action": "edit",
-          "remarks": `Screen privilege updated`,
-        };
+          audit_log: true,
+          performed_action: 'edit',
+          remarks: `Screen privilege updated`
+        }
       } else {
         audit_log = {
-          "audit_log": false,
-          "performed_action": "none",
-          "remarks": `none`,
-        };
+          audit_log: false,
+          performed_action: 'none',
+          remarks: `none`
+        }
       }
       setIsLoading(true)
       const res = await api('/feature/screen-access/', { audit_log, screenIdsByDesignation }, 'put', true)
       setIsLoading(false)
       console.log('All screens after update ', res.data)
       if (res.data.success) {
-        setOpenSnackbar(true)
-        setAlertData({ ...alertData, type: 'success', message: 'Screen feature updated successfully' })
+        setAlertData({ ...alertData, type: 'success', message: 'Screen feature updated successfully',openSnackbar:true })
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       }
     } catch (error) {
       setIsLoading(false)
@@ -153,36 +175,38 @@ const Index = () => {
     }, {})
   }
   const closeSnackbar = () => {
-    setOpenSnackbar(false)
+    setAlertData({type: '', message: '', variant: 'filled',openSnackbar:false})
   }
   const handleResetFilter = () => {
-    setSelectScreenName(null);
-    setSelectedDeptValue(null);
-    setCheckboxes(allCheckboxes);
-    setFilteredDepartments(departments);
+    setSelectScreenName(null)
+    setSelectedDeptValue(null)
+    setCheckboxes(allCheckboxes)
+    setFilteredDepartments(departments)
   }
   const handleScreenName = (event, newValue) => {
-    console.log('Selected Value:', newValue);
+    console.log('Selected Value:', newValue)
     if (newValue) {
       setCheckboxes(
-        allCheckboxes.filter(checkboxRow => checkboxRow.screenName.toLowerCase().includes(newValue.screenName.toLowerCase()))
-      );
-      setSelectScreenName(newValue);
+        allCheckboxes.filter(checkboxRow =>
+          checkboxRow.screenName.toLowerCase().includes(newValue.screenName.toLowerCase())
+        )
+      )
+      setSelectScreenName(newValue)
     } else {
-      handleResetFilter();
+      handleResetFilter()
     }
-  };
+  }
   const handleDeptChange = (event, newValue) => {
-    console.log('Selected Value:', newValue);
+    console.log('Selected Value:', newValue)
     if (newValue) {
       setFilteredDepartments(
         departments.filter(dept => dept.department.toLowerCase().includes(newValue.department.toLowerCase()))
       )
-      setSelectedDeptValue(newValue);
+      setSelectedDeptValue(newValue)
     } else {
-      handleResetFilter();
+      handleResetFilter()
     }
-  };
+  }
   return (
     <Box padding={4}>
       <Head>
@@ -202,17 +226,12 @@ const Index = () => {
                 <Box className='mx-2 w-25'>
                   <FormControl className='w-100 mx-3 my-3'>
                     <Autocomplete
-                      id="tags-standard"
+                      id='tags-standard'
                       options={departments}
-                      getOptionLabel={(dept) => dept.department}
+                      getOptionLabel={dept => dept.department}
                       value={selectedDeptValue}
                       onChange={handleDeptChange}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Search Department"
-                        />
-                      )}
+                      renderInput={params => <TextField {...params} label='Search Department' />}
                       placeholder='Search Department'
                     />
                   </FormControl>
@@ -220,17 +239,12 @@ const Index = () => {
                 <Box className='mx-2 w-25'>
                   <FormControl className='w-100 mx-3 my-3'>
                     <Autocomplete
-                      id="tags-standard"
+                      id='tags-standard'
                       options={allCheckboxes}
-                      getOptionLabel={(item) => item.screenName}
+                      getOptionLabel={item => item.screenName}
                       value={selectScreenName}
                       onChange={handleScreenName}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Search Screen"
-                        />
-                      )}
+                      renderInput={params => <TextField {...params} label='Search Screen' />}
                       placeholder='Search Screen'
                     />
                   </FormControl>
@@ -240,11 +254,7 @@ const Index = () => {
                 <Button variant='contained' sx={{ display: 'inline-flex' }} onClick={handleResetFilter}>
                   Reset
                 </Button>
-                <Button
-                  variant='contained'
-                  sx={{ display: 'inline-flex', ml: 4 }}
-                  onClick={handleSaveChanges}
-                >
+                <Button variant='contained' sx={{ display: 'inline-flex', ml: 4 }} onClick={handleSaveChanges}>
                   Save Changes
                 </Button>
               </Box>
@@ -277,15 +287,9 @@ const Index = () => {
                         ))}
                       </TableRow>
                       <TableRow>
-                        <TableCell
-                          style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}
-                        ></TableCell>
-                        <TableCell
-                          style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}
-                        ></TableCell>
-                        <TableCell
-                          style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}
-                        ></TableCell>
+                        <TableCell style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}></TableCell>
+                        <TableCell style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}></TableCell>
+                        <TableCell style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}></TableCell>
                         {filteredDepartments?.map((dept, rowIndex) =>
                           dept.designations.map((designation, colIndex) => (
                             <TableCell
@@ -313,7 +317,11 @@ const Index = () => {
                             style={{
                               fontWeight: '600',
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                              borderTop: '1px solid rgba(224, 224, 224, 1)'
+                              borderTop: '1px solid rgba(224, 224, 224, 1)',
+                              position: 'sticky',
+                              left: 0,
+                              top: '80px',
+                              zIndex: 2
                             }}
                           >
                             {checkboxRow.screenName}
@@ -325,7 +333,7 @@ const Index = () => {
                           ></TableCell>
                           {checkboxRow.checkboxes.map((checkbox, colIndex) => {
                             const shouldDisplay =
-                              selectedDeptValue === null || selectedDeptValue?.department_id == checkbox.department_id;
+                              selectedDeptValue === null || selectedDeptValue?.department_id == checkbox.department_id
                             return (
                               shouldDisplay && (
                                 <TableCell
@@ -334,7 +342,7 @@ const Index = () => {
                                   style={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                                 >
                                   <Checkbox
-                                    role="checkbox"
+                                    role='checkbox'
                                     aria-checked={checkbox.checked}
                                     data-testid={`${checkboxRow.screenName}-${checkbox.designation_id}`}
                                     checked={checkbox.checked}
@@ -354,7 +362,7 @@ const Index = () => {
           </Box>
         </Grid2>
       </Grid2>
-      <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+      <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
       <AccessibilitySettings />
       <ChatbotComponent />
     </Box>
