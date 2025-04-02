@@ -28,7 +28,7 @@ import { decodeAndSetConfig } from '../utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
-import ProductModal from 'src/components/Modal/ProjectSettingModal'
+import ProductModal from 'src/components/Modal/productModal'
 
 const Index = () => {
   const router = useRouter()
@@ -294,6 +294,7 @@ const Index = () => {
   }
   const addProduct = async (esign_status, aduitRemarks) => {
     console.log("formData",formData)
+    delete formData['file']
     const uploadRes = await uploadFile(formData.file, '/upload/productImage')
     if (!uploadRes?.success) {
       setAlertData({ ...alertData, type: 'error', message: 'File upload failed', openSnackbar: true })
@@ -302,44 +303,10 @@ const Index = () => {
 
     try {
       const data = {
-        productId: formData.productId,
-        productName: formData.productName,
-        gtin: formData.gtin,
-        ndc: formData.ndc,
+        ...formData,
         mrp: formData.mrp === '' ? null : formData.mrp,
-        genericName: formData.genericName,
+        pallet_size:formData?.pallet_size?.toString(),
         productImage: uploadRes?.url.split('/').pop(),
-        packagingSize: formData.packagingSize,
-        companyUuid: formData.companyUuid,
-        country: formData.country,
-        firstLayer: formData.firstLayer,
-        secondLayer: formData.secondLayer,
-        thirdLayer: formData.thirdLayer,
-        productNumber_unit_of_measurement: formData.productNumberUom,
-        firstLayer_unit_of_measurement: formData.firstLayerUom,
-        secondLayer_unit_of_measurement: formData.secondLayerUom,
-        thirdLayer_unit_of_measurement: formData.thirdLayerUom,
-        packagingHierarchy: formData.packagingHierarchy,
-        productNumber: formData.productNumber,
-        productNumber_print: formData.productNumberPrint,
-        firstLayer_print: formData.firstLayerPrint,
-        secondLayer_print: formData.secondLayerPrint,
-        thirdLayer_print: formData.thirdLayerPrint,
-        productNumberAggregation: formData.productNumberAggregation,
-        firstLayerAggregation: formData.firstLayerAggregation,
-        secondLayerAggregation: formData.secondLayerAggregation,
-        thirdLayerAggregation: formData.thirdLayerAggregation,
-        genericSalt: formData.genericSalt,
-        composition: formData.composition,
-        dosage: formData.dosage,
-        remarks: formData.remarks,
-        palletisation_applicable: formData.palletisationApplicable,
-        pallet_size: formData.palletSize === '' ? '0' : formData.palletSize.toString(),
-        pallet_size_unit_of_measurement: formData.palletSizeUom,
-        no_of_units_in_primary_level: formData.noOfUnitsInPrimaryLevel === '' ? null : formData.noOfUnitsInPrimaryLevel,
-        prefix: formData.prefix === '' ? null : formData.prefix,
-        unit_of_measurement: formData.uom === '' ? null : formData.uom,
-        schedule_drug: formData.scheduledDrug
       }
       const auditlogRemark = aduitRemarks
       const audit_log = config?.config?.audit_logs
@@ -387,45 +354,12 @@ const Index = () => {
         : editData.product_image
 
     try {
+      delete formData['productId']
       const data = {
-        // productName: formData.productName,
-        // gtin: formData.gtin,
-        // ndc: formData.ndc,
         ...formData,
         mrp: formData.mrp === '' ? null : formData.mrp,
-        // genericName: formData.genericName,
+        pallet_size:formData?.pallet_size?.toString(),
         productImage: productImageUrl,
-        // packagingSize: formData.packagingSize,
-        // companyUuid: formData.companyUuid,
-        // country: formData.country,
-        // firstLayer: formData.firstLayer,
-        // secondLayer: formData.secondLayer,
-        // thirdLayer: formData.thirdLayer,
-        // productNumber_unit_of_measurement: formData.productNumberUom,
-        // firstLayer_unit_of_measurement: formData.firstLayerUom,
-        // secondLayer_unit_of_measurement: formData.secondLayerUom,
-        // thirdLayer_unit_of_measurement: formData.thirdLayerUom,
-        // packagingHierarchy: formData.packagingHierarchy,
-        // productNumber: formData.productNumber,
-        // productNumber_print: formData.productNumberPrint,
-        // firstLayer_print: formData.firstLayerPrint,
-        // secondLayer_print: formData.secondLayerPrint,
-        // thirdLayer_print: formData.thirdLayerPrint,
-        // productNumber_aggregation: formData.productNumberAggregation,
-        // firstLayer_aggregation: formData.firstLayerAggregation,
-        // secondLayer_aggregation: formData.secondLayerAggregation,
-        // thirdLayer_aggregation: formData.thirdLayerAggregation,
-        // generic_salt: formData.genericSalt,
-        // composition: formData.composition,
-        // dosage: formData.dosage,
-        // remarks: formData.remarks,
-        // palletisation_applicable: formData.palletisationApplicable,
-        // pallet_size: formData.palletSize === '' ? null : formData.palletSize?.toString(),
-        // pallet_size_unit_of_measurement: formData.palletSizeUom,
-        // no_of_units_in_primary_level: formData.noOfUnitsInPrimaryLevel === '' ? null : formData.noOfUnitsInPrimaryLevel,
-        // prefix: formData.prefix === '' ? null : formData.prefix,
-        // unit_of_measurement: formData.uom === '' ? null : formData.uom,
-        // schedule_drug: formData.scheduledDrug
       }
       const auditlogRemark = aduitRemarks
       let audit_log

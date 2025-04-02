@@ -91,7 +91,7 @@ const validationSchema = yup.object().shape({
     .trim()
     .max(10, 'Packaging Size length should be <= 10')
     .required('Packaging Size is required'),
-  genericSalt: yup
+  generic_salt: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
@@ -248,7 +248,7 @@ const validationSchema = yup.object().shape({
   }),
 
   palletisation_applicable: yup.boolean().optional(),
-  palletSize: yup
+  pallet_size: yup
     .number()
     .nullable() // Allow null values
     .transform((value, originalValue) => {
@@ -280,7 +280,7 @@ const validationSchema = yup.object().shape({
   firstLayer_aggregation: yup.boolean().optional(),
   secondLayer_aggregation: yup.boolean().optional(),
   thirdLayer_aggregation: yup.boolean().optional(),
-  scheduledDrug: yup.boolean().optional()
+  schedule_drug: yup.boolean().optional()
 })
 
 
@@ -313,7 +313,7 @@ function ProductModal({
       mrp: '',
       genericName: '',
       packagingSize: '',
-      genericSalt: '',
+      generic_salt: '',
       composition: '',
       dosage: '',
       remarks: '',
@@ -332,7 +332,7 @@ function ProductModal({
       thirdLayer: 0,
       thirdLayer_unit_of_measurement: '',
       palletisation_applicable: false,
-      palletSize: '0',
+      pallet_size: '0',
       pallet_size_unit_of_measurement: '',
       productImage: '/images/avatars/p.png',
       productNumber_aggregation: false,
@@ -343,7 +343,7 @@ function ProductModal({
       firstLayer_print: false,
       secondLayer_print: false,
       thirdLayer_print: false,
-      scheduledDrug: false
+      schedule_drug: false
     }
   })
   const router = useRouter()
@@ -373,12 +373,12 @@ function ProductModal({
 
       if (getPrefixData.gs2_prefix) prefixs.push(getPrefixData.gs2_prefix)
       if (getPrefixData.gs3_prefix) prefixs.push(getPrefixData.gs3_prefix)
-      setValue('prefixs', prefixs) // Set only if we have valid values
+      setValue('prefix', prefixs) // Set only if we have valid values
     } else {
-      setValue('prefixs', []) // Clear if no valid company selected
+      setValue('prefix', []) // Clear if no valid company selected
     }
 
-    if (editData?.prefix) setValue('prefixs', editData.prefix.split(',')) // Restore edit data if available
+    if (editData?.prefix) setValue('prefix', editData.prefix.split(',')) // Restore edit data if available
 
   }, [editData, companyUuid, companies]) // Ensure companies is a dependency
 
@@ -417,7 +417,7 @@ function ProductModal({
               'thirdLayer',
               'thirdLayer_unit_of_measurement',
               'palletisation_applicable',
-              'palletSize',
+              'pallet_size',
               'pallet_size_unit_of_measurement',
               'productImage',
               'productNumber_aggregation',
@@ -513,17 +513,17 @@ function ProductModal({
         firstLayer_aggregation: editData?.firstLayer_aggregation || false,
         secondLayer_aggregation: editData?.secondLayer_aggregation || false,
         thirdLayer_aggregation: editData?.thirdLayer_aggregation || false,
-        genericSalt: editData?.generic_salt || '',
+        generic_salt: editData?.generic_salt || '',
         composition: editData?.composition || '',
         dosage: editData?.dosage || '',
         remarks: editData?.remarks || '',
         palletisation_applicable: editData?.palletisation_applicable || false,
-        palletSize: editData?.pallet_size || '',
+        pallet_size: editData?.pallet_size?.toString() || '',
         pallet_size_unit_of_measurement: editData?.pallet_size_unit_of_measurement || '',
         no_of_units_in_primary_level: editData?.no_of_units_in_primary_level || '',
         prefix: editData.prefix?.split(','),
         unit_of_measurement: editData?.unit_of_measurement || false,
-        scheduledDrug: editData?.schedule_drug || false
+        schedule_drug: editData?.schedule_drug || false
       })
       if (
         editData?.product_image &&
@@ -533,7 +533,7 @@ function ProductModal({
         convertImageToBase64(editData?.productImage, setProductImage)
 
       }
-      setValue('prefixs', editData?.prefix?.split(',') || '')
+      setValue('prefix', editData?.prefix?.split(',') || '')
 
     }
   }, [editData])
@@ -566,7 +566,7 @@ function ProductModal({
     }
   }))
 
-  const prefixs = watch('prefixs')
+  const prefixs = watch('prefix')
   const PrefixsData = Array.isArray(prefixs)
     ? prefixs.map(item => ({
         id: item,
@@ -758,7 +758,7 @@ function ProductModal({
               />
             </Grid2>
             <Grid2 size={4}>
-              <CustomDropdown control={control} label='UOM *' name={'uom'} options={UOMSData} />
+              <CustomDropdown control={control} label='UOM *' name={'unit_of_measurement'} options={UOMSData} />
             </Grid2>
           </Grid2>
           <Grid2 container spacing={2}>
@@ -1513,7 +1513,7 @@ function ProductModal({
                   {palletisation_applicable && (
                     <Grid2 container spacing={5} size={12} className='d-flex align-items-center mb-3'>
                       <Grid2 size={7}>
-                        <CustomTextField control={control} id='palletSize' label='Pallet size' name={'palletSize'} />
+                        <CustomTextField control={control} id='pallet_size' label='Pallet size' name={'pallet_size'} />
                       </Grid2>
                       <Grid2 size={4}>
                         <CustomDropdown
@@ -1563,7 +1563,7 @@ function ProductModal({
               </Typography>
             </Grid2>
             <Grid2 size={5}>
-              <CustomTextField label='Generic Salt' control={control} name={'genericSalt'} />
+              <CustomTextField label='Generic Salt' control={control} name={'generic_salt'} />
             </Grid2>
             <Grid2 size={5}>
               <CustomTextField label='Composition' name={'composition'} control={control} />
@@ -1576,14 +1576,14 @@ function ProductModal({
             </Grid2>
             <Grid2 size={6}>
               <Controller
-                name={'scheduledDrug'}
+                name={'schedule_drug'}
                 control={control}
                 render={({ field }) => (
                   <FormControlLabel
                     label='Scheduled Drug?'
                     labelPlacement='start'
                     control={
-                      <Switch {...field} checked={field.value} name='scheduledDrug' color='primary' role='button' />
+                      <Switch {...field} checked={field.value} name='schedule_drug' color='primary' role='button' />
                     }
                   />
                 )}

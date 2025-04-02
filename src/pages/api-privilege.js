@@ -100,7 +100,6 @@ const Index = () => {
       } else {
         updatedGroups[groupIndex] = { ...currentGroup, checkboxes: updatedCheckboxes }
       }
-
       return updatedGroups
     })
     console.log(checkboxes)
@@ -310,7 +309,7 @@ const Index = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {allCheckboxes.map((checkboxRow, index) => (
+                      {checkboxes.map((checkboxRow, index) => (
                         <TableRow key={`row-${index + 1}`}>
                           <TableCell
                             style={{
