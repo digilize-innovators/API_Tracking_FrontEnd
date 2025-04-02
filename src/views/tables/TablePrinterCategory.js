@@ -231,7 +231,7 @@ const TablePrinterCategory = ({
     setPage(0);
     console.log(tableHeaderData.searchVal)
 
-  },[tableHeaderData]);
+  },[tableHeaderData,page,rowsPerPage]);
 
   const handleSort = key => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'

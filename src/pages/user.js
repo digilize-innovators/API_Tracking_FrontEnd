@@ -13,7 +13,7 @@ import SnackbarAlert from 'src/components/SnackbarAlert'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import Head from 'next/head'
 import { useAuth } from 'src/Context/AuthContext'
-import { BaseUrl } from '../../constants'
+import { BaseUrl } from '../../../constants'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { decrypt } from 'src/utils/Encrypt-Decrypt'
 import { useRouter } from 'next/router'
@@ -21,7 +21,7 @@ import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken';
-import { getTokenValues } from '../utils/tokenUtils';
+import { getTokenValues } from '../../utils/tokenUtils';
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
@@ -71,19 +71,23 @@ const Index = () => {
     setUserDataPdf(data);
     return () => { }
   }, [])
-
   useEffect(() => {
-    if (userFormData && pendingAction) {
-      const esign_status = config?.config?.esign_status && config?.role!='admin' ? "pending" : "approved";
-      if (pendingAction === "edit") {
-        editUser(esign_status)
-      } else if (pendingAction == 'add') {
-        addUser(esign_status);
+    const handleUserAction = async () => {
+      if (userFormData && pendingAction) {
+        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
+        
+        if (pendingAction === "edit") {
+          await editUser(esign_status);  // Await editUser
+        } else if (pendingAction === "add") {
+          await addUser(esign_status);   // Await addUser
+        }
+        
+        setPendingAction(null);
       }
-      setPendingAction(null);
     }
+  
+    handleUserAction();
   }, [userFormData, pendingAction]);
-
   useEffect(() => {
     getDepartments()
   }, [departmentFilter, tableHeaderData, statusFilter])
@@ -102,10 +106,11 @@ const Index = () => {
     tableHeaderText: 'User Master Report',
     tableBodyText: 'User Data',
     Filter: ['department', departmentFilter],
+    statusFilter:statusFilter,
     filename: "UserMaster"
   }), [departmentFilter]);
 
-
+  console.log('tableData is index',tableData)
   const getDepartments = async () => {
     try {
       setIsLoading(true);
@@ -229,6 +234,7 @@ const Index = () => {
     }
   }
   const editUser = async (esign_status, remarks) => {
+    console.log("formData",userFormData)
     let url = ''
     console.log(profilePhoto !== editData.profile_photo, editData.profile_photo !== "")
     if (profilePhoto !== editData.profile_photo || editData.profile_photo === "") {

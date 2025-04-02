@@ -675,7 +675,7 @@ const TableDepartment = ({
 
   useMemo(() => {
     setPage(0)
-  }, [tableHeaderData])
+  }, [tableHeaderData,page,rowsPerPage])
   useEffect(() => {
     getDepartments()
   }, [page, rowsPerPage, tableHeaderData, pendingAction])

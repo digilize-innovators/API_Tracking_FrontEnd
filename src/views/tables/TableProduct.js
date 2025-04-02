@@ -275,7 +275,7 @@ const TableProduct = ({
 
   useMemo(() => {
     setPage(0)
-  }, [tableHeaderData])
+  }, [tableHeaderData,page,rowsPerPage])
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
@@ -346,6 +346,7 @@ const TableProduct = ({
   useEffect(() => {
     getProducts()
   }, [page, rowsPerPage, tableHeaderData, pendingAction])
+  
 
   return (
     <CustomTable

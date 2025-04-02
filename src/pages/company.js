@@ -18,14 +18,13 @@ import SnackbarAlert from 'src/components/SnackbarAlert'
 import { useAuth } from 'src/Context/AuthContext'
 import { api } from 'src/utils/Rest-API'
 import { validateToken } from 'src/utils/ValidateToken'
-import { getTokenValues } from '../utils/tokenUtils'
+import { getTokenValues } from '../../utils/tokenUtils'
 import TableCompany from 'src/views/tables/TableCompany'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import downloadPdf from 'src/utils/DownloadPdf'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import CompanyModal from 'src/components/Modal/CompanyModal'
-// import CompanyModal from 'src/components/Modal/CompanyModel'
 
 const Index = () => {
   const [openModal, setOpenModal] = useState(false)
@@ -60,18 +59,26 @@ const Index = () => {
 
 
 
-  useEffect(() => {
-    if (formData && pendingAction) {
-      const esign_status = config?.config.esign_status?'pending':'approved'
-      if (pendingAction === 'edit') {
-        editCompany(esign_status)
-      } else if(pendingAction=='add'){
-        addCompany(esign_status)
-      }
-      setPendingAction(null)
-    }
-  }, [formData, pendingAction])
 
+
+
+  useEffect(() => {
+    const handleUserAction = async () => {
+      if (formData && pendingAction) {
+        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
+        
+        if (pendingAction === "edit") {
+          await editCompany(esign_status)  // Await editUser
+        } else if (pendingAction === "add") {
+          await addCompany(esign_status)  // Await addUser
+        }
+        
+        setPendingAction(null);
+      }
+    };
+  
+    handleUserAction();
+  }, [formData, pendingAction])
 
   const tableBody = companyData?.map((item, index) => [
     index + 1,
@@ -225,7 +232,7 @@ const Index = () => {
         resetForm()
       } else {
         console.log('error to edit company ', res.data)
-        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.error.details.message })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
@@ -307,6 +314,7 @@ const Index = () => {
         console.log("Esign Download pdf ",esignDownloadPdf)
         if(esignDownloadPdf){
           console.log('esign is approved for creator to download')
+          setEsignDownloadPdf(false)
           setOpenModalApprove(true)
           resetState()
         }
@@ -353,7 +361,7 @@ const Index = () => {
   }
 
   const handleSearch = val => {
-    setTableHeaderData({ ...tableHeaderData, searchVal: val.toLowerCase() })
+    setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
   }
   
   const handleAuthModalOpen = () => {
@@ -370,7 +378,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, companyData, userDataPdf)
   }
   
   return (

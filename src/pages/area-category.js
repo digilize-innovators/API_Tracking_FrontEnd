@@ -151,6 +151,7 @@ const tableBody = allAreaCategoryData.map((item, index) =>
       const res = await api('/area-category/', data, 'post', true)
       setIsLoading(false);
       if (res?.data?.success) {
+      setOpenModal(false); 
         console.log('res data', res?.data)
         setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Area category added successfully' });
         resetForm();
@@ -163,10 +164,11 @@ const tableBody = allAreaCategoryData.map((item, index) =>
         }
       }
     } catch (error) {
+      
+      setOpenModal(false);
       console.log('Erorr to add area category ', error)
       router.push('/500');
     } finally {
-      setOpenModal(false);
       setApproveAPI({
         approveAPIName:'',approveAPImethod:'',approveAPIEndPoint:''
      })

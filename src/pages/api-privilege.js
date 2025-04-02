@@ -178,7 +178,7 @@ const Index = () => {
   const handleResetFilter = () => {
     setSelectedDeptValue(null)
     setSelectedApiName(null)
-    setCheckboxes(allCheckboxes)
+    setCheckboxes(checkboxes)
     setFilteredDepartments(departments)
   }
   const handleApiName = (event, newValue) => {

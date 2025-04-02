@@ -34,7 +34,7 @@ const TableAuditLog = ({
   const { removeAuthToken } = useAuth()
   useMemo(() => {
     setPage(0)
-  }, [tableHeaderData])
+  }, [tableHeaderData,page,rowsPerPage])
   useEffect(() => {
     getData()
   }, [tableHeaderData, startDate, endDate, page, rowsPerPage])

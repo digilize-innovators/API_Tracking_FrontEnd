@@ -116,9 +116,9 @@ const TableCountryMaster = ({
     const [sortDirection,setSortDirection]=useState('asc')
     const [rowsPerPage,setRowsPerPage]=useState(settings.rowsPerPage)
     console.log(rowsPerPage)
-    useMemo(()=>[
+    useMemo(()=>{
         setPage(0)
-    ],[page]);
+},[page,rowsPerPage]);
 
     useEffect(() => {
         getCountryMasterData()

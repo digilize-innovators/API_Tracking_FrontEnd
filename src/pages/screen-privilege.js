@@ -180,7 +180,7 @@ const Index = () => {
   const handleResetFilter = () => {
     setSelectScreenName(null)
     setSelectedDeptValue(null)
-    setCheckboxes(allCheckboxes)
+    setCheckboxes(checkboxes)
     setFilteredDepartments(departments)
   }
   const handleScreenName = (event, newValue) => {
