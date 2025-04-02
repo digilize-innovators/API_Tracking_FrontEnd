@@ -27,7 +27,7 @@ const modalBoxStyle = {
   }
 }
 
-const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEditData,setOpenModal }) => {
+const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEditData, setOpenModal }) => {
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
   const router = useRouter()
@@ -117,7 +117,7 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
 
   const undoCodeStructureValue = () => {
     let updatedCodeStructure = [...codeStructure]
-const lastValue = updatedCodeStructure.pop()
+    const lastValue = updatedCodeStructure.pop()
     setCodeStructure(updatedCodeStructure)
     const updatedUrlMarker = urlMakerData?.map(item => ({
       ...item,
@@ -146,11 +146,11 @@ const lastValue = updatedCodeStructure.pop()
     setUrlMakerData(updatedData)
 
     if (checked) {
-      const updatedCodeStructure = codeStructure?.length?[...codeStructure]:[]
+      const updatedCodeStructure = codeStructure?.length > 0 ? [...codeStructure] : []
       updatedCodeStructure.push(value)
       setCodeStructure(updatedCodeStructure)
     } else {
-      let updatedCodeStructure = codeStructure?.length==0?[...codeStructure]:[]
+      let updatedCodeStructure = codeStructure?.length > 0 ? [...codeStructure] : []
       updatedCodeStructure.splice(updatedCodeStructure.indexOf(value), 1)
       setCodeStructure(updatedCodeStructure)
     }
@@ -163,7 +163,7 @@ const lastValue = updatedCodeStructure.pop()
       setCodeStructure([...codeStructure, e.target.value])
     } else {
       updatedCodeStructure.splice(updatedCodeStructure.indexOf('CRMURL'), 1)
-      setCodeStructure([...updatedCodeStructure])
+      setCodeStructure([...codeStructure, ...updatedCodeStructure])
     }
   }
 
@@ -203,16 +203,31 @@ const lastValue = updatedCodeStructure.pop()
     }
   }, [editData])
 
-
   const resetEditForm = () => {
     console.log('Reset edit field')
     setCodeStructure('')
-    setCountry('')
+    const newURLMakerData = editData?.codeStructure?.split('/')
+    console.log(newURLMakerData)
+
+    // Create a Set for quick lookups of valid labels
+    const validLabels = new Set(newURLMakerData.slice(newURLMakerData?.length)) // Only store labels after index 1 for efficient lookup
+
+    // Map through the existing data
+    const updatedData = urlMakerData.map(el => ({
+      ...el,
+      options: el?.options?.map(option => ({
+        ...option,
+        checked: validLabels.has(option.label)
+      }))
+    }))
+    setUrlMakerData(updatedData)
+
+    setCountry(editData?.country)
     setEditData(prev => ({
       ...prev,
-      country: '',
-      crmurl: '',
-      codeStructure: ''
+      country: prev.country,
+      crmurl: prev.crmurl,
+      codeStructure: prev.codeStructure
     }))
   }
 
@@ -255,7 +270,7 @@ const lastValue = updatedCodeStructure.pop()
   }
 
   const validateNotEmpty = (field, value, fieldName, required = true) => {
-    if ((required && value.trim() === '') || (!required && !value)) {
+    if ((required && value?.trim() === '') || (!required && !value)) {
       field({ isError: true, message: `${fieldName} can't be empty` })
     } else {
       field({ isError: false, message: '' })
@@ -381,7 +396,10 @@ const lastValue = updatedCodeStructure.pop()
             <TextField
               fullWidth
               id='country'
-              onChange={e => setCountry(e.target.value)}
+              onChange={e => {
+                setErrorCountry('')
+                setCountry(e.target.value)
+              }}
               value={country}
               required
               error={errorCountry.isError}
@@ -400,7 +418,7 @@ const lastValue = updatedCodeStructure.pop()
               id='url'
               multiline
               rows={3}
-              value={codeStructure?.join('') || ''}
+              value={codeStructure?.length ? codeStructure?.join('') : ''}
               required
               disabled
               style={{ backgroundColor: '#dde1e7', borderRadius: 5 }}
@@ -480,7 +498,15 @@ const lastValue = updatedCodeStructure.pop()
           <Button variant='outlined' color='primary' onClick={editData?.id ? resetEditForm : resetForm}>
             Reset
           </Button>
-          <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={()=>{resetForm();handleCloseModal()}}>
+          <Button
+            variant='outlined'
+            color='error'
+            sx={{ marginLeft: 3.5 }}
+            onClick={() => {
+              resetForm()
+              handleCloseModal()
+            }}
+          >
             Close
           </Button>
         </Grid2>

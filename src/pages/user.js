@@ -13,7 +13,7 @@ import SnackbarAlert from 'src/components/SnackbarAlert'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import Head from 'next/head'
 import { useAuth } from 'src/Context/AuthContext'
-import { BaseUrl } from '../../../constants'
+import { BaseUrl } from '../../constants'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { decrypt } from 'src/utils/Encrypt-Decrypt'
 import { useRouter } from 'next/router'
@@ -21,7 +21,7 @@ import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken';
-import { getTokenValues } from '../../utils/tokenUtils';
+import { getTokenValues } from '../utils/tokenUtils';
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'

@@ -3,13 +3,13 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import Box from '@mui/material/Box'
 import Grid2 from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
-import { Button, TextField } from '@mui/material'
+import { Button} from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import Head from 'next/head'
 import { useAuth } from 'src/Context/AuthContext';
-import TableUOM from '../../views/tables/TableUOM'
+import TableUOM from '../views/tables/TableUOM'
 import SnackbarAlert from 'src/components/SnackbarAlert'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import { useRouter } from 'next/router'
@@ -17,7 +17,7 @@ import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken';
-import { getTokenValues } from '../../utils/tokenUtils';
+import { getTokenValues } from '../utils/tokenUtils';
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
@@ -204,7 +204,6 @@ const Index = () => {
         setOpenModalApprove(true);
       } else if (esignStatus === "approved") {
         console.log("esign is approved for creator");
-        const esign_status = "pending";
         setPendingAction(editData?.id ? "edit" : "add");
       }
     };

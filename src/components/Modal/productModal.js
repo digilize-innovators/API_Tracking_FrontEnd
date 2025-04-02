@@ -133,13 +133,13 @@ const validationSchema = yup.object().shape({
     .transform(value => (value == null ? '' : String(value)))
     .trim()
     .required('Country is required'),
-  uom: yup
+    unit_of_measurement: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
     .trim()
     .required('Uom is required'),
-  noOfUnitsInPrimaryLevel: yup
+  no_of_units_in_primary_level: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
@@ -150,7 +150,7 @@ const validationSchema = yup.object().shape({
   // productImage: yup.mixed().required('Product Image is required'),
   packagingHierarchy: yup.number().required('Packaging Hierarchy is required'),
 
-  productNumberUom: yup.string().required('Please Select Level 0 UOM'),
+  productNumber_unit_of_measurement: yup.string().required('Please Select Level 0 UOM'),
 
   productNumber: yup
     .number()
@@ -185,7 +185,7 @@ const validationSchema = yup.object().shape({
     .test('divisible-level0', 'Level 1 value should be divisible with level 0 value', function (value) {
       return !this.parent.productNumber || !value || this.parent.productNumber % value === 0
     }),
-  firstLayerUom: yup.string().when('packagingHierarchy', {
+    firstLayer_unit_of_measurement: yup.string().when('packagingHierarchy', {
     is: val => val >= 2,
     then: schema => schema.required('Please Select Level 1 UOM')
   }),
@@ -214,7 +214,7 @@ const validationSchema = yup.object().shape({
       }
     }),
 
-  secondLayerUom: yup.string().when('packagingHierarchy', {
+  secondLayer_unit_of_measurement: yup.string().when('packagingHierarchy', {
     is: val => val >= 3,
     then: schema => schema.required('Please Select Level 2 UOM')
   }),
@@ -242,12 +242,12 @@ const validationSchema = yup.object().shape({
         return schema
       }
     }),
-  thirdLayerUom: yup.string().when('packagingHierarchy', {
+  thirdLayer_unit_of_measurement: yup.string().when('packagingHierarchy', {
     is: val => val >= 4,
     then: schema => schema.required('Please Select Level 3 UOM')
   }),
 
-  palletisationApplicable: yup.boolean().optional(),
+  palletisation_applicable: yup.boolean().optional(),
   palletSize: yup
     .number()
     .nullable() // Allow null values
@@ -259,27 +259,27 @@ const validationSchema = yup.object().shape({
       return value
     })
     .optional() // Allow the field to be optional
-    .when('palletisationApplicable', {
+    .when('palletisation_applicable', {
       is: true,
       then: schema => schema.required('Pallet size is required').min(1, 'Pallet size should be greater than 0'),
       otherwise: schema => schema.nullable() // Allow null or undefined when not applicable
     }),
   file: yup.mixed().optional(),
-  palletSizeUom: yup
+  pallet_size_unit_of_measurement: yup
     .string()
     .optional()
-    .when('palletisationApplicable', {
+    .when('palletisation_applicable', {
       is: true,
       then: schema => schema.required('Please Select Pallet Size UOM')
     }),
-  productNumberPrint: yup.boolean().optional(),
-  firstLayerPrint: yup.boolean().optional(),
-  secondLayerPrint: yup.boolean().optional(),
-  thirdLayerPrint: yup.boolean().optional(),
-  productNumberAggregation: yup.boolean().optional(),
-  firstLayerAggregation: yup.boolean().optional(),
-  secondLayerAggregation: yup.boolean().optional(),
-  thirdLayerAggregation: yup.boolean().optional(),
+  productNumber_print: yup.boolean().optional(),
+  firstLayer_print: yup.boolean().optional(),
+  secondLayer_print: yup.boolean().optional(),
+  thirdLayer_print: yup.boolean().optional(),
+  productNumber_aggregation: yup.boolean().optional(),
+  firstLayer_aggregation: yup.boolean().optional(),
+  secondLayer_aggregation: yup.boolean().optional(),
+  thirdLayer_aggregation: yup.boolean().optional(),
   scheduledDrug: yup.boolean().optional()
 })
 
@@ -320,36 +320,36 @@ function ProductModal({
       companyUuid: '',
       prefix: '',
       country: '',
-      uom: '',
-      noOfUnitsInPrimaryLevel: '',
+      unit_of_measurement: '',
+      no_of_units_in_primary_level: '',
       packagingHierarchy: '',
       productNumber: '',
-      productNumberUom: '',
+      productNumber_unit_of_measurement: '',
       firstLayer: 0,
-      firstLayerUom: '',
+      firstLayer_unit_of_measurement: '',
       secondLayer: 0,
-      secondLayerUom: '',
+      secondLayer_unit_of_measurement: '',
       thirdLayer: 0,
-      thirdLayerUom: '',
-      palletisationApplicable: false,
+      thirdLayer_unit_of_measurement: '',
+      palletisation_applicable: false,
       palletSize: '0',
-      palletSizeUom: '',
+      pallet_size_unit_of_measurement: '',
       productImage: '/images/avatars/p.png',
-      productNumberAggregation: false,
-      firstLayerAggregation: false,
-      secondLayerAggregation: false,
-      thirdLayerAggregation: false,
-      productNumberPrint: false,
-      firstLayerPrint: false,
-      secondLayerPrint: false,
-      thirdLayerPrint: false,
+      productNumber_aggregation: false,
+      firstLayer_aggregation: false,
+      secondLayer_aggregation: false,
+      thirdLayer_aggregation: false,
+      productNumber_print: false,
+      firstLayer_print: false,
+      secondLayer_print: false,
+      thirdLayer_print: false,
       scheduledDrug: false
     }
   })
   const router = useRouter()
   const { removeAuthToken } = useAuth()
   const packagingHierarchy = watch('packagingHierarchy')
-  const palletisationApplicable = watch('palletisationApplicable')
+  const palletisation_applicable = watch('palletisation_applicable')
   const productNumber = watch('productNumber')
   const firstLayer = watch('firstLayer')
   const secondLayer = watch('secondLayer')
@@ -409,24 +409,24 @@ function ProductModal({
   const applyPackagingHierarchy = async() => {
     const fieldsToValidate = [
       'productNumber',
-              'productNumberUom',
+              'productNumber_unit_of_measurement',
               'firstLayer',
-              'firstLayerUom',
+              'firstLayer_unit_of_measurement',
               'secondLayer',
-              'secondLayerUom',
+              'secondLayer_unit_of_measurement',
               'thirdLayer',
-              'thirdLayerUom',
-              'palletisationApplicable',
+              'thirdLayer_unit_of_measurement',
+              'palletisation_applicable',
               'palletSize',
-              'palletSizeUom',
+              'pallet_size_unit_of_measurement',
               'productImage',
-              'productNumberAggregation',
-              'firstLayerAggregation',
-              'secondLayerAggregation',
-              'thirdLayerAggregation',
-              'productNumberPrint',
-              'firstLayerPrint',
-              'secondLayerPrint',
+              'productNumber_aggregation',
+              'firstLayer_aggregation',
+              'secondLayer_aggregation',
+              'thirdLayer_aggregation',
+              'productNumber_print',
+              'firstLayer_print',
+              'secondLayer_print',
             ];
         
             const isValid = await Promise.all(fieldsToValidate.map((field) => trigger(field)));
@@ -499,30 +499,30 @@ function ProductModal({
         firstLayer: editData?.first_layer || '',
         secondLayer: editData?.second_layer || '',
         thirdLayer: editData?.third_layer || '',
-        productNumberUom: editData?.productNumber_unit_of_measurement || '',
-        firstLayerUom: editData?.firstLayer_unit_of_measurement || '',
-        secondLayerUom: editData?.secondLayer_unit_of_measurement || '',
-        thirdLayerUom: editData?.thirdLayer_unit_of_measurement || '',
+        productNumber_unit_of_measurement: editData?.productNumber_unit_of_measurement || '',
+        firstLayer_unit_of_measurement: editData?.firstLayer_unit_of_measurement || '',
+        secondLayer_unit_of_measurement: editData?.secondLayer_unit_of_measurement || '',
+        thirdLayer_unit_of_measurement: editData?.thirdLayer_unit_of_measurement || '',
         packagingHierarchy: editData?.packagingHierarchy || '',
         productNumber: editData?.productNumber || '',
-        productNumberPrint: editData?.productNumber_print || false,
-        firstLayerPrint: editData?.firstLayer_print || false,
-        secondLayerPrint: editData?.secondLayer_print || false,
-        thirdLayerPrint: editData?.thirdLayer_print || false,
-        productNumberAggregation: editData?.productNumber_aggregation || false,
-        firstLayerAggregation: editData?.firstLayer_aggregation || false,
-        secondLayerAggregation: editData?.secondLayer_aggregation || false,
-        thirdLayerAggregation: editData?.thirdLayer_aggregation || false,
+        productNumber_print: editData?.productNumber_print || false,
+        firstLayer_print: editData?.firstLayer_print || false,
+        secondLayer_print: editData?.secondLayer_print || false,
+        thirdLayer_print: editData?.thirdLayer_print || false,
+        productNumber_aggregation: editData?.productNumber_aggregation || false,
+        firstLayer_aggregation: editData?.firstLayer_aggregation || false,
+        secondLayer_aggregation: editData?.secondLayer_aggregation || false,
+        thirdLayer_aggregation: editData?.thirdLayer_aggregation || false,
         genericSalt: editData?.generic_salt || '',
         composition: editData?.composition || '',
         dosage: editData?.dosage || '',
         remarks: editData?.remarks || '',
-        palletisationApplicable: editData?.palletisation_applicable || false,
+        palletisation_applicable: editData?.palletisation_applicable || false,
         palletSize: editData?.pallet_size || '',
-        palletSizeUom: editData?.pallet_size_unit_of_measurement || '',
-        noOfUnitsInPrimaryLevel: editData?.no_of_units_in_primary_level || '',
+        pallet_size_unit_of_measurement: editData?.pallet_size_unit_of_measurement || '',
+        no_of_units_in_primary_level: editData?.no_of_units_in_primary_level || '',
         prefix: editData.prefix?.split(','),
-        uom: editData?.unit_of_measurement || false,
+        unit_of_measurement: editData?.unit_of_measurement || false,
         scheduledDrug: editData?.schedule_drug || false
       })
       if (
@@ -754,7 +754,7 @@ function ProductModal({
                 control={control}
                 label='No. Of Units in Primary Level'
                 placeholder='No. Of Units in Primary Level'
-                name={'noOfUnitsInPrimaryLevel'}
+                name={'no_of_units_in_primary_level'}
               />
             </Grid2>
             <Grid2 size={4}>
@@ -907,13 +907,13 @@ function ProductModal({
                           <CustomDropdown
                             control={control}
                             label='0th Level Uom'
-                            name={'productNumberUom'}
+                            name={'productNumber_unit_of_measurement'}
                             options={UOMSData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
-                            name={'productNumberPrint'}
+                            name={'productNumber_print'}
                             control={control}
                             render={({ field }) => (
                               <FormControlLabel
@@ -924,7 +924,7 @@ function ProductModal({
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
-                            name={'productNumberAggregation'}
+                            name={'productNumber_aggregation'}
                             control={control}
                             render={({ field }) => (
                               <FormControlLabel
@@ -932,7 +932,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberAggregation'
+                                    name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -961,13 +961,13 @@ function ProductModal({
                           <CustomDropdown
                             control={control}
                             label='0th Level Uom'
-                            name={'productNumberUom'}
+                            name={'productNumber_unit_of_measurement'}
                             options={UOMSData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
-                            name='productNumberPrint'
+                            name='productNumber_print'
                             control={control}
                             render={({ field }) => (
                               <FormControlLabel
@@ -975,7 +975,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberPrint'
+                                    name='productNumber_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -989,7 +989,7 @@ function ProductModal({
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
-                            name={'productNumberAggregation'}
+                            name={'productNumber_aggregation'}
                             control={control}
                             render={({ field }) => (
                               <FormControlLabel
@@ -997,7 +997,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberAggregation'
+                                    name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -1019,21 +1019,21 @@ function ProductModal({
                             control={control}
                             label='First Level Uom'
                             labelId='packaging-hierarchy-1st-layer'
-                            name={'firstLayerUom'}
+                            name={'firstLayer_unit_of_measurement'}
                             options={UOMSData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
                             control={control}
-                            name={'firstLayerPrint'}
+                            name={'firstLayer_print'}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberPrint'
+                                    name='productNumber_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1045,14 +1045,14 @@ function ProductModal({
                         <Grid2 size={2}>
                           <Controller
                             control={control}
-                            name={'firstLayerAggregation'}
+                            name={'firstLayer_aggregation'}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberAggregation'
+                                    name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -1084,13 +1084,13 @@ function ProductModal({
                           <CustomDropdown
                             control={control}
                             label='0th Level Uom'
-                            name={'productNumberUom'}
+                            name={'productNumber_unit_of_measurement'}
                             options={UOMSData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
-                            name={'productNumberPrint'}
+                            name={'productNumber_print'}
                             control={control}
                             render={({ field }) => (
                               <FormControlLabel
@@ -1098,7 +1098,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberPrint'
+                                    name='productNumber_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1113,14 +1113,14 @@ function ProductModal({
                         <Grid2 size={2}>
                           <Controller
                             control={control}
-                            name={'productNumberAggregation'}
+                            name={'productNumber_aggregation'}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberAggregation'
+                                    name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -1141,21 +1141,21 @@ function ProductModal({
                           <CustomDropdown
                             control={control}
                             label='First Level Uom'
-                            name={'firstLayerUom'}
+                            name={'firstLayer_unit_of_measurement'}
                             options={UOMSData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
                             control={control}
-                            name={'firstLayerPrint'}
+                            name={'firstLayer_print'}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberPrint'
+                                    name='productNumber_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1169,7 +1169,7 @@ function ProductModal({
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
-                            name={'firstLayerAggregation'}
+                            name={'firstLayer_aggregation'}
                             control={control}
                             render={({ field }) => (
                               <FormControlLabel
@@ -1177,7 +1177,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberAggregation'
+                                    name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -1198,13 +1198,13 @@ function ProductModal({
                           <CustomDropdown
                             control={control}
                             label='Second Level Uom'
-                            name={'secondLayerUom'}
+                            name={'secondLayer_unit_of_measurement'}
                             options={UOMSData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
-                            name={'secondLayerPrint'}
+                            name={'secondLayer_print'}
                             control={control}
                             render={({ field }) => (
                               <FormControlLabel
@@ -1212,7 +1212,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberPrint'
+                                    name='productNumber_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1227,11 +1227,11 @@ function ProductModal({
                         <Grid2 size={2}>
                           <Controller
                             control={control}
-                            name={'secondLayerAggregation'}
+                            name={'secondLayer_aggregation'}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
-                                  <Switch {...field} name='productNumberAggregation' color='primary' role='button' />
+                                  <Switch {...field} name='productNumber_aggregation' color='primary' role='button' />
                                 }
                                 sx={{
                                   marginLeft: 0
@@ -1260,21 +1260,21 @@ function ProductModal({
                           <CustomDropdown
                             control={control}
                             label='0th Level Uom'
-                            name={'productNumberUom'}
+                            name={'productNumber_unit_of_measurement'}
                             options={UOMSData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
                             control={control}
-                            name={'productNumberPrint'}
+                            name={'productNumber_print'}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberPrint'
+                                    name='productNumber_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1289,14 +1289,14 @@ function ProductModal({
                         <Grid2 size={2}>
                           <Controller
                             control={control}
-                            name={'productNumberAggregation'}
+                            name={'productNumber_aggregation'}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberAggregation'
+                                    name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -1317,13 +1317,13 @@ function ProductModal({
                           <CustomDropdown
                             control={control}
                             label='First Level Uom'
-                            name={'firstLayerUom'}
+                            name={'firstLayer_unit_of_measurement'}
                             options={UOMSData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
-                            name={'firstLayerPrint'}
+                            name={'firstLayer_print'}
                             control={control}
                             render={({ field }) => (
                               <FormControlLabel
@@ -1331,7 +1331,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberPrint'
+                                    name='productNumber_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1346,14 +1346,14 @@ function ProductModal({
                         <Grid2 size={2}>
                           <Controller
                             control={control}
-                            name={'firstLayerAggregation'}
+                            name={'firstLayer_aggregation'}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberAggregation'
+                                    name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -1374,21 +1374,21 @@ function ProductModal({
                           <CustomDropdown
                             control={control}
                             label='Second Level Uom'
-                            name={'secondLayerUom'}
+                            name={'secondLayer_unit_of_measurement'}
                             options={UOMSData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
                             control={control}
-                            name={'secondLayerPrint'}
+                            name={'secondLayer_print'}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberPrint'
+                                    name='productNumber_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1402,14 +1402,14 @@ function ProductModal({
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
-                            name={'secondLayerAggregation'}
+                            name={'secondLayer_aggregation'}
                             control={control}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
                                   <Switch
                                     checked={field.value}
-                                    name='productNumberAggregation'
+                                    name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -1430,21 +1430,21 @@ function ProductModal({
                           <CustomDropdown
                             control={control}
                             label='Third Level Uom'
-                            name={'thirdLayerUom'}
+                            name={'thirdLayer_unit_of_measurement'}
                             options={UOMSData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
                           <Controller
                             control={control}
-                            name={'thirdLayerPrint'}
+                            name={'thirdLayer_print'}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberPrint'
+                                    name='productNumber_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1459,14 +1459,14 @@ function ProductModal({
                         <Grid2 size={2}>
                           <Controller
                             control={control}
-                            name={'thirdLayerAggregation'}
+                            name={'thirdLayer_aggregation'}
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumberAggregation'
+                                    name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -1482,11 +1482,11 @@ function ProductModal({
                     </>
                   )}
 
-                  <Grid2 size={12} className={palletisationApplicable ? '' : 'mb-3'}>
+                  <Grid2 size={12} className={palletisation_applicable ? '' : 'mb-3'}>
                     <Controller
                       control={control}
                       mj
-                      name={'palletisationApplicable'}
+                      name={'palletisation_applicable'}
                       render={({ field }) => (
                         <FormControlLabel
                           label='Palletisation applicable: '
@@ -1495,7 +1495,7 @@ function ProductModal({
                             <Switch
                               {...field}
                               checked={field.value}
-                              name='palletisationApplicable'
+                              name='palletisation_applicable'
                               color='primary'
                               role='button'
                             />
@@ -1510,7 +1510,7 @@ function ProductModal({
                       )}
                     />
                   </Grid2>
-                  {palletisationApplicable && (
+                  {palletisation_applicable && (
                     <Grid2 container spacing={5} size={12} className='d-flex align-items-center mb-3'>
                       <Grid2 size={7}>
                         <CustomTextField control={control} id='palletSize' label='Pallet size' name={'palletSize'} />
@@ -1519,7 +1519,7 @@ function ProductModal({
                         <CustomDropdown
                           control={control}
                           label='Pallet size Uom'
-                          name={'palletSizeUom'}
+                          name={'pallet_size_unit_of_measurement'}
                           options={UOMSData}
                         />
                       </Grid2>

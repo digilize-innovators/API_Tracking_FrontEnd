@@ -29,11 +29,9 @@ import { useSettings } from 'src/@core/hooks/useSettings';
 const Row = ({
     row,
     index,
-    isOpen,
     handleRowToggle,
     page,
     rowsPerPage,
-    historyData,
     config,
     handleUpdate,
     apiAccess
@@ -44,7 +42,7 @@ const Row = ({
             <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
                 <TableCell className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                     <IconButton align='center' aria-label='expand row' size='small' onClick={() => handleRowToggle(row.id)}>
-                        {isOpen ? <ChevronUp /> : <ChevronDown />}
+                        {/* {isOpen ? <ChevronUp /> : <ChevronDown />} */}
                     </IconButton>
                 </TableCell>
                 <TableCell align='center' component='th' scope='row' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
@@ -83,72 +81,6 @@ const Row = ({
                     )}
                 </TableCell>
             </TableRow>
-            {isOpen && (
-                <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                    <TableCell colSpan={16} sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                        <Collapse in={isOpen} timeout='auto' unmountOnExit>
-                            <Box sx={{ mx: 2 }}>
-                                <Typography variant='h6' gutterBottom component='div'>
-                                    History
-                                </Typography>
-                                <Box style={{ display: 'flex', justifyContent: 'center' }}>
-                                    <Table size='small' aria-label='purchases'>
-                                        <TableHead>
-                                            <TableRow align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)', width: '100%' }}>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Sr.No.</TableCell>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Product Id</TableCell>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Product Name</TableCell>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>GTIN</TableCell>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>NDC</TableCell>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>MRP</TableCell>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Generic Name</TableCell>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Packaging Size</TableCell>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Company Name</TableCell>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Antidote</TableCell>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Caution</TableCell>
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Reg No</TableCell>
-
-                                                {config?.config?.esign_status === true && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>E-Sign</TableCell>}
-                                                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Updated At</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {historyData[row.id]?.map((historyRow, idx) => (
-                                                <TableRow key={historyRow.created_at} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                                                    <TableCell component='th' scope='row' align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                                                        {idx + 1}
-                                                    </TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.product_id}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.product_name}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.gtin}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.ndc}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.mrp}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.generic_name}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.packaging_size}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow?.company?.company_name}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.antidote_statement}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.caution_logo}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.registration_no}</TableCell>
-
-                                                    {config?.config?.esign_status === true && (
-                                                        <StatusChip
-                                                            label={historyRow.esign_status}
-                                                            color={statusObj[historyRow.esign_status]?.color || 'default'}
-                                                        />
-                                                    )}
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                                                        {moment(historyRow?.created_at).format('DD/MM/YYYY, hh:mm:ss')}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </Box>
-                            </Box>
-                        </Collapse>
-                    </TableCell>
-                </TableRow>
-            )}
         </Fragment>
     );
 };
@@ -159,7 +91,6 @@ Row.propTypes = {
     handleRowToggle: PropTypes.any,
     page: PropTypes.any,
     rowsPerPage: PropTypes.any,
-    historyData: PropTypes.any,
     config: PropTypes.any,
     handleUpdate: PropTypes.any,
     apiAccess: PropTypes.any,
@@ -180,11 +111,11 @@ const TableCountryMaster = ({
     const {setIsLoading}=useLoading()
     const {removeAuthToken}=useAuth()
     const router=useRouter()
-    const [page,setPage]=useState(0)
+    const [page,setPage]=useState(1)
     const {settings}=useSettings()
     const [sortDirection,setSortDirection]=useState('asc')
     const [rowsPerPage,setRowsPerPage]=useState(settings.rowsPerPage)
-
+    console.log(rowsPerPage)
     useMemo(()=>[
         setPage(0)
     ],[page]);
@@ -237,7 +168,7 @@ const TableCountryMaster = ({
     const getCountryMasterData = async () => {
         try {
           setIsLoading(true)
-          const res = await api('/country-master/', {}, 'get', true)
+          const res = await api(`/country-master?limit=${rowsPerPage}&page=${page+1}`, {}, 'get', true)
           setIsLoading(false)
           console.log('All Country Master Data : ', res?.data?.data)
           if (res.data.success) {
@@ -267,8 +198,8 @@ const TableCountryMaster = ({
         handleChangePage={handleChangePage}
         handleChangeRowsPerPage={handleChangeRowsPerPage}
         >
-            <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
-                <Table stickyHeader>
+            {/* <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}> */}
+                {/* <Table stickyHeader> */}
                     <TableHead>
                         <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} />
@@ -321,8 +252,8 @@ const TableCountryMaster = ({
                             </TableRow>
                         )}
                     </TableBody>
-                </Table>
-            </Box>
+                {/* </Table>
+            </Box> */}
         </CustomTable>
     );
 };

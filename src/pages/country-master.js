@@ -10,7 +10,7 @@ import Head from 'next/head'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
-import { decodeAndSetConfig } from '../../utils/tokenUtils'
+import { decodeAndSetConfig } from '../utils/tokenUtils'
 import TableCountryMaster from 'src/views/tables/TableCountryMaster'
 import AddCountryModalComponent from 'src/components/Modal/CountryModel.js'
 

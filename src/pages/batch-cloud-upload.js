@@ -1,5 +1,5 @@
 'use-client'
-import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import React, { useState, useLayoutEffect, useMemo, useRef } from 'react'
 import Box from '@mui/material/Box'
 import Select from '@mui/material/Select'
 import Grid2 from '@mui/material/Grid2'
@@ -15,8 +15,6 @@ import TableBatch from 'src/views/tables/TableBatch'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import Head from 'next/head'
 import { useSettings } from 'src/@core/hooks/useSettings'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
 import AuthModal from 'src/components/authModal'
@@ -24,7 +22,7 @@ import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken';
 import { style } from 'src/configs/generalConfig';
-import {  getTokenValues } from '../../utils/tokenUtils';
+import {  getTokenValues } from '../utils/tokenUtils';
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import CustomSearchBar from 'src/components/CustomSearchBar'

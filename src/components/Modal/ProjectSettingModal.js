@@ -403,7 +403,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                         </Grid2>
                         <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                             {
-                                apiAccess.addApiAccess && (
+                                apiAccess?.addApiAccess && (
                                     <Button variant='contained' type="submit" sx={{ minWidth: 100 }}>
                                         Apply
                                     </Button>

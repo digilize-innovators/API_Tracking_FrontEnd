@@ -95,7 +95,7 @@ function UserModel({ open, onClose, editData,
       departmentId: editData?.departmentId || '',
       designationId: editData?.designationId || '',
       locationId: editData?.locationId || '',
-      isEnabled: editData?.is_active || true
+      isEnabled: editData?.is_active || false
     },
   });
 
@@ -121,12 +121,12 @@ function UserModel({ open, onClose, editData,
         departmentId: editData?.department_id || '',
         designationId: editData?.designation_id || '',
         locationId: editData?.location_id || '',
-        isEnabled: editData?.is_active || true,
+        isEnabled: editData?.is_active || false,
 
       });
     }
-  }, [editData, reset]);
-  console.log(editData)
+  }, [editData]);
+  console.log(editData.is_active)
   useEffect(() => {
     const getDesignation = async () => {
       try {
@@ -176,7 +176,7 @@ function UserModel({ open, onClose, editData,
           const data = res.data.data.locations.map((item) => ({
             id: item.id,
             value: item.id,
-            label: item.location_id,
+            label: item.location_name,
           }));
           setAllLocation(data)
         } else {

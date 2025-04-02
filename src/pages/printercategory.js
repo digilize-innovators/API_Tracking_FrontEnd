@@ -1,12 +1,11 @@
 'use-client'
-import { useMemo } from 'react'
+import { useMemo,useRef  ,useEffect, useState } from 'react'
 import { Button, Paper, TableContainer } from '@mui/material'
 import Box from '@mui/material/Box'
 import Grid2 from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
 import { IoMdAdd } from 'react-icons/io'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import { useLoading } from 'src/@core/hooks/useLoading'
@@ -19,7 +18,7 @@ import SnackbarAlert from 'src/components/SnackbarAlert'
 import { useAuth } from 'src/Context/AuthContext'
 import { api } from 'src/utils/Rest-API'
 import TablePrinterCategory from 'src/views/tables/TablePrinterCategory'
-import { decodeAndSetConfig } from '../../utils/tokenUtils'
+import { decodeAndSetConfig } from '../utils/tokenUtils'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import { validateToken } from 'src/utils/ValidateToken'
 import PrintingCategoryModal from 'src/components/Modal/PrintingCategoryModal'
@@ -397,7 +396,7 @@ const Index = () => {
 
   const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.toLowerCase() })
-    setPage(0)
+
   }
 
   const handleAuthModalOpen = () => {
@@ -441,7 +440,7 @@ const Index = () => {
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
                {
-                  config.config.status &&
+                  config?.config?.status &&
                   <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
                } 
               </Box>

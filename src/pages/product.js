@@ -14,7 +14,7 @@ import ProtectedRoute from 'src/components/ProtectedRoute'
 import Head from 'next/head'
 import downloadPdf from 'src/utils/DownloadPdf'
 import { useAuth } from 'src/Context/AuthContext'
-import { BaseUrl } from '../../../constants'
+import { BaseUrl } from '../../constants'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { useRouter } from 'next/router'
 import AuthModal from 'src/components/authModal'
@@ -24,7 +24,7 @@ import { validateToken } from 'src/utils/ValidateToken'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 
 const mainUrl = BaseUrl
-import { decodeAndSetConfig } from '../../utils/tokenUtils'
+import { decodeAndSetConfig } from '../utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
@@ -296,7 +296,6 @@ const Index = () => {
     console.log("formData",formData)
     const uploadRes = await uploadFile(formData.file, '/upload/productImage')
     if (!uploadRes?.success) {
-      setOpenSnackbar(true)
       setAlertData({ ...alertData, type: 'error', message: 'File upload failed', openSnackbar: true })
       return
     }
@@ -326,11 +325,11 @@ const Index = () => {
         firstLayer_print: formData.firstLayerPrint,
         secondLayer_print: formData.secondLayerPrint,
         thirdLayer_print: formData.thirdLayerPrint,
-        productNumber_aggregation: formData.productNumberAggregation,
-        firstLayer_aggregation: formData.firstLayerAggregation,
-        secondLayer_aggregation: formData.secondLayerAggregation,
-        thirdLayer_aggregation: formData.thirdLayerAggregation,
-        generic_salt: formData.genericSalt,
+        productNumberAggregation: formData.productNumberAggregation,
+        firstLayerAggregation: formData.firstLayerAggregation,
+        secondLayerAggregation: formData.secondLayerAggregation,
+        thirdLayerAggregation: formData.thirdLayerAggregation,
+        genericSalt: formData.genericSalt,
         composition: formData.composition,
         dosage: formData.dosage,
         remarks: formData.remarks,
@@ -363,13 +362,11 @@ const Index = () => {
       console.log('REs of add product ', res.data)
       if (res?.data?.success) {
         console.log('res data of add product', res?.data)
-        setOpenSnackbar(true)
         setAlertData({ ...alertData, type: 'success', message: 'Product added successfully', openSnackbar: true })
         resetForm()
         setOpenModal(false)
       } else {
         console.log('error to add product ', res.data)
-        setOpenSnackbar(true)
         setAlertData({ ...alertData, type: 'error', message: res.data?.message, openSnackbar: true })
         if (res.data.code === 401) {
           removeAuthToken()
@@ -391,43 +388,44 @@ const Index = () => {
 
     try {
       const data = {
-        productName: formData.productName,
-        gtin: formData.gtin,
-        ndc: formData.ndc,
+        // productName: formData.productName,
+        // gtin: formData.gtin,
+        // ndc: formData.ndc,
+        ...formData,
         mrp: formData.mrp === '' ? null : formData.mrp,
-        genericName: formData.genericName,
+        // genericName: formData.genericName,
         productImage: productImageUrl,
-        packagingSize: formData.packagingSize,
-        companyUuid: formData.companyUuid,
-        country: formData.country,
-        firstLayer: formData.firstLayer,
-        secondLayer: formData.secondLayer,
-        thirdLayer: formData.thirdLayer,
-        productNumber_unit_of_measurement: formData.productNumberUom,
-        firstLayer_unit_of_measurement: formData.firstLayerUom,
-        secondLayer_unit_of_measurement: formData.secondLayerUom,
-        thirdLayer_unit_of_measurement: formData.thirdLayerUom,
-        packagingHierarchy: formData.packagingHierarchy,
-        productNumber: formData.productNumber,
-        productNumber_print: formData.productNumberPrint,
-        firstLayer_print: formData.firstLayerPrint,
-        secondLayer_print: formData.secondLayerPrint,
-        thirdLayer_print: formData.thirdLayerPrint,
-        productNumber_aggregation: formData.productNumberAggregation,
-        firstLayer_aggregation: formData.firstLayerAggregation,
-        secondLayer_aggregation: formData.secondLayerAggregation,
-        thirdLayer_aggregation: formData.thirdLayerAggregation,
-        generic_salt: formData.genericSalt,
-        composition: formData.composition,
-        dosage: formData.dosage,
-        remarks: formData.remarks,
-        palletisation_applicable: formData.palletisationApplicable,
-        pallet_size: formData.palletSize === '' ? null : formData.palletSize?.toString(),
-        pallet_size_unit_of_measurement: formData.palletSizeUom,
-        no_of_units_in_primary_level: formData.noOfUnitsInPrimaryLevel === '' ? null : formData.noOfUnitsInPrimaryLevel,
-        prefix: formData.prefix === '' ? null : formData.prefix,
-        unit_of_measurement: formData.uom === '' ? null : formData.uom,
-        schedule_drug: formData.scheduledDrug
+        // packagingSize: formData.packagingSize,
+        // companyUuid: formData.companyUuid,
+        // country: formData.country,
+        // firstLayer: formData.firstLayer,
+        // secondLayer: formData.secondLayer,
+        // thirdLayer: formData.thirdLayer,
+        // productNumber_unit_of_measurement: formData.productNumberUom,
+        // firstLayer_unit_of_measurement: formData.firstLayerUom,
+        // secondLayer_unit_of_measurement: formData.secondLayerUom,
+        // thirdLayer_unit_of_measurement: formData.thirdLayerUom,
+        // packagingHierarchy: formData.packagingHierarchy,
+        // productNumber: formData.productNumber,
+        // productNumber_print: formData.productNumberPrint,
+        // firstLayer_print: formData.firstLayerPrint,
+        // secondLayer_print: formData.secondLayerPrint,
+        // thirdLayer_print: formData.thirdLayerPrint,
+        // productNumber_aggregation: formData.productNumberAggregation,
+        // firstLayer_aggregation: formData.firstLayerAggregation,
+        // secondLayer_aggregation: formData.secondLayerAggregation,
+        // thirdLayer_aggregation: formData.thirdLayerAggregation,
+        // generic_salt: formData.genericSalt,
+        // composition: formData.composition,
+        // dosage: formData.dosage,
+        // remarks: formData.remarks,
+        // palletisation_applicable: formData.palletisationApplicable,
+        // pallet_size: formData.palletSize === '' ? null : formData.palletSize?.toString(),
+        // pallet_size_unit_of_measurement: formData.palletSizeUom,
+        // no_of_units_in_primary_level: formData.noOfUnitsInPrimaryLevel === '' ? null : formData.noOfUnitsInPrimaryLevel,
+        // prefix: formData.prefix === '' ? null : formData.prefix,
+        // unit_of_measurement: formData.uom === '' ? null : formData.uom,
+        // schedule_drug: formData.scheduledDrug
       }
       const auditlogRemark = aduitRemarks
       let audit_log
@@ -452,13 +450,11 @@ const Index = () => {
       setIsLoading(false)
       if (res?.data?.success) {
         console.log('res of edit product ', res?.data)
-        setOpenSnackbar(true)
         setAlertData({ ...alertData, type: 'success', message: 'Product updated successfully', openSnackbar: true })
         setOpenModal(false)
         resetForm()
       } else {
         console.log('error to edit product ', res.data)
-        setOpenSnackbar(true)
         setAlertData({ ...alertData, type: 'error', message: res.data.message, openSnackbar: true })
         if (res.data.code === 401) {
           removeAuthToken()

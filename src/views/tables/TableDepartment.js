@@ -86,7 +86,7 @@ const Row = ({
 
   useEffect(() => {
     if (formData && pendingAction) {
-      const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
+      const esign_status = config?.config?.esign_status && config?.role!=='admin' ? 'pending' : 'approved'
       if (pendingAction === 'edit') {
         editDesignation(esign_status)
       } else {

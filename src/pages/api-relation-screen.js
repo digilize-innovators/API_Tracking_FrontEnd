@@ -16,85 +16,86 @@ import SnackbarAlert from 'src/components/SnackbarAlert'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import Cookies from 'js-cookie'
-import { validateToken } from 'src/utils/ValidateToken';
+import { validateToken } from 'src/utils/ValidateToken'
 import { useSettings } from 'src/@core/hooks/useSettings'
 
-
 const Index = () => {
-  const [apis, setApis] = useState([]);
-  const [allApis, setAllApis] = useState([]);
-  const [screens, setScreens] = useState([]);
-  const [allScreens, setAllScreens] = useState([]);
-  const [filterApiVal, setFilterApiVal] = useState('');
-  const [filterScreenVal, setFilterScreenVal] = useState('');
-  const [relations, setRelations] = useState([]);
-  const [allRelation, setAllRelation] = useState([]);
-  const { setIsLoading } = useLoading();
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' });
-  const [selectedValue, setSelectedValue] = useState(null);
-  const [selectedScreenValue, setSelectedScreenValue] = useState(null);
-  const { removeAuthToken } = useAuth();
-  const { settings } = useSettings();
+  const [apis, setApis] = useState([])
+  const [allApis, setAllApis] = useState([])
+  const [screens, setScreens] = useState([])
+  const [allScreens, setAllScreens] = useState([])
+  const [filterApiVal, setFilterApiVal] = useState('')
+  const [filterScreenVal, setFilterScreenVal] = useState('')
+  const [relations, setRelations] = useState([])
+  const [allRelation, setAllRelation] = useState([])
+  const { setIsLoading } = useLoading()
+  const [openSnackbar, setOpenSnackbar] = useState(false)
+  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' })
+  const [selectedValue, setSelectedValue] = useState(null)
+  const [selectedScreenValue, setSelectedScreenValue] = useState(null)
+  const { removeAuthToken } = useAuth()
+  const { settings } = useSettings()
 
-  const router = useRouter();
+  const router = useRouter()
   useEffect(() => {
-    getAPIsList();
-    getScreensList();
-    getApiScreenRelation();
-    return () => { }
+    getAPIsList()
+    getScreensList()
+    getApiScreenRelation()
+    return () => {}
   }, [])
   useEffect(() => {
-    const filteredScreen = allScreens.filter(screen => screen.screen_name.toLowerCase().includes(filterScreenVal.toLowerCase()));
-    console.log('Filtered screen ', filteredScreen, filterScreenVal);
-    setScreens(filteredScreen);
-    return () => { }
-  }, [filterScreenVal]);
+    const filteredScreen = allScreens.filter(screen =>
+      screen.screen_name.toLowerCase().includes(filterScreenVal.toLowerCase())
+    )
+    console.log('Filtered screen ', filteredScreen, filterScreenVal)
+    setScreens(filteredScreen)
+    return () => {}
+  }, [filterScreenVal])
   useEffect(() => {
-    const filteredApis = allApis.filter(api => api.name.toLowerCase().includes(filterApiVal.toLowerCase()));
-    setApis(filteredApis);
-    return () => { }
-  }, [filterApiVal]);
+    const filteredApis = allApis.filter(api => api.name.toLowerCase().includes(filterApiVal.toLowerCase()))
+    setApis(filteredApis)
+    return () => {}
+  }, [filterApiVal])
   const getScreensList = async () => {
     try {
-      setIsLoading(true);
-      const res = await api('/register-screen', {}, 'get', true);
+      setIsLoading(true)
+      const res = await api('/register-screen', {}, 'get', true)
       if (res.data.success) {
-        setScreens(res.data.data);
-        setAllScreens(res.data.data);
+        setScreens(res.data.data)
+        setAllScreens(res.data.data)
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       } else {
-        console.log('Error: Unexpected response', res.data);
+        console.log('Error: Unexpected response', res.data)
       }
-      setIsLoading(false);
-      console.log('All screens ', res.data);
+      setIsLoading(false)
+      console.log('All screens ', res.data)
     } catch (error) {
-      console.log('Error in get screens ', error);
+      console.log('Error in get screens ', error)
     }
   }
   const getAPIsList = async () => {
     try {
-      setIsLoading(true);
-      const res = await api('/register-api', {}, 'get', true);
+      setIsLoading(true)
+      const res = await api('/register-api', {}, 'get', true)
       if (res.data.success) {
-        setApis(res.data.data);
-        setAllApis(res.data.data);
+        setApis(res.data.data)
+        setAllApis(res.data.data)
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       } else {
-        console.log('Error: Unexpected response', res.data);
+        console.log('Error: Unexpected response', res.data)
       }
-      setIsLoading(false);
-      console.log('All apis ', res.data);
+      setIsLoading(false)
+      console.log('All apis ', res.data)
     } catch (error) {
-      console.log('Error in get apis ', error);
+      console.log('Error in get apis ', error)
     }
   }
   const getApiScreenRelation = async () => {
@@ -105,10 +106,10 @@ const Index = () => {
         setRelations(res.data.data)
         setAllRelation(res.data.data)
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       } else {
-        console.log('Error: Unexpected response', res.data);
+        console.log('Error: Unexpected response', res.data)
       }
       setIsLoading(false)
       console.log('All api-screen relation', res.data)
@@ -117,88 +118,99 @@ const Index = () => {
     }
   }
   const handleCheckboxChange = (apiId, screenId) => {
-    console.log('click checkbox, ', relations, apiId, screenId);
-    const rArray = [...relations];
-    const index = rArray.findIndex((relation) => relation.api_id === apiId && relation.screen_id === screenId);
+    console.log('click checkbox, ', relations, apiId, screenId)
+    const rArray = [...relations]
+    const index = rArray.findIndex(relation => relation.api_id === apiId && relation.screen_id === screenId)
     if (index !== -1) {
-      rArray.splice(index, 1);
+      rArray.splice(index, 1)
     } else {
-      rArray.push({ api_id: apiId, screen_id: screenId });
+      rArray.push({ api_id: apiId, screen_id: screenId })
     }
-    setRelations(rArray);
+    setRelations(rArray)
   }
   const handleSaveChanges = async () => {
-    console.log('Changes saved!');
-    const rArray = relations.filter((relation) => !allRelation.find((r) => r.api_id === relation.api_id && r.screen_id === relation.screen_id));
-    console.log("Relation array ", relations);
-    console.log("Final array ", rArray);
-    const uncheckedArr = allRelation.filter((relation) => !relations.find((r) => r.api_id === relation.api_id && r.screen_id === relation.screen_id));
-    console.log("Unchecked array ", uncheckedArr);
+    console.log('Changes saved!')
+    const rArray = relations.filter(
+      relation => !allRelation.find(r => r.api_id === relation.api_id && r.screen_id === relation.screen_id)
+    )
+    console.log('Relation array ', relations)
+    console.log('Final array ', rArray)
+    const uncheckedArr = allRelation.filter(
+      relation => !relations.find(r => r.api_id === relation.api_id && r.screen_id === relation.screen_id)
+    )
+    console.log('Unchecked array ', uncheckedArr)
     try {
-      const token = Cookies.get('token');
-      const decodedToken = jwtDecode(token);
-      const config = decodedToken.config.audit_logs;
-      let audit_log;
+      const token = Cookies.get('token')
+      const decodedToken = jwtDecode(token)
+      const config = decodedToken.config.audit_logs
+      let audit_log
       if (config === true) {
         audit_log = {
-          "audit_log": true,
-          "performed_action": "edit",
-          "remarks": `API - Screen privilege updated`,
-        };
+          audit_log: true,
+          performed_action: 'edit',
+          remarks: `API - Screen privilege updated`
+        }
       } else {
         audit_log = {
-          "audit_log": false,
-          "performed_action": "none",
-          "remarks": `none`,
-        };
+          audit_log: false,
+          performed_action: 'none',
+          remarks: `none`
+        }
       }
-      const res = await api('/api-screen-relations', { audit_log, checked: rArray, unChecked: uncheckedArr }, 'post', true);
-      console.log("Res of api screen relation ", res.data);
+      const res = await api(
+        '/api-screen-relations',
+        { audit_log, checked: rArray, unChecked: uncheckedArr },
+        'post',
+        true
+      )
+      console.log('Res of api screen relation ', res.data)
       if (res.data.success) {
-        console.log('res ', res.data);
-        setOpenSnackbar(true);
-        setAlertData({ ...alertData, type: 'success', message: 'API-Screen relation updated successfully' });
+        console.log('res ', res.data)
+        setOpenSnackbar(true)
+        setAlertData({ ...alertData, type: 'success', message: 'API-Screen relation updated successfully' })
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       } else {
-        console.log('Error: Unexpected response', res.data);
+        console.log('Error: Unexpected response', res.data)
       }
     } catch (error) {
-      console.log('Error in save changes ', error);
+      console.log('Error in save changes ', error)
     }
   }
   const handleResetFilter = () => {
-    setFilterScreenVal('');
-    setFilterApiVal('');
-    setScreens(allScreens);
-    setApis(allApis);
-    setSelectedValue(null);
-    setSelectedScreenValue(null);
+    setFilterScreenVal('')
+    setFilterApiVal('')
+    setScreens(allScreens)
+    setApis(allApis)
+    setSelectedValue(null)
+    setSelectedScreenValue(null)
   }
   const closeSnackbar = () => {
     setOpenSnackbar(false)
   }
   const handleChange = (event, newValue) => {
-    console.log('Selected Value:', newValue);
+    console.log('Selected Value:', newValue)
     if (newValue) {
-      setSelectedValue(newValue);
-      const filteredApis = allApis.filter(api => api.name.toLowerCase().includes(newValue.name.toLowerCase()));
-      setApis(filteredApis);
+      setSelectedValue(newValue)
+      const filteredApis = allApis.filter(api => api.name.toLowerCase().includes(newValue.name.toLowerCase()))
+      setApis(filteredApis)
     } else {
-      handleResetFilter();
+      handleResetFilter()
     }
-  };
+  }
   const handleScreenChange = (event, newValue) => {
-    console.log('Selected Value:', newValue);
+    console.log('Selected Value:', newValue)
     if (newValue) {
-      setSelectedScreenValue(newValue);
-      const filteredScreen = allScreens.filter(screen => screen.screen_name.toLowerCase().includes(newValue.screen_name.toLowerCase()));
-      setScreens(filteredScreen);
+      setSelectedScreenValue(newValue)
+      const filteredScreen = allScreens.filter(screen =>
+        screen.screen_name.toLowerCase().includes(newValue.screen_name.toLowerCase())
+      )
+      setScreens(filteredScreen)
     } else {
-      handleResetFilter();
+      handleResetFilter()
     }
-  };
+  }
   return (
     <Box padding={4}>
       <Head>
@@ -218,34 +230,24 @@ const Index = () => {
                 <Box className='mx-2 w-25'>
                   <FormControl className='w-100 mx-3 my-3'>
                     <Autocomplete
-                      id="tags-standard"
+                      id='tags-standard'
                       options={allScreens}
-                      getOptionLabel={(screen) => screen.screen_name}
+                      getOptionLabel={screen => screen.screen_name}
                       value={selectedScreenValue}
                       onChange={handleScreenChange}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Search Screen"
-                        />
-                      )}
+                      renderInput={params => <TextField {...params} label='Search Screen' />}
                     />
                   </FormControl>
                 </Box>
                 <Box className='mx-2 w-25'>
                   <FormControl className='w-100 mx-3 my-3'>
                     <Autocomplete
-                      id="tags-standard"
+                      id='tags-standard'
                       options={allApis}
-                      getOptionLabel={(api) => api.name}
+                      getOptionLabel={api => api.name}
                       value={selectedValue}
                       onChange={handleChange}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Search API"
-                        />
-                      )}
+                      renderInput={params => <TextField {...params} label='Search API' />}
                     />
                   </FormControl>
                 </Box>
@@ -254,11 +256,7 @@ const Index = () => {
                 <Button variant='contained' sx={{ display: 'inline-flex' }} onClick={handleResetFilter}>
                   Reset
                 </Button>
-                <Button
-                  variant='contained'
-                  sx={{ display: 'inline-flex', ml: 4 }}
-                  onClick={handleSaveChanges}
-                >
+                <Button variant='contained' sx={{ display: 'inline-flex', ml: 4 }} onClick={handleSaveChanges}>
                   Save Changes
                 </Button>
               </Box>
@@ -281,7 +279,7 @@ const Index = () => {
                             align='center'
                             style={{
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                              backgroundColor: '#fff', // Optional: To make sure the header has a background
+                              backgroundColor: '#fff' // Optional: To make sure the header has a background
                             }}
                           >
                             {screen.screen_name}
@@ -297,6 +295,11 @@ const Index = () => {
                               fontWeight: '600',
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
                               borderTop: '1px solid rgba(224, 224, 224, 1)',
+                              position: 'sticky',
+                              left: 0, // Make the first column sticky on the left
+                              top: '80px',
+                              zIndex: 2,
+                              backgroundColor: '#fff', // Ensure the first column has a background color
                             }}
                           >
                             {api.name}
@@ -309,9 +312,10 @@ const Index = () => {
                             >
                               <Checkbox
                                 key={`${apiIndex}-${screenIndex}`}
-                                checked={relations.findIndex(item => (
-                                  item.api_id === api.id && item.screen_id === screen.id
-                                )) > -1}
+                                checked={
+                                  relations.findIndex(item => item.api_id === api.id && item.screen_id === screen.id) >
+                                  -1
+                                }
                                 onChange={() => handleCheckboxChange(api.id, screen.id)}
                               />
                             </TableCell>
@@ -321,7 +325,6 @@ const Index = () => {
                     </TableBody>
                   </Table>
                 </TableContainer>
-
               )}
             </Grid2>
           </Box>
@@ -334,6 +337,6 @@ const Index = () => {
   )
 }
 export async function getServerSideProps(context) {
-  return validateToken(context, "API-Screen Relation")
+  return validateToken(context, 'API-Screen Relation')
 }
-export default ProtectedRoute(Index);
+export default ProtectedRoute(Index)
