@@ -28,7 +28,7 @@ import { decodeAndSetConfig } from '../../utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
-import ProductModal from 'src/components/Modal/ProductModal'
+import ProductModal from 'src/components/Modal/ProjectSettingModal'
 
 const Index = () => {
   const router = useRouter()
@@ -36,7 +36,6 @@ const Index = () => {
   const [openModal, setOpenModal] = useState(false)
   const [editData, setEditData] = useState({})
   const [productData, setProduct] = useState([])
-  const [openSnackbar, setOpenSnackbar] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
 
   const [productImage, setProductImage] = useState('/images/avatars/p.png')
@@ -126,7 +125,7 @@ const Index = () => {
   }
 
   const closeSnackbar = () => {
-    setOpenSnackbar(false)
+    setAlertData({...alertData,openSnackbar:false})
   }
   const handleOpenModal = () => {
     setApproveAPI({
@@ -589,7 +588,7 @@ const Index = () => {
           </Box>
         </Grid2>
       </Grid2>
-      <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+      <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
       <ProductModal
         handleSubmitForm={handleSubmitForm}
         openModal={openModal}

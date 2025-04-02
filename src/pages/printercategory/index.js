@@ -30,8 +30,8 @@ import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 const Index = () => {
   const { settings } = useSettings()
   const [openModal, setOpenModal] = useState(false)
-  const [printerCategoryName, setPrinterCategoryName] = useState('')
-  const [printerCategoryID, setPrinterCategoryID] = useState('')
+    const searchBarRef = useRef(null)
+  
   const [tableHeaderData, setTableHeaderData] = useState({
     esignStatus: '',
     searchVal: ''
@@ -139,7 +139,6 @@ const Index = () => {
       return
     }
     setPendingAction(editData?.id ? 'edit' : 'add')
-    // editData?.id ? editPrinterCategory() : addPrinterCategory(esign_status)
   }
   const addPrinterCategory = async (esign_status, remarks) => {
     try {
@@ -157,7 +156,7 @@ const Index = () => {
         ? {
             audit_log: true,
             performed_action: 'add',
-            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Printer category added - ${printerCategoryName}`
+            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Printer category added - ${formData.printerCategoryName}`
           }
         : {
             audit_log: false,
@@ -390,6 +389,9 @@ const Index = () => {
   }
   
   const resetFilter = () => {
+    if (searchBarRef.current) {
+      searchBarRef.current.resetSearch()
+    }
     setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '' })
   }
 
@@ -438,12 +440,15 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+               {
+                  config.config.status &&
+                  <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+               } 
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
-                  <CustomSearchBar handleSearchClick={handleSearch} />
+                  <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
                   {apiAccess.addApiAccess && (
                     <Box className='mx-2'>
                       <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
