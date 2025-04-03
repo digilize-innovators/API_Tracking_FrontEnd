@@ -249,7 +249,7 @@ const TablePrinterLineConfiguration = ({
 
         useMemo(()=>{
           setPage(0)
-        },[tableHeaderData,page,rowsPerPage])
+        },[tableHeaderData,rowsPerPage])
 
         useEffect(() => {
             getAllPrinterLineConfigurationData()

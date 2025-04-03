@@ -342,7 +342,7 @@ const TableBatch = ({
 
   useMemo(()=>{
     setPage(0)
-  },[tableHeaderData,page,rowsPerPage])
+  },[tableHeaderData,rowsPerPage])
 
   useEffect(() => {
     getBatches()

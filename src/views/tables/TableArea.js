@@ -189,7 +189,7 @@ const { setIsLoading } = useLoading()
   // };
   useMemo(()=>{
     setPage(0)
-  },[tableHeaderData,page,rowsPerPage])
+  },[tableHeaderData,rowsPerPage])
   const getData = async () => {
     setIsLoading(true)
     try {

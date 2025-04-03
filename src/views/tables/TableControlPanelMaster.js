@@ -256,7 +256,7 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
 
   useMemo(()=>{
     setPage(0)
-  },[tableHeaderData,page,rowsPerPage])
+  },[tableHeaderDatarowsPerPage])
 
   useEffect(() => {
     getData()

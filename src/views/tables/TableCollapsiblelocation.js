@@ -180,7 +180,7 @@ const TableCollapsiblelocation = ({
       setPage(0);
       console.log("tableHeaderData.searchVal",tableHeaderData.searchVal)
     
-    },[tableHeaderData,page,rowsPerPage]);
+    },[tableHeaderData,rowsPerPage]);
 
   const handleSort = key => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'

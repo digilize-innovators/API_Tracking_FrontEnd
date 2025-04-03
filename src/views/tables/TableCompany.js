@@ -239,7 +239,7 @@ const TableCompany = ({
 
   useMemo(()=>{
     setPage(0)
-  },[tableHeaderData,page,rowsPerPage])
+  },[tableHeaderData,rowsPerPage])
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage)

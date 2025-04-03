@@ -231,11 +231,12 @@ const TablePrinterCategory = ({
     setPage(0);
     console.log(tableHeaderData.searchVal)
 
-  },[tableHeaderData,page,rowsPerPage]);
+  },[tableHeaderData,rowsPerPage]);
 
   const handleSort = key => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const sorted = [...allPrinterCategoryData?.data].sort((a, b) => {
+    const data=allPrinterCategoryData?.data
+    const sorted = [...data].sort((a, b) => {
       if (a[key] > b[key]) {
         return newSortDirection === 'asc' ? 1 : -1
       }

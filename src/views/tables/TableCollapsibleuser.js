@@ -197,7 +197,7 @@ const TableCollapsibleUser = ({
 
   useMemo(() => {
     setPage(0)
-  }, [tableHeaderData,page,rowsPerPage])
+  }, [tableHeaderData,rowsPerPage])
 
   useEffect(() => {
     const getUser = async () => {

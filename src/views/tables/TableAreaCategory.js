@@ -156,7 +156,7 @@ const TableAreaCategory = ({
 
   useMemo(()=>{
       setPage(0)
-    },[tableHeaderData,page,rowsPerPage])
+    },[tableHeaderData,rowsPerPage])
 
     useEffect(() => {
         getData()

@@ -256,7 +256,7 @@ const TablePrinterMaster = ({
 
   useMemo(()=>{
     setPage(0)
-  },[tableHeaderData,page,rowsPerPage])
+  },[tableHeaderData,rowsPerPage])
       
   const handleSort = (key,child) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'

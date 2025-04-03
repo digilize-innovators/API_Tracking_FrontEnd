@@ -166,7 +166,7 @@ const TableUOM = ({
 
    useMemo(()=>{
       setPage(0);  
-    },[tableHeaderData,page,rowsPerPage]);
+    },[tableHeaderData,rowsPerPage]);
 
   const handleSort = key => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
