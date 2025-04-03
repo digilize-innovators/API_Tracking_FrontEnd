@@ -11,12 +11,14 @@ import { useRouter } from 'next/router';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { useAuth } from 'src/Context/AuthContext';
 import { api } from 'src/utils/Rest-API';
+
 const ButtonStyled = styled(Button)(({ theme }) => ({
   [theme.breakpoints.down('sm')]: {
     width: '100%',
     textAlign: 'center'
   }
 }))
+
 const ResetButtonStyled = styled(Button)(({ theme }) => ({
   marginLeft: theme.spacing(4.5),
   [theme.breakpoints.down('sm')]: {
@@ -26,12 +28,14 @@ const ResetButtonStyled = styled(Button)(({ theme }) => ({
     marginTop: theme.spacing(4)
   }
 }))
+
 const ImgStyled = styled('img')(({ theme }) => ({
   width: 120,
   height: 120,
   marginRight: theme.spacing(6.25),
   borderRadius: theme.shape.borderRadius
 }))
+
 const MAX_LENGTH = 50;
 const PHONE_LENGTH = 10;
 const MIN_PASSWORD_LENGTH = 8;
@@ -65,9 +69,8 @@ const UserSchema = yup.object().shape({
   designationId: yup.string().required('Designation ID cannot be empty'),
   locationId: yup.string().required('Location ID cannot be empty'),
 });
-function UserModel({ open, onClose, editData,
-  handleSubmitForm, allDepartment, profilePhoto,
-  setProfilePhoto, onChange }) {
+
+function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, profilePhoto,setProfilePhoto, onChange }) {
   const { setIsLoading } = useLoading();
   const { removeAuthToken } = useAuth()
   const router = useRouter();
@@ -76,15 +79,7 @@ function UserModel({ open, onClose, editData,
   const [departmentId, setDepartmentId] = useState('')
   const [inputKey, setInputKey] = useState(Date.now());
 
-
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    watch
-  } = useForm({
+  const {control,handleSubmit,formState: { errors },reset,watch} = useForm({
     resolver: yupResolver(UserSchema),
     defaultValues: {
       userId: editData?.id || '',
@@ -102,7 +97,6 @@ function UserModel({ open, onClose, editData,
   useEffect(() => {
     const selectedDepartment = watch('departmentId');
     setDepartmentId(selectedDepartment);
-
   }, [watch('departmentId')]);
 
   const departmentData = allDepartment?.map((item) => ({
@@ -110,6 +104,7 @@ function UserModel({ open, onClose, editData,
     value: item.id,
     label: item.department_id,
   }));
+
   useEffect(() => {
     if (editData) {
       reset({
@@ -122,11 +117,10 @@ function UserModel({ open, onClose, editData,
         designationId: editData?.designation_id || '',
         locationId: editData?.location_id || '',
         isEnabled: editData?.is_active || false,
-
       });
     }
   }, [editData]);
-  console.log(editData.is_active)
+
   useEffect(() => {
     const getDesignation = async () => {
       try {
@@ -159,11 +153,9 @@ function UserModel({ open, onClose, editData,
         setIsLoading(false)
       }
     }
-
     getDesignation()
 
   }, [departmentId])
-
 
   useEffect(() => {
     const getLocation = async () => {
@@ -204,10 +196,9 @@ function UserModel({ open, onClose, editData,
         aria-labelledby='modal-modal-title'
         aria-describedby='modal-modal-description'
       >
-
         <Box sx={{
           ...style,
-          width: { xs: "100%", sm: "75%", md: "50%", lg: "40%" }, // Responsive width
+          width: { xs: "100%", sm: "75%", md: "50%", lg: "40%" }, 
           overflowY: 'auto'
         }}>
           <Typography variant='h4' className='my-2'>
@@ -261,7 +252,6 @@ function UserModel({ open, onClose, editData,
                   label="User ID"
                   control={control}
                   disabled={!!editData?.id}
-
                 />
               </Grid2>
               <Grid2 size={6}>
@@ -270,7 +260,6 @@ function UserModel({ open, onClose, editData,
                   label="User Name"
                   control={control}
                   disabled={!!editData?.id}
-
                 />
               </Grid2>
             </Grid2>
@@ -299,13 +288,12 @@ function UserModel({ open, onClose, editData,
                       error={!!error} s
                       helperText={error ? error.message : ''}
                       disabled={!!editData?.id}
-
                     />
                   )}
                 />
-
               </Grid2>
             </Grid2>
+
             <Grid2 container spacing={2}>
               <Grid2 size={6}>
                 <CustomTextField
@@ -333,8 +321,8 @@ function UserModel({ open, onClose, editData,
                   control={control}
                   options={departmentId ? allDesignation : []}
                 />
-
               </Grid2>
+
               <Grid2 size={6}>
                 <CustomDropdown
                   name='locationId'
@@ -342,8 +330,8 @@ function UserModel({ open, onClose, editData,
                   control={control}
                   options={allLocation}
                 />
-
               </Grid2>
+
             </Grid2>
             {editData?.id && (
               <Grid2 item xs={12} sm={6}>
@@ -357,8 +345,6 @@ function UserModel({ open, onClose, editData,
                       />
                     )}
                   />
-
-
                   User Enabled
                 </Typography>
               </Grid2>
@@ -369,16 +355,16 @@ function UserModel({ open, onClose, editData,
               sx={{
                 my: 3,
                 display: 'flex',
-                flexDirection: { xs: 'column', sm: 'row' }, // Column on xs, row on sm+
-                gap: 2, // Spacing between buttons
-                alignItems: { xs: 'stretch', sm: 'center' }, // Full width on xs, normal on sm+
-                justifyContent: { sm: 'flex-start' }, // Align left on sm+
+                flexDirection: { xs: 'column', sm: 'row' }, 
+                gap: 2, 
+                alignItems: { xs: 'stretch', sm: 'center' }, 
+                justifyContent: { sm: 'flex-start' }, 
               }}
             >
               <Button variant="contained" type="submit">
                 Save Changes
               </Button>
-              <Button type="reset" variant="outlined" color="primary" onClick={reset}>
+              <Button type="reset" variant="outlined" color="primary" onClick={()=>reset()}>
                 Reset
               </Button>
               <Button variant="outlined" color="error" onClick={onClose}>

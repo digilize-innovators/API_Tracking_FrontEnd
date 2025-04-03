@@ -252,11 +252,12 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
     } finally {
       setIsLoading(false)
     }
+    }
   }
 
   useMemo(()=>{
     setPage(0)
-  },[tableHeaderDatarowsPerPage])
+  },[tableHeaderData,rowsPerPage])
 
   useEffect(() => {
     getData()

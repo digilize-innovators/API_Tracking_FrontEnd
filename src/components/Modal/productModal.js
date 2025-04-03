@@ -14,7 +14,11 @@ import {
   Radio,
   InputAdornment,
   IconButton,
-  FormHelperText
+  FormHelperText,
+  TextField,
+  MenuItem,
+  Select,
+  InputLabel
 } from '@mui/material'
 import { style, modalStyle } from 'src/configs/generalConfig'
 import CustomTextField from '../CustomTextField'
@@ -52,30 +56,32 @@ const validationSchema = yup.object().shape({
     .trim()
     .length(12, 'GTIN length should be 12')
     .required('GTIN is required'),
-    ndc: yup.string()
-    .transform((value) => {
+  ndc: yup
+    .string()
+    .transform(value => {
       // If the value is an empty string, null, or undefined, return empty string
       if (value === '' || value == null) {
-        return '';  // Return empty string if it's null or empty
+        return '' // Return empty string if it's null or empty
       }
       // If the value can be converted to a valid number, return it as string, else return ''
-      return isNaN(Number(value)) ? '' : value;
+      return isNaN(Number(value)) ? '' : value
     })
-    .test('length', 'NDC length should be 10', (value) => {
+    .test('length', 'NDC length should be 10', value => {
       // Only apply the length check if the value is not an empty string
-      return value === '' || value?.length === 10;
+      return value === '' || value?.length === 10
     })
     .optional(),
-  mrp: yup.number()
-  .transform((value) => {
-    // Check if the value is an empty string, null, or undefined
-    if (value === '' || value == null) {
-      return 0;
-    }
-    // If the value is a valid number, return it, else return the original value
-    return isNaN(value) ? 0 : value;
-  })
-  .min(0, 'MRP cannot be negative'),
+  mrp: yup
+    .number()
+    .transform(value => {
+      // Check if the value is an empty string, null, or undefined
+      if (value === '' || value == null) {
+        return 0
+      }
+      // If the value is a valid number, return it, else return the original value
+      return isNaN(value) ? 0 : value
+    })
+    .min(0, 'MRP cannot be negative'),
   genericName: yup
     .string()
     .optional()
@@ -133,7 +139,7 @@ const validationSchema = yup.object().shape({
     .transform(value => (value == null ? '' : String(value)))
     .trim()
     .required('Country is required'),
-    unit_of_measurement: yup
+  unit_of_measurement: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
@@ -154,13 +160,13 @@ const validationSchema = yup.object().shape({
 
   productNumber: yup
     .number()
-    .transform((value) => {
+    .transform(value => {
       // Check if the value is an empty string, null, or undefined
       if (value === '' || value == null) {
-        return 0;
+        return 0
       }
       // If the value is a valid number, return it, else return the original value
-      return isNaN(value) ? 0 : value;
+      return isNaN(value) ? 0 : value
     })
     .required('Level 0 value should be greater than 0')
     .min(1, 'Level 0 value should be greater than 0'),
@@ -185,7 +191,7 @@ const validationSchema = yup.object().shape({
     .test('divisible-level0', 'Level 1 value should be divisible with level 0 value', function (value) {
       return !this.parent.productNumber || !value || this.parent.productNumber % value === 0
     }),
-    firstLayer_unit_of_measurement: yup.string().when('packagingHierarchy', {
+  firstLayer_unit_of_measurement: yup.string().when('packagingHierarchy', {
     is: val => val >= 2,
     then: schema => schema.required('Please Select Level 1 UOM')
   }),
@@ -283,13 +289,11 @@ const validationSchema = yup.object().shape({
   schedule_drug: yup.boolean().optional()
 })
 
-
 function ProductModal({
   openModal,
   handleCloseModal,
   editData,
   handleSubmitForm,
-  gtinLastDigit,
   convertImageToBase64,
   productImage,
   setProductImage,
@@ -302,6 +306,7 @@ function ProductModal({
     trigger,
     reset,
     setValue,
+    clearErrors,
     formState: { errors }
   } = useForm({
     resolver: yupResolver(validationSchema),
@@ -347,6 +352,7 @@ function ProductModal({
     }
   })
   const router = useRouter()
+  const [gtinLastDigit, setGtinLastDigit] = useState()
   const { removeAuthToken } = useAuth()
   const packagingHierarchy = watch('packagingHierarchy')
   const palletisation_applicable = watch('palletisation_applicable')
@@ -379,7 +385,6 @@ function ProductModal({
     }
 
     if (editData?.prefix) setValue('prefix', editData.prefix.split(',')) // Restore edit data if available
-
   }, [editData, companyUuid, companies]) // Ensure companies is a dependency
 
   useEffect(() => {
@@ -406,38 +411,36 @@ function ProductModal({
     getUomData()
   }, [])
 
-  const applyPackagingHierarchy = async() => {
+  const applyPackagingHierarchy = async () => {
     const fieldsToValidate = [
       'productNumber',
-              'productNumber_unit_of_measurement',
-              'firstLayer',
-              'firstLayer_unit_of_measurement',
-              'secondLayer',
-              'secondLayer_unit_of_measurement',
-              'thirdLayer',
-              'thirdLayer_unit_of_measurement',
-              'palletisation_applicable',
-              'pallet_size',
-              'pallet_size_unit_of_measurement',
-              'productImage',
-              'productNumber_aggregation',
-              'firstLayer_aggregation',
-              'secondLayer_aggregation',
-              'thirdLayer_aggregation',
-              'productNumber_print',
-              'firstLayer_print',
-              'secondLayer_print',
-            ];
-        
-            const isValid = await Promise.all(fieldsToValidate.map((field) => trigger(field)));
-            if(!isValid.every(Boolean)){
-              return 
-            }
-            else{
-              setModalOpen(false)
-            }
-          }
+      'productNumber_unit_of_measurement',
+      'firstLayer',
+      'firstLayer_unit_of_measurement',
+      'secondLayer',
+      'secondLayer_unit_of_measurement',
+      'thirdLayer',
+      'thirdLayer_unit_of_measurement',
+      'palletisation_applicable',
+      'pallet_size',
+      'pallet_size_unit_of_measurement',
+      'productImage',
+      'productNumber_aggregation',
+      'firstLayer_aggregation',
+      'secondLayer_aggregation',
+      'thirdLayer_aggregation',
+      'productNumber_print',
+      'firstLayer_print',
+      'secondLayer_print'
+    ]
 
+    const isValid = await Promise.all(fieldsToValidate.map(field => trigger(field)))
+    if (!isValid.every(Boolean)) {
+      return
+    } else {
+      setModalOpen(false)
+    }
+  }
 
   const getCompanies = async () => {
     try {
@@ -492,13 +495,13 @@ function ProductModal({
         ndc: editData?.ndc || '',
         mrp: editData?.mrp || '',
         genericName: editData?.generic_name || '',
-        productImage: editData?.product_image || '/images/avatars/p.png',
+        // productImage: editData?.product_image || '/images/avatars/p.png',
         packagingSize: editData?.packaging_size || '',
         companyUuid: editData?.company?.id || '',
         country: editData?.country_id || '',
-        firstLayer: editData?.first_layer || '',
-        secondLayer: editData?.second_layer || '',
-        thirdLayer: editData?.third_layer || '',
+        firstLayer: editData?.firstLayer || '',
+        secondLayer: editData?.secondLayer || '',
+        thirdLayer: editData?.thirdLayer || '',
         productNumber_unit_of_measurement: editData?.productNumber_unit_of_measurement || '',
         firstLayer_unit_of_measurement: editData?.firstLayer_unit_of_measurement || '',
         secondLayer_unit_of_measurement: editData?.secondLayer_unit_of_measurement || '',
@@ -525,16 +528,20 @@ function ProductModal({
         unit_of_measurement: editData?.unit_of_measurement || false,
         schedule_drug: editData?.schedule_drug || false
       })
+      console.log(
+        editData?.product_image &&
+          editData?.product_image !== '/images/avatars/p.png' &&
+          productImage != '/images/avatars/p.png'
+      )
       if (
         editData?.product_image &&
         editData?.product_image !== '/images/avatars/p.png' &&
         productImage != '/images/avatars/p.png'
       ) {
         convertImageToBase64(editData?.productImage, setProductImage)
-
+        setValue('productImage', editData?.productImage)
       }
-      setValue('prefix', editData?.prefix?.split(',') || '')
-
+      setValue('prefix', editData?.prefix?.split(',') || [])
     }
   }, [editData])
 
@@ -567,13 +574,7 @@ function ProductModal({
   }))
 
   const prefixs = watch('prefix')
-  const PrefixsData = Array.isArray(prefixs)
-    ? prefixs.map(item => ({
-        id: item,
-        value: item,
-        label: item
-      }))
-    : []
+
   const CountryData = countries?.map(item => ({
     id: item.id,
     value: item.id,
@@ -589,8 +590,24 @@ function ProductModal({
   const CompanyData = companies?.map(item => ({
     id: item.id,
     value: item.id,
-    label: item.company_id
+    label: item.company_name
   }))
+
+  const calculateGtinCheckDigit = input => {
+    if (input.length !== 12 || isNaN(input)) {
+      return
+    }
+
+    let sum = 0
+    for (let i = 0; i < 12; i++) {
+      const digit = parseInt(input[i])
+      sum += i % 2 === 0 ? digit : digit * 3
+    }
+
+    const nearestMultipleOfTen = Math.ceil(sum / 10) * 10
+    const checkDigit = nearestMultipleOfTen - sum
+    setGtinLastDigit(checkDigit)
+  }
 
   return (
     <Modal
@@ -609,7 +626,7 @@ function ProductModal({
           <Grid2 item xs={12} className='d-flex justify-content-between align-items-center'>
             <Box>
               <Grid2 container xs={12} sx={{ marginTop: 4.8, marginBottom: 3 }}>
-                {console.log("Image :",productImage)}
+                {/* {console.log("Image :",productImage)} */}
                 <ImgStyled src={productImage} alt='Profile Pic' />
                 <Box>
                   <ButtonStyled component='label' variant='contained' htmlFor='account-settings-upload-image'>
@@ -650,9 +667,14 @@ function ProductModal({
                   <ResetButtonStyled
                     color='error'
                     variant='outlined'
-                    onClick={() => {
-                      setProductImage('/images/avatars/p.png')
-                      setValue('productImage', '/images/avatars/p.png') // Clear form value
+                    onClick={async () => {
+                      if (editData?.id) {
+                        await convertImageToBase64(editData?.product_image, setProductImage)
+                        setValue('productImage', productImage)
+                      } else {
+                        setProductImage('/images/avatars/p.png')
+                        setValue('productImage', '/images/avatars/p.png') // Clear form value
+                      }
                     }}
                   >
                     Reset
@@ -689,32 +711,57 @@ function ProductModal({
               <CustomTextField label='Product Name' placeholder='Product Name' name={'productName'} control={control} />
             </Grid2>
             <Grid2 size={4}>
-              <CustomTextField
-                type='number'
+              <Controller
+                name='gtin'
                 control={control}
-                label='GTIN'
-                placeholder='GTIN'
-                name={'gtin'}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <Box
-                        sx={{
-                          backgroundColor: '#f0f0f0',
-                          paddingX: '25px',
-                          paddingY: gtinLastDigit ? '16px' : '28px',
-                          borderRadius: '4px',
-                          color: '#666'
-                        }}
-                      >
-                        {gtinLastDigit || ''}
-                      </Box>
-                    </InputAdornment>
-                  ),
-                  sx: {
-                    paddingRight: 0
+                rules={{
+                  required: 'GTIN is required',
+                  maxLength: {
+                    value: 12,
+                    message: 'GTIN cannot exceed 12 digits'
                   }
                 }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    type='number'
+                    id='gtin'
+                    label='GTIN'
+                    placeholder='GTIN'
+                    onBlur={e => calculateGtinCheckDigit(e.target.value)}
+                    onChange={e => {
+                      // Ensure the GTIN does not exceed 12 characters
+                      if (e.target.value?.length <= 12) {
+                        setValue('gtin', e.target.value) // Update value using setValue
+                      }
+                    }}
+                    required
+                    error={!!errors.gtin}
+                    helperText={errors.gtin ? errors.gtin.message : ''}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <Box
+                            sx={{
+                              backgroundColor: '#f0f0f0',
+                              paddingX: '25px',
+                              paddingY: errors.gtin ? '16px' : '28px', // Adjust padding based on error
+                              borderRadius: '4px',
+                              color: '#666'
+                            }}
+                          >
+                            {/* Assuming gtinLastDigit is stored in state */}
+                            {gtinLastDigit || ''}
+                          </Box>
+                        </InputAdornment>
+                      ),
+                      sx: {
+                        paddingRight: 0
+                      }
+                    }}
+                  />
+                )}
               />
             </Grid2>
           </Grid2>
@@ -734,7 +781,34 @@ function ProductModal({
               <CustomDropdown options={CompanyData} label='Company *' name={'companyUuid'} control={control} />
             </Grid2>
             <Grid2 size={4}>
-              <CustomDropdown options={PrefixsData} control={control} label='Prefixs *' name={'prefix'} />
+            <FormControl fullWidth required error={!!errors.prefix}>
+        <InputLabel id="label-prefixs">Prefixs</InputLabel>
+        <Controller
+          name="prefix"
+          control={control}
+          defaultValue=""
+          render={({ field }) => (
+            <Select
+              {...field}
+              labelId="label-prefixs"
+              label="Prefixs *"
+              onChange={(e) => {
+                field.onChange(e);
+                clearErrors("prefix");
+              }}
+            >
+              {Array.isArray(prefixs) &&
+                prefixs.map((item) => (
+                  <MenuItem key={item} value={item}>
+                    {item}
+                  </MenuItem>
+                ))}
+            </Select>
+          )}
+        />
+        {errors.prefix && <FormHelperText>{errors.prefix.message}</FormHelperText>}
+      </FormControl>
+
             </Grid2>
             <Grid2 size={4}>
               <CustomDropdown label='Country *' name={'country'} control={control} options={CountryData} />
@@ -1533,7 +1607,11 @@ function ProductModal({
                     ''
                   ) : (
                     <>
-                      <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={async() => await applyPackagingHierarchy()}>
+                      <Button
+                        variant='contained'
+                        sx={{ marginRight: 3.5 }}
+                        onClick={async () => await applyPackagingHierarchy()}
+                      >
                         Save Changes
                       </Button>
                       <Button
@@ -1594,10 +1672,10 @@ function ProductModal({
             <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'>
               Save Changes
             </Button>
-            <Button type='reset' variant='outlined' color='primary' onClick={() => reset()}>
+            <Button type='reset' variant='outlined' color='primary' onClick={() =>{setGtinLastDigit(); reset()}}>
               Reset
             </Button>
-            <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={() => handleCloseModal()}>
+            <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={() =>{setGtinLastDigit(); handleCloseModal()}}>
               Close
             </Button>
           </Grid2>

@@ -1,16 +1,5 @@
 import React, { useState, Fragment, useEffect, useMemo } from 'react';
-import {
-  Box,
-  Table,
-  Collapse,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-  Typography,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
+import {Box,Table,Collapse,TableRow,TableHead,TableBody,TableCell,Typography,IconButton,Tooltip,} from '@mui/material';
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md';
 import ChevronUp from 'mdi-material-ui/ChevronUp';
 import ChevronDown from 'mdi-material-ui/ChevronDown';
@@ -26,6 +15,7 @@ import { useSettings } from 'src/@core/hooks/useSettings';
 import { api } from 'src/utils/Rest-API';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { useAuth } from 'src/Context/AuthContext';
+import { useRouter } from 'next/router';
 
 const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, historyData, config, handleAuthCheck, handleUpdate, apiAccess, }) => {
   const isOpen = openRows[row.id];
@@ -155,6 +145,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
     </Fragment>
   );
 };
+
 Row.propTypes = {
   row: PropTypes.any,
   index: PropTypes.any,
@@ -168,6 +159,7 @@ Row.propTypes = {
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
 };
+
 const TableCollapsibleUser = ({
   pendingAction,
   handleUpdate,
@@ -190,10 +182,9 @@ const TableCollapsibleUser = ({
   const [userData, setUserData] = useState({ data: [], total: 0 })
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
+  const router=useRouter()
 
-  const handleRowToggle = async (rowId) => {
-    await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/user/history');
-  };
+
 
   useMemo(() => {
     setPage(0)
@@ -234,7 +225,10 @@ const TableCollapsibleUser = ({
 
   }, [tableHeaderData, rowsPerPage, page, pendingAction, statusFilter, departmentFilter])
 
-
+  const handleRowToggle = async (rowId) => {
+    await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/user/history');
+  };
+  
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
   }
@@ -280,7 +274,6 @@ const TableCollapsibleUser = ({
       handleChangePage={handleChangePage}
       handleChangeRowsPerPage={handleChangeRowsPerPage}
     >
-
       <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
         <Table stickyHeader>
           <TableHead>

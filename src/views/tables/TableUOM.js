@@ -1,18 +1,8 @@
 import React, { useState, Fragment, useEffect,useMemo } from 'react';
-import Box from '@mui/material/Box';
-import Table from '@mui/material/Table';
-import Collapse from '@mui/material/Collapse';
-import TableRow from '@mui/material/TableRow';
-import TableHead from '@mui/material/TableHead';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
+import {Box,Table,Collapse,TableRow,TableHead,TableBody,TableCell,Typography,IconButton,Tooltip} from '@mui/material';
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md';
-import ChevronUp from 'mdi-material-ui/ChevronUp';
-import ChevronDown from 'mdi-material-ui/ChevronDown';
+import {ChevronUp,ChevronDown} from 'mdi-material-ui';
 import CustomTable from 'src/components/CustomTable';
-import { Tooltip } from '@mui/material';
 import PropTypes from 'prop-types';
 import { statusObj } from 'src/configs/statusConfig';
 import { getSortIcon } from 'src/utils/sortUtils';
@@ -23,6 +13,8 @@ import moment from 'moment';
 import { useSettings } from 'src/@core/hooks/useSettings';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { api } from 'src/utils/Rest-API';
+import { useRouter } from 'next/router';
+import { useAuth } from 'src/Context/AuthContext';
 
 const Row = ({
   row,
@@ -159,6 +151,8 @@ const TableUOM = ({
   const [allUOMData, setAllUOMData] = useState({ data: [], total: 0 })
   const [sortDirection, setSortDirection] = useState('asc')
   const { setIsLoading } = useLoading();
+  const {removeAuthToken}=useAuth()
+  const router=useRouter()
 
   const handleRowToggle = async (rowId) => {
     await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/uom/history');
@@ -167,14 +161,16 @@ const TableUOM = ({
    useMemo(()=>{
       setPage(0);  
     },[tableHeaderData,rowsPerPage]);
-
   const handleSort = key => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const sorted = [...allUOMData?.data].sort((a, b) => {
-      if (a[key] > b[key]) {
+    const data=allUOMData?.data
+    const sorted = [...data].sort((a, b) => {
+      const valueA = a[key]?.toLowerCase() || "";
+      const valueB = b[key]?.toLowerCase() || "";
+      if (valueA > valueB) {
         return newSortDirection === 'asc' ? 1 : -1
       }
-      if (a[key] < b[key]) {
+      if (valueA < valueB) {
         return newSortDirection === 'asc' ? -1 : 1
       }
       return 0

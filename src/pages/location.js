@@ -25,11 +25,9 @@ import downloadPdf from 'src/utils/DownloadPdf'
 
 const Index = () => {
   const router = useRouter()
-
   const { settings } = useSettings()
   const searchRef = useRef()
   const [pendingAction, setPendingAction] = useState(null)
-
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [locationData, setLocation] = useState([])
@@ -45,10 +43,7 @@ const Index = () => {
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [formData, setFormData] = useState({})
-  const [tableHeaderData, setTableHeaderData] = useState({
-    esignStatus: '',
-    searchVal: ''
-  })
+  const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''})
 
   const apiAccess = useApiAccess('location-create', 'location-update', 'location-approve')
 
@@ -62,7 +57,7 @@ const Index = () => {
 
   useEffect(() => {
     if (formData && pendingAction) {
-      const esign_status = config?.config.esign_status && config?.role !='admin'  ? 'pending' : 'approved'
+      const esign_status = config?.config.esign_status && config?.role != 'admin' ? 'pending' : 'approved'
       if (pendingAction === 'edit') {
         editLocation(esign_status)
       } else if (pendingAction === 'add') {
@@ -81,15 +76,14 @@ const Index = () => {
     item.address,
     item.esign_status || 'N/A'
   ])
+
   const tableData = useMemo(
     () => ({
       tableHeader: ['Sr.No.', 'Id', 'Name', 'Mfg.Licence No.', 'Mfg Name', 'Address', 'E-Sign'],
       tableHeaderText: 'Location Master Report',
       tableBodyText: 'Location Master Data',
       filename: 'LocationMaster'
-    }),
-    []
-  )
+    }),[])
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
@@ -135,86 +129,74 @@ const Index = () => {
         approveAPIEndPoint: '/api/v1/location'
       })
     }
-    if (config?.config?.esign_status && config?.role!=='admin') {
+    if (config?.config?.esign_status && config?.role !== 'admin') {
       setAuthModalOpen(true)
       return
     }
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
+    console.log('handleAuthResult 02', config?.userId, user.user_id)
+
     const resetState = () => {
-      setApproveAPI({
-        approveAPIName: '',
-        approveAPImethod: '',
-        approveAPIEndPoint: ''
-      })
+      setApproveAPI({ approveAPIEndPoint: '', approveAPImethod: '', approveAPIName: '' })
       setEsignDownloadPdf(false)
       setAuthModalOpen(false)
     }
-    const handleUnauthenticated = () => {
-      setAlertData({ SnackbarAlert: true, type: 'error', message: 'Authentication failed, Please try again.' })
-      resetState()
+
+    if (!isAuthenticated) {
+      setAlertData({ type: 'error', openSnackbar: true, message: 'Authentication failed, Please try again.' })
+      return
     }
-    const handleModalActions = isApproved => {
-      setOpenModalApprove(!isApproved)
-      if (isApproved && esignDownloadPdf) {
-        console.log('esign is approved for download')
-        downloadPdf(tableData, tableHeaderData, tableBody, locationData, userDataPdf)
-        resetState()
-      }
-    }
-    const createAuditLog = action =>
-      config?.config?.audit_logs
-        ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            performed_action: action,
-            remarks: remarks?.length > 0 ? remarks : `location ${action} - ${auditLogMark}`
-          }
-        : {}
-    const handleUpdateStatus = async () => {
+
+    const handleApproverActions = async () => {
       const data = {
         modelName: 'location',
         esignStatus,
         id: eSignStatusId,
-        audit_log: createAuditLog(esignStatus)
+        audit_log: config?.config?.audit_logs
+          ? {
+              user_id: user.userId,
+              user_name: user.userName,
+              performed_action: 'approved',
+              remarks: remarks.length > 0 ? remarks : `location master approved - ${auditLogMark}`
+            }
+          : {}
       }
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('res /esign-status/update-esign-status :', res)
-
-      console.log('esign status update', res?.data)
-    }
-    const processApproverActions = async () => {
-      if (esignStatus === 'approved' || esignStatus === 'rejected') {
-        handleModalActions(esignStatus === 'approved')
-        if (esignStatus === 'approved' && esignDownloadPdf) {
-          resetState()
-          return
-        }
-      }
-      await handleUpdateStatus()
-      resetState()
-    }
-    const processNonApproverActions = async () => {
-      if (esignStatus === 'rejected') {
+      if (esignStatus === 'approved' && esignDownloadPdf) {
+        setOpenModalApprove(false)
+        console.log('esign is approved for approver')
+        downloadPdf(tableData, tableHeaderData, tableBody, locationData, userDataPdf)
+        resetState()
         return
       }
 
-      if (esignStatus === 'approved' && approveAPI.approveAPIName !== 'location-approve') {
-        handleModalActions(true)
-        if (!esignDownloadPdf) {
-          setPendingAction(editData?.id ? 'edit' : 'add')
-          console.log('esign is approved for creator')
-        }
-      } else {
-        await handleUpdateStatus()
-        setPendingAction(true)
+      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+      console.log('esign status update', res?.data)
+      setPendingAction(true)
+      if (esignStatus === 'rejected' && esignDownloadPdf) {
+        console.log('approver rejected')
+        setOpenModalApprove(false)
+        resetState()
       }
     }
-    // Main logic flow
-    if (!isAuthenticated) {
-      handleUnauthenticated()
-      return
+
+    const handleCreatorActions = () => {
+      if (esignStatus === 'rejected') {
+        setAuthModalOpen(false)
+        setOpenModalApprove(false)
+      }
+
+      if (esignStatus === 'approved') {
+        if (esignDownloadPdf) {
+          console.log('esign is approved for creator to download')
+          setOpenModalApprove(true)
+        } else {
+          console.log('esign is approved for creator')
+          setPendingAction(editData?.id ? 'edit' : 'add')
+        }
+      }
     }
     if (!isApprover && esignDownloadPdf) {
       setAlertData({
@@ -225,38 +207,12 @@ const Index = () => {
       })
       resetState()
       return
-    } else if (isApprover && esignDownloadPdf) {
-      await processApproverActions()
-      resetState()
-      return
-    } else {
-      if (approveAPI.approveAPIName === 'location-approve' && !isApprover) {
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: 'error',
-          message: 'Access denied with same user.'
-        })
-        resetState()
-        return
-      } else if (
-        (approveAPI.name === 'location-create' || approveAPI.approveAPIName === 'location-update') &&
-        isApprover
-      ) {
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: 'error',
-          message: 'Access denied with Different user.'
-        })
-        resetState()
-        return
-      } else {
-        await processNonApproverActions()
-        resetState()
-      }
     }
-
+    if (isApprover) {
+      await handleApproverActions()
+    } else {
+      handleCreatorActions()
+    }
     resetState()
   }
   const handleAuthCheck = async row => {
@@ -269,6 +225,7 @@ const Index = () => {
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.location_id)
+    console.log('row', row)
   }
   const addLocation = async (esign_status, remarks) => {
     try {
@@ -306,7 +263,6 @@ const Index = () => {
           removeAuthToken()
           router.push('/401')
         } else if (res.data.code === 409) {
-          setOpenModal(true)
           setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
           console.log('409 :', res.data.message)
         } else if (res.data.code == 500) {
@@ -314,6 +270,7 @@ const Index = () => {
         }
       }
     } catch (error) {
+      setOpenModal(false)
       console.log('Error in add locaiton ', error)
       router.push('/500')
     } finally {
@@ -350,24 +307,24 @@ const Index = () => {
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/location/${editData.id}`, data, 'put', true)
-      console.log('res Edit location:', res)
-
-      console.log('EDIT API RES', res.data)
 
       setIsLoading(false)
       if (res.data.success) {
+        setOpenModal(false)
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Location updated successfully' })
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
+        } else if (res.data.code === 500) {
+          setOpenModal(false)
         }
       }
     } catch (error) {
+      setOpenModal(false)
       router.push('/500')
     } finally {
-      setOpenModal(false)
       setIsLoading(false)
     }
   }
@@ -378,11 +335,11 @@ const Index = () => {
   const handleUpdate = item => {
     setEditData(item)
     setOpenModal(true)
-    if (config?.config?.esign_status ) {
+    if (config?.config?.esign_status) {
       setESignStatusId(item.id)
     }
   }
- 
+
   const resetFilter = () => {
     if (searchRef.current) {
       searchRef.current.resetSearch() // Call the reset method in the child
@@ -407,7 +364,7 @@ const Index = () => {
     })
     let data = getUserData()
     setUserDataPdf(data)
-    if (config?.config?.esign_status && config?.role!=='admin') {
+    if (config?.config?.esign_status && config?.role !== 'admin') {
       console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
@@ -427,14 +384,14 @@ const Index = () => {
         <Grid2 item xs={12}>
           <Box sx={{ backgroundColor: settings.mode === 'dark' ? '#212121' : 'white', borderRadius: 1 }}>
             <Grid2 item xs={12}>
-              {config?.config?.esign_status  && (
+              {config?.config?.esign_status && (
                 <Typography variant='h4' className='mx-4 my-2 mx-2' sx={{ paddingTop: '1%' }}>
                   Filter
                 </Typography>
               )}
               <Grid2 item xs={12}>
                 <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                  {config?.config?.esign_status && config?.role!=='admin' && (
+                  {config?.config?.esign_status && config?.role !== 'admin' && (
                     <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
                   )}
                 </Box>

@@ -13,7 +13,7 @@ import SnackbarAlert from 'src/components/SnackbarAlert'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import Head from 'next/head'
 import { useAuth } from 'src/Context/AuthContext'
-import { BaseUrl } from '../../../constants'
+import { BaseUrl } from 'constants'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { decrypt } from 'src/utils/Encrypt-Decrypt'
 import { useRouter } from 'next/router'
@@ -21,13 +21,14 @@ import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken';
-import { getTokenValues } from '../../utils/tokenUtils';
+import { getTokenValues } from 'src/utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import downloadPdf from 'src/utils/DownloadPdf'
 import UserModel from 'src/components/Modal/UserModel'
+
 const mainUrl = BaseUrl
 const Index = () => {
   const router = useRouter()
@@ -47,10 +48,7 @@ const Index = () => {
   const [config, setConfig] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-  const [tableHeaderData, setTableHeaderData] = useState({
-    esignStatus: '',
-    searchVal: ''
-  });
+  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '',searchVal: ''});
   const [eSignStatusId, setESignStatusId] = useState('');
   const [auditLogMark, setAuditLogMark] = useState('');
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
@@ -59,10 +57,7 @@ const Index = () => {
   const [userFormData, setUserFormData] = useState({})
   const searchBarRef = useRef(null);
 
-  const apiAccess = useApiAccess(
-    "user-create",
-    "user-update",
-    "user-approve");
+  const apiAccess = useApiAccess("user-create","user-update","user-approve");
 
   useLayoutEffect(() => {
     let data = getUserData();
@@ -71,27 +66,27 @@ const Index = () => {
     setUserDataPdf(data);
     return () => { }
   }, [])
+
   useEffect(() => {
     const handleUserAction = async () => {
       if (userFormData && pendingAction) {
         const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
-        
         if (pendingAction === "edit") {
-          await editUser(esign_status);  // Await editUser
+          await editUser(esign_status);  
         } else if (pendingAction === "add") {
-          await addUser(esign_status);   // Await addUser
+          await addUser(esign_status);  
         }
-        
         setPendingAction(null);
       }
     }
-  
     handleUserAction();
   }, [userFormData, pendingAction]);
+
   useEffect(() => {
     getDepartments()
   }, [departmentFilter, tableHeaderData, statusFilter])
 
+  
   const tableBody = userData.map((item, index) =>
     [index + 1, item.user_id,
     item.user_name,
@@ -111,6 +106,7 @@ const Index = () => {
   }), [departmentFilter]);
 
   console.log('tableData is index',tableData)
+
   const getDepartments = async () => {
     try {
       setIsLoading(true);
@@ -128,6 +124,7 @@ const Index = () => {
       setIsLoading(false);
     }
   };
+
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
@@ -146,16 +143,17 @@ const Index = () => {
     setAuthModalOpen(false);
     setOpenModalApprove(false);
   };
+
   const handleCloseModal = () => {
     resetForm()
     setOpenModal(false)
   }
 
   const resetForm = () => {
-
     setEditData({})
     setProfilePhoto('/images/avatars/1.png')
   }
+
   const handleSubmitForm = async (data) => {
     setUserFormData(data)
     const isEdit = !!editData?.id;
@@ -175,6 +173,7 @@ const Index = () => {
     }
     setPendingAction(editData?.id ? "edit" : "add");
   };
+
   const addUser = async (esign_status, remarks) => {
     const uploadRes = await uploadUserImage();
     if (!uploadRes?.success) {
@@ -233,6 +232,7 @@ const Index = () => {
       })
     }
   }
+
   const editUser = async (esign_status, remarks) => {
     console.log("formData",userFormData)
     let url = ''
@@ -307,6 +307,7 @@ const Index = () => {
     }
 
   }
+
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log("handleAuthResult 01", isAuthenticated, isApprover, esignStatus, user);
     console.log("handleAuthResult 02", config.userId, user.user_id);
@@ -358,14 +359,13 @@ const Index = () => {
       const res = await api('/esign-status/update-esign-status', data, 'patch', true);
       console.log("esign status update", res?.data);
       setPendingAction(true)
-
     };
     const handleEsignUpdateError = () => {
       console.error("Error updating esign status:");
       setAlertData({ openSnackbar: true, type: 'error', message: 'Failed to update e-sign status.' });
       resetApprovalState();
     };
-    const handleCreatorActions = (esignStatus, remarks) => {
+    const handleCreatorActions = (esignStatus) => {
       if (esignStatus === "rejected") {
         setAuthModalOpen(false);
         setOpenModalApprove(false);
@@ -407,6 +407,7 @@ const Index = () => {
     }
     resetApprovalState();
   };
+
   const handleAuthCheck = async (row) => {
     console.log("handleAuthCheck", row)
     setApproveAPI({
@@ -419,6 +420,7 @@ const Index = () => {
     setAuditLogMark(row.user_id)
     console.log("row", row)
   }
+
   const handleUpdate = (item) => {
     console.log('edit user', item);
     resetForm();
@@ -434,6 +436,7 @@ const Index = () => {
       setProfilePhoto('/images/avatars/1.png');
     }
   };
+
   const handleSearch = (val) => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() });
     if (val === '') {
@@ -442,15 +445,15 @@ const Index = () => {
     }
   }
 
-
   const resetFilter = () => {
     if (searchBarRef.current) {
       searchBarRef.current.resetSearch();
     }
-    setTableHeaderData({ ...tableHeaderData, searchVal: "" })
+    setTableHeaderData({ ...tableHeaderData, searchVal: "" ,esignStatus:''})
     setDepartmentFilter('')
     setStatusFilter('')
   }
+
   const convertImageToBase64 = async imageUrl => {
     console.log('converting to base64')
     try {
@@ -468,6 +471,7 @@ const Index = () => {
       console.error('Error fetching the image:', error)
     }
   }
+
   const onChange = event => {
     setIsLoading(true);
     const reader = new FileReader();
@@ -488,6 +492,7 @@ const Index = () => {
     console.log("profilePhoto", profilePhoto)
     setIsLoading(false);
   }
+
   const uploadUserImage = async () => {
     try {
       if (!file) {
@@ -514,7 +519,6 @@ const Index = () => {
     }
   }
 
-
   const handleAuthModalOpen = () => {
     console.log("OPen auth model");
     setApproveAPI({
@@ -524,6 +528,7 @@ const Index = () => {
     })
     setAuthModalOpen(true);
   };
+
   const handleDownloadPdf = () => {
 
     setApproveAPI({
@@ -539,6 +544,7 @@ const Index = () => {
     }
     downloadPdf(tableData, tableHeaderData, tableBody, userData, userDataPdf);
   }
+
   return (
     <Box padding={4}>
       <Head>
@@ -554,7 +560,6 @@ const Index = () => {
               Filter
             </Typography>
             <Grid2 item xs={12}>
-
               <Box className='d-flex-row justify-content-start align-items-center mx-4 my-3 '>
                 {(config?.config?.esign_status && config?.role!=='admin') &&
                   <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />

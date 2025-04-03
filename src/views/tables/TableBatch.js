@@ -1,18 +1,9 @@
 import React, { useState, Fragment, useEffect, useMemo } from 'react'
-import Box from '@mui/material/Box'
-import Table from '@mui/material/Table'
-import Collapse from '@mui/material/Collapse'
-import TableRow from '@mui/material/TableRow'
-import TableHead from '@mui/material/TableHead'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import Typography from '@mui/material/Typography'
-import IconButton from '@mui/material/IconButton'
+import { Tooltip,Typography,IconButton,TableCell,TableBody,TableHead,TableRow,Collapse,Table,Box } from '@mui/material'
 import { MdModeEdit, MdOutlineDomainVerification, MdOutlineCloudUpload } from 'react-icons/md'
 import ChevronUp from 'mdi-material-ui/ChevronUp'
 import ChevronDown from 'mdi-material-ui/ChevronDown'
 import CustomTable from 'src/components/CustomTable'
-import { Tooltip } from '@mui/material'
 import PropTypes from 'prop-types'
 import { statusObj } from 'src/configs/statusConfig'
 import { getSortIcon } from 'src/utils/sortUtils'
@@ -38,7 +29,6 @@ const Row = ({
   handleAuthCheck,
   handleUpdate,
   apiAccess,
-  filterProductVal,
   isBatchCloud
 }) => {
   const isOpen = openRows[row.id]

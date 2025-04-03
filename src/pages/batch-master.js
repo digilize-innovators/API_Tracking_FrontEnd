@@ -1,12 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import Box from '@mui/material/Box'
-import Select from '@mui/material/Select'
-import Grid2 from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
-import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
-import { Button, MenuItem } from '@mui/material'
+import { Box,Select,Grid2,Typography,FormControl,InputLabel,Button, MenuItem  } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -53,7 +47,6 @@ const Index = () => {
   const [allProductData, setAllProductData] = useState([]);
   const [ allLocationData,setAllLocationData]=useState([])
   const [formData, setFormData] = useState({})
-
   const [filterLocationVal, setFilterLocationVal] = useState('');
   const [filterProductVal, setFilterProductVal] = useState('');
   const [batchData,setBatch]=useState([])
@@ -238,12 +231,9 @@ const Index = () => {
   }
 
   const handleUpdate = item => {
-    // resetForm()
-    // handleOpenModal()
-    // setEditData(item)
-    // console.log('edit batch ', item)
+    resetForm()
     setEditData(item)
-    console.log('edit controlpanel master', item)
+    console.log('edit Batch master', item)
     setOpenModal(true)
   }
 
@@ -254,6 +244,7 @@ const Index = () => {
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
     console.log('handleAuthResult 02', config?.userId, user.user_id)
+
     const resetState = () => {
       setApproveAPI({approveAPIName: '',approveAPImethod: '',approveAPIEndPoint: ''})
       setAuthModalOpen(false)
@@ -325,6 +316,17 @@ const Index = () => {
       handleUnauthenticated()
       return
     }
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: "Access denied: Download pdf disabled for this user."
+      })
+      resetState()
+      return
+    }
+    
     if (isApprover) {
       await processApproverActions()
       return

@@ -23,11 +23,13 @@ const locationSchema = yup.object().shape({
   mfgLicenceNo: yup
     .string()
     .max(255, 'Mfg licence no length should be less than 256')
+    .matches(/^[a-zA-Z0-9]+\s*$/, 'Mfg licence no cannot contain any special symbols')
     .required("Mfg licence no can't be empty"),
 
   mfgName: yup
     .string()
     .max(255, 'Mfg name length should be less than 255')
+    .matches(/^[a-zA-Z0-9]+\s*$/, 'Mfg name cannot contain any special symbols')
     .required("Mfg Name can't be empty"),
 
   address: yup
@@ -117,7 +119,7 @@ const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
             <Button type='submit' variant='contained' sx={{ marginRight: 3.5 }}>
               Save Changes
             </Button>
-            <Button type='button' variant='outlined' onClick={reset} color='primary'>
+            <Button type='button' variant='outlined' onClick={()=>reset()} color='primary'>
               Reset
             </Button>
             <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={handleClose}>

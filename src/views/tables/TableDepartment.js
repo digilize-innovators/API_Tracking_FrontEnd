@@ -83,18 +83,22 @@ const Row = ({
     setUserDataPdf(data)
     return () => { }
   }, [openModalDes])
-
-  useEffect(() => {
-    if (formData && pendingAction) {
-      const esign_status = config?.config?.esign_status && config?.role!=='admin' ? 'pending' : 'approved'
-      if (pendingAction === 'edit') {
-        editDesignation(esign_status)
-      } else {
-        addDesignation(esign_status)
-      }
-    }
-    setPendingAction(null)
-  }, [formData, pendingAction])
+  
+   useEffect(() => {
+         const handleUserAction = async () => {
+           if (formData && pendingAction) {
+             const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
+             if (pendingAction === "edit") {
+               await editDesignation(esign_status)  // Await editUser
+             } else if (pendingAction === "add") {
+               await  addDesignation(esign_status)  // Await addUser
+             }
+             setPendingAction(null);
+           }
+         };
+       
+         handleUserAction();
+       }, [formData, pendingAction])
 
   const tableBody = arrayDesignation.map((item, index) => [
     index + 1,
@@ -167,6 +171,8 @@ const Row = ({
       }
       else {
         const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+        setPendingAction(true)
+
         if (esignDownloadPdf) {
           if (esignStatus === 'approved' && esignDownloadPdf) {
             console.log('esign is approved for approver')
@@ -184,10 +190,10 @@ const Row = ({
           }
         }
         else if (approveAPI.approveAPIName === 'department-approve') {
-          setPendingAction(true)
           if (esignStatus === "approved") {
             setOpenModalApprove(false);
             console.log("esign is approved for approver");
+            setPendingAction(true)
             resetState();
             return;
           }
@@ -433,11 +439,11 @@ const Row = ({
       <Grid2 item xs={12}>
         <TableDesignation
           departmentId={depData?.id}
-          handleUpdateDes={handleUpdateDes}
-          openModalDes={openModalDes}
           handleAuthCheck={handleDesigAuthCheck}
+          handleUpdateDes={handleUpdateDes}
           apiAccess={apiAccess}
           config_dept={config_dept}
+          pendingAction={pendingAction}
           setArrayDesignation={setArrayDesignation}
         />
       </Grid2>
@@ -814,6 +820,7 @@ const TableDepartment = ({
                 departmentData={departmentData.data}
                 historyData={historyData}
                 page={page}
+
                 rowsPerPage={rowsPerPage}
               />
             ))}

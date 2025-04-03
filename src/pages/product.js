@@ -14,7 +14,7 @@ import ProtectedRoute from 'src/components/ProtectedRoute'
 import Head from 'next/head'
 import downloadPdf from 'src/utils/DownloadPdf'
 import { useAuth } from 'src/Context/AuthContext'
-import { BaseUrl } from '../../constants'
+import { BaseUrl } from 'constants'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { useRouter } from 'next/router'
 import AuthModal from 'src/components/authModal'
@@ -94,24 +94,26 @@ const Index = () => {
         'Country',
         'E-Sign'
       ],
-      tableHeaderText: 'Batch Master Report',
-      tableBodyText: 'Batch Master Data',
-      filename: 'BatchMaster'
+      tableHeaderText: 'Product Master Report',
+      tableBodyText: 'Product Master Data',
+      filename: 'ProductMaster'
     }),
     []
   )
 
   useEffect(() => {
-    if (formData && pendingAction) {
-      const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
-      alert(esign_status)
-      if (pendingAction === 'edit') {
-        editProduct(esign_status)
-      } else if (pendingAction === 'add') {
-        addProduct(esign_status)
+    const handleUserAction = async () => {
+      if (formData && pendingAction) {
+        const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
+        if (pendingAction === 'edit') {
+          await editProduct(esign_status)
+        } else if (pendingAction === 'add') {
+          await addProduct(esign_status)
+        }
+        setPendingAction(null)
       }
-      setPendingAction(null)
     }
+    handleUserAction()
   }, [formData, pendingAction])
 
   const handleAuthModalOpen = () => {
@@ -125,7 +127,7 @@ const Index = () => {
   }
 
   const closeSnackbar = () => {
-    setAlertData({...alertData,openSnackbar:false})
+    setAlertData({ ...alertData, openSnackbar: false })
   }
   const handleOpenModal = () => {
     setApproveAPI({
@@ -187,6 +189,7 @@ const Index = () => {
       if (res?.data?.success) {
         const decryptUrl = await decrypt(res.data.data.path)
         url = `${mainUrl}/${decryptUrl}`
+        console.log(url)
         return { url, success: true }
       } else if (res?.data?.code === 401) {
         removeAuthToken()
@@ -206,7 +209,6 @@ const Index = () => {
     const resetState = () => {
       setApproveAPI({ approveAPIEndPoint: '', approveAPImethod: '', approveAPIName: '' })
       setEsignDownloadPdf(false)
-
       setAuthModalOpen(false)
     }
 
@@ -268,7 +270,7 @@ const Index = () => {
         ...alertData,
         openSnackbar: true,
         type: 'error',
-        message: "Access denied: Download pdf disabled for this user."
+        message: 'Access denied: Download pdf disabled for this user.'
       })
       resetState()
       return
@@ -293,33 +295,33 @@ const Index = () => {
     console.log('row', row)
   }
   const addProduct = async (esign_status, aduitRemarks) => {
-    console.log("formData",formData)
-    delete formData['file']
+    console.log('formData', formData)
     const uploadRes = await uploadFile(formData.file, '/upload/productImage')
     if (!uploadRes?.success) {
       setAlertData({ ...alertData, type: 'error', message: 'File upload failed', openSnackbar: true })
       return
     }
-
+    
     try {
+      delete formData['file']
       const data = {
         ...formData,
         mrp: formData.mrp === '' ? null : formData.mrp,
-        pallet_size:formData?.pallet_size?.toString(),
-        productImage: uploadRes?.url.split('/').pop(),
+        pallet_size: formData?.pallet_size?.toString(),
+        productImage: uploadRes?.url.split('/').pop()
       }
       const auditlogRemark = aduitRemarks
       const audit_log = config?.config?.audit_logs
-        ? {
-            audit_log: true,
-            performed_action: 'add',
-            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `product added - ${formData.productId}`
-          }
-        : {
-            audit_log: false,
-            performed_action: 'none',
-            remarks: `none`
-          }
+      ? {
+        audit_log: true,
+        performed_action: 'add',
+        remarks: auditlogRemark?.length > 0 ? auditlogRemark : `product added - ${formData.productId}`
+      }
+      : {
+        audit_log: false,
+        performed_action: 'none',
+        remarks: `none`
+      }
       data.audit_log = audit_log
       data.esign_status = esign_status
       console.log('Add product data ', data)
@@ -348,19 +350,22 @@ const Index = () => {
     }
   }
   const editProduct = async (esign_status, aduitRemarks) => {
+    console.log("Check Image is new pic is upload ",)
     let productImageUrl =
       productImage !== editData.product_image
         ? (await uploadFile(formData.file, '/upload/productImage'))?.url
         : editData.product_image
-
+      console.log(productImageUrl)
     try {
       delete formData['productId']
+      delete formData['file']
       const data = {
         ...formData,
         mrp: formData.mrp === '' ? null : formData.mrp,
-        pallet_size:formData?.pallet_size?.toString(),
-        productImage: productImageUrl,
+        pallet_size: formData?.pallet_size?.toString(),
+        productImage: productImage !== editData.product_image ?productImageUrl?.split('/').pop():productImageUrl
       }
+
       const auditlogRemark = aduitRemarks
       let audit_log
       if (config?.config?.audit_logs) {
@@ -383,6 +388,7 @@ const Index = () => {
       const res = await api(`/product/${editData.id}`, data, 'put', true)
       setIsLoading(false)
       if (res?.data?.success) {
+        setProductImage('/images/avatars/p.png')
         console.log('res of edit product ', res?.data)
         setAlertData({ ...alertData, type: 'success', message: 'Product updated successfully', openSnackbar: true })
         setOpenModal(false)
@@ -407,22 +413,27 @@ const Index = () => {
     setOpenModal(true)
     setEditData(item)
     console.log('edit product', item)
-    if(config?.config?.esign_status){
+    if (config?.config?.esign_status) {
       setESignStatusId(item.id)
     }
     const defaultImage = '/images/avatars/p.png'
     if (item.product_image && item.product_image !== defaultImage) {
-      convertImageToBase64(item.product_image, setProductImage)
+      
+    convertImageToBase64(item.product_image, setProductImage)
     } else {
       setProductImage(defaultImage)
     }
   }
   const convertImageToBase64 = async (imageUrl, setImageState) => {
     try {
+      console.log("imageUrl ",imageUrl)
       const response = await fetch(imageUrl)
+      console.log(response)
       const blob = await response.blob()
+      console.log(blob)
       const reader = new FileReader()
       reader.onloadend = () => {
+        console.log(reader.result)
         setImageState(reader.result)
       }
       reader.onerror = error => {
@@ -433,7 +444,6 @@ const Index = () => {
       console.error('Error fetching the image:', error)
     }
   }
-
 
   const resetFilter = () => {
     if (searchBarRef.current) {
@@ -454,9 +464,11 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
+    console.log(productData)
     downloadPdf(tableData, tableHeaderData, tableBody, productData, userDataPdf)
   }
 
+  console.log("Product Data",productData)
 
   const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })

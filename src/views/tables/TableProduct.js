@@ -39,6 +39,7 @@ const Row = ({
   handleUpdate,
   apiAccess
 }) => {
+  console.log(row)
   const serialNumber = getSerialNumber(index, page, rowsPerPage)
   return (
     <Fragment>
@@ -328,7 +329,8 @@ const TableProduct = ({
       setIsLoading(false)
       if (res.data.success) {
         setProductData({ data: res.data.data.products, total: res.data.data.total })
-        setProduct(res.data.data.product)
+        setProduct(res.data.data.products)
+        console.log('Set Product Data')
       } else {
         console.log('Error to get all products ', res.data)
         console.log('Error to get all products ', res.data)
@@ -357,7 +359,7 @@ const TableProduct = ({
       handleChangePage={handleChangePage}
       handleChangeRowsPerPage={handleChangeRowsPerPage}
     >
-      <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+      <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>

@@ -4,9 +4,8 @@ import { Modal, Box, Typography, Button, Grid2, TextField } from '@mui/material'
 import { style } from 'src/configs/generalConfig';
 import CustomTextField from 'src/components/CustomTextField';
 import CustomDropdown from 'src/components/CustomDropdown';
-import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Controller } from 'react-hook-form';
+import { Controller,useForm } from 'react-hook-form';
 
 const validationSchema = yup.object().shape({
     batchNo: yup.string()
@@ -98,7 +97,8 @@ function BatchModal({ openModal, handleCloseModal, editData, allProductData, all
     }, [editData,openModal]);
 console.log("editData",editData);
 
-    return (<Modal
+    return (
+    <Modal
         open={openModal}
         onClose={handleCloseModal}
         aria-labelledby='modal-modal-title'

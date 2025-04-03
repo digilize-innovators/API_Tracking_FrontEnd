@@ -10,14 +10,16 @@ import CustomDropdown from '../CustomDropdown';
 
 const designationSchema = yup.object().shape({
   designationId: yup.string()
+  .required("Designation ID can't be empty")
     .max(20, 'Designation ID length should be <= 20')
     .matches(/^[a-zA-Z0-9]+\s*$/, 'Designation ID cannot contain any special symbols')
-    .required("Designation ID can't be empty"),
+    ,
 
   designationName: yup.string()
+  .required("Designation Name can't be empty")
     .max(50, 'Designation Name length should be <= 50')
     .matches(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/, 'Designation Name cannot contain any special symbols')
-    .required("Designation Name can't be empty"),
+    ,
 });
 
 const DesignationModal = ({ open, onClose, editData, handleSubmitForm, departmentData, depData }) => {

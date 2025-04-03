@@ -15,7 +15,7 @@ import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken';
-import { getTokenValues } from '../utils/tokenUtils';
+import { getTokenValues } from 'src/utils/tokenUtils';
 import { useApiAccess } from 'src/@core/hooks/useApiAccess';
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
@@ -74,20 +74,22 @@ const Index = () => {
   }), []);
 
 
-  useEffect(() => {
-    if (formData && pendingAction) {
-      const esign_status = config?.config?.esign_status && config?.role!='admin' ? "pending" : "approved";
-      if (pendingAction === "edit" ) {
-        editDepartment(esign_status)
-      }
-      else if (pendingAction === "add") {
-        addDepartment(esign_status)
-      }
-      setPendingAction(null);
-    }
-  }, [formData, pendingAction]);
-
-
+    useEffect(() => {
+       const handleUserAction = async () => {
+         if (formData && pendingAction) {
+           const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
+           if (pendingAction === "edit") {
+             await editDepartment(esign_status)  // Await editUser
+           } else if (pendingAction === "add") {
+             await  addDepartment(esign_status)  // Await addUser
+           }
+           setPendingAction(null);
+         }
+       };
+     
+       handleUserAction();
+     }, [formData, pendingAction])
+   
   useLayoutEffect(() => {
     let data = getUserData();
     const decodedToken = getTokenValues();
@@ -220,7 +222,7 @@ const Index = () => {
       setAuthModalOpen(false);
       setOpenModalApprove(false);
     };
-    // Main Logic
+    
     if (!isAuthenticated) {
       handleUnauthenticated();
       return;
@@ -259,6 +261,7 @@ const Index = () => {
   }
 
   const handleSubmitForm = async (data) => {
+      
     setFormData(data)
     if (editData?.id) {
       setApproveAPI({
@@ -326,6 +329,7 @@ const Index = () => {
   }
   const editDepartment = async (esign_status, remarks) => {
     try {
+      console.log(formData)
       const data = { ...formData };
       delete data.departmentId;
       const auditlogRemark = remarks;
@@ -361,6 +365,7 @@ const Index = () => {
         }
       }
     } catch (error) {
+      console.log(error,'error while edit')
       router.push('/500');
       setOpenModal(false);
 

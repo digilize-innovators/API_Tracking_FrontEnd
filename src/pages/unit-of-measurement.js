@@ -3,7 +3,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import Box from '@mui/material/Box'
 import Grid2 from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
-import { Button} from '@mui/material'
+import { Button } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
@@ -63,17 +63,20 @@ const Index = () => {
   }, [])
 
   useEffect(() => {
-    if (formData && pendingAction) {
-      const esign_status = config?.config?.esign_status?"pending":"approved";
-      if (pendingAction === "edit") {
-        editUOM(esign_status);
-      }
-      else if(pendingAction==='add') {
-        addUOM(esign_status)
-      }
-      setPendingAction(null);
-    }
-  }, [formData, pendingAction]);
+       const handleUserAction = async () => {
+         if (formData && pendingAction) {
+           const esign_status = config?.config?.esign_status?"pending":"approved";
+           if (pendingAction === "edit") {
+             await  editUOM(esign_status);  
+           } else if (pendingAction === "add") {
+             await  addUOM(esign_status)  
+           }
+           setPendingAction(null);
+         }
+       };
+       handleUserAction();
+     }, [formData, pendingAction])
+ 
 
   const tableBody = allUOMData.map((item, index) => [
     index + 1,
@@ -161,6 +164,7 @@ const Index = () => {
       }
       try {
         const res = await api('/esign-status/update-esign-status', data, 'patch', true);
+        setPendingAction(true)
         console.log("esign status update", res?.data);
       } catch (error) {
         console.error("Error updating e-sign status:", error);
@@ -195,7 +199,7 @@ const Index = () => {
       resetApprovalState();
       setAuthModalOpen(false);
     };
-    const handleCreatorActions = (esignStatus, remarks) => {
+    const handleCreatorActions = (esignStatus) => {
       if (esignStatus === "rejected") {
         setAuthModalOpen(false);
         setOpenModalApprove(false);
@@ -204,6 +208,7 @@ const Index = () => {
         setOpenModalApprove(true);
       } else if (esignStatus === "approved") {
         console.log("esign is approved for creator");
+      
         setPendingAction(editData?.id ? "edit" : "add");
       }
     };
@@ -228,7 +233,6 @@ const Index = () => {
       handleCreatorActions(esignStatus, remarks);
     }
     resetApprovalState();
-    //getData();
   };
   const handleAuthCheck = async (row) => {
     console.log("handleAuthCheck", row);
@@ -342,8 +346,7 @@ const Index = () => {
     setTableHeaderData({ ...tableHeaderData, esignStatus: "", searchVal: "" })
   };
   const handleSearch = (val) => {
-    setTableHeaderData({ ...tableHeaderData, searchVal: val.toLowerCase() });
-    //setPage(0);
+    setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() });
   };
 
   const handleAuthModalOpen = () => {
@@ -367,9 +370,7 @@ const Index = () => {
       setAuthModalOpen(true);
       return;
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, uomData, userDataPdf);
-    resetApprovalState()
-    
+    downloadPdf(tableData, tableHeaderData, tableBody, allUOMData, userDataPdf);
   }
   return (
     <Box padding={4}>

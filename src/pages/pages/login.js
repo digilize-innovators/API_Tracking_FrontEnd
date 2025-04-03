@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
@@ -8,16 +8,11 @@ import { useRouter } from 'next/router';
 import {
   Box,
   Button,
-  TextField,
   Typography,
   CardContent,
-  FormControl,
   styled,
-  IconButton,
-  Modal,
+  MuiCard
 } from '@mui/material';
-import MuiCard from '@mui/material/Card';
-import { Eye, EyeOff } from 'mdi-material-ui';
 import Cookies from 'js-cookie';
 import themeConfig from 'src/configs/themeConfig';
 import BlankLayout from 'src/@core/layouts/BlankLayout';
@@ -35,19 +30,7 @@ import CustomTextField from 'src/components/CustomTextField';
 const Card = styled(MuiCard)(({ theme }) => ({
   [theme.breakpoints.up('sm')]: { width: '28rem' }
 }));
-const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: '50%',
-  bgcolor: 'background.paper',
-  borderRadius: '10px',
-  border: 0,
-  outline: 0,
-  boxShadow: 24,
-  p: 10
-};
+
 const removeAuthToken = () => {
   Cookies.remove('token');
   Cookies.remove('userName');
@@ -73,15 +56,9 @@ const LoginPage = () => {
     defaultValues: { userId: '', password: '' },
   });
   const [data, setData] = useState({ userId: '', password: '' });
-  const [showPassword, setShowPassword] = useState(false);
-  // const [userIdError, setUserIdError] = useState({ error: false, text: '' });
-  // const [passwordError, setPasswordError] = useState({ error: false, text: '' });
-  // const [openSnackbar, setOpenSnackbar] = useState(false);
   const [alertData, setAlertData] = useState({ openSnackbar:false, type: '', message: '', variant: 'filled' });
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [openPasswordModal, setOpenPasswordModal] = useState(false);
-  // const [passwords, setPasswords] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
-  // const [errors, setErrors] = useState({})
   const router = useRouter();
   const { login, setUserInfo } = useAuth();
   const { setIsLoading } = useLoading();
@@ -186,7 +163,6 @@ const LoginPage = () => {
         reset();
         setIsLoading(false);
       }
-    // }
   };
   const handleConfirmLogin = useCallback(async () => {
     try {
@@ -221,7 +197,6 @@ const LoginPage = () => {
         router.push('/home-screen');
       } else {
         setAlertData({ openSnackbar:true ,type: 'error', message: res.data.message || 'Login failed', variant: 'filled' });
-        // setOpenSnackbar(true);
       }
       setOpenConfirmDialog(false);
       setIsLoading(false);
@@ -274,10 +249,10 @@ const LoginPage = () => {
       onConfirm={handleConfirmLogin} />
 
       <PasswordResetModal
-        open={openPasswordModal}
+        openPasswordModal={openPasswordModal}
         onClose={() => setOpenPasswordModal(false)}
         userId={data.userId} 
-        setAlertData
+        setAlertData={setAlertData}
         />
       
     </>

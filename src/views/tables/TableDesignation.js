@@ -1,12 +1,5 @@
 import { useState, Fragment, useEffect } from 'react'
-import Box from '@mui/material/Box'
-import Table from '@mui/material/Table'
-import Collapse from '@mui/material/Collapse'
-import TableRow from '@mui/material/TableRow'
-import TableHead from '@mui/material/TableHead'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import Typography from '@mui/material/Typography'
+import{Box,Table,Collapse,TableRow,TableHead,TableBody,TableCell,Typography} from '@mui/material'
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md'
 import IconButton from '@mui/material/IconButton'
 import ChevronUp from 'mdi-material-ui/ChevronUp'
@@ -167,8 +160,8 @@ const TableDesignation = ({
   handleAuthCheck,
   apiAccess,
   config_dept,
-  openModalDes,
-  setArrayDesignation
+  setArrayDesignation,
+  pendingAction,
 }) => {
   const [sortBy, setSortBy] = useState('');
   const [sortDirection, setSortDirection] = useState('asc')
@@ -204,8 +197,10 @@ const TableDesignation = ({
     }
   }
   useEffect(() => {
+    console.log('1212')
     getDesignations()
-  }, [departmentId, openModalDes])
+  }, [departmentId,pendingAction])
+  
   const handleSort = (key, isBoolean = false) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
     const booleanSort = (a, b) => {
@@ -289,6 +284,6 @@ TableDesignation.propTypes = {
   config_dept: PropTypes.any,
   departmentId: PropTypes.any,
   setArrayDesignation: PropTypes.any,
-  openModalDes: PropTypes.any
+  pendingAction: PropTypes.any
 };
 export default TableDesignation;
