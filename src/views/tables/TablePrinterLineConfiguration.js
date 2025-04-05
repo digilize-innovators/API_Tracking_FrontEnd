@@ -186,6 +186,7 @@ Row.propTypes = {
     handleUpdate: PropTypes.any,
     apiAccess: PropTypes.any,
 };
+
 const TablePrinterLineConfiguration = ({
     setAllPrinterLineConfiguration,
     handleUpdate,
@@ -205,8 +206,8 @@ const TablePrinterLineConfiguration = ({
     const {setIsLoading}=useLoading()
     const {removeAuthToken}=useAuth()
     const router=useRouter()
-
     const [allPrinterLineConfigurationData,setAllPrinterLineConfigurationData]=useState({data:[],total:0})
+
     const handleRowToggle = async (rowId) => {
         await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/printerlineconfiguration/history');
     };
@@ -214,6 +215,7 @@ const TablePrinterLineConfiguration = ({
     const handleChangePage = (event, newPage) => {
         setPage(newPage)
     }
+
     const handleChangeRowsPerPage = event => {
         setRowsPerPage(parseInt(event.target.value, 10))
         setPage(0)
@@ -245,15 +247,15 @@ const TablePrinterLineConfiguration = ({
             } finally {
                 setIsLoading(false)
             }
-        }
+    }
 
-        useMemo(()=>{
+    useMemo(()=>{
           setPage(0)
-        },[tableHeaderData,rowsPerPage])
+    },[tableHeaderData,rowsPerPage])
 
-        useEffect(() => {
-            getAllPrinterLineConfigurationData()
-        }, [tableHeaderData, rowsPerPage, page,pendingAction])
+    useEffect(() => {
+        getAllPrinterLineConfigurationData()
+    }, [tableHeaderData, rowsPerPage, page,pendingAction])
 
     const handleSort = (key,child) => {
             const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -283,8 +285,8 @@ const TablePrinterLineConfiguration = ({
             })
             setAllPrinterLineConfigurationData({...allPrinterLineConfigurationData,data:sorted});
             setSortDirection(newSortDirection);
-            setSortBy(sortBy)
-        };
+            setSortBy(key)
+    };
 
     
     return (

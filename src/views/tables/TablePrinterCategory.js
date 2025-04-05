@@ -1,19 +1,9 @@
 import React, { useState, Fragment,useEffect, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import Box from '@mui/material/Box'
-import Table from '@mui/material/Table'
-import Collapse from '@mui/material/Collapse'
-import TableRow from '@mui/material/TableRow'
-import TableHead from '@mui/material/TableHead'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import Typography from '@mui/material/Typography'
-import IconButton from '@mui/material/IconButton'
+import {Box,Table,Collapse,TableRow,TableHead,TableBody,TableCell,Typography,IconButton,Tooltip} from '@mui/material'
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md'
-import ChevronUp from 'mdi-material-ui/ChevronUp'
-import ChevronDown from 'mdi-material-ui/ChevronDown'
+import {ChevronUp,ChevronDown} from 'mdi-material-ui'
 import CustomTable from 'src/components/CustomTable'
-import { Tooltip } from '@mui/material'
 import { statusObj } from 'src/configs/statusConfig'
 import { getSortIcon } from 'src/utils/sortUtils'
 import { handleRowToggleHelper } from 'src/utils/rowUtils'
@@ -22,6 +12,8 @@ import moment from 'moment'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { api } from 'src/utils/Rest-API'
+import { useAuth } from 'src/Context/AuthContext'
+import { useRouter } from 'next/router'
 
 const Row = ({
   row,
@@ -216,7 +208,8 @@ const TablePrinterCategory = ({
   const [sortBy, setSortBy] = useState('')
   const [openRows, setOpenRows] = useState({})
   const [historyData, setHistoryData] = useState({})
-
+  const {removeAuthToken}=useAuth()
+  const router=useRouter()
   const {settings}=useSettings()
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
@@ -379,6 +372,7 @@ TablePrinterCategory.propTypes = {
   tableHeaderData: PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
-  handleAuthCheck: PropTypes.any
+  handleAuthCheck: PropTypes.any,
+  pendingAction:PropTypes.any
 }
 export default TablePrinterCategory

@@ -156,7 +156,12 @@ const Index = () => {
   const handleSubmitForm = async data => {
     console.log('submit form')
     console.log(data)
-    setFormData(data)
+    setFormData({ ...data, 
+      productNumber_print: data.productNumber_print?data.productNumber_print:data.productNumber_aggregation, 
+      firstLayer_print:data.firstlayer_print? data.firstlayer_print:data.firstLayer_aggregation,
+      secondLayer_print:data.secondLayer_print?data.secondLayer_print:data.secondLayer_aggregation,
+      thirdLayer_print:data.thirdLayer_print?data.thirdLayer_print:data.thirdLayer_aggregation
+    })
     if (editData?.id) {
       setApproveAPI({
         approveAPIName: 'product-update',
@@ -301,7 +306,7 @@ const Index = () => {
       setAlertData({ ...alertData, type: 'error', message: 'File upload failed', openSnackbar: true })
       return
     }
-    
+
     try {
       delete formData['file']
       const data = {
@@ -312,16 +317,16 @@ const Index = () => {
       }
       const auditlogRemark = aduitRemarks
       const audit_log = config?.config?.audit_logs
-      ? {
-        audit_log: true,
-        performed_action: 'add',
-        remarks: auditlogRemark?.length > 0 ? auditlogRemark : `product added - ${formData.productId}`
-      }
-      : {
-        audit_log: false,
-        performed_action: 'none',
-        remarks: `none`
-      }
+        ? {
+            audit_log: true,
+            performed_action: 'add',
+            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `product added - ${formData.productId}`
+          }
+        : {
+            audit_log: false,
+            performed_action: 'none',
+            remarks: `none`
+          }
       data.audit_log = audit_log
       data.esign_status = esign_status
       console.log('Add product data ', data)
@@ -350,12 +355,12 @@ const Index = () => {
     }
   }
   const editProduct = async (esign_status, aduitRemarks) => {
-    console.log("Check Image is new pic is upload ",)
+    console.log('Check Image is new pic is upload ')
     let productImageUrl =
       productImage !== editData.product_image
         ? (await uploadFile(formData.file, '/upload/productImage'))?.url
         : editData.product_image
-      console.log(productImageUrl)
+    console.log(productImageUrl)
     try {
       delete formData['productId']
       delete formData['file']
@@ -363,7 +368,7 @@ const Index = () => {
         ...formData,
         mrp: formData.mrp === '' ? null : formData.mrp,
         pallet_size: formData?.pallet_size?.toString(),
-        productImage: productImage !== editData.product_image ?productImageUrl?.split('/').pop():productImageUrl
+        productImage: productImage !== editData.product_image ? productImageUrl?.split('/').pop() : productImageUrl
       }
 
       const auditlogRemark = aduitRemarks
@@ -418,15 +423,14 @@ const Index = () => {
     }
     const defaultImage = '/images/avatars/p.png'
     if (item.product_image && item.product_image !== defaultImage) {
-      
-    convertImageToBase64(item.product_image, setProductImage)
+      convertImageToBase64(item.product_image, setProductImage)
     } else {
       setProductImage(defaultImage)
     }
   }
   const convertImageToBase64 = async (imageUrl, setImageState) => {
     try {
-      console.log("imageUrl ",imageUrl)
+      console.log('imageUrl ', imageUrl)
       const response = await fetch(imageUrl)
       console.log(response)
       const blob = await response.blob()
@@ -468,7 +472,7 @@ const Index = () => {
     downloadPdf(tableData, tableHeaderData, tableBody, productData, userDataPdf)
   }
 
-  console.log("Product Data",productData)
+  console.log('Product Data', productData)
 
   const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })

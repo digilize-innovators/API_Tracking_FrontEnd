@@ -11,8 +11,9 @@ import {
   Typography,
   CardContent,
   styled,
-  MuiCard
+  
 } from '@mui/material';
+import MuiCard from '@mui/material/Card'
 import Cookies from 'js-cookie';
 import themeConfig from 'src/configs/themeConfig';
 import BlankLayout from 'src/@core/layouts/BlankLayout';
@@ -32,7 +33,7 @@ const Card = styled(MuiCard)(({ theme }) => ({
 }));
 
 const removeAuthToken = () => {
-  Cookies.remove('token');
+  Cookies.remove('toke');
   Cookies.remove('userName');
   Cookies.remove('departmentName');
   Cookies.remove('showBot');

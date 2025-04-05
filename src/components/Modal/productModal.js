@@ -154,7 +154,12 @@ const validationSchema = yup.object().shape({
     .required('No Of Units In Primary Level is required'),
 
   // productImage: yup.mixed().required('Product Image is required'),
-  packagingHierarchy: yup.number().required('Packaging Hierarchy is required'),
+  packagingHierarchy: yup
+    .number()
+    .transform((value, originalValue) => {
+      return originalValue === '' || originalValue == null ? null : Number(originalValue)
+    })
+    .required('Packaging Hierarchy is required'),
 
   productNumber_unit_of_measurement: yup.string().required('Please Select Level 0 UOM'),
 
@@ -369,21 +374,25 @@ function ProductModal({
   const [uoms, setUoms] = useState([])
   const [modalOpen, setModalOpen] = useState(false)
 
-  useEffect(() => {
-    if (!companyUuid) return // Ensure companyUuid exists before running the logic
+  const getPrefixData=()=>{
+    const prefix_data = companies.find(company => company.id === companyUuid)
 
-    const getPrefixData = companies.find(company => company.id === companyUuid)
+    if (prefix_data) {
+      let prefixs = [prefix_data.gs1_prefix].filter(Boolean) // Ensure no undefined values
 
-    if (getPrefixData) {
-      let prefixs = [getPrefixData.gs1_prefix].filter(Boolean) // Ensure no undefined values
-
-      if (getPrefixData.gs2_prefix) prefixs.push(getPrefixData.gs2_prefix)
-      if (getPrefixData.gs3_prefix) prefixs.push(getPrefixData.gs3_prefix)
+      if (prefix_data.gs2_prefix) prefixs.push(prefix_data.gs2_prefix)
+      if (prefix_data.gs3_prefix) prefixs.push(prefix_data.gs3_prefix)
       setValue('prefix', prefixs) // Set only if we have valid values
     } else {
       setValue('prefix', []) // Clear if no valid company selected
     }
+  }
 
+  useEffect(() => {
+    if (!companyUuid) return // Ensure companyUuid exists before running the logic
+    if(companyUuid){
+      getPrefixData()
+    }
     if (editData?.prefix) setValue('prefix', editData.prefix.split(',')) // Restore edit data if available
   }, [editData, companyUuid, companies]) // Ensure companies is a dependency
 
@@ -414,12 +423,12 @@ function ProductModal({
   const applyPackagingHierarchy = async () => {
     const fieldsToValidate = [
       'productNumber',
-      'productNumber_unit_of_measurement',
       'firstLayer',
-      'firstLayer_unit_of_measurement',
       'secondLayer',
-      'secondLayer_unit_of_measurement',
       'thirdLayer',
+      'productNumber_unit_of_measurement',
+      'firstLayer_unit_of_measurement',
+      'secondLayer_unit_of_measurement',
       'thirdLayer_unit_of_measurement',
       'palletisation_applicable',
       'pallet_size',
@@ -463,6 +472,7 @@ function ProductModal({
       setIsLoading(false)
     }
   }
+
 
   const getCountries = async () => {
     try {
@@ -573,7 +583,13 @@ function ProductModal({
     }
   }))
 
-  const prefixs = watch('prefix')
+  const prefixs = watch('prefix')||[]
+  useEffect(()=>{
+    if(!prefixs?.length){
+
+      getPrefixData()
+    }
+  },[prefixs?.length])
 
   const CountryData = countries?.map(item => ({
     id: item.id,
@@ -608,6 +624,9 @@ function ProductModal({
     const checkDigit = nearestMultipleOfTen - sum
     setGtinLastDigit(checkDigit)
   }
+
+  const isPackagingHierarchyLevelIsRequired = () =>
+    ['productNumber', 'firstLayer', 'secondLayer', 'thirdLayer'].some(el => Boolean(errors[el]?.message))
 
   return (
     <Modal
@@ -735,8 +754,10 @@ function ProductModal({
                       if (e.target.value?.length <= 12) {
                         setValue('gtin', e.target.value) // Update value using setValue
                       }
+                      if (e.target.value?.length !== 12) {
+                        setGtinLastDigit(null)
+                      }
                     }}
-                    required
                     error={!!errors.gtin}
                     helperText={errors.gtin ? errors.gtin.message : ''}
                     InputProps={{
@@ -744,8 +765,7 @@ function ProductModal({
                         <InputAdornment position='end'>
                           <Box
                             sx={{
-                              backgroundColor: '#f0f0f0',
-                              paddingX: '25px',
+                              paddingX: '15px',
                               paddingY: errors.gtin ? '16px' : '28px', // Adjust padding based on error
                               borderRadius: '4px',
                               color: '#666'
@@ -781,34 +801,40 @@ function ProductModal({
               <CustomDropdown options={CompanyData} label='Company *' name={'companyUuid'} control={control} />
             </Grid2>
             <Grid2 size={4}>
-            <FormControl fullWidth required error={!!errors.prefix}>
-        <InputLabel id="label-prefixs">Prefixs</InputLabel>
+              <FormControl fullWidth error={!!errors.prefix} sx={{ mb: 2 }}>
+        <InputLabel id='label-prefixs'>Prefix</InputLabel>
         <Controller
-          name="prefix"
+          name='prefix'
           control={control}
-          defaultValue=""
+          rules={{ required: 'Prefix is required' }}
           render={({ field }) => (
             <Select
               {...field}
-              labelId="label-prefixs"
-              label="Prefixs *"
-              onChange={(e) => {
-                field.onChange(e);
-                clearErrors("prefix");
+              labelId='label-prefixs'
+              label='Prefix *'
+              value={field.value || ''} // ensure controlled input
+              onChange={e => {
+                const selected = e.target.value
+                console.log('User selected:', selected)
+                field.onChange('') // reset select after selection
+                clearErrors('prefix')
               }}
             >
-              {Array.isArray(prefixs) &&
-                prefixs.map((item) => (
-                  <MenuItem key={item} value={item}>
-                    {item}
-                  </MenuItem>
-                ))}
+              <MenuItem disabled value=''>
+                Select a prefix
+              </MenuItem>
+              {prefixs?.map(item => (
+                <MenuItem key={item} value={item}>
+                  {item}
+                </MenuItem>
+              ))}
             </Select>
           )}
         />
-        {errors.prefix && <FormHelperText>{errors.prefix.message}</FormHelperText>}
+        {errors.prefix && (
+          <FormHelperText>{errors.prefix.message}</FormHelperText>
+        )}
       </FormControl>
-
             </Grid2>
             <Grid2 size={4}>
               <CustomDropdown label='Country *' name={'country'} control={control} options={CountryData} />
@@ -893,6 +919,13 @@ function ProductModal({
                     </RadioGroup>
                   )}
                 />
+                <FormControl error={!!errors.packagingHierarchy || isPackagingHierarchyLevelIsRequired()}>
+                  <FormHelperText>
+                    {errors.packagingHierarchy?.message ||
+                      (isPackagingHierarchyLevelIsRequired() &&
+                        'Please provide the required Packaging Hierarchy Levels to proceed.')}
+                  </FormHelperText>
+                </FormControl>
               </FormControl>
 
               <Modal
@@ -1005,6 +1038,14 @@ function ProductModal({
                                 control={
                                   <Switch
                                     {...field}
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      // Update the form state
+                                      if(isChecked){
+                                        setValue('productNumber_print',isChecked)
+                                      }
+                                      field.onChange(isChecked);
+                                    }}
                                     checked={field.value}
                                     name='productNumber_aggregation'
                                     color='primary'
@@ -1071,6 +1112,14 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      // Update the form state
+                                      if(isChecked){
+                                        setValue('productNumber_print',isChecked)
+                                      }
+                                      field.onChange(isChecked);
+                                    }}
                                     name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
@@ -1126,6 +1175,14 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      // Update the form state
+                                      if(isChecked){
+                                        setValue('firstLayer_print',isChecked)
+                                      }
+                                      field.onChange(isChecked);
+                                    }}
                                     name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
@@ -1194,6 +1251,14 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      // Update the form state
+                                      if(isChecked){
+                                        setValue('productNumber_print',isChecked)
+                                      }
+                                      field.onChange(isChecked);
+                                    }}
                                     name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
@@ -1251,7 +1316,15 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumber_aggregation'
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      // Update the form state
+                                      if(isChecked){
+                                        setValue('firstLayer_print',isChecked)
+                                      }
+                                      field.onChange(isChecked);
+                                    }}
+                                    name='firstLayer_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -1305,7 +1378,16 @@ function ProductModal({
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
-                                  <Switch {...field} name='productNumber_aggregation' color='primary' role='button' />
+                                  <Switch {...field} name='productNumber_aggregation' 
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    // Update the form state
+                                    if(isChecked){
+                                      setValue('secondLayer_print',isChecked)
+                                    }
+                                    field.onChange(isChecked);
+                                  }}
+                                  color='primary' role='button' />
                                 }
                                 sx={{
                                   marginLeft: 0
@@ -1370,6 +1452,14 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      // Update the form state
+                                      if(isChecked){
+                                        setValue('productNumber_print',isChecked)
+                                      }
+                                      field.onChange(isChecked);
+                                    }}
                                     name='productNumber_aggregation'
                                     color='primary'
                                     role='button'
@@ -1405,6 +1495,14 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      // Update the form state
+                                      if(isChecked){
+                                        setValue('productNumber_print',isChecked)
+                                      }
+                                      field.onChange(isChecked);
+                                    }}
                                     name='productNumber_print'
                                     color='primary'
                                     role='button'
@@ -1426,8 +1524,16 @@ function ProductModal({
                                 control={
                                   <Switch
                                     {...field}
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      // Update the form state
+                                      if(isChecked){
+                                        setValue('firstLayer_print',isChecked)
+                                      }
+                                      field.onChange(isChecked);
+                                    }}
                                     checked={field.value}
-                                    name='productNumber_aggregation'
+                                    name='firstLayer_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -1485,6 +1591,14 @@ function ProductModal({
                                     checked={field.value}
                                     name='productNumber_aggregation'
                                     color='primary'
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      // Update the form state
+                                      if(isChecked){
+                                        setValue('productNumber_print',isChecked)
+                                      }
+                                      field.onChange(isChecked);
+                                    }}
                                     role='button'
                                   />
                                 }
@@ -1542,6 +1656,14 @@ function ProductModal({
                                     checked={field.value}
                                     name='productNumber_aggregation'
                                     color='primary'
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      // Update the form state
+                                      if(isChecked){
+                                        setValue('productNumber_print',isChecked)
+                                      }
+                                      field.onChange(isChecked);
+                                    }}
                                     role='button'
                                   />
                                 }
@@ -1672,10 +1794,26 @@ function ProductModal({
             <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'>
               Save Changes
             </Button>
-            <Button type='reset' variant='outlined' color='primary' onClick={() =>{setGtinLastDigit(); reset()}}>
+            <Button
+              type='reset'
+              variant='outlined'
+              color='primary'
+              onClick={() => {
+                setGtinLastDigit()
+                reset()
+              }}
+            >
               Reset
             </Button>
-            <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={() =>{setGtinLastDigit(); handleCloseModal()}}>
+            <Button
+              variant='outlined'
+              color='error'
+              sx={{ marginLeft: 3.5 }}
+              onClick={() => {
+                setGtinLastDigit()
+                handleCloseModal()
+              }}
+            >
               Close
             </Button>
           </Grid2>

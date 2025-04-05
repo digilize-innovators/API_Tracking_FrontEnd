@@ -15,11 +15,11 @@ const validationSchema = yup.object().shape({
 
     ip: yup.string()
         .trim()
+        .required("IP Address can't be empty")
         .matches(
             /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/,
             "Provide a valid IP address"
-        )
-        .required("IP Address can't be empty"),
+        ),
 
     port: yup.number()
         .typeError("Port Number must be a valid number")

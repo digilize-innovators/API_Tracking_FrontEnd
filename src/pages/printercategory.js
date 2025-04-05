@@ -1,11 +1,9 @@
 'use-client'
-import { useMemo,useRef  ,useEffect, useState } from 'react'
-import { Button, Paper, TableContainer } from '@mui/material'
-import Box from '@mui/material/Box'
-import Grid2 from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
+import { useLayoutEffect, useMemo, useRef } from 'react'
+import { Button, Paper, TableContainer,Box,Grid2,Typography } from '@mui/material'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
 import { IoMdAdd } from 'react-icons/io'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import { useLoading } from 'src/@core/hooks/useLoading'
@@ -18,19 +16,18 @@ import SnackbarAlert from 'src/components/SnackbarAlert'
 import { useAuth } from 'src/Context/AuthContext'
 import { api } from 'src/utils/Rest-API'
 import TablePrinterCategory from 'src/views/tables/TablePrinterCategory'
-import { decodeAndSetConfig } from '../utils/tokenUtils'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import { validateToken } from 'src/utils/ValidateToken'
 import PrintingCategoryModal from 'src/components/Modal/PrintingCategoryModal'
 import downloadPdf from 'src/utils/DownloadPdf'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
+import { getTokenValues } from 'src/utils/tokenUtils'
 
 const Index = () => {
   const { settings } = useSettings()
   const [openModal, setOpenModal] = useState(false)
-    const searchBarRef = useRef(null)
-  
+  const searchBarRef = useRef(null)
   const [tableHeaderData, setTableHeaderData] = useState({
     esignStatus: '',
     searchVal: ''
@@ -68,27 +65,29 @@ const Index = () => {
     }),
     []
   )
-
-  useEffect(() => {
-    console.log(pendingAction)
-    if (formData && pendingAction) {
-      const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
-      if (pendingAction === 'edit') {
-        editPrinterCategory(esign_status)
-      } else if (pendingAction === 'add') {
-        addPrinterCategory(esign_status)
-      }
-      setPendingAction(null)
-    }
-  }, [formData, pendingAction])
-
-  useEffect(() => {
-    let data = getUserData()
-
-    decodeAndSetConfig(setConfig)
-    setUserDataPdf(data)
-    return () => {}
-  }, [])
+  useLayoutEffect(() => {
+      let data = getUserData();
+      const decodedToken = getTokenValues();
+      setConfig(decodedToken);
+      setUserDataPdf(data);
+      return () => { }
+    }, [])
+    
+    useEffect(() => {
+           const handleUserAction = async () => {
+             if (formData && pendingAction) {
+               const esign_status = config?.config?.esign_status?"pending":"approved";
+               if (pendingAction === "edit") {
+                 await  editPrinterCategory(esign_status);  
+               } else if (pendingAction === "add") {
+                 await  addPrinterCategory(esign_status)
+               }
+               setPendingAction(null);
+             }
+           };
+           handleUserAction();
+         }, [formData, pendingAction])
+    
   
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
@@ -190,8 +189,9 @@ const Index = () => {
       }
     } catch (error) {
       console.log('Error to add printer category ', error)
-      router.push('/500')
       setOpenModal(false)
+
+      router.push('/500')
 
     } finally {
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
@@ -395,8 +395,7 @@ const Index = () => {
   }
 
   const handleSearch = val => {
-    setTableHeaderData({ ...tableHeaderData, searchVal: val.toLowerCase() })
-
+    setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
   }
 
   const handleAuthModalOpen = () => {
@@ -440,7 +439,7 @@ const Index = () => {
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
                {
-                  config?.config?.status &&
+                  config?.config.esign_status &&
                   <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
                } 
               </Box>

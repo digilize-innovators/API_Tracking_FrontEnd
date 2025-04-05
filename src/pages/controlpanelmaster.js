@@ -56,18 +56,22 @@ const Index = () => {
     return () => { }
   }, [])
 
+
   useEffect(() => {
-    if (formData && pendingAction) {
-      const esign_status = config?.config?.esign_status ? "pending" : "approved";
-      if (pendingAction === 'edit') {
-        editControlPanelMaster(esign_status)
+    const handleUserAction = async () => {
+      if (formData && pendingAction) {
+        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
+        if (pendingAction === "edit") {
+          await editControlPanelMaster(esign_status); 
+        } else if (pendingAction === "add") {
+          await addControlPanelMaster(esign_status);  
+        }
+        setPendingAction(null);
       }
-      else if (pendingAction == 'add') {
-        addControlPanelMaster(esign_status)
-      }
-    }
-    setPendingAction(null)
-  }, [formData, pendingAction])
+    };
+    handleUserAction();
+  }, [formData, pendingAction]);
+
 
   const tableBody = controlPanelData?.map((item, index) => [
     index + 1,
@@ -238,7 +242,6 @@ const Index = () => {
 
   const handleUpdate = item => {
     console.log("item", item);
-
     resetForm()
     setEditData(item)
     console.log('edit controlpanel master', item)
@@ -248,6 +251,7 @@ const Index = () => {
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
     console.log('handleAuthResult 02', config?.userId, user.user_id)
+
     const resetState = () => {
       setApproveAPI({
         approveAPIName: '',
@@ -262,6 +266,7 @@ const Index = () => {
       setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
       resetState()
     }
+
     const handleModalActions = isApproved => {
       setOpenModalApprove(!isApproved)
       if (isApproved && esignDownloadPdf) {
@@ -269,6 +274,7 @@ const Index = () => {
         downloadPdf(tableData, tableHeaderData, tableBody, controlPanelData, userDataPdf)
       }
     }
+
     const createAuditLog = action =>
       config?.config?.audit_logs
         ? {
@@ -278,6 +284,7 @@ const Index = () => {
           remarks: remarks?.length > 0 ? remarks : `control panel master ${action} - ${auditLogMark}`
         }
         : {}
+        
     const handleUpdateStatus = async () => {
       const data = {
         modelName: 'controlpanelmaster',
@@ -289,6 +296,7 @@ const Index = () => {
       console.log('esign status update', res?.data)
       setPendingAction(true)
     }
+
     const processApproverActions = async () => {
       if (esignStatus === 'approved' || esignStatus === 'rejected') {
         handleModalActions(esignStatus === 'approved')
@@ -300,6 +308,7 @@ const Index = () => {
       await handleUpdateStatus()
       resetState()
     }
+
     const processNonApproverActions = () => {
       if (esignStatus === 'rejected') {
         resetState()
@@ -316,6 +325,16 @@ const Index = () => {
 
     if (!isAuthenticated) {
       handleUnauthenticated()
+      return
+    }
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: "Access denied: Download pdf disabled for this user."
+      })
+      resetState()
       return
     }
     if (isApprover) {

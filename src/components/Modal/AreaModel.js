@@ -1,15 +1,14 @@
-import React, { useState, useCallback } from 'react'
-import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import React, { useState,useEffect } from 'react'
+import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Modal, Box, Typography, Button, TextField, Grid2 } from '@mui/material';
+import { Modal, Box, Typography, Button, Grid2 } from '@mui/material';
 import { style } from 'src/configs/generalConfig'
 import CustomTextField from 'src/components/CustomTextField';
 import CustomDropdown from 'src/components/CustomDropdown';
 import { useLoading } from 'src/@core/hooks/useLoading';
-import { api } from 'src/utils/Rest-API';
 import { useAuth } from 'src/Context/AuthContext';
+import { api } from 'src/utils/Rest-API';
 import { useRouter } from 'next/router';
 
 
@@ -25,8 +24,8 @@ const AreaSchema = yup.object().shape({
         .max(255, 'Area name length should be less than 256')
         .required("Area name can't be empty")
         .matches(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/, "Area name cannot contain any special symbols"),
-    areaCategoryId: yup.string().required("Area cate req"),
-    location_uuid: yup.string().required("location  req")
+    areaCategoryId: yup.string().required("Area category can't be empty"),
+    location_uuid: yup.string().required("location can't be empty")
 });
 
 function AreaModel({ open, onClose, editData, handleSubmitForm }) {

@@ -1,9 +1,6 @@
 'use-client'
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import Box from '@mui/material/Box'
-import Grid2 from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
-import { Button, Paper, TableContainer } from '@mui/material'
+import { Button, Paper, TableContainer,Box,Grid2,Typography } from '@mui/material'
 import Head from 'next/head'
 import { IoMdAdd } from 'react-icons/io'
 import { useSettings } from 'src/@core/hooks/useSettings'
@@ -58,6 +55,7 @@ const Index = () => {
   }, [])
 
   useEffect(() => {
+    const handleUserAction=()=>{
     if (formData && pendingAction) {
       const esign_status = config?.config.esign_status?'pending':'approved'
       if (pendingAction === 'edit') {
@@ -67,6 +65,8 @@ const Index = () => {
       }
       setPendingAction(null)
     }
+  }
+  handleUserAction()
   }, [formData, pendingAction])
 
   const tableBody = allPrinterMasterData?.map((item, index) => [
@@ -137,9 +137,7 @@ const Index = () => {
 
   const AddPrinterMaster = async (esign_status, remarks) => {
     try {
-      console.log(formData)
-
-      const data = { ...formData }
+      const data = { ...formData,printerPort:formData.printerPort?.toString() }
 
       const auditlogRemark = remarks
       const audit_log = config?.config?.audit_logs
@@ -188,7 +186,7 @@ const Index = () => {
 
   const editPrinterMaster = async (esign_status, remarks) => {
     try {
-      const data = { ...formData }
+      const data = { ...formData,printerPort:formData.printerPort?.toString() }
       const auditlogRemark = remarks
       let audit_log
       if (config?.config?.audit_logs) {
@@ -230,70 +228,99 @@ const Index = () => {
       setApproveAPI({ approveAPIEndPoint: '', approveAPImethod: '', approveAPIName: '' })
     }
   }
-
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-    console.log('handleAuthResult 02', config?.userId, user.user_id)
-
+    console.log("handleAuthResult 01", isAuthenticated, isApprover, esignStatus, user);
+    console.log("handleAuthResult 02", config?.userId, user.user_id);
     const resetState = () => {
-      setApproveAPI({ approveAPIEndPoint: '', approveAPImethod: '', approveAPIName: '' })
+      setApproveAPI({
+        approveAPIName: "",
+        approveAPImethod: "",
+        approveAPIEndPoint: ""
+      })
       setEsignDownloadPdf(false)
+      setAuthModalOpen(false);
+    };
+    const handleApprovalActions = () => {
+      if (!isApprover && (approveAPI.approveAPIName === 'printermaster-create' || approveAPI.approveAPIName === 'printermaster-update')) {
+        console.log("esign is approved for creator");
+        setPendingAction(editData?.id ? "edit" : "add");
 
-      setAuthModalOpen(false)
-    }
-
-    if (!isAuthenticated) {
-      setAlertData({ type: 'error', openSnackbar: true, message: 'Authentication failed, Please try again.' })
-      return
-    }
-
-    const handleApproverActions = async () => {
-      const data = {
-        modelName: 'printermaster',
-        esignStatus,
-        id: eSignStatusId,
-        audit_log: config?.config?.audit_logs
-          ? {
-              user_id: user.userId,
-              user_name: user.userName,
-              performed_action: 'approved',
-              remarks: remarks.length > 0 ? remarks : `printer master approved - ${auditLogMark}`
-            }
-          : {}
       }
-      if (esignStatus === 'approved' && esignDownloadPdf) {
-        setOpenModalApprove(false)
-        console.log('esign is approved for approver')
-        downloadPdf(tableData, tableHeaderData, tableBody, allPrinterMasterData, userDataPdf)
+      resetState()
+    };
+    const handleUnauthenticated = () => {
+      setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' });
+      resetState();
+    };
+    const handleApproverActions = async () => {
+
+      if (!esignDownloadPdf && isApprover && approveAPI.approveAPIName !== "printermaster-approve") {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: "Access denied for this user."
+        })
         resetState()
         return
       }
+      else {
 
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('esign status update', res?.data)
-      setPendingAction(true)
-      if (esignStatus === 'rejected' && esignDownloadPdf) {
-        console.log('approver rejected')
-        setOpenModalApprove(false)
-        resetState()
-      }
-    }
+        const data = {
+          modelName: "printermaster",
+          esignStatus,
+          id: eSignStatusId,
+          audit_log: config?.config?.audit_logs ? {
+            "user_id": user.userId,
+            "user_name": user.userName,
+            "performed_action": 'approved',
+            "remarks": remarks.length > 0 ? remarks : `printer master approved - ${auditLogMark}`,
+          } : {}
+        };
 
-    const handleCreatorActions = () => {
-      if (esignStatus === 'rejected') {
-        setAuthModalOpen(false)
-        setOpenModalApprove(false)
-      }
+        if (isApprover && esignDownloadPdf) {
+          if (esignStatus === "approved" && esignDownloadPdf) {
+            setOpenModalApprove(false);
+            console.log("esign is approved for approver");
+            downloadPdf(tableData, tableHeaderData, tableBody, allPrinterMasterData, userDataPdf);
+            resetState();
+            return;
+          }
 
-      if (esignStatus === 'approved') {
-        if (esignDownloadPdf) {
-          console.log('esign is approved for creator to download')
-          setOpenModalApprove(true)
-        } else {
-          console.log('esign is approved for creator')
-          setPendingAction(editData?.id ? 'edit' : 'add')
+          if (esignStatus === "rejected" && esignDownloadPdf) {
+            console.log("approver rejected");
+            setOpenModalApprove(false);
+            resetState();
+          }
+        }
+        else if (isApprover && approveAPI.approveAPIName === 'printermaster-approve') {
+
+          const res = await api('/esign-status/update-esign-status', data, 'patch', true);
+          console.log("esign status update", res?.data);
+          setPendingAction(true)
+          if (esignStatus === "approved") {
+            setOpenModalApprove(false);
+            console.log("esign is approved for approver");
+            resetState();
+            return;
+          }
+          if (esignStatus === "rejected") {
+            console.log("approver rejected");
+            setOpenModalApprove(false);
+            resetState();
+          }
         }
       }
+
+    };
+    const handleCreatorRejection = () => {
+      setAuthModalOpen(false);
+      setOpenModalApprove(false);
+    };
+    
+    if (!isAuthenticated) {
+      handleUnauthenticated();
+      return;
     }
     if (!isApprover && esignDownloadPdf) {
       setAlertData({
@@ -306,12 +333,17 @@ const Index = () => {
       return
     }
     if (isApprover) {
-      await handleApproverActions()
+      await handleApproverActions();
+    } else if (esignStatus === "rejected") {
+      handleCreatorRejection();
     } else {
-      handleCreatorActions()
+
+      handleApprovalActions();
     }
-    resetState()
-  }
+    resetState();
+  };
+
+  
 
   const handleAuthCheck = async row => {
     console.log('handleAuthCheck', row)

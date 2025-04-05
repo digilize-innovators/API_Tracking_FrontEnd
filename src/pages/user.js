@@ -37,7 +37,7 @@ const Index = () => {
   const [allDepartment, setAllDepartment] = useState([])
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [departmentFilter, setDepartmentFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState(null)
   const [openModal, setOpenModal] = useState(false)
   const [editData, setEditData] = useState({})
   const [profilePhoto, setProfilePhoto] = useState('/images/avatars/1.png')
@@ -101,9 +101,9 @@ const Index = () => {
     tableHeaderText: 'User Master Report',
     tableBodyText: 'User Data',
     Filter: ['department', departmentFilter],
-    statusFilter:statusFilter,
+    statusFilter:statusFilter==null?'':statusFilter==true?"enable":"disable",
     filename: "UserMaster"
-  }), [departmentFilter]);
+  }), [departmentFilter,statusFilter]);
 
   console.log('tableData is index',tableData)
 
@@ -441,7 +441,7 @@ const Index = () => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() });
     if (val === '') {
       setDepartmentFilter('')
-      setStatusFilter('')
+      setStatusFilter(null)
     }
   }
 
@@ -451,7 +451,7 @@ const Index = () => {
     }
     setTableHeaderData({ ...tableHeaderData, searchVal: "" ,esignStatus:''})
     setDepartmentFilter('')
-    setStatusFilter('')
+    setStatusFilter(null)
   }
 
   const convertImageToBase64 = async imageUrl => {
@@ -589,7 +589,7 @@ const Index = () => {
                     label='Status'
                     onChange={e => setStatusFilter(e.target.value)}
                   >
-                    <MenuItem value={''}>None</MenuItem>
+                    <MenuItem value={null}>None</MenuItem>
                     <MenuItem value={true}>enabled</MenuItem>
                     <MenuItem value={false}>disabled</MenuItem>
                   </Select>

@@ -77,6 +77,7 @@ const Index = ({ userId, ip }) => {
     setValue,
     reset,
     control,
+    clearErrors,
     handleSubmit,
     watch,
     formState: { errors }
@@ -119,9 +120,9 @@ const Index = ({ userId, ip }) => {
       const prevPrinterLines = watch('printerLines')
       const panels = [...prevPrinterLines]
       const panel = panels.find(i => i.panelName === panelName)
-      const line = panel.lines.find(line => line.id === lineId)
+      const line = panel.lines.find(line => line?.id === lineId);
       line.printCount = printCount
-      line.pendingCount = line.codeToPrint - printCount
+      line.pendingCount = line?.codeToPrint - printCount
       setValue('printerLines', printerLines)
 
     })
@@ -132,7 +133,7 @@ const Index = ({ userId, ip }) => {
       const prevPrinterLine = watch('printerLines')
       const panels = [...prevPrinterLines]
       const panel = panels.find(i => i.panelName === panelName)
-      const line = panel.lines.find(line => line.id === lineId)
+      const line = panel.lines.find(line => line?.id === lineId)
       line.scanned = scanned
       console.log('dataScanned panels ', panels)
       setValue('printerLines', printer)
@@ -143,7 +144,7 @@ const Index = ({ userId, ip }) => {
       const prevPrinterLines=watch('printerLines')
       const panels = [...prevPrinterLines]
       const panel = panels.find(i => i.panelName === data.panelName)
-      const line = panel.lines.find(line => line.id === data.lineId)
+      const line = panel.lines.find(line => line?.id === data.lineId)
       line.disabledStartPrint = true
       line.disabledStopPrint = false
       line.disabledReset = true
@@ -159,7 +160,7 @@ const Index = ({ userId, ip }) => {
       const prevPrinterLines = watch('printerLines')
       const panels = [...prevPrinterLines]
       const panel = panels.find(i => i.panelName === data.panelName)
-      const line = panel.lines.find(line => line.id === data.lineId)
+      const line = panel.lines.find(line => line?.id === data.lineId)
       line.codeToPrint = String(data.pendingCount)
       line.disabledStartPrint = true
       line.disabledStopPrint = true
@@ -257,7 +258,7 @@ const Index = ({ userId, ip }) => {
           // Process all lines asynchronously
           panel.lines = await Promise.all(
             panel.lines.map(async line => {
-              const res = await api(`/printLineSetting/restore/${line.id}`, {}, 'get', true, true, ip)
+              const res = await api(`/printLineSetting/restore/${line?.id}`, {}, 'get', true, true, ip)
               console.log('Response of restore ', res.data)
 
               if (res?.data?.success && res?.data?.data) {
@@ -279,7 +280,7 @@ const Index = ({ userId, ip }) => {
                     ip
                   ),
                   api(
-                    `/batchprinting/getAvailableCodesFromProductAndBatch/${data.product_id}/${data.batch_id}/${data.packing_hierarchy}/${line.ControlPanel.id}/${line.id}`,
+                    `/batchprinting/getAvailableCodesFromProductAndBatch/${data.product_id}/${data.batch_id}/${data.packing_hierarchy}/${line?.ControlPanel.id}/${line?.id}`,
                     {},
                     'get',
                     true,
@@ -437,7 +438,7 @@ const Index = ({ userId, ip }) => {
   }
 
   const handleBatchChange = async (panelIndex, lineIndex, batchId, line) => {
-    const productID = line.product
+    const productID = line?.product
     try {
       setIsLoading(true)
       const res = await api(
@@ -501,7 +502,7 @@ const Index = ({ userId, ip }) => {
  
   const handleSubmitForm = async (panelIndex, lineIndex, line) => {
     console.log(line)
-    const productID = line?.product
+    const productID = line.product
     const batchId = line?.batch
     const packagingHierarchy = line?.packagingHierarchy
     const controlPanelId = line?.ControlPanel?.id
@@ -621,8 +622,11 @@ const Index = ({ userId, ip }) => {
 
   const handleResetPanel = async (panelIndex, lineIndex) => {
     const lines = [...printerLines]
+    clearErrors(`printerLines[${lineIndex}].product`)
+    clearErrors(`printerLines[${lineIndex}].batch`)
+    clearErrors(`printerLines[${lineIndex}].packagingHierarchy`)
     const line = lines[panelIndex].lines[lineIndex]
-    const redisKey = `product:${line.product}:batch:${line.batch}:hierarchy:${line.packagingHierarchy}`
+    const redisKey = `product:${line?.product}:batch:${line?.batch}:hierarchy:${line?.packagingHierarchy}`
     line.batches = []
     line.codeToPrint = ''
     line.packagingHierarchy = ''
@@ -639,7 +643,7 @@ const Index = ({ userId, ip }) => {
       console.log('redis key ', redisKey)
       const res = await api(
         '/batchprinting/removeTableFromRedis',
-        { redisKey, lineId: line.id },
+        { redisKey, lineId: line?.id },
         'delete',
         true,
         true,
@@ -654,7 +658,7 @@ const Index = ({ userId, ip }) => {
 
   const handleOpenSetting = async line => {
     console.log('setting of line ', line)
-    setProjectSettingData({ ...projectSettingData, lineId: line.id, printerId: line.printer_id })
+    setProjectSettingData({ ...projectSettingData, lineId: line?.id, printerId: line?.printer_id })
     setOpenProjectModal(!openProjectModal)
   }
 
@@ -666,8 +670,8 @@ const Index = ({ userId, ip }) => {
         const lines = [...panel.lines]
         await Promise.all(
           lines.map(async line => {
-            if (line.line_pc_ip === ip) {
-              data.lineId = line.id
+            if (line?.line_pc_ip === ip) {
+              data.lineId = line?.id
               line.disabledCodePrintSave = false
               line.disabledStartSession = true
               line.disabledCodeToPrint = true
@@ -699,7 +703,7 @@ const Index = ({ userId, ip }) => {
         const lines = [...panel.lines]
         await Promise.all(
           lines.map(async line => {
-            data.lineId = line.id
+            data.lineId = line?.id
             line.disabledCodePrintSave = true
             line.disabledStartSession = true
             line.disabledStopSession = true
@@ -865,9 +869,9 @@ const Index = ({ userId, ip }) => {
           </Grid2>
           {panel?.lines?.map((line, lineIndex) => {
             return (
-              line.line_pc_ip === ip && (
+              line?.line_pc_ip === ip && (
                 <Paper
-                  key={line.id}
+                  key={line?.id}
                   sx={{
                     borderRadius: 2,
                     padding: '10px 20px 20px 20px',
@@ -879,12 +883,12 @@ const Index = ({ userId, ip }) => {
                   <Grid2 container spacing={2} sx={{ alignItems: 'center', marginBottom: '16px' }}>
                     <Grid2 item size={6}>
                       <Typography variant='h4' className='mx-1 my-2' sx={{ paddingTop: '1%' }}>
-                        Line Name: {line.printer_line_name}
+                        Line Name: {line?.printer_line_name}
                       </Typography>
                     </Grid2>
                     <Grid2 item size={6} sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                       <Typography variant='h4' className='mx-3 my-2' sx={{ paddingTop: '1%' }}>
-                        Line No: {line.line_no}
+                        Line No: {line?.line_no}
                       </Typography>
                       <Box
                         sx={{
@@ -926,7 +930,7 @@ const Index = ({ userId, ip }) => {
                               <Select
                                 {...field}
                                 fullWidth
-                                disabled={line.saveData}
+                                disabled={line?.saveData}
                                 labelId={`select-product-${panelIndex}-${lineIndex}`}
                                 id={`select-product-${panelIndex}-${lineIndex}`}
                                 onChange={e => {
@@ -963,12 +967,13 @@ const Index = ({ userId, ip }) => {
                               <Select
                                 {...field}
                                 fullWidth
-                                disabled={line.saveData || !line.product} // Disable conditionally
+                                disabled={line?.saveData || !line?.product} // Disable conditionally
                                 labelId={`select-batch-${panelIndex}-${lineIndex}`}
                                 id={`select-batch-${panelIndex}-${lineIndex}`}
                                 onChange={e => {
                                   field.onChange(e) // Trigger React Hook Form onChange
                                   handleBatchChange(panelIndex, lineIndex, e.target.value, line) // Your custom change handler
+                                  clearErrors(`printerLines[${lineIndex}].batch`)
                                 }}
                               >
                                 {line?.batches?.map(batch => (
@@ -996,21 +1001,22 @@ const Index = ({ userId, ip }) => {
                           <Controller
                             name={`printerLine[${lineIndex}].packagingHierarchy`} // Ensure a unique field name
                             control={control}
-                            defaultValue={line.packagingHierarchy || ''} // Set default value from line.packagingHierarchy if available
+                            defaultValue={line?.packagingHierarchy || ''} // Set default value from line?.packagingHierarchy if available
                             render={({ field }) => (
                               <Select
                                 {...field}
                                 fullWidth
-                                disabled={line.saveData || !line.batch} // Disable based on conditions
+                                disabled={line?.saveData || !line?.batch} // Disable based on conditions
                                 labelId={`packaging-hierarchy-${panelIndex}-${lineIndex}`}
                                 id={`packaging-hierarchy-${panelIndex}-${lineIndex}`}
                                 label='Packaging Hierarchy'
                                 onChange={e => {
+                                  clearErrors(`printerLines[${lineIndex}].packagingHierarchy`)
                                   field.onChange(e) // Trigger React Hook Form onChange
                                   handleInputChange(panelIndex, lineIndex, 'packagingHierarchy', e.target.value) // Your custom change handler
                                 }}
                               >
-                                {line.packagingHierarchies.map(ph =>
+                                {line?.packagingHierarchies.map(ph =>
                                   getLayerOptions(ph).map((option, idx) => (
                                     <MenuItem key={`${ph.id}-${idx}`} value={option.value}>
                                       {option.label}
@@ -1038,7 +1044,7 @@ const Index = ({ userId, ip }) => {
                             alignItems: 'center'
                           }}
                         >
-                          <Button variant='contained' type='submit' disabled={line.saveData}>
+                          <Button variant='contained' type='submit' disabled={line?.saveData}>
                             Save
                           </Button>
                           <Button
@@ -1046,10 +1052,10 @@ const Index = ({ userId, ip }) => {
                             variant='outlined'
                             color='error'
                             onClick={() => {
-                              reset()
+                              
                               handleResetPanel(panelIndex, lineIndex)
                             }}
-                            disabled={line.disabledReset}
+                            disabled={line?.disabledReset}
                           >
                             Reset
                           </Button>
@@ -1057,16 +1063,16 @@ const Index = ({ userId, ip }) => {
                       </Grid2>
                     </Grid2>
                   </form>
-                  {line.saveData && (
+                  {line?.saveData && (
                     <>
                       <Grid2 container spacing={3} sx={{ marginTop: 2, alignItems: 'center' }}>
                         <Grid2 size={3} item sx={{ width: '24%', marginRight: 1 }}>
                           <TextField
-                            disabled={line.availableToCode}
-                            value={line.availableToCode}
+                            disabled={line?.availableToCode}
+                            value={line?.availableToCode}
                             onChange={e => handleInputChange(panelIndex, lineIndex, 'availableToCode', e.target.value)}
-                            error={line.errorAvailableToCode.isError}
-                            helperText={line.errorAvailableToCode.isError ? line.errorAvailableToCode.message : ''}
+                            error={line?.errorAvailableToCode?.isError}
+                            helperText={line?.errorAvailableToCode?.isError ? line?.errorAvailableToCode?.message : ''}
                             fullWidth
                             aria-label='available-code'
                             label='Available Code'
@@ -1075,17 +1081,17 @@ const Index = ({ userId, ip }) => {
                         <Grid2 size={3} item sx={{ width: '24%' }}>
                           <TextField
                             id='code-to-print'
-                            disabled={line.disabledCodeToPrint}
-                            value={line.codeToPrint}
+                            disabled={line?.disabledCodeToPrint}
+                            value={line?.codeToPrint}
                             onChange={e => {
                               handleInputChange(panelIndex, lineIndex, 'codeToPrint', e.target.value)
-                              console.log({ value: e.target.value, start: line.sessionStarted })
-                              if (!line.sessionStarted && e.target.value !== '')
+                              console.log({ value: e.target.value, start: line?.sessionStarted })
+                              if (!line?.sessionStarted && e.target.value !== '')
                                 handleInputChange(panelIndex, lineIndex, 'disabledStartSession', false)
                               else handleInputChange(panelIndex, lineIndex, 'disabledStartSession', true)
                             }}
-                            error={line.errorCodeToPrint.isError}
-                            helperText={line.errorCodeToPrint.isError ? line.errorCodeToPrint.message : ''}
+                            error={line?.errorCodeToPrint?.isError}
+                            helperText={line?.errorCodeToPrint?.isError ? line?.errorCodeToPrint?.message : ''}
                             fullWidth
                             type='number'
                             aria-label='code-to-print'
@@ -1097,7 +1103,7 @@ const Index = ({ userId, ip }) => {
                             variant='contained'
                             className='py-2'
                             onClick={() => handleSessionStart(line)}
-                            disabled={line.disabledStartSession}
+                            disabled={line?.disabledStartSession}
                           >
                             Start Session
                           </Button>
@@ -1107,7 +1113,7 @@ const Index = ({ userId, ip }) => {
                             variant='contained'
                             className='py-2'
                             onClick={() => handleSessionStop(panelIndex, lineIndex, line)}
-                            disabled={line.disabledStopSession}
+                            disabled={line?.disabledStopSession}
                           >
                             Stop Session
                           </Button>
@@ -1116,13 +1122,13 @@ const Index = ({ userId, ip }) => {
                       <Divider />
                       <Grid2 container className='d-flex justify-content-end align-items-center mb-2'>
                         <Grid2 size={3} item sx={{ paddingLeft: 2 }}>
-                          <Typography variant='h4'>{`Pending: ${line.pendingCount || 0}`}</Typography>
+                          <Typography variant='h4'>{`Pending: ${line?.pendingCount || 0}`}</Typography>
                         </Grid2>
                         <Grid2 size={3} item>
-                          <Typography variant='h4'>{`Printed: ${line.printCount || 0}`}</Typography>
+                          <Typography variant='h4'>{`Printed: ${line?.printCount || 0}`}</Typography>
                         </Grid2>
                         <Grid2 size={3} item>
-                          <Typography variant='h4'>{`Scanned: ${line.scanned || 0}`}</Typography>
+                          <Typography variant='h4'>{`Scanned: ${line?.scanned || 0}`}</Typography>
                         </Grid2>
                         <Grid2 size={3} item>
                           <Box className='w-100' sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -1130,7 +1136,7 @@ const Index = ({ userId, ip }) => {
                               variant='contained'
                               className='py-2'
                               onClick={() => handleCodeToPrint(panelIndex, lineIndex, line)}
-                              disabled={line.disabledCodePrintSave}
+                              disabled={line?.disabledCodePrintSave}
                             >
                               Save
                             </Button>
@@ -1140,7 +1146,7 @@ const Index = ({ userId, ip }) => {
                                   variant='contained'
                                   className='py-2 mx-3'
                                   onClick={() => handleStartPrinting(panelIndex, lineIndex, line)}
-                                  disabled={line.disabledStartPrint}
+                                  disabled={line?.disabledStartPrint}
                                 >
                                   Start
                                 </Button>
@@ -1149,7 +1155,7 @@ const Index = ({ userId, ip }) => {
                                   color='error'
                                   className='py-2'
                                   onClick={() => handleStopPrinting(panelIndex, lineIndex, line)}
-                                  disabled={line.disabledStopPrint}
+                                  disabled={line?.disabledStopPrint}
                                 >
                                   Stop
                                 </Button>

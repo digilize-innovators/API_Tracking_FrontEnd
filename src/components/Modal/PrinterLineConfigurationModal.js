@@ -50,24 +50,26 @@ const PrinterLineCongSchema = yup.object().shape({
     .required("Line no. can't be empty"),
 
     cameraIp: yup.string()
-        // .matches(
-        //     /^(?:\d{1,3}\.){3}\d{1,3}$/,
-        //     'Invalid IP address format'
-        // )
-        .required("Camera IP can't be empty"),
+        .matches(
+            /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/,
+            'Invalid IP address format'
+        )
+        .required("Camera IP can't be empty")
+        
+        ,
 
         cameraPort: yup.string()
         .typeError('Camera port must be a number')
         // .integer('Camera port must be an integer')
-        // .min(1, 'Camera port must be at least 1')
-        // .max(65535, 'Camera port must be less than 65536')
+        .min(1, 'Camera port must be at least 1')
+        .max(65535, 'Camera port must be less than 65536')
         .required("Camera port can't be empty"),
 
         linePcAddress: yup.string()
-        // .matches(
-        //     /^(?:\d{1,3}\.){3}\d{1,3}$/,
-        //     'Invalid IP address format'
-        // )
+        .matches(
+            /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/,
+            'Invalid IP address format'
+        )
         .required("Line PC Address can't be empty"),
 })
 

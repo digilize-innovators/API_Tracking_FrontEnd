@@ -2,7 +2,17 @@ import { useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
-import { Modal, Box, Typography, Button, RadioGroup, FormControlLabel, Radio, Grid2 } from '@mui/material'
+import {
+  Modal,
+  Box,
+  Typography,
+  Button,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Grid2,
+  FormHelperText
+} from '@mui/material'
 import { style } from 'src/configs/generalConfig'
 import CustomTextField from 'src/components/CustomTextField'
 
@@ -39,34 +49,43 @@ const PrintingCategoryModal = ({ open, onClose, editData, handleSubmitForm }) =>
   }, [editData])
 
   return (
-
     <Modal open={open} onClose={onClose} data-testid='modal' role='dialog'>
       <Box sx={style}>
-{        console.log(editData)
-}        <Typography variant='h4' className='my-2'>
+        {console.log(editData)}{' '}
+        <Typography variant='h4' className='my-2'>
           {editData?.id ? 'Edit Printer Category' : 'Add Printer Category'}
         </Typography>
-
         <form onSubmit={handleSubmit(handleSubmitForm)}>
           <Grid2 container spacing={2}>
             <Grid2 item xs={6}>
-              <CustomTextField name='printerCategoryID' label='Printer Category' control={control} />
+              <CustomTextField
+                name='printerCategoryID'
+                disabled={editData?.id ? true : false}
+                label='Printer Category'
+                control={control}
+              />
             </Grid2>
             <Grid2 item xs={6}>
               <CustomTextField name='printerCategoryName' label='Printer Name' control={control} />
             </Grid2>
-            <Grid2 item xs={12}>
-              <Controller
-                name='printerType'
-                control={control}
-                render={({ field }) => (
+          </Grid2>
+          <Grid2 item xs={12}>
+            <Controller
+              name='printerType'
+              control={control}
+              rules={{ required: 'Please select a printer type' }} // Add validation rule
+              render={({ field }) => (
+                <>
                   <RadioGroup row {...field}>
-                    <FormControlLabel value='inkBased' control={<Radio />} label='Ink Based' />
-                    <FormControlLabel value='ribbonBased' control={<Radio />} label='Ribbon Based' />
+                    <FormControlLabel value='inkBased' control={<Radio disabled={editData?.id ? true : false} />} label='Ink Based' />
+                    <FormControlLabel value='ribbonBased' control={<Radio disabled={editData?.id ? true : false} />} label='Ribbon Based' />
                   </RadioGroup>
-                )}
-              />
-            </Grid2>
+                  {errors.printerType && (
+                    <FormHelperText error>{errors.printerType.message}</FormHelperText> // Display validation error
+                  )}
+                </>
+              )}
+            />
           </Grid2>
 
           <Grid2 container spacing={2} className='mt-3'>

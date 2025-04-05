@@ -17,7 +17,19 @@ const PrinterMasterSchema = yup.object().shape({
     .max(50, 'Printer ID length should be less than 51')
     .required("Printer ID can't be empty"),
   printerCategoryId: yup.string().required('Printer category is required'),
-  printerPort: yup.string().trim().required("Printer port can't be empty"),
+  printerPort: yup
+    .number()
+    .transform(value => {
+      // Check if the value is an empty string, null, or undefined
+      if (value === '' || value == null) {
+        return 0
+      }
+      // If the value is a valid number, return it, else return the original value
+      return isNaN(value) ? 0 : value
+    })
+    .required("Printer port can't be empty")
+    .min(1, 'Port number must be at least 1')
+    .max(65535, 'Port number must be less than or equal to 65535'),
   printerIp: yup
     .string()
     .trim()

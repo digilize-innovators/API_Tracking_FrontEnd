@@ -18,9 +18,10 @@ const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) =
         doc.text('Filters :\n', 15, 30);
 
         if (tableData.Filter) {
+            console.log("Table status Filter ",tableData.statusFilter)
             doc.text(`${tableData.Filter[0]} : ` + (tableData.Filter[1] || '__'), 20, 35);
             const statusText = tableData.Filter[0] === 'department' 
-                ? `Status : ${tableHeaderData?.eSignStatus ? 'enabled' : 'disabled'}` 
+                ? `Status : ${tableData?.statusFilter || '__'}` 
                 : `E-Sign : ${tableHeaderData?.esignStatus || '__'}`;
             doc.text(statusText, 20, 40);
         } else {

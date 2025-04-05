@@ -1,10 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useRef, useLayoutEffect} from 'react'
-import Box from '@mui/material/Box'
-import Grid2 from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
-
-import { Button, TableContainer, Paper } from '@mui/material'
+import { Button, TableContainer, Paper,Box,Grid2,Typography } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import TableArea from 'src/views/tables/TableArea'
 import { api } from 'src/utils/Rest-API'
@@ -22,7 +18,6 @@ import { validateToken } from 'src/utils/ValidateToken'
 import { getTokenValues } from '../utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
-
 import AreaModel from 'src/components/Modal/AreaModel'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
@@ -32,11 +27,11 @@ const Index = () => {
   const { settings } = useSettings()
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [areaData, setArea] = useState([])
-  const [userDataPdf, setUserDataPdf] = useState()
-  const { getUserData, removeAuthToken } = useAuth()
-  const { setIsLoading } = useLoading()
   const [editData, setEditData] = useState({})
+  const { setIsLoading } = useLoading()
+  const { getUserData, removeAuthToken } = useAuth()
+  const [pendingAction, setPendingAction] = useState(null)
+  const [userDataPdf, setUserDataPdf] = useState()
   const router = useRouter()
   const [config, setConfig] = useState(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -45,36 +40,39 @@ const Index = () => {
   const [auditLogMark, setAuditLogMark] = useState('')
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
+  const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''})
   const apiAccess = useApiAccess('area-create', 'area-update', 'area-approve')
-  const [formData, setFormData] = useState({})
-  const [pendingAction, setPendingAction] = useState(null)
-  const [tableHeaderData, setTableHeaderData] = useState({
-    esignStatus: '',
-    searchVal: ''
-  })
   const searchBarRef = useRef(null)
+  const [areaData, setArea] = useState([])
+  const [formData, setFormData] = useState({})
 
-  useEffect(() => {
-    if (formData && pendingAction) {
-      const esign_status = config?.config.esign_status ? 'pending' : 'approved'
-      if (pendingAction === 'edit') {
-        editArea(esign_status)
-      } else if (pendingAction == 'add') {
-        addArea(esign_status)
-      }
-      setPendingAction(null)
-    }
-  }, [formData, pendingAction])
+    useEffect(() => {
+      const handleUserAction = async () => {
+        if (formData && pendingAction) {
+          const esign_status = config?.config?.esign_status  ? "pending" : "approved";
+          
+          if (pendingAction === "edit") {
+            await editArea(esign_status);  
+          } else if (pendingAction === "add") {
+            await addArea(esign_status); 
+          }
+          
+          setPendingAction(null);
+        }
+      };
+    
+      handleUserAction();
+    }, [formData, pendingAction]);
 
-  useLayoutEffect(() => {
+    useLayoutEffect(() => {
     let data = getUserData()
     const decodedToken = getTokenValues()
     setConfig(decodedToken)
     setUserDataPdf(data)
     return () => {}
-  }, [])
+    }, [])
 
-  const tableBody = areaData.map((item, index) => [
+  const tableBody = areaData?.map((item, index) => [
     index + 1,
     item.area_id,
     item.area_name,
@@ -92,25 +90,29 @@ const Index = () => {
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
+
   const handleOpenModal = () => {
     setApproveAPI({ approveAPIName: 'area-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/area' })
+    setEditData({})
     setOpenModal(true)
   }
-  const handleAuthModalClose = () => {
-    setAuthModalOpen(false)
-    setOpenModalApprove(false)
-  }
+
   const handleCloseModal = () => {
     setEditData({})
     setOpenModal(false)
   }
+
+  const handleAuthModalClose = () => {
+    setAuthModalOpen(false)
+    setOpenModalApprove(false)
+  }
+
   const resetForm = () => {
     setEditData({})
   }
+
   const handleSubmitForm = async data => {
-    console.log('form data ', data)
     setFormData(data)
-    console.log('after set ', editData)
 
     if (editData?.id) {
       setApproveAPI({ approveAPIName: 'area-update', approveAPImethod: 'PUT', approveAPIEndPoint: '/api/v1/area' })
@@ -125,17 +127,11 @@ const Index = () => {
 
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
+
   const addArea = async (esign_status, remarks) => {
     console.log('add form ', formData)
-
     try {
-      const data = {
-        areaId: formData.areaId,
-        areaName: formData.areaName,
-        areaCategoryId: formData.areaCategoryId,
-        location_uuid: formData.location_uuid
-      }
-      console.log(data, ':-area data')
+      const data = {...formData}
       const auditlogRemark = remarks
       const audit_log = config?.config?.audit_logs
         ? {
@@ -153,10 +149,11 @@ const Index = () => {
       setIsLoading(true)
       console.log('add area', data)
       const res = await api('/area/', data, 'post', true)
+      setIsLoading(false)
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Area added successfully' })
-
         resetForm()
+        setOpenModal(false)
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
         if (res.data.code === 401) {
@@ -165,22 +162,17 @@ const Index = () => {
         }
       }
     } catch (error) {
+      console.log('Error to add Area', error)
       router.push('/500')
     } finally {
-      setOpenModal(false)
-      setIsLoading(false)
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
     }
   }
+
   const editArea = async (esign_status, remarks) => {
     try {
       console.log(formData, 'formdata')
-      const data = {
-        areaId: formData.areaId,
-        areaName: formData.areaName,
-        areaCategoryId: formData.areaCategoryId,
-        location_uuid: formData.location_uuid
-      }
+      const data = {...formData }
       delete data.areaId
       const auditlogRemark = remarks
       let audit_log
@@ -188,7 +180,7 @@ const Index = () => {
         audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark > 0 ? auditlogRemark : `area edited - ${formData.areaName}`
+          remarks: auditlogRemark > 0 ? auditlogRemark : `area edited - ${formData?.areaName}`
         }
       } else {
         audit_log = {
@@ -199,12 +191,14 @@ const Index = () => {
       }
       data.audit_log = audit_log
       data.esign_status = esign_status
-      console.log(data, 'aaaa')
       setIsLoading(true)
       const res = await api(`/area/${editData.id}`, data, 'put', true)
+      console.log('Response of update Area ', res.data)
+      setIsLoading(false)
       if (res.data.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Area updated successfully' })
         resetForm()
+        setOpenModal(false)
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
         if (res.data.code === 401) {
@@ -217,90 +211,101 @@ const Index = () => {
       console.log(error, 'error while edit')
       router.push('/500')
     } finally {
-      setOpenModal(false)
-      setIsLoading(false)
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
     }
   }
+
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
     console.log('handleAuthResult 02', config.userId, user.user_id)
+
     const resetState = () => {
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
       setEsignDownloadPdf(false)
       setAuthModalOpen(false)
     }
-    if (!isAuthenticated) {
-      setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' })
-      return
-    }
-    const handleEsignApproved = () => {
-      console.log('else EsignDownloadpdf is false')
-      console.log('esign is approved for creator.')
-      setPendingAction(editData?.id?"edit":"add")
-      // editData?.id ? editArea(esign_status, remarks) : addArea(esign_status, remarks);
-    }
-    const handleApproverActions = async () => {
-      console.log('Handle Aprove Action ()')
-      const data = {
-        modelName: 'area',
-        esignStatus,
-        id: eSignStatusId,
-        audit_log: config?.config?.audit_logs
-          ? {
-              user_id: user.userId,
-              user_name: user.userName,
-              performed_action: 'approved',
-              remarks: remarks.length > 0 ? remarks : `area approved - ${auditLogMark}`
-            }
-          : {}
-      }
-      console.log('esignAppprove', data)
-      console.log('EsignStatus is Approved ', esignStatus === 'approved', 'EsignDownloadPdf is ', esignDownloadPdf)
-      if (esignStatus === 'approved' && esignDownloadPdf) {
-        setOpenModalApprove(false)
-        console.log('esign is approved for approver')
-        resetState()
-        console.log(tableData, 'tabledata')
 
+    const handleUnauthenticated = () => {
+      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
+      resetState()
+    }
+
+    const handleModalActions = isApproved => {
+      setOpenModalApprove(!isApproved)
+      if (isApproved && esignDownloadPdf) {
+        console.log('esign is approved for download')
         downloadPdf(tableData, tableHeaderData, tableBody, areaData, userDataPdf)
-        resetState()
+       }
+     }
 
+     const createAuditLog = action =>
+      config?.config?.audit_logs
+        ? {
+          user_id: user.userId,
+          user_name: user.userName,
+          performed_action: action,
+          remarks: remarks?.length > 0 ? remarks : `area approved - ${auditLogMark}`
+        }
+        : {}
+        const handleUpdateStatus = async () => {
+          const data = {
+            modelName: 'area',
+            esignStatus,
+            id: eSignStatusId,
+            audit_log: createAuditLog(esignStatus)
+          }
+          const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+          console.log('esign status update', res?.data)
+          setPendingAction(true)
+      }
+
+      const processApproverActions = async () => {
+        if (esignStatus === 'approved' || esignStatus === 'rejected') {
+          handleModalActions(esignStatus === 'approved')
+          if (esignStatus === 'approved' && esignDownloadPdf) {
+            resetState()
+            return
+          }
+        }
+        await handleUpdateStatus()
+        resetState()
+      }
+      const processNonApproverActions = () => {
+        if (esignStatus === 'rejected') {
+          resetState()
+          return
+        }
+        if (esignStatus === 'approved') {
+          handleModalActions(true)
+          if (!esignDownloadPdf) {
+            console.log('esign is approved for creator')
+            setPendingAction(editData?.id ? 'edit' : 'add')
+          }
+        }
+      }
+      if (!isAuthenticated) {
+        handleUnauthenticated()
         return
       }
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      setPendingAction(true)
-      console.log('esign status update', esignStatus, esignDownloadPdf, res?.data)
-      console.log('EsignStatus is Rejected ', esignStatus === 'rejected', 'EsignDownloadPdf is ', esignDownloadPdf)
-      if (esignStatus === 'rejected' && esignDownloadPdf) {
-        console.log('approver rejected')
-        setOpenModalApprove(false)
+      if (!isApprover && esignDownloadPdf) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: "Access denied: Download pdf disabled for this user."
+        })
         resetState()
+        return
       }
-    }
-    console.log('isApproved :', isApprover)
-    console.log('Esign is rejected :', esignStatus === 'rejected')
-    if (!isApprover && esignDownloadPdf) {
-      setAlertData({
-        ...alertData,
-        openSnackbar: true,
-        type: 'error',
-        message: "Access denied: Download pdf disabled for this user."
-      })
+
+      if (isApprover) {
+        await processApproverActions()
+        return
+      }
+      processNonApproverActions()
       resetState()
-      return
-    }
-    if (isApprover) {
-      await handleApproverActions()
-    } else if (esignStatus === 'rejected') {
-      console.log('esign is rejected.')
-      setAuthModalOpen(false)
-      setOpenModalApprove(false)
-    } else if (esignStatus === 'approved') {
-      handleEsignApproved()
-    }
-    resetState()
   }
+
   const handleAuthCheck = async row => {
     console.log('handleAuthCheck', row)
     setApproveAPI({ approveAPIName: 'area-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/area' })
@@ -309,48 +314,34 @@ const Index = () => {
     setESignStatusId(row.id)
     setAuditLogMark(row.area_name)
     console.log('row', row)
-    setPendingAction(false)
+  }
+
+  const handleUpdate = item => {
+    resetForm()
+    setEditData(item)
+    console.log('edit Printer Line Configuration', item)
+    setOpenModal(true)
+  }
+
+  const resetFilter = () => {
+    setTableHeaderData({...tableHeaderData, esignStatus: '', searchVal: '' })
+    if (searchBarRef.current) {
+      searchBarRef.current.resetSearch();
+    }
   }
 
   const handleSearch = val => {
-    setTableHeaderData({ ...tableHeaderData, searchVal: val.toLowerCase() })
-  }
-  // }
-
-  const handleUpdate = item => {
-    setOpenModal(true)
-    setEditData(item)
-    if(config?.config?.esign_status){
-      setESignStatusId(item.id)
-    }
-  }
-
-  // const handleSortByName = () => handleSort('area_name');
-  // const handleSortByAreaCateName = () => handleSort('area_category_name');
-  // const handleSortByID = () => handleSort('area_id');
-  const resetFilter = () => {
-    if (searchBarRef.current) {
-      searchBarRef.current.resetSearch()
-    }
-    setTableHeaderData({
-      ...tableHeaderData,
-      esignStatus: '',
-      searchVal: ''
-    })
-    // setESignStatus('')
-    // setSearchVal('')
-    // setTempSearchVal('')
+    setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
   }
 
   const handleAuthModalOpen = () => {
     console.log('OPen auth model')
     setApproveAPI({ approveAPIName: 'area-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/area' })
-
     setAuthModalOpen(true)
   }
+
   const handleDownloadPdf = () => {
     setApproveAPI({ approveAPIName: 'area-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/area' })
-
     if (config?.config?.esign_status) {
       console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
@@ -403,13 +394,13 @@ const Index = () => {
               </Typography>
               <TableContainer component={Paper}>
                 <TableArea
-                  pendingAction={pendingAction}
                   handleUpdate={handleUpdate}
+                  tableHeaderData={tableHeaderData}
+                  pendingAction={pendingAction}
                   setArea={setArea}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}
-                  tableHeaderData={tableHeaderData}
                 />
               </TableContainer>
             </Grid2>

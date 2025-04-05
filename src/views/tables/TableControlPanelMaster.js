@@ -252,7 +252,6 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
     } finally {
       setIsLoading(false)
     }
-    }
   }
 
   useMemo(()=>{

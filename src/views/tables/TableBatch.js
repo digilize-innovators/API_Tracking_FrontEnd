@@ -31,6 +31,7 @@ const Row = ({
   apiAccess,
   isBatchCloud
 }) => {
+console.log(row)
   const isOpen = openRows[row.id]
   const serialNumber = getSerialNumber(index, page, rowsPerPage)
   return (

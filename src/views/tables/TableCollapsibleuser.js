@@ -199,7 +199,7 @@ const TableCollapsibleUser = ({
           limit: rowsPerPage === -1 ? -1 : rowsPerPage,
           search: tableHeaderData.searchVal,
           esign_status: tableHeaderData.esignStatus,
-          status: statusFilter,
+          status: statusFilter==null?'':statusFilter,
           department_name: departmentFilter
         });
         console.log('params', params.toString());
