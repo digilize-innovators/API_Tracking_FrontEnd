@@ -85,35 +85,19 @@ const Index = () => {
       console.log('Error in get screen-access ', error)
     }
   }
-  const handleCheckboxChange = useCallback((groupIndex, checkboxIndex) => {
-    setCheckboxes(prevGroups => {
-      const updatedGroups = [...prevGroups]
-      const currentGroup = updatedGroups[groupIndex]
-      const updatedCheckboxes = currentGroup.checkboxes.map((checkbox, index) =>
-        index === checkboxIndex ? { ...checkbox, checked: !checkbox.checked } : checkbox
-      )
-
-      // Only update selectAll if the checkboxes have changed
-      const allChecked = updatedCheckboxes.every(cb => cb.checked)
-
-      if (currentGroup.selectAll !== allChecked) {
-        updatedGroups[groupIndex] = {
-          ...currentGroup,
-          checkboxes: updatedCheckboxes,
-          selectAll: allChecked
-        }
-      } else {
-        updatedGroups[groupIndex] = { ...currentGroup, checkboxes: updatedCheckboxes }
-      }
-
-      return updatedGroups
+  const handleCheckboxChange = (masterIndex, innerIndex) => {
+    setCheckboxes(prevCheckboxes => {
+      const updatedCheckboxes = [...prevCheckboxes]
+      updatedCheckboxes[masterIndex].checkboxes[innerIndex].checked =
+        !updatedCheckboxes[masterIndex].checkboxes[innerIndex].checked
+      return updatedCheckboxes
     })
-  }, [])
+  }
   const handleSaveChanges = () => {
     console.log('Changes saved!')
     console.log('checkboxes ', allCheckboxes)
     let onlyChecked = []
-    checkboxes.forEach(item => {
+    allCheckboxes.forEach(item => {
       item.checkboxes.forEach(row => {
         if (row.checked) {
           onlyChecked.push({
@@ -180,7 +164,7 @@ const Index = () => {
   const handleResetFilter = () => {
     setSelectScreenName(null)
     setSelectedDeptValue(null)
-    setCheckboxes(checkboxes)
+    setCheckboxes(allCheckboxes);
     setFilteredDepartments(departments)
   }
   const handleScreenName = (event, newValue) => {
