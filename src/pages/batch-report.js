@@ -1,10 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react'
-import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
-import Select from '@mui/material/Select'
-import MenuItem from '@mui/material/MenuItem'
-import InputLabel from '@mui/material/InputLabel'
-import FormControl from '@mui/material/FormControl'
+import {Box,Button,Select,MenuItem,InputLabel,FormControl} from '@mui/material'
 import SnackbarAlert from 'src/components/SnackbarAlert'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -19,7 +14,7 @@ import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken'
-import { decodeAndSetConfig, getTokenValues } from 'src/utils/tokenUtils'
+import {  getTokenValues } from 'src/utils/tokenUtils'
 import Head from 'next/head'
 import { Grid2, Typography } from '@mui/material'
 
@@ -51,6 +46,7 @@ const BatchReport = () => {
         fetchProducts()
         return () => { }
       }, [])
+    
       
   useEffect(() => {
     if (selectedProduct) {
@@ -444,7 +440,7 @@ const BatchReport = () => {
   const batchRecordPdf = async approver => {
     if (!report) {
       setAlertData({
-        type: 'warning',
+        type: 'error',
         message: 'Please generate the report before downloading.',
         variant: 'filled',
         openSnackbar:true
@@ -567,20 +563,23 @@ const BatchReport = () => {
       const rows = data
       let unique = []
       let columns = ['Code', 'Parent Code', 'Grand Parent Code']
+      let hasData = false
 
-      // eslint-disable-next-line no-unused-vars
+
       for (let [key, value] of Object.entries(rows)) {
         if (value.length > 0) {
           unique.push([...value])
+          hasData=true
         }
       }
+      if (!hasData) return false
       const uniqueData = unique.map(item => {
         return item.map(Uc => {
           return Uc.unique_code
         })
       })
 
-      currentY = currentY + 20
+      currentY = currentY + 10
       doc.setFontSize(12).setFont(undefined, 'bold')
 
       uniqueData.forEach((data, index) => {
@@ -617,8 +616,8 @@ const BatchReport = () => {
       currentY += 10
       name == 'primary'
         ? doc.text('Aggregation Report Primary to Secondary Codes:', 14, currentY)
-        : doc.text('Aggregation Report Secondary to third level Codes:', 14, currentY)
-      const head = name === 'primary' ? ['SR.', 'level0', 'level1'] : ['SR.', 'level1', 'level5']
+        : doc.text('Aggregated codes:', 14, currentY)
+      const head = name === 'primary' ? ['SR.', 'level0', 'level1'] : ['SR.', 'Level1', 'SSCC']
       currentY += 5
       autoTable(doc, {
         startY: currentY + 3,
@@ -639,11 +638,14 @@ const BatchReport = () => {
     const buildPdfContent = () => {
       renderBatchDetails()
       printingSummary()
-      renderBatchReport(data.dynamicTable, 'Printed code ')
-      renderBatchReport(data.scannedTable, 'Rejected Summary Report')
-      renderBatchReport(data.dropoutSample, 'Dropout Sample')
-      renderBatchReport(data.dropoutOther, 'Dropout Other')
-
+      const hasPrinted = renderBatchReport(data.dynamicTable, 'Printed code ')
+      const hasRejected = renderBatchReport(data.scannedTable, 'Rejected Summary Report')
+      const hasSample = renderBatchReport(data.dropoutSample, 'Dropout Sample')
+      const hasDropOther = renderBatchReport(data.dropoutOther, 'Dropout Other')
+      const anyReport = hasPrinted || hasRejected || hasSample || hasDropOther
+      if (anyReport) {
+        currentY += 10
+      }
       if (data.AggregatedTable.length > 0) {
         renderAggregated(data.AggregatedTable, 'primary')
       }
@@ -695,6 +697,12 @@ const BatchReport = () => {
     doc.save(`${BatchRecordFile}.pdf`)
   }
   const batchSummaryPdf = async approver => {
+    const logoImg = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = '/images/brand.png';
+      img.onload = () => resolve(img);
+      img.onerror = err => reject('Logo image failed to load: ' + err);
+    });
     if (!report) {
       setAlertData({
         type: 'warning',
@@ -710,13 +718,12 @@ const BatchReport = () => {
     const FOOTER_HEIGHT = 30
     let currentY = HEADER_HEIGHT
     const headerContent = () => {
-      const img = new Image()
-      img.src = '/images/brand.png'
+     
       const logoWidth = 45
       const logoHeight = 28
       const logoX = doc.internal.pageSize.width - logoWidth - 12
       const logoY = 8
-      doc.addImage(img, 'PNG', logoX, logoY, logoWidth, logoHeight)
+      doc.addImage(logoImg, 'PNG', logoX, logoY, logoWidth, logoHeight)
       doc
         .setFontSize(16)
         .setFont(undefined, 'bold')

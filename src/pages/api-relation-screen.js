@@ -1,5 +1,6 @@
+/* eslint-disable no-undef */
 'use-client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Checkbox from '@mui/material/Checkbox'
 import TableContainer from '@mui/material/TableContainer'
 import Table from '@mui/material/Table'
@@ -33,8 +34,7 @@ const Index = () => {
   const [relations, setRelations] = useState([])
   const [allRelation, setAllRelation] = useState([])
   const { setIsLoading } = useLoading()
-  const [openSnackbar, setOpenSnackbar] = useState(false)
-  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' })
+  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [selectedValue, setSelectedValue] = useState(null)
   const [selectedScreenValue, setSelectedScreenValue] = useState(null)
   const { removeAuthToken } = useAuth()
@@ -47,7 +47,7 @@ const Index = () => {
     getApiScreenRelation()
     return () => {}
   }, [])
-  useEffect(() => {
+  useMemo(() => {
     const filteredScreen = allScreens.filter(screen =>
       screen.screen_name.toLowerCase().includes(filterScreenVal.toLowerCase())
     )
@@ -55,7 +55,7 @@ const Index = () => {
     setScreens(filteredScreen)
     return () => {}
   }, [filterScreenVal])
-  useEffect(() => {
+  useMemo(() => {
     const filteredApis = allApis.filter(api => api.name.toLowerCase().includes(filterApiVal.toLowerCase()))
     setApis(filteredApis)
     return () => {}
@@ -117,28 +117,30 @@ const Index = () => {
       console.log('Error in get api screen relation ', error)
     }
   }
-  const handleCheckboxChange = (apiId, screenId) => {
-    console.log('click checkbox, ', relations, apiId, screenId)
-    const rArray = [...relations]
-    const index = rArray.findIndex(relation => relation.api_id === apiId && relation.screen_id === screenId)
-    if (index !== -1) {
-      rArray.splice(index, 1)
-    } else {
-      rArray.push({ api_id: apiId, screen_id: screenId })
-    }
-    setRelations(rArray)
-  }
+  const handleCheckboxChange = useCallback((apiId, screenId) => {
+    setRelations(prevRelations => {
+      const exists = prevRelations.some(rel => rel.api_id === apiId && rel.screen_id === screenId)
+
+      if (exists) {
+        return prevRelations.filter(rel => !(rel.api_id === apiId && rel.screen_id === screenId))
+      } else {
+        return [...prevRelations, { api_id: apiId, screen_id: screenId }]
+      }
+    })
+  }, [])
   const handleSaveChanges = async () => {
     console.log('Changes saved!')
-    const rArray = relations.filter(
-      relation => !allRelation.find(r => r.api_id === relation.api_id && r.screen_id === relation.screen_id)
-    )
-    console.log('Relation array ', relations)
-    console.log('Final array ', rArray)
-    const uncheckedArr = allRelation.filter(
-      relation => !relations.find(r => r.api_id === relation.api_id && r.screen_id === relation.screen_id)
-    )
-    console.log('Unchecked array ', uncheckedArr)
+    const getKey = r => `${r.api_id}|${r.screen_id}`
+
+    // Create a Set of keys from allRelation for fast lookup
+    const allRelationKeys = new Set(allRelation.map(getKey))
+    const relationsKeys = new Set(relations.map(getKey))
+
+    const result = {
+      checked: relations.filter(r => !allRelationKeys.has(getKey(r))),
+      unchecked: allRelation.filter(r => !relationsKeys.has(getKey(r)))
+    }
+    console.log('Unchecked array ', result)
     try {
       const token = Cookies.get('token')
       const decodedToken = jwtDecode(token)
@@ -159,15 +161,19 @@ const Index = () => {
       }
       const res = await api(
         '/api-screen-relations',
-        { audit_log, checked: rArray, unChecked: uncheckedArr },
+        { audit_log, checked: result.checked, unChecked: result.unchecked },
         'post',
         true
       )
       console.log('Res of api screen relation ', res.data)
       if (res.data.success) {
         console.log('res ', res.data)
-        setOpenSnackbar(true)
-        setAlertData({ ...alertData, type: 'success', message: 'API-Screen relation updated successfully' })
+        setAlertData({
+          ...alertData,
+          type: 'success',
+          message: 'API-Screen relation updated successfully',
+          openSnackbar: true
+        })
       } else if (res.data.code === 401) {
         removeAuthToken()
         router.push('/401')
@@ -187,7 +193,7 @@ const Index = () => {
     setSelectedScreenValue(null)
   }
   const closeSnackbar = () => {
-    setOpenSnackbar(false)
+    setAlertData({ ...alertData, openSnackbar: false })
   }
   const handleChange = (event, newValue) => {
     console.log('Selected Value:', newValue)
@@ -270,16 +276,26 @@ const Index = () => {
               ) : (
                 <TableContainer component={Paper} style={{ maxHeight: '800px', overflowY: 'auto' }}>
                   <Table aria-label='checkbox table'>
-                    <TableHead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                    <TableHead style={{ position: 'sticky', top: 0, zIndex: 3 }}>
                       <TableRow>
-                        <TableCell style={{ borderBottom: '1px solid #fff', backgroundColor: '#fff' }}></TableCell>
+                        <TableCell
+                          style={{
+                            position: 'sticky',
+                            left: 0,
+                            top: 0,
+                            zIndex: 3,
+                            borderBottom: '1px solid #fff',
+                            backgroundColor: '#fff'
+                          }}
+                        ></TableCell>
                         {screens.map((screen, index) => (
                           <TableCell
                             key={`master-${index + 1}`}
                             align='center'
                             style={{
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                              backgroundColor: '#fff' // Optional: To make sure the header has a background
+                              backgroundColor: '#fff',
+                              zIndex: 2
                             }}
                           >
                             {screen.screen_name}
@@ -292,14 +308,13 @@ const Index = () => {
                         <TableRow key={`row-${apiIndex + 1}`}>
                           <TableCell
                             style={{
-                              fontWeight: '600',
-                              borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                              borderTop: '1px solid rgba(224, 224, 224, 1)',
                               position: 'sticky',
-                              left: 0, // Make the first column sticky on the left
-                              top: '80px',
-                              zIndex: 2,
-                              backgroundColor: '#fff', // Ensure the first column has a background color
+                              left: 0,
+                              overflow: 'hidden',
+                              background: '#fff',
+                              zIndex: 1,
+                              fontWeight: 600,
+                              borderBottom: '1px solid rgba(224, 224, 224, 1)'
                             }}
                           >
                             {api.name}
@@ -330,7 +345,7 @@ const Index = () => {
           </Box>
         </Grid2>
       </Grid2>
-      <SnackbarAlert openSnackbar={openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+      <SnackbarAlert openSnackbar={alertData?.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
       <AccessibilitySettings />
       <ChatbotComponent />
     </Box>

@@ -277,7 +277,7 @@ const TablePrinterMaster = ({
     setAllPrinterMasterData({...allPrinterMasterData,data:sorted})
 
     setSortDirection(newSortDirection)
-    setSortBy(sortDirection)
+    setSortBy(key)
   }
   
   const getAllPrinterMasterData = async () => {

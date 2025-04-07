@@ -36,7 +36,6 @@ import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import AuthModal from 'src/components/authModal'
-import { decodeAndSetConfig } from 'src/utils/tokenUtils'
 import ProjectSettings from 'src/components/Modal/ProjectSettingModal'
 import { Controller, useForm } from 'react-hook-form'
 import * as Yup from 'yup'
@@ -98,7 +97,8 @@ const Index = ({ userId, ip }) => {
   useLayoutEffect(() => {
     (async () => {
       await getLinesByPcIp()
-      decodeAndSetConfig(setConfig)
+      const decodedToken = getTokenValues()
+          setConfig(decodedToken)
     })()
 
     // const productData=
@@ -130,7 +130,7 @@ const Index = ({ userId, ip }) => {
     socket.current.on('dataScanned', data => {
       const { lineId, scanned, panelName } = data
       console.log('dataScanned', data)
-      const prevPrinterLine = watch('printerLines')
+      const prevPrinterLines = watch('printerLines')
       const panels = [...prevPrinterLines]
       const panel = panels.find(i => i.panelName === panelName)
       const line = panel.lines.find(line => line?.id === lineId)
@@ -223,6 +223,7 @@ const Index = ({ userId, ip }) => {
         setValue('printerLines', panels)
         setAlertData({ type: 'success', message: 'Printing completed', variant: 'filled', openSnackbar: true })
       } catch (error) {
+      setAlertData({...alertData,type:"error",message:error?.message,openSnackbar:true})
         console.log('Error to stop printing ', error)
       }
     })
@@ -331,6 +332,7 @@ const Index = ({ userId, ip }) => {
       setValue('printerLines', updatedPanels)
       setIsLoading(false)
     } catch (error) {
+      setAlertData({...alertData,type:"error",message:error?.message,openSnackbar:true})
       setIsLoading(false)
     }
   }
@@ -381,6 +383,7 @@ const Index = ({ userId, ip }) => {
         }
       }
     } catch (error) {
+      setAlertData({...alertData,type:"error",message:error?.message,openSnackbar:true})
       console.log('Error fetching lines', error)
     } finally {
       setIsLoading(false)
@@ -403,6 +406,7 @@ const Index = ({ userId, ip }) => {
         }
       }
     } catch (error) {
+      setAlertData({...alertData,type:"error",message:error?.message,openSnackbar:true})
       console.log('Error fetching products', error)
     }
   }
@@ -413,8 +417,8 @@ const Index = ({ userId, ip }) => {
       const res = await api(`/batchprinting/getBatchesByProduct/${productId}`, {}, 'get', true, true, ip)
       if (res.data.success) {
         const batches = res.data.data.batches
-        const prevPrinterLine = watch('printerLines')
-        const panels = [...prevPrinterLine]
+        const prevPrinterLines = watch('printerLines')
+        const panels = [...prevPrinterLines]
         const line = panels[panelIndex].lines[lineIndex]
         line.product = productId
         line.batches = batches
@@ -431,6 +435,7 @@ const Index = ({ userId, ip }) => {
         }
       }
     } catch (error) {
+      setAlertData({...alertData,type:"error",message:error?.message,openSnackbar:true})
       console.log('Error fetching batches', error)
     } finally {
       setIsLoading(false)
@@ -470,6 +475,7 @@ const Index = ({ userId, ip }) => {
         }
       }
     } catch (error) {
+      setAlertData({...alertData,type:"error",message:error?.message,openSnackbar:true})
       console.log('Error fetching packaging hierarchies', error)
     } finally {
       setIsLoading(false)
@@ -541,6 +547,7 @@ const Index = ({ userId, ip }) => {
         }
       }
     } catch (error) {
+      setAlertData({...alertData,type:"error",message:error?.message,openSnackbar:true})
       console.log('Error fetching codes', error)
     } finally {
       setIsLoading(false)
@@ -548,8 +555,8 @@ const Index = ({ userId, ip }) => {
   }
 
   const handleCodeToPrint = async (panelIndex, lineIndex, line) => {
-    const prevPrinterLine = watch('printerLines')
-    const isValidation = await lineValidationSchema.validate(prevPrinterLine)
+    const prevPrinterLines = watch('printerLines')
+    const isValidation = await lineValidationSchema.validate(prevPrinterLines[panelIndex])
     console.log('Printer Validation :', isValidation)
 
     // ApplyValidation
@@ -590,6 +597,7 @@ const Index = ({ userId, ip }) => {
         }
       }
     } catch (error) {
+      setAlertData({...alertData,type:"error",message:error?.message,openSnackbar:true})
       console.log('Error fetching codes', error)
     }
   }
@@ -610,6 +618,8 @@ const Index = ({ userId, ip }) => {
       const data = { line }
       socket.current.emit('stopPrinting', data)
     } catch (error) {
+      setAlertData({...alertData,type:"error",message:error?.message,openSnackbar:true})
+
       console.log('Error handleStop Printing', error)
 
       setAlertData({ ...alertData, type: 'error', message: error, openSnackbar: true })
@@ -620,23 +630,30 @@ const Index = ({ userId, ip }) => {
     setAlertData({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   }
 
+  console.log("Printer line ",printerLines)
+
   const handleResetPanel = async (panelIndex, lineIndex) => {
     const lines = [...printerLines]
     clearErrors(`printerLines[${lineIndex}].product`)
     clearErrors(`printerLines[${lineIndex}].batch`)
     clearErrors(`printerLines[${lineIndex}].packagingHierarchy`)
     const line = lines[panelIndex].lines[lineIndex]
-    const redisKey = `product:${line?.product}:batch:${line?.batch}:hierarchy:${line?.packagingHierarchy}`
-    line.batches = []
-    line.codeToPrint = ''
-    line.packagingHierarchy = ''
-    line.packagingHierarchies = []
-    line.products = []
-    line.product = ''
-    line.saveData = false
-    line.pendingCount = 0
-    line.printCount = 0
-    line.scanned = 0
+    const redisKey = `product:${lines[panelIndex].lines[lineIndex]?.product}:batch:${lines[panelIndex].lines[lineIndex]?.batch}:hierarchy:${line?.packagingHierarchy}`
+    lines[panelIndex].lines[lineIndex].batches = []
+    lines[panelIndex].lines[lineIndex].codeToPrint = ''
+    lines[panelIndex].lines[lineIndex].packagingHierarchy = ''
+    lines[panelIndex].lines[lineIndex].packagingHierarchies = []
+    lines[panelIndex].lines[lineIndex].products = []
+    lines[panelIndex].lines[lineIndex].product = ''
+    lines[panelIndex].lines[lineIndex].saveData = false
+    lines[panelIndex].lines[lineIndex].pendingCount = 0
+    lines[panelIndex].lines[lineIndex].printCount = 0
+    lines[panelIndex].lines[lineIndex].scanned = 0
+    lines[panelIndex].product=''
+    lines[panelIndex].batch=''
+    lines[panelIndex].packagingHierarchy=''
+    console.log("Lines ",lines)
+    // const newPrinterLines=printerLines?.splice(lineIndex,1)
     setValue('printerLines', lines)
     try {
       setIsLoading(true)
@@ -652,6 +669,8 @@ const Index = ({ userId, ip }) => {
       console.log('res of reset ', res.data)
       setIsLoading(false)
     } catch (error) {
+      setAlertData({...alertData,type:"error",message:error?.message,openSnackbar:true})
+
       setIsLoading(false)
     }
   }
@@ -914,7 +933,6 @@ const Index = ({ userId, ip }) => {
                   </Grid2>
                   <form
                     onSubmit={handleSubmit(data => {
-                      console.log(data.printerLines)
                       handleSubmitForm(panelIndex, lineIndex, data?.printerLines[lineIndex]?.lines[0])
                     })}
                   >
@@ -1188,7 +1206,7 @@ const Index = ({ userId, ip }) => {
           ip={ip}
         />
       )}
-      <SnackbarAlert closeSnackbar={closeSnackbar} alertData={alertData} />
+      <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}

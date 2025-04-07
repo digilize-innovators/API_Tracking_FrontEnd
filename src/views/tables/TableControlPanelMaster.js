@@ -1,18 +1,9 @@
 import React, { useState, Fragment, useEffect, useMemo } from 'react'
-import Box from '@mui/material/Box'
-import Table from '@mui/material/Table'
-import Collapse from '@mui/material/Collapse'
-import TableRow from '@mui/material/TableRow'
-import TableHead from '@mui/material/TableHead'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import Typography from '@mui/material/Typography'
-import IconButton from '@mui/material/IconButton'
+import {Box ,Table,Collapse,TableRow,TableHead,TableBody,TableCell,Typography,IconButton,Tooltip } from '@mui/material'
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md'
 import ChevronUp from 'mdi-material-ui/ChevronUp'
 import ChevronDown from 'mdi-material-ui/ChevronDown'
 import CustomTable from 'src/components/CustomTable'
-import { Tooltip } from '@mui/material'
 import PropTypes from 'prop-types'
 import { statusObj } from 'src/configs/statusConfig'
 import { getSortIcon } from 'src/utils/sortUtils'
@@ -206,8 +197,6 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
   const router = useRouter()
   const [controlPanelData,setControlPanelData]=useState({data:[],total:0})
 
-
-
   const handleRowToggle = async rowId => {
     await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/controlpanelmaster/history')
   }
@@ -291,7 +280,6 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
     setSortDirection(newSortDirection)
     setSortBy(key)
   }
-console.log("controlPanelData",controlPanelData);
 
   return (
     <CustomTable
@@ -382,6 +370,7 @@ console.log("controlPanelData",controlPanelData);
     </CustomTable>
   )
 }
+
 TableControlPanelMaster.propTypes = {
   controlPanelData: PropTypes.any,
   setControlPanel:PropTypes.any,

@@ -24,7 +24,7 @@ import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import downloadPdf from 'src/utils/DownloadPdf'
 import PrinterLineConfigurationModal from 'src/components/Modal/PrinterLineConfigurationModal'
-import { decodeAndSetConfig } from 'src/utils/tokenUtils'
+import { getTokenValues } from 'src/utils/tokenUtils'
 
 const Index = () => {
   const { settings } = useSettings()
@@ -53,7 +53,8 @@ const Index = () => {
   useLayoutEffect(() => {
       let data = getUserData()
       setUserDataPdf(data)
-      decodeAndSetConfig(setConfig)
+      const decodedToken = getTokenValues()
+          setConfig(decodedToken)
       return () => {}
     }, [])
 

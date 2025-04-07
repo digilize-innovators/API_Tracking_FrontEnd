@@ -1,8 +1,5 @@
 'use-client'
-import { Button, Paper, TableContainer } from '@mui/material'
-import Box from '@mui/material/Box'
-import Grid2 from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
+import { Button, Paper, TableContainer,Box ,Grid2,Typography } from '@mui/material'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -18,7 +15,7 @@ import SnackbarAlert from 'src/components/SnackbarAlert'
 import { useAuth } from 'src/Context/AuthContext'
 import { api } from 'src/utils/Rest-API'
 import TableAreaCategory from 'src/views/tables/TableAreaCategory'
-import { getTokenValues} from '../utils/tokenUtils'
+import { getTokenValues} from 'src/utils/tokenUtils'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import { validateToken } from 'src/utils/ValidateToken'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
@@ -63,19 +60,20 @@ const tableBody = allAreaCategoryData.map((item, index) =>
   }), []);
 
   useEffect(() => {
-      if (formData && pendingAction) {
-        
-        const esign_status = config?.config.esign_status?"pending":"approved";
-        if (pendingAction === "edit") {
-          editAreaCategory(esign_status) ;
-        }
-        else if(pendingAction=="add") {
-          addAreaCategory(esign_status)
-        }
-        setPendingAction(null);
-      }
-    }, [formData, pendingAction]);
-    
+         const handleUserAction = async () => {
+           if (formData && pendingAction) {
+             const esign_status = config?.config?.esign_status?"pending":"approved";
+             if (pendingAction === "edit") {
+               await  editAreaCategory(esign_status) ;;  
+             } else if (pendingAction === "add") {
+               await  addAreaCategory(esign_status)
+             }
+             setPendingAction(null);
+           }
+         };
+         handleUserAction();
+       }, [formData, pendingAction])
+
   useLayoutEffect(() => {
     let data = getUserData();
     const decodedToken = getTokenValues();
@@ -151,9 +149,9 @@ const tableBody = allAreaCategoryData.map((item, index) =>
       const res = await api('/area-category/', data, 'post', true)
       setIsLoading(false);
       if (res?.data?.success) {
-      setOpenModal(false); 
         console.log('res data', res?.data)
         setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Area category added successfully' });
+        setOpenModal(false);
         resetForm();
       } else {
         console.log('error to add area category ', res.data)
@@ -164,9 +162,9 @@ const tableBody = allAreaCategoryData.map((item, index) =>
         }
       }
     } catch (error) {
-      
-      setOpenModal(false);
       console.log('Erorr to add area category ', error)
+      setOpenModal(false);
+
       router.push('/500');
     } finally {
       setApproveAPI({

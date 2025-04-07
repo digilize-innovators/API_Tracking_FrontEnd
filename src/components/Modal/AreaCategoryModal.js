@@ -2,11 +2,10 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Modal, Box, Typography, Button ,Grid2} from '@mui/material';
+import { Modal, Box, Typography, Button, Grid2} from '@mui/material';
 import { style } from 'src/configs/generalConfig'
 import CustomTextField from 'src/components/CustomTextField';
 
-// ✅ Define Yup Validation Schema
 const AreaCategorySchema = yup.object().shape({
   areaCategoryName: yup
     .string()

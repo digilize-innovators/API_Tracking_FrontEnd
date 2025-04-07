@@ -153,6 +153,7 @@ const Index = () => {
             setIsLoading(true);
             const res = await api('/batch-cloud-upload/', data, 'post', true)
             setIsLoading(false);
+            console.log("Batch Upload :",res.data)
             if (res?.data?.success) {
                 console.log('res ', res?.data)
                 setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Batch cloud data added successfully on target database' })

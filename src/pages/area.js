@@ -60,7 +60,6 @@ const Index = () => {
           setPendingAction(null);
         }
       };
-    
       handleUserAction();
     }, [formData, pendingAction]);
 

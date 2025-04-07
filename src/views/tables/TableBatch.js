@@ -305,7 +305,7 @@ const TableBatch = ({
     const paramsFilterLocationVal = filterLocation === '' ? filterLocation : filterLocationVal
     const paramsFilterProductVal = filterProductVal === '' ? filterProductVal : filterProductVal
     try {
-      let query = `/batch?page=${paramsPage}&limit=${paramsRows}`
+      let query = `/batch?page=${paramsPage+1}&limit=${paramsRows}`
       if (paramsSearchVal) query += `&search=${paramsSearchVal}`
       if (paramsEsignStatus) query += `&esign_status=${paramsEsignStatus}`
       if (paramsFilterLocationVal) query += `&locationName=${paramsFilterLocationVal}`

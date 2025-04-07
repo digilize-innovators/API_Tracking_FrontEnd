@@ -102,7 +102,7 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
   const departmentData = allDepartment?.map((item) => ({
     id: item.id,
     value: item.id,
-    label: item.department_id,
+    label: item.department_name,
   }));
 
   useEffect(() => {
@@ -138,7 +138,7 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
           const data = res.data.data.designations.map((item) => ({
             id: item.id,
             value: item.id,
-            label: item.designation_id,
+            label: item.designation_name,
           }))
           setAllDesignation(data)
         } else {

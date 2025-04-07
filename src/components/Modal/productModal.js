@@ -447,6 +447,7 @@ function ProductModal({
     if (!isValid.every(Boolean)) {
       return
     } else {
+      clearErrors('packagingHierarchy')
       setModalOpen(false)
     }
   }
@@ -753,6 +754,9 @@ function ProductModal({
                       // Ensure the GTIN does not exceed 12 characters
                       if (e.target.value?.length <= 12) {
                         setValue('gtin', e.target.value) // Update value using setValue
+                      }
+                      if(e.target.value.length==12){
+                        clearErrors('gtin')
                       }
                       if (e.target.value?.length !== 12) {
                         setGtinLastDigit(null)

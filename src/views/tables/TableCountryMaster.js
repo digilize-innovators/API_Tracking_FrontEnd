@@ -1,22 +1,16 @@
-import { useState, Fragment, useEffect, useMemo } from 'react';
+import { useState, Fragment, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import Table from '@mui/material/Table';
-import Collapse from '@mui/material/Collapse';
 import TableRow from '@mui/material/TableRow';
 import TableHead from '@mui/material/TableHead';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
-import Typography from '@mui/material/Typography';
+import Table from '@mui/material/Table';
 import IconButton from '@mui/material/IconButton';
 import { MdModeEdit, MdOutlineDomainVerification } from "react-icons/md";
-import ChevronUp from 'mdi-material-ui/ChevronUp';
-import ChevronDown from 'mdi-material-ui/ChevronDown';
-import CustomTable from 'src/components/CustomTable';
 import { Tooltip } from '@mui/material';
 import PropTypes from 'prop-types';
 import { statusObj } from 'src/configs/statusConfig';
 import { getSortIcon } from 'src/utils/sortUtils';
-import { getSerialNumber } from 'src/configs/generalConfig';
 import { handleRowToggleHelper } from 'src/utils/rowUtils';
 import StatusChip from 'src/components/StatusChip';
 import moment from 'moment';
@@ -24,25 +18,25 @@ import { useLoading } from 'src/@core/hooks/useLoading';
 import { useAuth } from 'src/Context/AuthContext';
 import { api } from 'src/utils/Rest-API';
 import { useRouter } from 'next/router';
-import { useSettings } from 'src/@core/hooks/useSettings';
 
 const Row = ({
     row,
     index,
     handleRowToggle,
-    page,
-    rowsPerPage,
     config,
     handleUpdate,
     apiAccess
 }) => {
-    const serialNumber = getSerialNumber(index, page, rowsPerPage);
+    console.log(index);
+    const getSerialNumber = (index) => {
+        return index + 1 ;
+    };
+    const serialNumber = getSerialNumber(index);
     return (
         <Fragment>
             <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
                 <TableCell className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                     <IconButton align='center' aria-label='expand row' size='small' onClick={() => handleRowToggle(row.id)}>
-                        {/* {isOpen ? <ChevronUp /> : <ChevronDown />} */}
                     </IconButton>
                 </TableCell>
                 <TableCell align='center' component='th' scope='row' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
@@ -111,22 +105,14 @@ const TableCountryMaster = ({
     const {setIsLoading}=useLoading()
     const {removeAuthToken}=useAuth()
     const router=useRouter()
-    const [page,setPage]=useState(1)
-    const {settings}=useSettings()
     const [sortDirection,setSortDirection]=useState('asc')
-    const [rowsPerPage,setRowsPerPage]=useState(settings.rowsPerPage)
-    console.log(rowsPerPage)
-    useMemo(()=>{
-        setPage(0)
-},[page,rowsPerPage]);
+
 
     useEffect(() => {
         getCountryMasterData()
-      }, [page,openModal,rowsPerPage]);
+      }, [openModal]);
 
-      const handleChangePage = (event, newPage) => {
-        setPage(newPage)
-      }
+
 
           
       const handleSort = (key,child) => {
@@ -159,16 +145,12 @@ const TableCountryMaster = ({
         setSortBy(key)
       }
     
-      const handleChangeRowsPerPage = event => {
-        const newRowsPerPage = parseInt(event.target.value, 10)
-        setRowsPerPage(newRowsPerPage)
-        setPage(0)
-      }
+
 
     const getCountryMasterData = async () => {
         try {
           setIsLoading(true)
-          const res = await api(`/country-master?limit=${rowsPerPage}&page=${page+1}`, {}, 'get', true)
+          const res = await api(`/country-master`, {}, 'get', true)
           setIsLoading(false)
           console.log('All Country Master Data : ', res?.data?.data)
           if (res.data.success) {
@@ -188,18 +170,7 @@ const TableCountryMaster = ({
       }
 
     return (
-        <CustomTable
-        data={countryMasterData?.data}
-        totalRecords={countryMasterData?.total}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        setPage={setPage}
-        setRowsPerPage={setRowsPerPage}
-        handleChangePage={handleChangePage}
-        handleChangeRowsPerPage={handleChangeRowsPerPage}
-        >
-            {/* <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}> */}
-                {/* <Table stickyHeader> */}
+        <Table stickyHeader style={{ border: '1px solid #eeeeee' }}>
                     <TableHead>
                         <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} />
@@ -236,8 +207,6 @@ const TableCountryMaster = ({
                                 index={index}
                                 isOpen={openRows[item.id]}
                                 handleRowToggle={handleRowToggle}
-                                page={page}
-                                rowsPerPage={rowsPerPage}
                                 historyData={historyData}
                                 config={config}
                                 handleUpdate={handleUpdate}
@@ -254,7 +223,7 @@ const TableCountryMaster = ({
                     </TableBody>
                 {/* </Table>
             </Box> */}
-        </CustomTable>
+        </Table>
     );
 };
 TableCountryMaster.propTypes = {

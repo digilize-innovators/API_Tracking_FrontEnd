@@ -7,8 +7,8 @@ import { useAuth } from 'src/Context/AuthContext'
 import { useEffect, useState } from 'react'
 import SnackbarAlert from '../SnackbarAlert'
 
-function CodeGenerationModal({ open, onClose, handleGenerateCode }) {
-  const [formData, setFormData] = useState({ productId: '', batchId: '', generateQuantity: '' })
+function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAuthModalOpen,config}) {
+  const [formData, setFormData] = useState({ productId: '', batchId: '', batch:'',generateQuantity: '' })
   const [errorData, setErrorData] = useState({
     productError: { isError: false, message: '' },
     batchError: { isError: false, message: '' },
@@ -30,7 +30,6 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode }) {
         setIsLoading(true)
         const res = await api(`/product/`, {}, 'get', true)
         setIsLoading(false)
-        // console.log('All products ', res?.data?.data)
         if (res.data.success) {
           const data = res.data.data.products?.map(item => ({
             id: item.id,
@@ -183,8 +182,13 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode }) {
       productId: formData.productId,
       batchId: formData.batchId
     }
+    if (config?.config?.esign_status) {
+      setForm(data)
+      setAuthModalOpen(true);
+      return;
+    }
     console.log('on submit ', data)
-    handleGenerateCode(false, data)
+    handleGenerateCode(false, data,"approved")
   }
 
   const resetAll = () => {
@@ -250,7 +254,15 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode }) {
                     label='Batch *'
                     value={formData.batchId}
                     onChange={e => {
-                      setFormData({ ...formData, batchId: e.target.value })
+                      const selectedValue = e.target.value;
+                      const selectedItem = batches.find(item => item.value === selectedValue);
+                  
+                      setFormData({
+                        ...formData,
+                        batchId: selectedValue,
+                        batch: selectedItem?.label || ''
+                      });
+                  
                       setErrorData(prev => ({ ...prev, batchError: { isError: false, message: '' } }))
                     }}
                   >

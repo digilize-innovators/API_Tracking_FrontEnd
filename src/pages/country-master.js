@@ -5,12 +5,11 @@ import Grid2 from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import { Button, TableContainer, Paper } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
-import SnackbarAlert from 'src/components/SnackbarAlert'
 import Head from 'next/head'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
-import { decodeAndSetConfig } from '../utils/tokenUtils'
+import { getTokenValues } from '../utils/tokenUtils'
 import TableCountryMaster from 'src/views/tables/TableCountryMaster'
 import AddCountryModalComponent from 'src/components/Modal/CountryModel.js'
 
@@ -18,21 +17,13 @@ const Index = () => {
   const { settings } = useSettings()
   const [openModal, setOpenModal] = useState(false)
   const [editData, setEditData] = useState({})
-  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled',openSnackbar:false })
   const [config, setConfig] = useState(null)
-  
 
   useEffect(() => {
-    decodeAndSetConfig(setConfig)
-
+    const decodedToken = getTokenValues()
+    setConfig(decodedToken)
     return () => {}
   }, [])
-
-  
-
-  const closeSnackbar = () => {
-    setAlertData({...alertData,openSnackbar:false})
-  }
 
   const handleOpenModal = async () => {
     setOpenModal(true)
@@ -43,7 +34,6 @@ const Index = () => {
   }
 
   const handleUpdate = async item => {
-
     setOpenModal(true)
     setEditData(item)
     console.log('edit country', item)
@@ -84,17 +74,12 @@ const Index = () => {
                 Country Master Data
               </Typography>
               <TableContainer component={Paper}>
-                <TableCountryMaster
-                  openModal={openModal}
-                  handleUpdate={handleUpdate}
-                  config={config}
-                />
+                <TableCountryMaster openModal={openModal} handleUpdate={handleUpdate} config={config} />
               </TableContainer>
             </Grid2>
           </Box>
         </Grid2>
       </Grid2>
-      <SnackbarAlert closeSnackbar={closeSnackbar} alertData={alertData} />
 
       <AddCountryModalComponent
         openModal={openModal}

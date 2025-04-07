@@ -117,7 +117,7 @@ function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
         <form onSubmit={handleSubmit(handleSubmitForm)}>
           <Grid2 container spacing={2}>
             <Grid2 size={6}>
-              <CustomTextField name='printerId' label='Printer ID' control={control} />
+              <CustomTextField name='printerId' disabled={!!editData.id} label='Printer ID' control={control} />
             </Grid2>
             <Grid2 size={6}>
               <CustomDropdown

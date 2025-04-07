@@ -4,6 +4,7 @@ import { useAuth } from 'src/Context/AuthContext'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useRouter } from 'next/router'
 import { api } from 'src/utils/Rest-API'
+import SnackbarAlert from '../SnackbarAlert'
 
 const modalBoxStyle = {
   width: '70vw', // 70% of viewport width
@@ -114,6 +115,9 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
       ]
     }
   ])
+  const closeSnackbar = () => {
+    setAlertData({...alertData,openSnackbar:false})
+  }
 
   const undoCodeStructureValue = () => {
     let updatedCodeStructure = [...codeStructure]
@@ -158,18 +162,21 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
 
   const handleCRMURLChange = e => {
     setCrmURL({ ...crmURL, checked: !crmURL.checked })
-    const updatedCodeStructure = [...codeStructure]
-    if (e.target.checked) {
-      setCodeStructure([...codeStructure, e.target.value])
-    } else {
-      updatedCodeStructure.splice(updatedCodeStructure.indexOf('CRMURL'), 1)
-      setCodeStructure([...codeStructure, ...updatedCodeStructure])
+    console.log(codeStructure)
+    if(codeStructure?.length){
+      const updatedCodeStructure = []
+      if (e.target.checked) {
+        setCodeStructure([...codeStructure, e.target.value])
+      } else {
+        updatedCodeStructure.splice(updatedCodeStructure.indexOf('CRMURL'), 1)
+        setCodeStructure([...codeStructure, ...updatedCodeStructure])
+      }
     }
   }
 
   const resetForm = () => {
     setCodeStructure([])
-    setCrmURL({ value: 'CRM', checked: false })
+    setCrmURL({ value:'', checked: false })
     setCountry('')
     const updatedData = urlMakerData.map(el => {
       return {
@@ -335,6 +342,7 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
     } finally {
       setOpenModal(false)
       setIsLoading(false)
+      resetForm()
     }
   }
 
@@ -368,10 +376,12 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
     } finally {
       setOpenModal(false)
       setIsLoading(false)
+      resetForm()
     }
   }
 
   return (
+    <>
     <Modal
       open={openModal}
       onClose={() => {
@@ -511,7 +521,11 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
           </Button>
         </Grid2>
       </Box>
+      
     </Modal>
+          <SnackbarAlert alertData={alertData} closeSnackbar={closeSnackbar} openSnackbar={alertData.openSnackbar}  />
+    
+    </>
   )
 }
 export default AddCountryModalComponent

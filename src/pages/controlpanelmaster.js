@@ -1,9 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
-import Box from '@mui/material/Box'
-import Grid2 from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
-import { Button, TableContainer, Paper } from '@mui/material'
+import { Button, TableContainer, Paper,Typography,Grid2,Box } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -16,7 +13,7 @@ import { useRouter } from 'next/router'
 import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
-import { decodeAndSetConfig } from '../utils/tokenUtils'
+import { getTokenValues } from 'src/utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
@@ -52,7 +49,8 @@ const Index = () => {
   useLayoutEffect(() => {
     let data = getUserData()
     setUserDataPdf(data)
-    decodeAndSetConfig(setConfig)
+    const decodedToken = getTokenValues()
+        setConfig(decodedToken)
     return () => { }
   }, [])
 

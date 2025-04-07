@@ -347,6 +347,7 @@ const TableCollapsibleUser = ({
     </CustomTable>
   );
 };
+
 TableCollapsibleUser.propTypes = {
   userData: PropTypes.any,
 

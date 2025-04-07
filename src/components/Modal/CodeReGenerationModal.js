@@ -3,7 +3,7 @@ import moment from 'moment'
 import React, { useState } from 'react'
 import { style } from 'src/configs/generalConfig'
 
-const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCodeData, setAvailableCodeData }) => {
+const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCodeData, setAvailableCodeData ,setForm,setAuthModalOpen,config}) => {
   const [selected, setSelected] = useState([])
 
   const handleCheckboxChange = id => {
@@ -25,6 +25,14 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
       setAvailableCodeData({ ...availableCodeData, packagingHierarchyData: updatedData })
     }
   }
+ const  handleSubmit =()=>{
+  if (config?.config?.esign_status) {
+    setAuthModalOpen(true);
+    return;
+  }
+  handleGenerateCode(true,{},"approved")
+ }
+  
 
   return (
     <>
@@ -171,7 +179,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
           </Grid2>
 
           <Grid2 item xs={12} className='my-3 '>
-            <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={() => handleGenerateCode(true)}>
+            <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={() => handleSubmit()}>
               Generate
             </Button>
             <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={onClose}>

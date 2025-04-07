@@ -24,7 +24,7 @@ const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) =
                 ? `Status : ${tableData?.statusFilter || '__'}` 
                 : `E-Sign : ${tableHeaderData?.esignStatus || '__'}`;
             doc.text(statusText, 20, 40);
-        } else {
+        } else if(tableHeaderData?.esignStatus) {
             doc.text('E-Sign : ' + (tableHeaderData?.esignStatus || '__'), 20, 35);
         }
 

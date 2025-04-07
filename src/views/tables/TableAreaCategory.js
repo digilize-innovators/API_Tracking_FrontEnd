@@ -1,19 +1,9 @@
 import React, { useState, Fragment ,useMemo, useEffect} from 'react';
 import PropTypes from 'prop-types';
-import Box from '@mui/material/Box';
-import Table from '@mui/material/Table';
-import Collapse from '@mui/material/Collapse';
-import TableRow from '@mui/material/TableRow';
-import TableHead from '@mui/material/TableHead';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
+import {Box,Table,Collapse,TableBody,TableCell,TableHead,Typography,IconButton,TableRow,Tooltip} from '@mui/material';
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md';
-import ChevronUp from 'mdi-material-ui/ChevronUp';
-import ChevronDown from 'mdi-material-ui/ChevronDown';
+import {ChevronUp,ChevronDown} from 'mdi-material-ui';
 import CustomTable from 'src/components/CustomTable';
-import { Tooltip } from '@mui/material';
 import { statusObj } from 'src/configs/statusConfig';
 import { getSortIcon } from 'src/utils/sortUtils';
 import { handleRowToggleHelper } from 'src/utils/rowUtils';
@@ -23,6 +13,7 @@ import { useSettings } from 'src/@core/hooks/useSettings';
 import { api } from 'src/utils/Rest-API';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { useAuth } from 'src/Context/AuthContext';
+import { useRouter } from 'next/router';
 
 const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, historyData, config, handleAuthCheck, handleUpdate, apiAccess }) => {
   const isOpen = openRows[row.id];
@@ -149,14 +140,14 @@ const TableAreaCategory = ({
     const [areaCategoryData, setAllAreaCategoryData] =  useState({data:[],total:0})
     const { setIsLoading } = useLoading()
       const { removeAuthToken } = useAuth()
-
+      const router=useRouter()
   const handleRowToggle = async (rowId) => {
     await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/area-category/history');
   };
 
-  useMemo(()=>{
+  useMemo(() => {
       setPage(0)
-    },[tableHeaderData,rowsPerPage])
+    }, [tableHeaderData,rowsPerPage])
 
     useEffect(() => {
         getData()

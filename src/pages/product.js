@@ -24,11 +24,11 @@ import { validateToken } from 'src/utils/ValidateToken'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 
 const mainUrl = BaseUrl
-import { decodeAndSetConfig } from '../utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import ProductModal from 'src/components/Modal/productModal'
+import { getTokenValues } from 'src/utils/tokenUtils'
 
 const Index = () => {
   const router = useRouter()
@@ -63,7 +63,8 @@ const Index = () => {
   useLayoutEffect(() => {
     let data = getUserData()
     setUserDataPdf(data)
-    decodeAndSetConfig(setConfig)
+    const decodedToken = getTokenValues()
+    setConfig(decodedToken)
     return () => {}
   }, [])
 
@@ -156,11 +157,12 @@ const Index = () => {
   const handleSubmitForm = async data => {
     console.log('submit form')
     console.log(data)
-    setFormData({ ...data, 
-      productNumber_print: data.productNumber_print?data.productNumber_print:data.productNumber_aggregation, 
-      firstLayer_print:data.firstlayer_print? data.firstlayer_print:data.firstLayer_aggregation,
-      secondLayer_print:data.secondLayer_print?data.secondLayer_print:data.secondLayer_aggregation,
-      thirdLayer_print:data.thirdLayer_print?data.thirdLayer_print:data.thirdLayer_aggregation
+    setFormData({
+      ...data,
+      productNumber_print: data.productNumber_print ? data.productNumber_print : data.productNumber_aggregation,
+      firstLayer_print: data.firstlayer_print ? data.firstlayer_print : data.firstLayer_aggregation,
+      secondLayer_print: data.secondLayer_print ? data.secondLayer_print : data.secondLayer_aggregation,
+      thirdLayer_print: data.thirdLayer_print ? data.thirdLayer_print : data.thirdLayer_aggregation
     })
     if (editData?.id) {
       setApproveAPI({
