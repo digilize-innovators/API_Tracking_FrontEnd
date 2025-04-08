@@ -159,7 +159,7 @@ function PrinterLineConfigurationModal({
   const getAllAreaCategory = async () => {
     try {
       setIsLoading(true)
-      const res = await api(`/area-category/`, {}, 'get', true)
+      const res = await api(`/area-category?limit=-1`, {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllAreaCategory(res.data.data.areaCategories)
@@ -179,7 +179,7 @@ function PrinterLineConfigurationModal({
     if (areaCategoryId) {
       try {
         setIsLoading(true)
-        const res = await api(`/area/byAreaCategory/${areaCategoryId}`, {}, 'get', true)
+        const res = await api(`/area/byAreaCategory/${areaCategoryId}?limit=-1`, {}, 'get', true)
         setIsLoading(false)
         if (res.data.success) {
           setAllArea(res.data.data.areas)
@@ -199,7 +199,7 @@ function PrinterLineConfigurationModal({
   const getAllLocation = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/location/', {}, 'get', true)
+      const res = await api('/location?limit=-1', {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllLocation(res.data.data.locations)
@@ -218,7 +218,7 @@ function PrinterLineConfigurationModal({
   const getAllPrinterMaster = async printerCategoryID => {
     try {
       setIsLoading(true)
-      const res = await api(`/printermaster/printerByCategory/?printerCategoryID=${printerCategoryID}`, {}, 'get', true)
+      const res = await api(`/printermaster/printerByCategory/?printerCategoryID=${printerCategoryID}?limit=-1`, {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllPrinter(res.data.data.printerCategories)
@@ -238,7 +238,7 @@ function PrinterLineConfigurationModal({
   const getAllPrinterCategories = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/printercategory/', {}, 'get', true)
+      const res = await api('/printercategory?limit=-1', {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllPrinterCatergory(res.data.data.printerCategories)
@@ -258,7 +258,7 @@ function PrinterLineConfigurationModal({
   const getAllControlPanels = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/controlpanelmaster/', {}, 'get', true)
+      const res = await api('/controlpanelmaster?limit=-1', {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllControlPanelData(res.data.data.controlPanelMasters)

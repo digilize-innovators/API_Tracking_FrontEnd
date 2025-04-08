@@ -1,14 +1,22 @@
 'use-client'
-import React, { useState, useEffect, useCallback } from 'react'
-import Checkbox from '@mui/material/Checkbox'
-import TableContainer from '@mui/material/TableContainer'
-import Table from '@mui/material/Table'
-import TableHead from '@mui/material/TableHead'
-import TableBody from '@mui/material/TableBody'
-import TableRow from '@mui/material/TableRow'
-import TableCell from '@mui/material/TableCell'
-import Paper from '@mui/material/Paper'
-import { Grid2, Typography, Button, Box, FormControl, TextField, Autocomplete } from '@mui/material'
+import React, { useState, useEffect } from 'react'
+import { 
+      Grid2,
+      Typography,
+      Button,
+      Box,
+      FormControl,
+      TextField,
+      Autocomplete,
+      Checkbox,
+      TableContainer,
+      Table,
+      TableHead,
+      TableBody,
+      TableRow,
+      TableCell,
+      Paper
+      } from '@mui/material'
 import Head from 'next/head'
 import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
@@ -30,7 +38,7 @@ const Index = () => {
   const [filteredDepartments, setFilteredDepartments] = useState([])
   const [departments, setDepartments] = useState([])
   const { setIsLoading } = useLoading()
-  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled',openSnackbar:false })
+  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [selectScreenName, setSelectScreenName] = useState(null)
   const [selectedDeptValue, setSelectedDeptValue] = useState(null)
   const { removeAuthToken } = useAuth()
@@ -138,7 +146,12 @@ const Index = () => {
       setIsLoading(false)
       console.log('All screens after update ', res.data)
       if (res.data.success) {
-        setAlertData({ ...alertData, type: 'success', message: 'Screen feature updated successfully',openSnackbar:true })
+        setAlertData({
+          ...alertData,
+          type: 'success',
+          message: 'Screen feature updated successfully',
+          openSnackbar: true
+        })
       } else if (res.data.code === 401) {
         removeAuthToken()
         router.push('/401')
@@ -159,12 +172,12 @@ const Index = () => {
     }, {})
   }
   const closeSnackbar = () => {
-    setAlertData({type: '', message: '', variant: 'filled',openSnackbar:false})
+    setAlertData({ type: '', message: '', variant: 'filled', openSnackbar: false })
   }
   const handleResetFilter = () => {
     setSelectScreenName(null)
     setSelectedDeptValue(null)
-    setCheckboxes(allCheckboxes);
+    setCheckboxes(allCheckboxes)
     setFilteredDepartments(departments)
   }
   const handleScreenName = (event, newValue) => {
@@ -254,16 +267,50 @@ const Index = () => {
                   <Table aria-label='checkbox table'>
                     <TableHead>
                       <TableRow>
-                        <TableCell style={{ borderBottom: '1px solid #fff' }}></TableCell>
-                        <TableCell style={{ borderBottom: '1px solid #fff' }}></TableCell>
-                        <TableCell style={{ borderBottom: '1px solid #fff' }}></TableCell>
+                      <TableCell
+                          style={{
+                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            position: 'sticky',
+                            left: 0,
+                            zIndex: 3,
+                            backgroundColor: 'white',
+                            width: '50px',
+                            minWidth: '50px',
+                            maxWidth: '50px',
+                            height: '56px',
+                            padding: '8px'
+                          }}
+                        ></TableCell>
+                        <TableCell
+                          style={{
+                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            position: 'sticky',
+                            left: '50px',
+                            zIndex: 3,
+                            backgroundColor: 'white',
+                            width: '200px',
+                            minWidth: '200px',
+                            maxWidth: '200px',
+                            height: '56px',
+                            padding: '8px'
+                          }}
+                        ></TableCell>
+                        <TableCell
+                          style={{
+                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            height: '56px',
+                            padding: '8px'
+                          }}
+                        ></TableCell>
                         {filteredDepartments?.map((dept, rowIndex) => (
                           <TableCell
                             key={`dept-${rowIndex + 1}`}
                             colSpan={dept.designations.length}
                             align='center'
                             style={{
-                              borderBottom: '1px solid rgba(224, 224, 224, 1)'
+                              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                              height: '56px',
+                              padding: '8px'
                             }}
                           >
                             {dept.department}
@@ -271,16 +318,50 @@ const Index = () => {
                         ))}
                       </TableRow>
                       <TableRow>
-                        <TableCell style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}></TableCell>
-                        <TableCell style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}></TableCell>
-                        <TableCell style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}></TableCell>
+                        <TableCell
+                          style={{
+                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            position: 'sticky',
+                            left: 0,
+                            zIndex: 3,
+                            backgroundColor: 'white',
+                            width: '50px',
+                            minWidth: '50px',
+                            maxWidth: '50px',
+                            height: '56px',
+                            padding: '8px'
+                          }}
+                        ></TableCell>
+                        <TableCell
+                          style={{
+                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            position: 'sticky',
+                            left: '50px',
+                            zIndex: 3,
+                            backgroundColor: 'white',
+                            width: '200px',
+                            minWidth: '200px',
+                            maxWidth: '200px',
+                            height: '56px',
+                            padding: '8px'
+                          }}
+                        ></TableCell>
+                        <TableCell
+                          style={{
+                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            height: '56px',
+                            padding: '8px'
+                          }}
+                        ></TableCell>
                         {filteredDepartments?.map((dept, rowIndex) =>
                           dept.designations.map((designation, colIndex) => (
                             <TableCell
                               key={`${rowIndex}-${colIndex}`}
                               align='center'
                               style={{
-                                borderBottom: '1px solid rgba(224, 224, 224, 1)'
+                                borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                                height: '56px',
+                                padding: '8px'
                               }}
                             >
                               {designation.designation_name}
@@ -294,7 +375,16 @@ const Index = () => {
                         <TableRow key={`row-${index + 1}`}>
                           <TableCell
                             style={{
-                              borderBottom: '1px solid rgba(224, 224, 224, 1)'
+                              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                              position: 'sticky',
+                              left: 0,
+                              zIndex: 2,
+                              backgroundColor: 'white',
+                              width: '50px',
+                              minWidth: '50px',
+                              maxWidth: '50px',
+                              height: '56px',
+                              padding: '8px'
                             }}
                           ></TableCell>
                           <TableCell
@@ -303,16 +393,27 @@ const Index = () => {
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
                               borderTop: '1px solid rgba(224, 224, 224, 1)',
                               position: 'sticky',
-                              left: 0,
-                              top: '80px',
-                              zIndex: 2
+                              left: '50px',
+                              zIndex: 2,
+                              backgroundColor: 'white',
+                              width: '200px',
+                              minWidth: '200px',
+                              maxWidth: '200px',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              height: '56px',
+                              padding: '8px',
+                              verticalAlign: 'middle'
                             }}
                           >
                             {checkboxRow.screenName}
                           </TableCell>
                           <TableCell
                             style={{
-                              borderBottom: '1px solid rgba(224, 224, 224, 1)'
+                              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                              height: '56px',
+                              padding: '8px'
                             }}
                           ></TableCell>
                           {checkboxRow.checkboxes.map((checkbox, colIndex) => {
@@ -323,7 +424,12 @@ const Index = () => {
                                 <TableCell
                                   key={`${index}-${colIndex}`}
                                   align='center'
-                                  style={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+                                  style={{
+                                    borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                                    height: '56px',
+                                    padding: '8px',
+                                    verticalAlign: 'middle'
+                                  }}
                                 >
                                   <Checkbox
                                     role='checkbox'

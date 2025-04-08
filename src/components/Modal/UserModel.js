@@ -77,7 +77,6 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
   const [allDesignation, setAllDesignation] = useState([])
   const [allLocation, setAllLocation] = useState([])
   const [departmentId, setDepartmentId] = useState('')
-  const [inputKey, setInputKey] = useState(Date.now());
 
   const {control,handleSubmit,formState: { errors },reset,watch} = useForm({
     resolver: yupResolver(UserSchema),
@@ -90,7 +89,7 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
       departmentId: editData?.departmentId || '',
       designationId: editData?.designationId || '',
       locationId: editData?.locationId || '',
-      isEnabled: editData?.is_active || false
+      isEnabled: editData?.is_active || true
     },
   });
 
@@ -119,7 +118,7 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
         isEnabled: editData?.is_active || false,
       });
     }
-  }, [editData]);
+  }, [editData,reset]);
 
   useEffect(() => {
     const getDesignation = async () => {
@@ -161,7 +160,7 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
     const getLocation = async () => {
       try {
         setIsLoading(true)
-        const res = await api(`/location?limit=-1}`, {}, 'get', true)
+        const res = await api(`/location?limit=-1`, {}, 'get', true)
         setIsLoading(false)
         console.log('All location ', res.data)
         if (res.data.success) {
@@ -218,7 +217,6 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
                     >
                       Upload New Photo{/* */}
                       <input
-                        key={inputKey}
                         hidden
                         type='file'
                         onChange={onChange}
@@ -230,7 +228,6 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
                       color='error'
                       variant='outlined'
                       onClick={() => {
-                        setInputKey(Date.now());
                         setProfilePhoto('/images/avatars/1.png')
                       }}
                     >

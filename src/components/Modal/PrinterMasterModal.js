@@ -47,7 +47,7 @@ function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
     const getAllPrinterCategory = async () => {
       try {
         setIsLoading(true)
-        const res = await api(`/printercategory/`, {}, 'get', true)
+        const res = await api(`/printercategory?limit=-1`, {}, 'get', true)
         setIsLoading(false)
 
         if (res.data.success) {

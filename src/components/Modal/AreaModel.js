@@ -65,7 +65,7 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
             const getAllAreaCategory = async () => {
                 setIsLoading(true)
                 try {
-                    const res = await api(`/area-category/`, {}, 'get', true)
+                    const res = await api(`/area-category?limit=-1`, {}, 'get', true)
                     if (res.data.success) {
                         const data = res.data.data.areaCategories?.map((item) => ({
                             id: item.id,
@@ -92,7 +92,7 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
             const getAllLocations = async () => {
                 try {
                     setIsLoading(true);
-                    const res = await api('/location/', {}, 'get', true);
+                    const res = await api('/location?limit=-1', {}, 'get', true);
                     setIsLoading(false);
                     console.log('All locations ', res.data);
                     if (res.data.success) {

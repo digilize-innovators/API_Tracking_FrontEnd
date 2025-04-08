@@ -1,15 +1,8 @@
 import { useState, Fragment, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Box from '@mui/material/Box';
-import Menu from '@mui/material/Menu';
-import Badge from '@mui/material/Badge';
-import Avatar from '@mui/material/Avatar';
-import Divider from '@mui/material/Divider';
-import MenuItem from '@mui/material/MenuItem';
+import {Box,Menu,Badge,Avatar,Divider,MenuItem,Typography} from '@mui/material';
 import { styled } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
 import LogoutVariant from 'mdi-material-ui/LogoutVariant';
-import AccountOutline from 'mdi-material-ui/AccountOutline';
 import { useAuth } from 'src/Context/AuthContext';
 
 const BadgeContentSpan = styled('span')(({ theme }) => ({
@@ -71,19 +64,7 @@ const UserDropdown = () => {
     }
   };
 
-  const styles = {
-    py: 2,
-    px: 4,
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    color: 'text.primary',
-    textDecoration: 'none',
-    '& svg': {
-      fontSize: '1.375rem',
-      color: 'text.secondary',
-    },
-  };
+  
 
   return (
     <Fragment>
@@ -141,13 +122,7 @@ const UserDropdown = () => {
             </Box>
           </Box>
         </Box>
-        {/* <Divider sx={{ mt: 0, mb: 1 }} /> */}
-        {/* <MenuItem sx={{ p: 0 }}>
-          <Box sx={styles} onClick={() => setOpenDropdown(null)}>
-            <AccountOutline sx={{ marginRight: 2 }} />
-            Profile
-          </Box>
-        </MenuItem> */}
+      
         <Divider />
         <MenuItem sx={{ py: 2 }} onClick={() => handleLogout('/login')}>
           <LogoutVariant

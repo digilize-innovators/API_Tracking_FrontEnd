@@ -382,7 +382,7 @@ const Index = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
   const handleSearch = (val) => {
-    setTableHeaderData({ ...tableHeaderData, searchVal: val.toLowerCase() });
+    setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() });
   }
 
 

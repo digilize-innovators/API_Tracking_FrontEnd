@@ -147,6 +147,7 @@ const Index = () => {
 
   const resetForm = () => {
     setEditData({})
+    setFile('')
     setProfilePhoto('/images/avatars/1.png')
   }
 
@@ -182,7 +183,7 @@ const Index = () => {
       const data = {
         ...userFormData,
         profilePhoto: uploadRes?.url || "",
-        is_active: userFormData.isEnabled,
+        is_active: true,
         role: 'user'
       }
       delete data.isEnabled;
@@ -244,7 +245,7 @@ const Index = () => {
     try {
       const data = {
         ...userFormData,
-        profilePhoto: url || editData?.profile_photo,
+        profilePhoto: url ,
         is_active: userFormData.isEnabled
       }
       delete data.isEnabled

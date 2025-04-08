@@ -383,7 +383,7 @@ const Index = () => {
   const getAllProducts = async () => {
     try {
       setIsLoading(true);
-      const res = await api('/product/', {}, 'get', true)
+      const res = await api('/product?limit=-1', {}, 'get', true)
       setIsLoading(false);
       if (res.data.success) {
         setAllProductData(res.data.data.products)
@@ -403,7 +403,7 @@ const Index = () => {
 const getAllLocations = async () => {
   try {
       setIsLoading(true);
-      const res = await api('/location/', {}, 'get', true)
+      const res = await api('/location?limit=-1', {}, 'get', true)
       setIsLoading(false);
       console.log('All locations ', res.data)
       if (res.data.success) {

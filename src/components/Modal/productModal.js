@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { useEffect, useState } from 'react'
 import * as yup from 'yup'
 import {
@@ -374,23 +375,25 @@ function ProductModal({
   const [uoms, setUoms] = useState([])
   const [modalOpen, setModalOpen] = useState(false)
 
-  const getPrefixData=()=>{
-    const prefix_data = companies.find(company => company.id === companyUuid)
-
-    if (prefix_data) {
-      let prefixs = [prefix_data.gs1_prefix].filter(Boolean) // Ensure no undefined values
-
-      if (prefix_data.gs2_prefix) prefixs.push(prefix_data.gs2_prefix)
-      if (prefix_data.gs3_prefix) prefixs.push(prefix_data.gs3_prefix)
-      setValue('prefix', prefixs) // Set only if we have valid values
-    } else {
-      setValue('prefix', []) // Clear if no valid company selected
+  const getPrefixData = () => {
+    if (companyUuid) {
+      const prefix_data = companies.find(company => company.id === companyUuid)
+      console.log(prefix_data)
+      if (prefix_data) {
+        let prefixs = [prefix_data.gs1_prefix].filter(Boolean) // Ensure no undefined values
+        if (prefix_data.gs2_prefix) prefixs.push(prefix_data.gs2_prefix)
+        // console.log(prefixs)
+        if (prefix_data.gs3_prefix) prefixs.push(prefix_data.gs3_prefix)
+        return prefixs
+      } else {
+        return []
+      }
     }
   }
 
   useEffect(() => {
     if (!companyUuid) return // Ensure companyUuid exists before running the logic
-    if(companyUuid){
+    if (companyUuid) {
       getPrefixData()
     }
     if (editData?.prefix) setValue('prefix', editData.prefix.split(',')) // Restore edit data if available
@@ -473,7 +476,6 @@ function ProductModal({
       setIsLoading(false)
     }
   }
-
 
   const getCountries = async () => {
     try {
@@ -584,13 +586,14 @@ function ProductModal({
     }
   }))
 
-  const prefixs = watch('prefix')||[]
-  useEffect(()=>{
-    if(!prefixs?.length){
-
+  const prefixs = (companyUuid && getPrefixData()) || []
+  useEffect(() => {
+    if (!prefixs?.length) {
       getPrefixData()
     }
-  },[prefixs?.length])
+  }, [prefixs?.length])
+
+  console.log(prefixs)
 
   const CountryData = countries?.map(item => ({
     id: item.id,
@@ -755,7 +758,7 @@ function ProductModal({
                       if (e.target.value?.length <= 12) {
                         setValue('gtin', e.target.value) // Update value using setValue
                       }
-                      if(e.target.value.length==12){
+                      if (e.target.value.length == 12) {
                         clearErrors('gtin')
                       }
                       if (e.target.value?.length !== 12) {
@@ -806,39 +809,34 @@ function ProductModal({
             </Grid2>
             <Grid2 size={4}>
               <FormControl fullWidth error={!!errors.prefix} sx={{ mb: 2 }}>
-        <InputLabel id='label-prefixs'>Prefix</InputLabel>
-        <Controller
-          name='prefix'
-          control={control}
-          rules={{ required: 'Prefix is required' }}
-          render={({ field }) => (
-            <Select
-              {...field}
-              labelId='label-prefixs'
-              label='Prefix *'
-              value={field.value || ''} // ensure controlled input
-              onChange={e => {
-                const selected = e.target.value
-                console.log('User selected:', selected)
-                field.onChange('') // reset select after selection
-                clearErrors('prefix')
-              }}
-            >
-              <MenuItem disabled value=''>
-                Select a prefix
-              </MenuItem>
-              {prefixs?.map(item => (
-                <MenuItem key={item} value={item}>
-                  {item}
-                </MenuItem>
-              ))}
-            </Select>
-          )}
-        />
-        {errors.prefix && (
-          <FormHelperText>{errors.prefix.message}</FormHelperText>
-        )}
-      </FormControl>
+                <InputLabel id='label-prefixs'>Prefix *</InputLabel>
+                <Controller
+                  name='prefix'
+                  control={control}
+                  rules={{ required: 'Prefix is required' }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      labelId='label-prefixs'
+                      label='Prefix *'
+                      onChange={e => {
+                        const selected = e.target.value
+                        console.log('User selected:', selected)
+                        field.onChange(selected)
+                        clearErrors('prefix')
+                      }}
+                      value={field.value} // must be a string in prefixs array or ''
+                    >
+                      {prefixs.map(item => (
+                        <MenuItem key={item} value={item}>
+                          {item}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  )}
+                />
+                {errors.prefix && <FormHelperText>{errors.prefix.message}</FormHelperText>}
+              </FormControl>
             </Grid2>
             <Grid2 size={4}>
               <CustomDropdown label='Country *' name={'country'} control={control} options={CountryData} />
@@ -1042,13 +1040,13 @@ function ProductModal({
                                 control={
                                   <Switch
                                     {...field}
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
+                                    onChange={e => {
+                                      const isChecked = e.target.checked
                                       // Update the form state
-                                      if(isChecked){
-                                        setValue('productNumber_print',isChecked)
+                                      if (isChecked) {
+                                        setValue('productNumber_print', isChecked)
                                       }
-                                      field.onChange(isChecked);
+                                      field.onChange(isChecked)
                                     }}
                                     checked={field.value}
                                     name='productNumber_aggregation'
@@ -1116,13 +1114,13 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
+                                    onChange={e => {
+                                      const isChecked = e.target.checked
                                       // Update the form state
-                                      if(isChecked){
-                                        setValue('productNumber_print',isChecked)
+                                      if (isChecked) {
+                                        setValue('productNumber_print', isChecked)
                                       }
-                                      field.onChange(isChecked);
+                                      field.onChange(isChecked)
                                     }}
                                     name='productNumber_aggregation'
                                     color='primary'
@@ -1179,13 +1177,13 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
+                                    onChange={e => {
+                                      const isChecked = e.target.checked
                                       // Update the form state
-                                      if(isChecked){
-                                        setValue('firstLayer_print',isChecked)
+                                      if (isChecked) {
+                                        setValue('firstLayer_print', isChecked)
                                       }
-                                      field.onChange(isChecked);
+                                      field.onChange(isChecked)
                                     }}
                                     name='productNumber_aggregation'
                                     color='primary'
@@ -1255,13 +1253,13 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
+                                    onChange={e => {
+                                      const isChecked = e.target.checked
                                       // Update the form state
-                                      if(isChecked){
-                                        setValue('productNumber_print',isChecked)
+                                      if (isChecked) {
+                                        setValue('productNumber_print', isChecked)
                                       }
-                                      field.onChange(isChecked);
+                                      field.onChange(isChecked)
                                     }}
                                     name='productNumber_aggregation'
                                     color='primary'
@@ -1320,13 +1318,13 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
+                                    onChange={e => {
+                                      const isChecked = e.target.checked
                                       // Update the form state
-                                      if(isChecked){
-                                        setValue('firstLayer_print',isChecked)
+                                      if (isChecked) {
+                                        setValue('firstLayer_print', isChecked)
                                       }
-                                      field.onChange(isChecked);
+                                      field.onChange(isChecked)
                                     }}
                                     name='firstLayer_aggregation'
                                     color='primary'
@@ -1382,16 +1380,20 @@ function ProductModal({
                             render={({ field }) => (
                               <FormControlLabel
                                 control={
-                                  <Switch {...field} name='productNumber_aggregation' 
-                                  onChange={(e) => {
-                                    const isChecked = e.target.checked;
-                                    // Update the form state
-                                    if(isChecked){
-                                      setValue('secondLayer_print',isChecked)
-                                    }
-                                    field.onChange(isChecked);
-                                  }}
-                                  color='primary' role='button' />
+                                  <Switch
+                                    {...field}
+                                    name='productNumber_aggregation'
+                                    onChange={e => {
+                                      const isChecked = e.target.checked
+                                      // Update the form state
+                                      if (isChecked) {
+                                        setValue('secondLayer_print', isChecked)
+                                      }
+                                      field.onChange(isChecked)
+                                    }}
+                                    color='primary'
+                                    role='button'
+                                  />
                                 }
                                 sx={{
                                   marginLeft: 0
@@ -1456,13 +1458,13 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
+                                    onChange={e => {
+                                      const isChecked = e.target.checked
                                       // Update the form state
-                                      if(isChecked){
-                                        setValue('productNumber_print',isChecked)
+                                      if (isChecked) {
+                                        setValue('productNumber_print', isChecked)
                                       }
-                                      field.onChange(isChecked);
+                                      field.onChange(isChecked)
                                     }}
                                     name='productNumber_aggregation'
                                     color='primary'
@@ -1499,13 +1501,13 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
+                                    onChange={e => {
+                                      const isChecked = e.target.checked
                                       // Update the form state
-                                      if(isChecked){
-                                        setValue('productNumber_print',isChecked)
+                                      if (isChecked) {
+                                        setValue('productNumber_print', isChecked)
                                       }
-                                      field.onChange(isChecked);
+                                      field.onChange(isChecked)
                                     }}
                                     name='productNumber_print'
                                     color='primary'
@@ -1528,13 +1530,13 @@ function ProductModal({
                                 control={
                                   <Switch
                                     {...field}
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
+                                    onChange={e => {
+                                      const isChecked = e.target.checked
                                       // Update the form state
-                                      if(isChecked){
-                                        setValue('firstLayer_print',isChecked)
+                                      if (isChecked) {
+                                        setValue('firstLayer_print', isChecked)
                                       }
-                                      field.onChange(isChecked);
+                                      field.onChange(isChecked)
                                     }}
                                     checked={field.value}
                                     name='firstLayer_aggregation'
@@ -1595,13 +1597,13 @@ function ProductModal({
                                     checked={field.value}
                                     name='productNumber_aggregation'
                                     color='primary'
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
+                                    onChange={e => {
+                                      const isChecked = e.target.checked
                                       // Update the form state
-                                      if(isChecked){
-                                        setValue('productNumber_print',isChecked)
+                                      if (isChecked) {
+                                        setValue('productNumber_print', isChecked)
                                       }
-                                      field.onChange(isChecked);
+                                      field.onChange(isChecked)
                                     }}
                                     role='button'
                                   />
@@ -1660,13 +1662,13 @@ function ProductModal({
                                     checked={field.value}
                                     name='productNumber_aggregation'
                                     color='primary'
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
+                                    onChange={e => {
+                                      const isChecked = e.target.checked
                                       // Update the form state
-                                      if(isChecked){
-                                        setValue('productNumber_print',isChecked)
+                                      if (isChecked) {
+                                        setValue('productNumber_print', isChecked)
                                       }
-                                      field.onChange(isChecked);
+                                      field.onChange(isChecked)
                                     }}
                                     role='button'
                                   />

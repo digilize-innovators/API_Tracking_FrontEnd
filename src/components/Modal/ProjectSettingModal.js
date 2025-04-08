@@ -145,7 +145,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         try {
             setIsLoading(true);
             console.log("Product Setting Line ", projectSettingData.lineId)
-            const res = await api(`/printLineSetting/${projectSettingData.lineId}`, {}, 'get', true, true, ip);
+            const res = await api(`/printLineSetting/${projectSettingData.lineId}?limit=-1`, {}, 'get', true, true, ip);
             if (res.data.success && res.data.data) {
                 setEditId(res.data.data.id);
                 setSettingData({

@@ -61,7 +61,7 @@ const PrintingCategoryModal = ({ open, onClose, editData, handleSubmitForm }) =>
               <CustomTextField
                 name='printerCategoryID'
                 disabled={editData?.id ? true : false}
-                label='Printer Category'
+                label='Printer Category Id'
                 control={control}
               />
             </Grid2>
