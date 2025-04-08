@@ -11,7 +11,7 @@ export const validateToken = (context, screenName) => {
   if (!token) {
     return {
       redirect: {
-        destination: '/pages/login',
+        destination: '/login',
         permanent: false,
       },
     };
@@ -44,7 +44,7 @@ export const validateToken = (context, screenName) => {
     if (error.name === 'TokenExpiredError') {
       return {
         redirect: {
-          destination: '/pages/login',
+          destination: '/login',
           permanent: false,
         },
       };

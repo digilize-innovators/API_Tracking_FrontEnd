@@ -37,7 +37,7 @@ export async function getServerSideProps(context) {
       console.log('Token expired')
       return {
         redirect: {
-          destination: '/pages/login',
+          destination: '/login',
           permanent: false
         }
       }
@@ -46,7 +46,7 @@ export async function getServerSideProps(context) {
   if (!token) {
     return {
       redirect: {
-        destination: '/pages/login',
+        destination: '/login',
         permanent: false,
       },
     };

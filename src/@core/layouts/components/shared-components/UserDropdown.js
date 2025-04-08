@@ -149,7 +149,7 @@ const UserDropdown = () => {
           </Box>
         </MenuItem> */}
         <Divider />
-        <MenuItem sx={{ py: 2 }} onClick={() => handleLogout('/pages/login')}>
+        <MenuItem sx={{ py: 2 }} onClick={() => handleLogout('/login')}>
           <LogoutVariant
             sx={{
               marginRight: 2,
