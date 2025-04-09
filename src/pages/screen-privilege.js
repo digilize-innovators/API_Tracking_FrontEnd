@@ -1,22 +1,22 @@
 'use-client'
 import React, { useState, useEffect } from 'react'
-import { 
-      Grid2,
-      Typography,
-      Button,
-      Box,
-      FormControl,
-      TextField,
-      Autocomplete,
-      Checkbox,
-      TableContainer,
-      Table,
-      TableHead,
-      TableBody,
-      TableRow,
-      TableCell,
-      Paper
-      } from '@mui/material'
+import {
+  Grid2,
+  Typography,
+  Button,
+  Box,
+  FormControl,
+  TextField,
+  Autocomplete,
+  Checkbox,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Paper
+} from '@mui/material'
 import Head from 'next/head'
 import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
@@ -197,7 +197,7 @@ const Index = () => {
     console.log('Selected Value:', newValue)
     if (newValue) {
       setFilteredDepartments(
-        departments.filter(dept => dept.department.toLowerCase().includes(newValue.department.toLowerCase()))
+        departments.filter(dept => dept.department.toLowerCase()===newValue.department.toLowerCase())
       )
       setSelectedDeptValue(newValue)
     } else {
@@ -267,7 +267,7 @@ const Index = () => {
                   <Table aria-label='checkbox table'>
                     <TableHead>
                       <TableRow>
-                      <TableCell
+                        <TableCell
                           style={{
                             borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
                             position: 'sticky',
@@ -298,24 +298,33 @@ const Index = () => {
                         <TableCell
                           style={{
                             borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            
+                            backgroundColor: 'white',
                             height: '56px',
                             padding: '8px'
                           }}
                         ></TableCell>
-                        {filteredDepartments?.map((dept, rowIndex) => (
-                          <TableCell
-                            key={`dept-${rowIndex + 1}`}
-                            colSpan={dept.designations.length}
-                            align='center'
-                            style={{
-                              borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                              height: '56px',
-                              padding: '8px'
-                            }}
-                          >
-                            {dept.department}
-                          </TableCell>
-                        ))}
+                        {filteredDepartments?.map(({ department, designations }, rowIndex) => {
+                          // console.log()
+                          if(!designations.length) return null
+                          return (  
+                            <TableCell
+                              key={`dept-${rowIndex + 1}`}
+                              colSpan={designations.length}
+                              align='center'
+                              style={{
+                                backgroundColor: 'white',
+                                borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                                borderLeft: '1px solid rgba(224, 224, 224, 1)',
+                                borderRight: '1px solid rgba(224, 224, 224, 1)',
+                                height: 56,
+                                p: 1
+                              }}
+                            >
+                              {department}
+                            </TableCell>
+                          )
+                        })}
                       </TableRow>
                       <TableRow>
                         <TableCell
@@ -335,6 +344,8 @@ const Index = () => {
                         <TableCell
                           style={{
                             borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            borderTop: '0.5px solid rgba(224, 224, 224, 1)',
+                            
                             position: 'sticky',
                             left: '50px',
                             zIndex: 3,
@@ -349,6 +360,7 @@ const Index = () => {
                         <TableCell
                           style={{
                             borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            borderTop: '0.5px solid rgba(224, 224, 224, 1)',
                             height: '56px',
                             padding: '8px'
                           }}
@@ -359,9 +371,10 @@ const Index = () => {
                               key={`${rowIndex}-${colIndex}`}
                               align='center'
                               style={{
-                                borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                                border: '1px solid rgba(224, 224, 224, 1)',
                                 height: '56px',
-                                padding: '8px'
+                                padding: '8px',
+                                minWidth: 170
                               }}
                             >
                               {designation.designation_name}
@@ -376,6 +389,8 @@ const Index = () => {
                           <TableCell
                             style={{
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                              borderTop: '1px solid rgba(224, 224, 224, 1)',
+                              
                               position: 'sticky',
                               left: 0,
                               zIndex: 2,
@@ -412,6 +427,7 @@ const Index = () => {
                           <TableCell
                             style={{
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                              borderTop: '1px solid rgba(224, 224, 224, 1)',
                               height: '56px',
                               padding: '8px'
                             }}

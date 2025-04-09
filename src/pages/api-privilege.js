@@ -2,13 +2,24 @@
 import React, { useState, useEffect } from 'react'
 import Checkbox from '@mui/material/Checkbox'
 import TableContainer from '@mui/material/TableContainer'
-import Table from '@mui/material/Table'
-import TableHead from '@mui/material/TableHead'
-import TableBody from '@mui/material/TableBody'
-import TableRow from '@mui/material/TableRow'
-import TableCell from '@mui/material/TableCell'
 import Paper from '@mui/material/Paper'
-import { Grid2, Typography, Box, Button, FormControl, TextField, Autocomplete } from '@mui/material'
+import {
+  Grid2,
+  Typography,
+  Button,
+  Box,
+  FormControl,
+  TextField,
+  Autocomplete,
+  Checkbox,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Paper
+} from '@mui/material'
 import Head from 'next/head'
 import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
@@ -16,44 +27,44 @@ import SnackbarAlert from 'src/components/SnackbarAlert'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import Cookies from 'js-cookie'
-import { validateToken } from 'src/utils/ValidateToken';
+import { validateToken } from 'src/utils/ValidateToken'
 import { useSettings } from 'src/@core/hooks/useSettings'
 
 const Index = () => {
-  const [checkboxes, setCheckboxes] = useState([]);
-  const [allCheckboxes, setAllCheckboxes] = useState([]);
-  const [filteredDepartments, setFilteredDepartments] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const { setIsLoading } = useLoading();
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' });
-  const [selectedApiName, setSelectedApiName] = useState(null);
-  const [selectedDeptValue, setSelectedDeptValue] = useState(null);
-  const { removeAuthToken } = useAuth();
-  const { settings } = useSettings();
+  const [checkboxes, setCheckboxes] = useState([])
+  const [allCheckboxes, setAllCheckboxes] = useState([])
+  const [filteredDepartments, setFilteredDepartments] = useState([])
+  const [departments, setDepartments] = useState([])
+  const { setIsLoading } = useLoading()
+  const [openSnackbar, setOpenSnackbar] = useState(false)
+  const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' })
+  const [selectedApiName, setSelectedApiName] = useState(null)
+  const [selectedDeptValue, setSelectedDeptValue] = useState(null)
+  const { removeAuthToken } = useAuth()
+  const { settings } = useSettings()
 
-  const router = useRouter();
+  const router = useRouter()
   useEffect(() => {
     getDesignationDepartmentWise()
     getAPIPrivilige()
-    return () => { }
+    return () => {}
   }, [])
   const getDesignationDepartmentWise = async () => {
     try {
       setIsLoading(true)
       const res = await api('/designation/designationByDeps/', {}, 'get', true)
       if (res.data.success) {
-        setDepartments(res.data.data.departments);
-        setFilteredDepartments(res.data.data.departments);
+        setDepartments(res.data.data.departments)
+        setFilteredDepartments(res.data.data.departments)
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       } else {
-        console.log('Error: Unexpected response', res.data);
+        console.log('Error: Unexpected response', res.data)
       }
       setIsLoading(false)
       console.log('All deps ', res.data.data)
@@ -66,13 +77,13 @@ const Index = () => {
       setIsLoading(true)
       const res = await api('/feature/api-access/', {}, 'get', true)
       if (res.data.success) {
-        setCheckboxes(res.data.data);
-        setAllCheckboxes(res.data.data);
+        setCheckboxes(res.data.data)
+        setAllCheckboxes(res.data.data)
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       } else {
-        console.log('Error: Unexpected response', res.data);
+        console.log('Error: Unexpected response', res.data)
       }
       setIsLoading(false)
       console.log('All api-access ', res.data)
@@ -111,22 +122,22 @@ const Index = () => {
   }
   const saveChanges = async apiIdsByDesignation => {
     try {
-      const token = Cookies.get('token');
-      const decodedToken = jwtDecode(token);
-      const config = decodedToken.config.audit_logs;
-      let audit_log;
+      const token = Cookies.get('token')
+      const decodedToken = jwtDecode(token)
+      const config = decodedToken.config.audit_logs
+      let audit_log
       if (config === true) {
         audit_log = {
-          "audit_log": true,
-          "performed_action": "edit",
-          "remarks": `API privilege updated`,
-        };
+          audit_log: true,
+          performed_action: 'edit',
+          remarks: `API privilege updated`
+        }
       } else {
         audit_log = {
-          "audit_log": false,
-          "performed_action": "none",
-          "remarks": `none`,
-        };
+          audit_log: false,
+          performed_action: 'none',
+          remarks: `none`
+        }
       }
       setIsLoading(true)
       const res = await api('/feature/api-access/', { audit_log, apiIdsByDesignation }, 'put', true)
@@ -134,10 +145,10 @@ const Index = () => {
         setOpenSnackbar(true)
         setAlertData({ ...alertData, type: 'success', message: 'API feature updated successfully' })
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       } else {
-        console.log('Error: Unexpected response', res.data);
+        console.log('Error: Unexpected response', res.data)
       }
       setIsLoading(false)
       console.log('All apis ', res.data)
@@ -160,33 +171,35 @@ const Index = () => {
     setOpenSnackbar(false)
   }
   const handleResetFilter = () => {
-    setSelectedDeptValue(null);
-    setSelectedApiName(null);
-    setCheckboxes(allCheckboxes);
-    setFilteredDepartments(departments);
+    setSelectedDeptValue(null)
+    setSelectedApiName(null)
+    setCheckboxes(allCheckboxes)
+    setFilteredDepartments(departments)
   }
   const handleApiName = (event, newValue) => {
-    console.log('Selected Value:', newValue);
+    console.log('Selected Value:', newValue)
     if (newValue) {
       setCheckboxes(
-        allCheckboxes.filter(checkboxRow => checkboxRow.apiName.toLowerCase().includes(newValue?.apiName?.toLowerCase()))
-      );
-      setSelectedApiName(newValue);
+        allCheckboxes.filter(checkboxRow =>
+          checkboxRow.apiName.toLowerCase().includes(newValue?.apiName?.toLowerCase())
+        )
+      )
+      setSelectedApiName(newValue)
     } else {
-      handleResetFilter();
+      handleResetFilter()
     }
-  };
+  }
   const handleDeptChange = (event, newValue) => {
-    console.log('Selected Value:', newValue);
+    console.log('Selected Value:', newValue)
     if (newValue) {
       setFilteredDepartments(
-        departments.filter(dept => dept.department.toLowerCase().includes(newValue?.department?.toLowerCase()))
+        departments.filter(dept => dept.department.toLowerCase()==newValue?.department?.toLowerCase())
       )
-      setSelectedDeptValue(newValue);
+      setSelectedDeptValue(newValue)
     } else {
-      handleResetFilter();
+      handleResetFilter()
     }
-  };
+  }
   return (
     <Box padding={4}>
       <Head>
@@ -206,36 +219,26 @@ const Index = () => {
                 <Box className='mx-2 w-25'>
                   <FormControl className='w-100 mx-3 my-3'>
                     <Autocomplete
-                      id="tags-standard"
+                      id='tags-standard'
                       options={departments}
-                      getOptionLabel={(dept) => dept.department}
+                      getOptionLabel={dept => dept.department}
                       value={selectedDeptValue}
                       onChange={handleDeptChange}
                       placeholder='Search Department'
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Search Department"
-                        />
-                      )}
+                      renderInput={params => <TextField {...params} label='Search Department' />}
                     />
                   </FormControl>
                 </Box>
                 <Box className='mx-2 w-25'>
                   <FormControl className='w-100 mx-3 my-3'>
                     <Autocomplete
-                      id="tags-standard"
+                      id='tags-standard'
                       options={allCheckboxes}
-                      getOptionLabel={(item) => item.apiName}
+                      getOptionLabel={item => item.apiName}
                       value={selectedApiName}
                       onChange={handleApiName}
                       placeholder='Search API'
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Search API"
-                        />
-                      )}
+                      renderInput={params => <TextField {...params} label='Search API' />}
                     />
                   </FormControl>
                 </Box>
@@ -265,31 +268,100 @@ const Index = () => {
                   <Table aria-label='checkbox table'>
                     <TableHead>
                       <TableRow>
-                        <TableCell style={{ borderBottom: '1px solid #fff' }}></TableCell>
-                        <TableCell style={{ borderBottom: '1px solid #fff' }}></TableCell>
-                        <TableCell style={{ borderBottom: '1px solid #fff' }}></TableCell>
-                        {filteredDepartments?.map((dept, rowIndex) => (
-                          <TableCell
-                            key={`dept-${rowIndex + 1}`}
-                            colSpan={dept.designations.length}
-                            align='center'
-                            style={{
-                              borderBottom: '1px solid rgba(224, 224, 224, 1)'
-                            }}
-                          >
-                            {dept.department}
-                          </TableCell>
-                        ))}
+                        <TableCell
+                          style={{
+                            borderBottom: '1px solid #fff',
+                            position: 'sticky',
+                            left: 0,
+                            zIndex: 3,
+                            backgroundColor: 'white',
+                            width: '50px',
+                            minWidth: '50px',
+                            maxWidth: '50px',
+                            height: '56px', // Fixed height for consistent sizing
+                            padding: '8px' // Consistent padding
+                          }}
+                        ></TableCell>
+                        <TableCell
+                          style={{
+                            borderBottom: '1px solid #fff',
+                            borderLeft: '1px solid #fff',
+                            position: 'sticky',
+                            left: '50px',
+                            zIndex: 3,
+                            backgroundColor: 'white',
+                            width: '200px',
+                            minWidth: '200px',
+                            maxWidth: '200px',
+                            height: '56px',
+                            padding: '8px'
+                          }}
+                        ></TableCell>
+                        <TableCell
+                          style={{
+                            borderBottom: '1px solid #fff',
+                            height: '56px',
+                            padding: '8px'
+                          }}
+                        ></TableCell>
+                        {filteredDepartments?.map(({ department, designations }, rowIndex) => {
+                          if (!designations.length) return null
+
+                          return (
+                            <TableCell
+                              key={`dept-${rowIndex + 1}`}
+                              colSpan={designations.length}
+                              align='center'
+                              sx={{
+                                borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                                borderLeft: '1px solid rgba(224, 224, 224, 1)',
+                                borderRight: '1px solid rgba(224, 224, 224, 1)',
+
+                                
+                                height: 56,
+                                p: 1,
+                              }}
+                            >
+                              {department}
+                            </TableCell>
+                          )
+                        })}
                       </TableRow>
                       <TableRow>
                         <TableCell
-                          style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}
+                          style={{
+                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            position: 'sticky',
+                            left: 0,
+                            zIndex: 3,
+                            backgroundColor: 'white',
+                            width: '50px',
+                            minWidth: '50px',
+                            maxWidth: '50px',
+                            height: '56px',
+                            padding: '8px'
+                          }}
                         ></TableCell>
                         <TableCell
-                          style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}
+                          style={{
+                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            position: 'sticky',
+                            left: '50px',
+                            zIndex: 3,
+                            backgroundColor: 'white',
+                            width: '200px',
+                            minWidth: '200px',
+                            maxWidth: '200px',
+                            height: '56px',
+                            padding: '8px'
+                          }}
                         ></TableCell>
                         <TableCell
-                          style={{ borderBottom: '0.5px solid rgba(224, 224, 224, 1)' }}
+                          style={{
+                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            height: '56px',
+                            padding: '8px'
+                          }}
                         ></TableCell>
                         {filteredDepartments?.map((dept, rowIndex) =>
                           dept.designations.map((designation, colIndex) => (
@@ -297,7 +369,11 @@ const Index = () => {
                               key={`${rowIndex}-${colIndex}`}
                               align='center'
                               style={{
-                                borderBottom: '1px solid rgba(224, 224, 224, 1)'
+                                border: '1px solid rgba(224, 224, 224, 1)',
+                                
+                                height: '56px',
+                                padding: '8px',
+                                minWidth: 170,
                               }}
                             >
                               {designation.designation_name}
@@ -311,44 +387,72 @@ const Index = () => {
                         <TableRow key={`row-${index + 1}`}>
                           <TableCell
                             style={{
-                              borderBottom: '1px solid rgba(224, 224, 224, 1)'
+                              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                              position: 'sticky',
+                              left: 0,
+                              zIndex: 2,
+                              backgroundColor: 'white',
+                              width: '50px',
+                              minWidth: '50px',
+                              maxWidth: '50px',
+                              height: '56px',
+                              padding: '8px'
                             }}
                           ></TableCell>
                           <TableCell
                             style={{
                               fontWeight: '600',
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                              borderTop: '1px solid rgba(224, 224, 224, 1)',
+                              borderTop: index === 0 ? '1px solid rgba(224, 224, 224, 1)' : 'none',
                               position: 'sticky',
-                              left: 0, // Make the first column sticky on the left
-                              top: '80px',
+                              left: '50px',
                               zIndex: 2,
+                              backgroundColor: 'white',
+                              width: '250px',
+                              minWidth: '250px',
+                              maxWidth: '250px',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              // textAlign:'center',
+                              height: '56px',
+                              padding: '8px',
+                              verticalAlign: 'middle' // Center content vertically
                             }}
-                            colSpan={2}
                           >
                             {checkboxRow.apiName}
                           </TableCell>
+                          <TableCell
+                            style={{
+                              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                              height: '56px',
+                              padding: '8px'
+                            }}
+                          ></TableCell>
                           {checkboxRow.checkboxes.map((checkbox, colIndex) => {
                             const shouldDisplay =
-                              selectedDeptValue === null || selectedDeptValue?.department_id == checkbox.department_id;
+                              selectedDeptValue === null || selectedDeptValue?.department_id == checkbox.department_id
                             return (
                               shouldDisplay && (
                                 <TableCell
                                   key={`${index}-${colIndex}`}
                                   align='center'
-                                  style={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+                                  style={{
+                                    borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                                    height: '56px',
+                                    padding: '8px',
+                                    verticalAlign: 'middle'
+                                  }}
                                 >
                                   <Checkbox
                                     inputProps={{ 'data-testid': `${checkboxRow.apiName}-${checkbox.designation_id}` }}
-                                    // dataTestId={`${checkboxRow.apiName}-${checkbox.designation_id}`}
                                     checked={checkbox.checked}
                                     onChange={() => handleCheckboxChange(index, colIndex)}
                                   />
                                 </TableCell>
                               )
                             )
-                          }
-                          )}
+                          })}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -366,6 +470,6 @@ const Index = () => {
   )
 }
 export async function getServerSideProps(context) {
-  return validateToken(context, "API Privilege")
+  return validateToken(context, 'API Privilege')
 }
-export default ProtectedRoute(Index);
+export default ProtectedRoute(Index)
