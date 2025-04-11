@@ -427,7 +427,7 @@ const Index = () => {
       profile_photo,
     } = item;
 
-    if (profile_photo && profile_photo !== '/images/avatars/1.png') {
+    if (profile_photo.trim()!=='' && profile_photo !== '/images/avatars/1.png') {
       convertImageToBase64(profile_photo);
     } else {
       setProfilePhoto('/images/avatars/1.png');

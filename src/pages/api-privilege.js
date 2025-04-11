@@ -1,8 +1,5 @@
 'use-client'
 import React, { useState, useEffect } from 'react'
-import Checkbox from '@mui/material/Checkbox'
-import TableContainer from '@mui/material/TableContainer'
-import Paper from '@mui/material/Paper'
 import {
   Grid2,
   Typography,

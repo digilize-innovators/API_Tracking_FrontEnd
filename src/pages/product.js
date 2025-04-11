@@ -1,9 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react'
-import Box from '@mui/material/Box'
-import Grid2 from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
-import { Button, TableContainer, Paper } from '@mui/material'
+import { Button, TableContainer, Paper,Box,Grid2,Typography} from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import TableProduct from 'src/views/tables/TableProduct'
 import { api } from 'src/utils/Rest-API'
@@ -416,6 +413,8 @@ const Index = () => {
     }
   }
   const handleUpdate = item => {
+    console.log("fgufg",item);
+    
     resetForm()
     setOpenModal(true)
     setEditData(item)
@@ -423,8 +422,11 @@ const Index = () => {
     if (config?.config?.esign_status) {
       setESignStatusId(item.id)
     }
+
+    const img =item.product_image.split(BaseUrl)
     const defaultImage = '/images/avatars/p.png'
-    if (item.product_image && item.product_image !== defaultImage) {
+    console.log("Image Name is ",img)
+    if (img[img?.length-1]!=='/' &&img[img?.length-1] !== defaultImage) {
       convertImageToBase64(item.product_image, setProductImage)
     } else {
       setProductImage(defaultImage)

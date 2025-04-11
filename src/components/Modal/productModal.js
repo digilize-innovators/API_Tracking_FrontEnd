@@ -33,6 +33,7 @@ import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useRouter } from 'next/router'
 import { useAuth } from 'src/Context/AuthContext'
+import { BaseUrl } from 'constants'
 
 const validationSchema = yup.object().shape({
   productId: yup
@@ -458,7 +459,7 @@ function ProductModal({
   const getCompanies = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/company/', {}, 'get', true)
+      const res = await api('/company?limit=-1', {}, 'get', true)
       setIsLoading(false)
       console.log('All companies ', res?.data?.data)
       if (res.data.success) {
@@ -480,7 +481,7 @@ function ProductModal({
   const getCountries = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/country-master/', {}, 'get', true)
+      const res = await api('/country-master?limit=-1', {}, 'get', true)
       setIsLoading(false)
       console.log('All country master : ', res?.data?.data)
       if (res.data.success) {
@@ -501,6 +502,7 @@ function ProductModal({
 
   useEffect(() => {
     if (editData) {
+      console.log('UOF 3 :', editData?.thirdLayer_unit_of_measurement)
       reset({
         productId: editData?.product_id || '',
         productName: editData?.product_name || '',
@@ -691,10 +693,9 @@ function ProductModal({
                     color='error'
                     variant='outlined'
                     onClick={async () => {
-                      if (editData?.id) {
-                        await convertImageToBase64(editData?.product_image, setProductImage)
-                        setValue('productImage', productImage)
-                      } else {
+                      const img = editData.product_image.split(BaseUrl)
+                      console.log(editData?.id, editData?.product_image != '/images/avatars/p.png')
+                      if (img[img?.length-1]!=='/' && editData?.id && editData?.product_image != '/images/avatars/p.png') {
                         setProductImage('/images/avatars/p.png')
                         setValue('productImage', '/images/avatars/p.png') // Clear form value
                       }

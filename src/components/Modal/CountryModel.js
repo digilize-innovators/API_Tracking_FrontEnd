@@ -176,7 +176,7 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
 
   const resetForm = () => {
     setCodeStructure([])
-    setCrmURL({ value:'', checked: false })
+    setCrmURL({ ...crmURL, checked: false })
     setCountry('')
     const updatedData = urlMakerData.map(el => {
       return {
