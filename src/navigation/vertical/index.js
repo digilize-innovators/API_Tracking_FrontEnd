@@ -8,11 +8,15 @@ import {
   MdOutlineFormatAlignCenter,
   MdOutlineLocalFireDepartment,
   MdCloudUpload,
+  MdShoppingCart,
   MdDashboard,
   MdOutlineAddHome,
   MdFactory,
-  MdSettingsOverscan
+  MdSettingsOverscan,
+  MdListAlt,
+
 } from 'react-icons/md'
+
 import { AiOutlineProduct, AiOutlineAudit } from 'react-icons/ai'
 import { IoLocationOutline } from 'react-icons/io5'
 import { FaChartArea, } from 'react-icons/fa'
@@ -199,7 +203,12 @@ const navigation = () => {
       mainTitle: false
     },
   ]
-
+  const salesScreens=[{
+    title: 'Purchase Order',
+    icon: MdShoppingCart,
+    path: '/purchase-order',
+    mainTitle: false
+  },]
   const configurationScreen = [
     {
       title: 'SuperAdmin Configuration',
@@ -257,6 +266,7 @@ const navigation = () => {
 
   const filteredDashboardScreen = dashboardScreen.filter(item => screens.includes(item.title))
   const filteredPrinterScreen = printerScreens.filter(item => screens.includes(item.title))
+  const filterSalesScreen =salesScreens.filter(item => screens.includes(item.title))
   const drawerArray = [
     {
       title: 'Home Screen',
@@ -279,6 +289,7 @@ const navigation = () => {
       path: '/master',
       subPages: filteredMasterScreens
     },
+    
 
     {
       title: 'Printer Configurations',
@@ -293,6 +304,13 @@ const navigation = () => {
       mainTitle: true,
       path: '/master',
       subPages: filteredProductionScreens
+    },
+    {
+      title: 'Sales Order ',
+      icon: MdListAlt,
+      mainTitle: true,
+      path: '/master',
+      subPages: filterSalesScreen
     },
     {
       title: 'Audit Logs',

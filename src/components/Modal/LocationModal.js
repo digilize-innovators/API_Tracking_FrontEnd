@@ -5,6 +5,7 @@ import { style } from 'src/configs/generalConfig';
 import { useEffect } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import CustomDropdown from '../CustomDropdown';
 
 
 const locationSchema = yup.object().shape({
@@ -28,18 +29,24 @@ const locationSchema = yup.object().shape({
 
   mfgName: yup
     .string()
-    .max(255, 'Mfg name length should be less than 255')
-    .matches(/^[a-zA-Z0-9]+\s*$/, 'Mfg name cannot contain any special symbols')
-    .required("Mfg Name can't be empty"),
+    .max(255, 'Mfg name length should be less than 255'),
 
   address: yup
     .string()
     .max(150, 'Address length should be less than 151')
-    .required("Address can't be empty"),
 });
 
 const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
-   
+
+  const locationData=[
+   {id: 'PLANT', value: 'PLANT', label: 'plant'},
+   {id: 'CFA', value: 'CFA', label: 'CFA'} ,
+   {id: 'DISTRIBUTOR', value: 'DISTRIBUTOR', label: 'Distributor'},
+   {id: 'DEALER', value: 'DEALER', label: 'Deales'},
+   {id: 'VENDOR', value: 'VENDOR', label: 'Vendor'},
+   {id: 'WAREHOUSE', value: 'WAREHOUSE', label: 'WareHouse'},
+   {id: 'CUSTOMER', value: 'CUSTOMER', label: 'Customer'}
+  ]
     
   const {
     handleSubmit,
@@ -50,6 +57,7 @@ const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
     resolver:yupResolver(locationSchema),
     defaultValues: {
       locationId: editData?.location_id || '',
+      locationType:editData?.location_type||'',
       locationName: editData?.location_name || '',
       mfgLicenceNo: editData?.mfg_licence_no || '', 
       mfgName: editData?.mfg_name || '',
@@ -60,6 +68,7 @@ const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
     if (editData) {
       reset({
         locationId: editData?.location_id || '',
+        locationType:editData?.location_type||'',
         locationName: editData?.location_name || '',
         mfgLicenceNo: editData?.mfg_licence_no || '', 
         mfgName: editData?.mfg_name || '',
@@ -86,30 +95,43 @@ const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
               />
             </Grid2>
             <Grid2 size={6}>
-              <CustomTextField
+              <CustomDropdown
+                              name='locationType'
+                              label='location type'
+                              control={control}
+                              options={locationData}
+                                />
+              
+            
+            </Grid2>
+          </Grid2>
+
+          <Grid2 container spacing={2}>
+            <Grid2 size={6}>
+            <CustomTextField
                 name='locationName'
                 label='Location Name'
                 control={control}
               />
+             
             </Grid2>
-          </Grid2>
-
-          <Grid2 container spacing={2}>
             <Grid2 size={6}>
-              <CustomTextField
+            <CustomTextField
                 name='mfgLicenceNo'
                 label='Mfg Licence No.'
                 control={control}
               />
-            </Grid2>
-            <Grid2 size={6}>
-            <CustomTextField name='mfgName' label='Mfg Name' control={control} />
+            
             </Grid2>
           </Grid2>
 
           <Grid2 container spacing={2}>
             <Grid2 size={6}>
-              <CustomTextField name='address' label='Address' control={control} />
+            <CustomTextField name='mfgName' label='Mfg Name' control={control} />
+            
+            </Grid2>
+            <Grid2 size={6}>
+            <CustomTextField name='address' label='Address' control={control} />
             </Grid2>
           </Grid2>
 
