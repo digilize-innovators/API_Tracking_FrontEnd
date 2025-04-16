@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Box, Grid2, Typography, Button, TableContainer, Paper } from '@mui/material'
+import { Box, Grid2, Typography, Button, TableContainer, Paper, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -17,12 +17,11 @@ import { getTokenValues } from 'src/utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import { validateToken } from 'src/utils/ValidateToken'
-import PurchaseOrderModel from 'src/components/Modal/PurchaseOrderModel'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import downloadPdf from 'src/utils/DownloadPdf'
-import TablePurchaseOrder from 'src/views/tables/TablePurchaseOrder'
-
+import SalesOrderModel from 'src/components/Modal/SalesOrderModel'
+import TableSaleOrder from 'src/views/tables/TableSaleOrder'
 const Index = () => {
   const router = useRouter()
   const { settings } = useSettings()
@@ -30,7 +29,7 @@ const Index = () => {
   const [pendingAction, setPendingAction] = useState(null)
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [purchaseOrder, setPurchaseOrder] = useState([])
+  const [saleOrder,setSaleOrder] = useState([])
   const { setIsLoading } = useLoading()
   const [editData, setEditData] = useState({})
   const [userDataPdf, setUserDataPdf] = useState()
@@ -44,8 +43,10 @@ const Index = () => {
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [formData, setFormData] = useState({})
   const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''})
+  const [orderType,setOrderType]=useState('')
+  const [orderTypeFilter,setOrderTypeFilter]=useState('')
 
-  const apiAccess = useApiAccess('purchase-order-create', 'purchase-order-update','purchase-order-approve')
+  const apiAccess = useApiAccess('sales-order-create', 'sales-order-update','sales-order-approve')
   console.log("apiAccess",apiAccess)
 
   useLayoutEffect(() => {
@@ -59,11 +60,11 @@ const Index = () => {
   useEffect(() => {
       const handleUserAction = async () => {
         if (formData && pendingAction) {
-          const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
+          const esign_status = config?.config?.esign_status ? "pending" : "approved";
           if (pendingAction === "edit") {
-            await editPurchaseOrder(esign_status); 
+            await editSaleOrder(esign_status); 
           } else if (pendingAction === "add") {
-            await addPurchaseOrder(esign_status);  
+            await addSaleOrder(esign_status);  
           }
           setPendingAction(null);
         }
@@ -72,21 +73,21 @@ const Index = () => {
     }, [formData, pendingAction]);
   
 
-  console.log(purchaseOrder)
-  const tableBody = purchaseOrder.map((item, index) => [
+  const tableBody = saleOrder?.map((item, index) => [
     index + 1,
+    item.type,
     item.orderNo,
-    item.pofl.location_name,
-    item.potl.location_name,
+    item.sfl.location_name,
+    item.stl.location_name,
     item.esign_status || 'N/A'
   ])
 
   const tableData = useMemo(
     () => ({
-      tableHeader: ['Sr.No.', 'Order No', 'From', 'To',  'E-Sign'],
-      tableHeaderText: 'Purchase Order Report',
-      tableBodyText: 'Purchase Order Data',
-      filename: 'PurchaseOrder'
+      tableHeader: ['Sr.No.','Order Type', 'Order No', 'From', 'To',  'E-Sign'],
+      tableHeaderText: 'Sale Order Report',
+      tableBodyText: 'Sale  Order Data',
+      filename: 'saleOrder'
     }),[])
 
   const closeSnackbar = () => {
@@ -94,9 +95,9 @@ const Index = () => {
   }
   const handleOpenModal = () => {
     setApproveAPI({
-      approveAPIName: 'purchase-order-create',
+      approveAPIName: 'sales-order-create',
       approveAPImethod: 'POST',
-      approveAPIEndPoint: '/api/v1/purchase-order'
+      approveAPIEndPoint: '/api/v1/sales-order'
     })
     setEditData({})
     setFormData({})
@@ -118,15 +119,15 @@ const Index = () => {
     setFormData(data)
     if (editData?.orderNo) {
       setApproveAPI({
-        approveAPIName: 'purchase-order-update',
+        approveAPIName: 'sales-order-update',
         approveAPImethod: 'PUT',
-        approveAPIEndPoint: '/api/v1/purchase-order'
+        approveAPIEndPoint: '/api/v1/sales-order'
       })
     } else {
       setApproveAPI({
-        approveAPIName: 'purchase-order-create',
+        approveAPIName: 'sales-order-create',
         approveAPImethod: 'POST',
-        approveAPIEndPoint: '/api/v1/purchase-order'
+        approveAPIEndPoint: '/api/v1/sales-order'
       })
     }
     if (config?.config?.esign_status && config?.role !== 'admin') {
@@ -134,6 +135,9 @@ const Index = () => {
       return
     }
     setPendingAction(editData?.id ? 'edit' : 'add')
+  }
+  const handleOrderTypeChange = (e) => {
+    setOrderTypeFilter(e.target.value);
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
@@ -151,8 +155,9 @@ const Index = () => {
     }
 
     const handleApproverActions = async () => {
+      const remarkText =(orderType==="salesOrder")?'sale order approved ':'sale return approved'
       const data = {
-        modelName: 'purchaseorder',
+        modelName: (orderType==="salesOrder")?'salesorder':'salesreturn',
         esignStatus,
         id: eSignStatusId,
         audit_log: config?.config?.audit_logs
@@ -160,14 +165,14 @@ const Index = () => {
               user_id: user.userId,
               user_name: user.userName,
               performed_action: 'approved',
-              remarks: remarks.length > 0 ? remarks : `purchase order approved - ${auditLogMark}`
+              remarks: remarks.length > 0 ? remarks : `${remarkText} - ${auditLogMark}`
             }
           : {}
       }
       if (esignStatus === 'approved' && esignDownloadPdf) {
         setOpenModalApprove(false)
         console.log('esign is approved for approver')
-        downloadPdf(tableData, tableHeaderData, tableBody, purchaseOrder, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, saleOrder, userDataPdf)
         resetState()
         return
       }
@@ -218,24 +223,26 @@ const Index = () => {
   const handleAuthCheck = async row => {
     console.log('handleAuthCheck', row)
     setApproveAPI({
-      approveAPIName: 'purchase-order-approve',
+      approveAPIName: 'sales-order-approve',
       approveAPImethod: 'PATCH',
-      approveAPIEndPoint: '/api/v1/purchase-order'
+      approveAPIEndPoint: '/api/v1/sales-order'
     })
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.orderNo)
+    setOrderType(row.type)
     console.log('row', row)
   }
-  const addPurchaseOrder = async (esign_status, remarks) => {
+  const addSaleOrder = async (esign_status, remarks) => {
     try {
       console.log('formdata', formData)
       const data = { ...formData }
+      const remarksText = (data.type=='salesOrder')?'Order Sale added':'Order Return added'
       const audit_log = config?.config?.audit_logs
         ? {
             audit_log: true,
             performed_action: 'add',
-            remarks: remarks?.length > 0 ? remarks : `order purchase added - ${formData.orderNo}`
+            remarks: remarks?.length > 0 ? remarks : `${remarksText} - ${formData.orderNo}`
           }
         : {
             audit_log: false,
@@ -246,7 +253,7 @@ const Index = () => {
       data.esign_status = esign_status
       console.log(data)
       setIsLoading(true)
-      const res = await api('/purchase-order/', data, 'post', true)
+      const res = await api('/sales-order/', data, 'post', true)
       console.log('res Add purchase order ', res)
 
       console.log(res, 'res')
@@ -255,7 +262,7 @@ const Index = () => {
       if (res?.data?.success) {
         setOpenModal(false)
         console.log('Add purchase order :-', res?.data)
-        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'purchase order added successfully' })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: ' added successfully' })
         setEditData({})
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
@@ -283,18 +290,20 @@ const Index = () => {
       setIsLoading(false)
     }
   }
-  const editPurchaseOrder = async (esign_status, remarks) => {
+  const editSaleOrder = async (esign_status, remarks) => {
     try {
       const data = { ...formData }
 
       console.log('EDIT FORM DATA :->', data)
       const auditlogRemark = remarks
+      const remarksText = (data.type=='salesOrder')?'Order Sale edited':'Order Return edited'
+
       let audit_log
       if (config?.config?.audit_logs) {
         audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `purchase order edited - ${formData.orderNo}`
+          remarks: auditlogRemark?.length > 0 ? auditlogRemark : ` ${remarksText} - ${formData.orderNo}`
         }
       } else {
         audit_log = {
@@ -306,12 +315,12 @@ const Index = () => {
       data.audit_log = audit_log
       data.esign_status = esign_status
       setIsLoading(true)
-      const res = await api(`/purchase-order/${editData.id}`, data, 'put', true)
+      const res = await api(`/sales-order/${editData.id}`, data, 'put', true)
 
       setIsLoading(false)
       if (res.data.success) {
         setOpenModal(false)
-        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Purchase Order updated successfully' })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'updated successfully' })
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
         if (res.data.code === 401) {
@@ -344,23 +353,24 @@ const Index = () => {
     if (searchRef.current) {
       searchRef.current.resetSearch() // Call the reset method in the child
     }
+    setOrderTypeFilter('')
     setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '' })
   }
 
   const handleAuthModalOpen = () => {
     console.log('OPen auth model')
     setApproveAPI({
-      approveAPIName: 'purchase-order-approve',
+      approveAPIName: 'sales-order-approve',
       approveAPImethod: 'PATCH',
-      approveAPIEndPoint: '/api/v1/purchase-order'
+      approveAPIEndPoint: '/api/v1/sales-order'
     })
     setAuthModalOpen(true)
   }
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: 'purchase-order-create',
+      approveAPIName: 'sales-order-create',
       approveAPImethod: 'POST',
-      approveAPIEndPoint: '/api/v1/purchase-order'
+      approveAPIEndPoint: '/api/v1/sales-order'
     })
     let data = getUserData()
     setUserDataPdf(data)
@@ -370,15 +380,15 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, purchaseOrder, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, saleOrder, userDataPdf)
   }
   return (
     <Box padding={4}>
       <Head>
-        <title>Purchase Order</title>
+        <title>Sales Order</title>
       </Head>
       <Grid2 item xs={12}>
-        <Typography variant='h2'>Purchase Order </Typography>
+        <Typography variant='h2'>Sales Order </Typography>
       </Grid2>
       <Grid2 item xs={12}>
         <Grid2 item xs={12}>
@@ -390,10 +400,28 @@ const Index = () => {
                 </Typography>
               )}
               <Grid2 item xs={12}>
-                <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
+                <Box className='d-flex-row justify-content-start align-items-center mx-4 my-3'>
                   {config?.config?.esign_status && config?.role !== 'admin' && (
                     <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
                   )}
+                  <FormControl className='w-25 mx-2'>
+                  <InputLabel id='Order-Filter-By-OrderType'>Order Type</InputLabel>
+                  <Select
+                    labelId='Order-select-by-OrderType'
+                    id='Order-select-by-OrderType'
+                    value={orderTypeFilter}
+                    label='Order Type'
+                    onChange={handleOrderTypeChange}
+                  >
+              <MenuItem key='salesOrder' value='salesOrder'>
+                Sale Order
+              </MenuItem>
+              <MenuItem key='salesReturn' value='salesReturn'>
+                Sale Return
+              </MenuItem>
+                   
+                  </Select>
+                </FormControl>
                 </Box>
                 <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                   <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
@@ -416,14 +444,15 @@ const Index = () => {
             </Grid2>
             <Grid2 item xs={12}>
               <Typography variant='h4' className='mx-4 mt-3'>
-                Purchase Order Data
+              Sale Order Data
               </Typography>
               <TableContainer component={Paper}>
-                <TablePurchaseOrder
+                <TableSaleOrder
                   handleUpdate={handleUpdate}
                   tableHeaderData={tableHeaderData}
                   pendingAction={pendingAction}
-                  setPurchaseOrder={setPurchaseOrder}
+                  orderTypeFilter={orderTypeFilter}
+                  setSaleOrder={setSaleOrder}
                   apiAccess={apiAccess}
                   handleAuthCheck={handleAuthCheck}
                   config={config}
@@ -434,14 +463,16 @@ const Index = () => {
         </Grid2>
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-      <PurchaseOrderModel
+     
+    
+      <SalesOrderModel
         open={openModal}
         handleClose={handleCloseModal}
         editData={editData}
         handleSubmitForm={handleSubmitForm}
       />
-
-    <AuthModal
+     
+      <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}
         approveAPIName={approveAPI.approveAPIName}
@@ -459,7 +490,7 @@ const Index = () => {
 }
 
 export async function getServerSideProps(context) {
-  return validateToken(context, 'Purchase Order')
+  return validateToken(context, 'Sales Order')
 }
 
 export default ProtectedRoute(Index)

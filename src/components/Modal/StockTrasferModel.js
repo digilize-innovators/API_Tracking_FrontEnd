@@ -12,57 +12,49 @@ import { api } from 'src/utils/Rest-API';
 import { useWatch } from 'react-hook-form';
 
 
-const purchaseSchema = yup.object().shape({
+const StockTrasferSchema = yup.object().shape({
     orderNo: yup.string().required('Order No is required'),
     from: yup.string().required('From location is required'),
     to: yup.string().required('To location is required'),
     addPurchase: yup
-      .array()
-      .of(
-        yup.object().shape({
-          product: yup.mixed().required('Product is required'),
-          batch: yup.mixed().required('Batch is required'),
-          qty: yup
-            .number()
-            .typeError('Quantity must be a number')
-            .required('Quantity is required')
-            .positive('Quantity must be greater than zero'),
-        })
-      )
-      .min(1, 'At least one purchase item is required'),
-  });
+        .array()
+        .of(
+            yup.object().shape({
+                product: yup.mixed().required('Product is required'),
+                batch: yup.mixed().required('Batch is required'),
+                qty: yup
+                    .number()
+                    .typeError('Quantity must be a number')
+                    .required('Quantity is required')
+                    .positive('Quantity must be greater than zero'),
+            })
+        )
+        .min(1, 'At least one purchase item is required'),
+});
 
-const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
+const StockTrasferModel = ({ open, handleClose, editData, handleSubmitForm }) => {
     const { setIsLoading } = useLoading();
-    const [locationFrom, setLocationFrom] = useState([])
-    const [locationTo, setLocationTo] = useState([])
+    const [location, setLocation] = useState([])
     const [productData, setProductData] = useState([])
     const [batchOptionsMap, setBatchOptionsMap] = useState({});
-
-
-
     const {
         handleSubmit,
         control,
         reset,
         formState: { errors },
     } = useForm({
-        resolver: yupResolver(purchaseSchema),
+        resolver: yupResolver(StockTrasferSchema),
         defaultValues: {
-          orderNo:editData.orderNo ||'',
-          from:editData.from|| '',
-          to:editData.to|| '',
-          orders:editData.orders?.length
-          ? editData.orders.map(order => ({
-              productId: order.productId || '',
-              batchId: order.batchId || '',
-              qty: order.qty || '',
-            })): [{ productId: '', batchId: '', qty: '' }],
-        },
-    });
-    const { fields, append, remove } = useFieldArray({
-        control,
-        name: 'orders'
+            orderNo:editData.orderNo ||'',
+            from:editData.from|| '',
+            to:editData.to|| '',
+            orders:editData.orders?.length
+            ? editData.orders.map(order => ({
+                productId: order.productId || '',
+                batchId: order.batchId || '',
+                qty: order.qty || '',
+              })): [{ productId: '', batchId: '', qty: '' }],
+          },
     });
     useEffect(() => {
         if (editData) {
@@ -79,24 +71,29 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
             });
         }
     }, [editData]);
+
+    const { fields, append } = useFieldArray({
+        control,
+        name: 'orders'
+    });
     const watchedProducts = useWatch({
         control,
         name: 'orders'
-      });
-      console.log("watchedProducts",watchedProducts)
-      useEffect(() => {
+    });
+    console.log("watchedProducts", watchedProducts)
+    useEffect(() => {
         watchedProducts?.forEach((purchase, index) => {
             const productId = purchase?.productId;
             console.log(productId)
             if (!productId) return;
-                const existing = batchOptionsMap[index];
-           if (existing && existing.productId === productId) return;
+            const existing = batchOptionsMap[index];
+            if (existing && existing.productId === productId) return;
 
-    
+
             const fetchBatches = async () => {
                 try {
                     const res = await api(`/batch/getbatchesbyproduct/${productId}`, {}, 'get', true);
-                    console.log('batches',res.data.data)
+                    console.log('batches', res.data.data)
                     if (res.data.success) {
                         const options = res.data.data.map(batch => ({
                             id: batch.id,
@@ -108,26 +105,25 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                             [index]: {
                                 productId,
                                 options,
-                              }
+                            }
                         }));
                     }
                 } catch (error) {
                     console.error(`Error fetching batches for product ${productId}`, error);
                 }
             };
-    
+
             fetchBatches();
         });
     }, [watchedProducts]);
-    
 
     useEffect(() => {
         const getLocation = async () => {
             try {
                 setIsLoading(true)
-                const res = await api(`/location/type-purchase`, {}, 'get', true)
+                const res = await api(`/location/type-so-sto `, {}, 'get', true)
                 setIsLoading(false)
-                console.log('All locations vendors', res.data)
+                console.log('All locations ', res.data)
                 if (res.data.success) {
                     console.log(res.data.data)
 
@@ -138,7 +134,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                     }));
                     console.log("Area category in dropdown ", data);
 
-                    setLocationFrom(data);
+                    setLocation(data);
                 } else {
                     console.log('Error to get all designation ', res.data)
                     if (res.data.code === 401) {
@@ -151,35 +147,6 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                 setIsLoading(false)
             }
         }
-        const getuserLocation = async () => {
-            try {
-                setIsLoading(true)
-                const res = await api(`/user/info`, {}, 'get', true)
-                setIsLoading(false)
-                console.log('All locations ', res.data)
-                if (res.data.success) {
-                    console.log(res.data.data.location)
-
-                    setLocationTo([{
-                        id: res.data.data.location.id,
-                        value: res.data.data.location.id,
-                        label: res.data.data.location.location_name
-                    }])
-
-
-                } else {
-                    console.log('Error to get all userLocation ', res.data)
-                    if (res.data.code === 401) {
-                        removeAuthToken()
-                        router.push('/401');
-                    }
-                }
-            } catch (error) {
-                console.log('Error in get userLocation ', error)
-                setIsLoading(false)
-            }
-        }
-
         const getAllProducts = async () => {
             try {
                 setIsLoading(true);
@@ -207,16 +174,15 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
             }
         }
         getAllProducts()
-        getuserLocation()
         getLocation()
 
     }, [])
 
     return (
-        <Modal open={open} onClose={handleClose} aria-labelledby='Purchase'>
+        <Modal open={open} onClose={handleClose} aria-labelledby='StockTranfer'>
             <Box sx={style}>
                 <Typography variant='h4' className='my-2'>
-                    {editData?.orderNo ? 'Edit Purchase Order' : 'Add Purchase Order'}
+                    {editData?.orderNo ? 'Edit Stock Transfer Order' : 'Add Stock Transfer Order'}
                 </Typography>
 
                 <form onSubmit={handleSubmit(handleSubmitForm)}>
@@ -234,7 +200,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                                 name='from'
                                 label='From'
                                 control={control}
-                                options={locationFrom}
+                                options={location}
                                 Grid2
                             />
 
@@ -245,7 +211,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                                 name='to'
                                 label='To'
                                 control={control}
-                                options={locationTo}
+                                options={location}
                             />
 
 
@@ -263,32 +229,32 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                         </Grid2>
 
                         {fields.map((field, index) => (
-    <Grid2 container spacing={2} key={field.id}>
-        <Grid2 size={4}>
-            <CustomDropdown
-                name={`orders.${index}.productId`}
-                label="Product"
-                control={control}
-                options={productData}
-            />
-        </Grid2>
-        <Grid2 size={4}>
-            <CustomDropdown
-                name={`orders.${index}.batchId`}
-                label="batch"
-                control={control}
-                options={batchOptionsMap[index]?.options || []}
-            />
-        </Grid2>
-        <Grid2 size={4}>
-            <CustomTextField
-                name={`orders.${index}.qty`}
-                label="Quantity"
-                control={control}
-            />
-        </Grid2>
-    </Grid2>
-))}
+                            <Grid2 container spacing={2} key={field.id}>
+                                <Grid2 size={4}>
+                                    <CustomDropdown
+                                        name={`orders.${index}.productId`}
+                                        label="Product"
+                                        control={control}
+                                        options={productData}
+                                    />
+                                </Grid2>
+                                <Grid2 size={4}>
+                                    <CustomDropdown
+                                        name={`orders.${index}.batchId`}
+                                        label="batch"
+                                        control={control}
+                                        options={batchOptionsMap[index]?.options || []}
+                                    />
+                                </Grid2>
+                                <Grid2 size={4}>
+                                    <CustomTextField
+                                        name={`orders.${index}.qty`}
+                                        label="Quantity"
+                                        control={control}
+                                    />
+                                </Grid2>
+                            </Grid2>
+                        ))}
 
                     </Grid2>
 
@@ -311,4 +277,4 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
     );
 };
 
-export default PurchaseOrderModel;
+export default StockTrasferModel;

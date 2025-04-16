@@ -14,7 +14,8 @@ import {
   MdFactory,
   MdSettingsOverscan,
   MdListAlt,
-
+  MdInventory2,
+  MdReceiptLong
 } from 'react-icons/md'
 
 import { AiOutlineProduct, AiOutlineAudit } from 'react-icons/ai'
@@ -208,7 +209,23 @@ const navigation = () => {
     icon: MdShoppingCart,
     path: '/purchase-order',
     mainTitle: false
-  },]
+
+  },
+  {
+    title: 'Stock Transfer Order',
+    icon: MdInventory2,
+    path: '/stocktransfer-order',
+    mainTitle: false
+
+  },
+  {
+    title: 'Sales Order',
+    icon: MdReceiptLong,
+    path: '/sales-order',
+    mainTitle: false
+
+  }
+]
   const configurationScreen = [
     {
       title: 'SuperAdmin Configuration',
@@ -306,7 +323,7 @@ const navigation = () => {
       subPages: filteredProductionScreens
     },
     {
-      title: 'Sales Order ',
+      title: 'Order',
       icon: MdListAlt,
       mainTitle: true,
       path: '/master',

@@ -12,91 +12,97 @@ import { api } from 'src/utils/Rest-API';
 import { useWatch } from 'react-hook-form';
 
 
-const purchaseSchema = yup.object().shape({
+const SalesOrderSchema = yup.object().shape({
+    type: yup.string().required('Select OrderType'),
     orderNo: yup.string().required('Order No is required'),
     from: yup.string().required('From location is required'),
     to: yup.string().required('To location is required'),
     addPurchase: yup
-      .array()
-      .of(
-        yup.object().shape({
-          product: yup.mixed().required('Product is required'),
-          batch: yup.mixed().required('Batch is required'),
-          qty: yup
-            .number()
-            .typeError('Quantity must be a number')
-            .required('Quantity is required')
-            .positive('Quantity must be greater than zero'),
-        })
-      )
-      .min(1, 'At least one purchase item is required'),
-  });
+        .array()
+        .of(
+            yup.object().shape({
+                product: yup.mixed().required('Product is required'),
+                batch: yup.mixed().required('Batch is required'),
+                qty: yup
+                    .number()
+                    .typeError('Quantity must be a number')
+                    .required('Quantity is required')
+                    .positive('Quantity must be greater than zero'),
+            })
+        )
+        .min(1, 'At least one purchase item is required'),
+});
 
-const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
+const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
     const { setIsLoading } = useLoading();
-    const [locationFrom, setLocationFrom] = useState([])
-    const [locationTo, setLocationTo] = useState([])
+    const [locationPW, setlocationPW] = useState([])
+    const [locationOth, setlocationOth] = useState([])
     const [productData, setProductData] = useState([])
     const [batchOptionsMap, setBatchOptionsMap] = useState({});
-
-
-
     const {
         handleSubmit,
         control,
         reset,
         formState: { errors },
+        watch
     } = useForm({
-        resolver: yupResolver(purchaseSchema),
+        resolver: yupResolver(SalesOrderSchema),
         defaultValues: {
-          orderNo:editData.orderNo ||'',
-          from:editData.from|| '',
-          to:editData.to|| '',
-          orders:editData.orders?.length
-          ? editData.orders.map(order => ({
-              productId: order.productId || '',
-              batchId: order.batchId || '',
-              qty: order.qty || '',
-            })): [{ productId: '', batchId: '', qty: '' }],
-        },
-    });
-    const { fields, append, remove } = useFieldArray({
-        control,
-        name: 'orders'
-    });
-    useEffect(() => {
-        if (editData) {
-            reset({
-                orderNo:editData.orderNo ||'',
-                from:editData.from|| '',
-                to:editData.to|| '',
-                orders:editData.orders?.length
+            type: editData.type || '',
+            orderNo: editData.orderNo || '',
+            from: editData.from || '',
+            to: editData.to || '',
+            orders: editData.orders?.length
                 ? editData.orders.map(order => ({
                     productId: order.productId || '',
                     batchId: order.batchId || '',
                     qty: order.qty || '',
-                  })): [{ productId: '', batchId: '', qty: '' }],
+                })) : [{ productId: '', batchId: '', qty: '' }],
+        },
+    });
+    useEffect(() => {
+        if (editData) {
+            reset({
+                type: editData.type || '',
+                orderNo: editData.orderNo || '',
+                from: editData.from || '',
+                to: editData.to || '',
+                orders: editData.orders?.length
+                    ? editData.orders.map(order => ({
+                        productId: order.productId || '',
+                        batchId: order.batchId || '',
+                        qty: order.qty || '',
+                    })) : [{ productId: '', batchId: '', qty: '' }],
             });
         }
     }, [editData]);
+
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: 'orders'
+    });
     const watchedProducts = useWatch({
         control,
         name: 'orders'
-      });
-      console.log("watchedProducts",watchedProducts)
-      useEffect(() => {
+    });
+    const orderType = [
+        { id: 'salesOrder', value: 'salesOrder', label: 'SO' },
+        { id: 'salesReturn', value: 'salesReturn', label: 'SR' }]
+
+
+    useEffect(() => {
         watchedProducts?.forEach((purchase, index) => {
             const productId = purchase?.productId;
             console.log(productId)
             if (!productId) return;
-                const existing = batchOptionsMap[index];
-           if (existing && existing.productId === productId) return;
+            const existing = batchOptionsMap[index];
+            if (existing && existing.productId === productId) return;
 
-    
+
             const fetchBatches = async () => {
                 try {
                     const res = await api(`/batch/getbatchesbyproduct/${productId}`, {}, 'get', true);
-                    console.log('batches',res.data.data)
+                    console.log('batches', res.data.data)
                     if (res.data.success) {
                         const options = res.data.data.map(batch => ({
                             id: batch.id,
@@ -108,26 +114,39 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                             [index]: {
                                 productId,
                                 options,
-                              }
+                            }
                         }));
                     }
                 } catch (error) {
                     console.error(`Error fetching batches for product ${productId}`, error);
                 }
             };
-    
+
             fetchBatches();
         });
     }, [watchedProducts]);
-    
+
+    const orderTypeValue = watch('type');
+
+    const getLocationOptions = () => {
+        if (orderTypeValue === 'salesReturn') {
+            return { from: locationOth, to: locationPW };
+        } else if (orderTypeValue === 'salesOrder') {
+            return { from: locationPW, to: locationOth };
+        } else {
+            return { from: [], to: [] };
+        }
+    };
+
+    const locationOptions = getLocationOptions();
 
     useEffect(() => {
-        const getLocation = async () => {
+        const getLocationPW = async () => {
             try {
                 setIsLoading(true)
-                const res = await api(`/location/type-purchase`, {}, 'get', true)
+                const res = await api(`/location/type-so-sto `, {}, 'get', true)
                 setIsLoading(false)
-                console.log('All locations vendors', res.data)
+                console.log('All locations ', res.data)
                 if (res.data.success) {
                     console.log(res.data.data)
 
@@ -138,7 +157,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                     }));
                     console.log("Area category in dropdown ", data);
 
-                    setLocationFrom(data);
+                    setlocationPW(data);
                 } else {
                     console.log('Error to get all designation ', res.data)
                     if (res.data.code === 401) {
@@ -151,42 +170,41 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                 setIsLoading(false)
             }
         }
-        const getuserLocation = async () => {
+        const getlocationOth = async () => {
             try {
                 setIsLoading(true)
-                const res = await api(`/user/info`, {}, 'get', true)
+                const res = await api(`/location/type-sr`, {}, 'get', true)
                 setIsLoading(false)
                 console.log('All locations ', res.data)
                 if (res.data.success) {
-                    console.log(res.data.data.location)
+                    console.log(res.data.data)
 
-                    setLocationTo([{
-                        id: res.data.data.location.id,
-                        value: res.data.data.location.id,
-                        label: res.data.data.location.location_name
-                    }])
+                    const data = res.data.data?.map((item) => ({
+                        id: item.id,
+                        value: item.id,
+                        label: item.location_name,
+                    }));
+                    console.log("Area category in dropdown ", data);
 
-
+                    setlocationOth(data);
                 } else {
-                    console.log('Error to get all userLocation ', res.data)
+                    console.log('Error to get all designation ', res.data)
                     if (res.data.code === 401) {
                         removeAuthToken()
                         router.push('/401');
                     }
                 }
             } catch (error) {
-                console.log('Error in get userLocation ', error)
+                console.log('Error in get designation ', error)
                 setIsLoading(false)
             }
         }
-
         const getAllProducts = async () => {
             try {
                 setIsLoading(true);
                 const res = await api('/product?limit=-1', {}, 'get', true)
                 setIsLoading(false);
                 if (res.data.success) {
-                    // setAllProductData(res.data.data.products)
                     const data = res.data.data.products?.map((item) => ({
                         id: item.id,
                         value: item.id,
@@ -207,48 +225,61 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
             }
         }
         getAllProducts()
-        getuserLocation()
-        getLocation()
+        getLocationPW()
+        getlocationOth()
 
     }, [])
 
     return (
         <Modal open={open} onClose={handleClose} aria-labelledby='Purchase'>
-            <Box sx={style}>
+            <Box sx={{
+                ...style,
+                maxHeight: '60vh',
+                overflowY: 'auto',
+            }}>
                 <Typography variant='h4' className='my-2'>
                     {editData?.orderNo ? 'Edit Purchase Order' : 'Add Purchase Order'}
                 </Typography>
 
                 <form onSubmit={handleSubmit(handleSubmitForm)}>
                     <Grid2 container spacing={2}>
-                        <Grid2 size={4}>
+                        <Grid2 size={6}>
+                            <CustomDropdown
+                                name='type'
+                                label='order Type'
+                                control={control}
+                                options={orderType}
+                                Grid2
+                            />
+                        </Grid2>
+                        <Grid2 size={6}>
                             <CustomTextField
                                 name='orderNo'
                                 label='Order No'
                                 control={control}
-                                disabled={!!editData?.location_id}
                             />
                         </Grid2>
-                        <Grid2 size={4}>
+
+                    </Grid2>
+                    <Grid2 container spacing={2}>
+                        <Grid2 size={6}>
                             <CustomDropdown
                                 name='from'
                                 label='From'
                                 control={control}
-                                options={locationFrom}
+                                options={locationOptions.from || []}
                                 Grid2
                             />
 
 
                         </Grid2>
-                        <Grid2 size={4}>
+                        <Grid2 size={6}>
                             <CustomDropdown
                                 name='to'
                                 label='To'
                                 control={control}
-                                options={locationTo}
+                                options={locationOptions.to || []}
                             />
-
-
                         </Grid2>
                     </Grid2>
 
@@ -263,32 +294,32 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                         </Grid2>
 
                         {fields.map((field, index) => (
-    <Grid2 container spacing={2} key={field.id}>
-        <Grid2 size={4}>
-            <CustomDropdown
-                name={`orders.${index}.productId`}
-                label="Product"
-                control={control}
-                options={productData}
-            />
-        </Grid2>
-        <Grid2 size={4}>
-            <CustomDropdown
-                name={`orders.${index}.batchId`}
-                label="batch"
-                control={control}
-                options={batchOptionsMap[index]?.options || []}
-            />
-        </Grid2>
-        <Grid2 size={4}>
-            <CustomTextField
-                name={`orders.${index}.qty`}
-                label="Quantity"
-                control={control}
-            />
-        </Grid2>
-    </Grid2>
-))}
+                            <Grid2 container spacing={2} key={field.id}>
+                                <Grid2 size={4}>
+                                    <CustomDropdown
+                                        name={`orders.${index}.productId`}
+                                        label="Product"
+                                        control={control}
+                                        options={productData}
+                                    />
+                                </Grid2>
+                                <Grid2 size={4}>
+                                    <CustomDropdown
+                                        name={`orders.${index}.batchId`}
+                                        label="batch"
+                                        control={control}
+                                        options={batchOptionsMap[index]?.options || []}
+                                    />
+                                </Grid2>
+                                <Grid2 size={4}>
+                                    <CustomTextField
+                                        name={`orders.${index}.qty`}
+                                        label="Quantity"
+                                        control={control}
+                                    />
+                                </Grid2>
+                            </Grid2>
+                        ))}
 
                     </Grid2>
 
@@ -311,4 +342,4 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
     );
 };
 
-export default PurchaseOrderModel;
+export default SalesOrderModel;
