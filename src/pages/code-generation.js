@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 'use-client'
 import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react'
-import {Button,TableContainer,Paper,Box,Grid2,Typography} from '@mui/material'
+import { Button, TableContainer, Paper, Box, Grid2, Typography } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import SnackbarAlert from 'src/components/SnackbarAlert'
@@ -29,7 +29,7 @@ const Index = () => {
   const [openModal, setOpenModal] = useState(false)
   const [openModal2, setOpenModal2] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [tableHeaderData, setTableHeaderData] = useState({  searchVal: '' })
+  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '' })
   const { setIsLoading } = useLoading()
   const { getUserData } = useAuth()
   const [userDataPdf, setUserDataPdf] = useState()
@@ -42,9 +42,9 @@ const Index = () => {
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [codeRequestData, setCodeRequest] = useState([])
   const [availableCodeData, setAvailableCodeData] = useState({})
-  const [formData,setFormData]=useState({})
-  const [isCodeReGeneration,setIsCodeReGeneration]=useState(false)
-  const apiAccess = useApiAccess('codegeneration-generate', 'codegeneration-regenerate', 'codegeneration-approve');
+  const [formData, setFormData] = useState({})
+  const [isCodeReGeneration, setIsCodeReGeneration] = useState(false)
+  const apiAccess = useApiAccess('codegeneration-create', 'codegeneration-update', 'codegeneration-approve');
   const searchRef = useRef();
 
   useLayoutEffect(() => {
@@ -52,7 +52,7 @@ const Index = () => {
     const decodedToken = getTokenValues()
     setConfig(decodedToken)
     setUserDataPdf(data)
-    return () => {}
+    return () => { }
   }, [])
 
 
@@ -90,7 +90,7 @@ const Index = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
   const handleOpenModal = () => {
-    setApproveAPI({ approveAPIName: 'codegeneration-generate', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/codegeneration' })
+    setApproveAPI({ approveAPIName: 'codegeneration-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/codegeneration' })
     setOpenModal(true)
   }
   const handleCloseModal = () => {
@@ -127,17 +127,17 @@ const Index = () => {
         modelName: 'CodeGenerationRequest',
         esignStatus,
         id: eSignStatusId,
-        audit_log: config?.config?.audit_logs 
+        audit_log: config?.config?.audit_logs
           ? {
-              user_id: user.userId,
-              user_name: user.userName,
-              performed_action: 'approved',
-              remarks: remarks || `code generation approved - ${auditLogMark}`
-            }
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: 'approved',
+            remarks: remarks || `code generation approved - ${auditLogMark}`
+          }
           : {}
       }
       await api('/esign-status/update-esign-status', data, 'patch', true)
-      setTableHeaderData({...tableHeaderData})
+      setTableHeaderData({ ...tableHeaderData })
       console.log('eSign status updated')
       if (esignDownloadPdf) {
         downloadPdf(tableData, tableHeaderData, tableBody, codeRequestData, userDataPdf)
@@ -148,7 +148,7 @@ const Index = () => {
         if (esignDownloadPdf) {
           setOpenModalApprove(true)
         } else {
-          isCodeReGeneration?handleGenerateCode(true,null,'pending'):handleGenerateCode(false,formData,'pending')
+          isCodeReGeneration ? handleGenerateCode(true, null, 'pending') : handleGenerateCode(false, formData, 'pending')
         }
       } else if (esignStatus === 'rejected') {
         closeApprovalModal()
@@ -193,15 +193,15 @@ const Index = () => {
 
   const resetFilter = () => {
     if (searchRef.current) {
-        searchRef.current.resetSearch(); // Call the reset method in the child
+      searchRef.current.resetSearch(); // Call the reset method in the child
     }
-    setTableHeaderData({ ...tableHeaderData, searchVal: "",esignStatus:"" })
-}
+    setTableHeaderData({ ...tableHeaderData, searchVal: "", esignStatus: "" })
+  }
   const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
-    
+
   }
- 
+
   const handleAuthModalOpen = () => {
     console.log('OPen auth model')
     setApproveAPI({
@@ -209,15 +209,15 @@ const Index = () => {
       approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/codegeneration'
     })
-     setAuthModalOpen(true)
+    setAuthModalOpen(true)
   }
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: 'codegeneration-generate',
+      approveAPIName: 'codegeneration-create',
       approveAPImethod: 'POST',
       approveAPIEndPoint: '/api/v1/codegeneration'
     })
-       if (config?.config?.esign_status) {
+    if (config?.config?.esign_status) {
       console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
@@ -232,7 +232,7 @@ const Index = () => {
     return parseInt(value || 0)
   }
 
-  const handleGenerateCode = async (regenerate, payload,esign_status) => {
+  const handleGenerateCode = async (regenerate, payload, esign_status) => {
     try {
       let data = {}
       if (regenerate) {
@@ -249,16 +249,16 @@ const Index = () => {
           batch_id: availableCodeData?.batch_id
         }
         const audit_log = config?.config?.audit_logs
-        ? {
+          ? {
             audit_log: true,
             performed_action: 'codeGenerated',
-            remarks:  `code Generated  - ${data.batch?.batch_no}`
+            remarks: `code Generated  - ${data.batch?.batch_no}`
           }
-        : {
-            
+          : {
+
           }
-      data.audit_log = audit_log
-      data.esign_status = esign_status
+        data.audit_log = audit_log
+        data.esign_status = esign_status
 
       } else {
         data = {
@@ -267,17 +267,17 @@ const Index = () => {
           batch_id: payload.batchId
         }
         const audit_log = config?.config?.audit_logs
-        ? {
+          ? {
             audit_log: true,
             performed_action: 'codeReGenrated',
-            remarks:  `code Generated  - ${payload.batch}`
+            remarks: `code Generated  - ${payload.batch}`
           }
-        : {
-            
+          : {
+
           }
-      data.audit_log = audit_log
-      data.esign_status = esign_status
-        
+        data.audit_log = audit_log
+        data.esign_status = esign_status
+
       }
       console.log('data on handleGenerateCode', data)
       setIsLoading(true)
@@ -307,7 +307,7 @@ const Index = () => {
       handleCloseModal()
       handleCloseModal2()
     }
-    finally{
+    finally {
       setIsCodeReGeneration(false)
     }
   }
@@ -366,7 +366,7 @@ const Index = () => {
     })
     setAvailableCodeData({ ...row, packagingHierarchyData })
     setApproveAPI({
-      approveAPIName: 'codegeneration-regenerate', approveAPImethod: 'PUT', approveAPIEndPoint: '/api/v1/codegeneration'
+      approveAPIName: 'codegeneration-update', approveAPImethod: 'PUT', approveAPIEndPoint: '/api/v1/codegeneration'
     })
     setIsCodeReGeneration(true)
     setOpenModal2(true)
@@ -388,10 +388,10 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                                {config?.config?.esign_status && (
-                                  <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
-                                )}
-                              </Box>
+                {config?.config?.esign_status && (
+                  <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+                )}
+              </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
@@ -416,7 +416,7 @@ const Index = () => {
               </Typography>
               <TableContainer component={Paper}>
                 <TableCodeGeneration
-                setCodeRequest={setCodeRequest}
+                  setCodeRequest={setCodeRequest}
                   tableHeaderData={tableHeaderData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
@@ -438,7 +438,7 @@ const Index = () => {
         setAuthModalOpen={setAuthModalOpen}
         config={config}
 
- />
+      />
       <CodeReGenerationModal
         open={openModal2}
         onClose={handleCloseModal2}
