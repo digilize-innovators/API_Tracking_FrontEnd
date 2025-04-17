@@ -15,17 +15,20 @@ const locationSchema = yup.object().shape({
     .matches(/^[a-zA-Z0-9]+\s*$/, 'Location ID cannot contain any special symbols')
     .required("Location ID can't be empty"),
 
+  locationType:yup.string().required('Select Location Type'),
   locationName: yup
     .string()
+    .required("Location Name can't be empty")
     .max(255, 'Location name length should be less than 256')
     .matches(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/, 'Location Name can only contain letters and numbers')
-    .required("Location Name can't be empty"),
+    ,
 
   mfgLicenceNo: yup
     .string()
+    .required("Mfg licence no can't be empty")
     .max(255, 'Mfg licence no length should be less than 256')
     .matches(/^[a-zA-Z0-9]+\s*$/, 'Mfg licence no cannot contain any special symbols')
-    .required("Mfg licence no can't be empty"),
+    ,
 
   mfgName: yup
     .string()

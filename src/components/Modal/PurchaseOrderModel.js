@@ -214,7 +214,11 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
 
     return (
         <Modal open={open} onClose={handleClose} aria-labelledby='Purchase'>
-            <Box sx={style}>
+            <Box sx={{
+                ...style,
+                maxHeight: '70vh',
+                overflowY: 'auto',
+            }}>
                 <Typography variant='h4' className='my-2'>
                     {editData?.orderNo ? 'Edit Purchase Order' : 'Add Purchase Order'}
                 </Typography>

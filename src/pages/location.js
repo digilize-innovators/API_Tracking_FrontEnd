@@ -55,17 +55,21 @@ const Index = () => {
     return () => {}
   }, [])
 
-  useEffect(() => {
-    if (formData && pendingAction) {
-      const esign_status = config?.config.esign_status && config?.role != 'admin' ? 'pending' : 'approved'
-      if (pendingAction === 'edit') {
-        editLocation(esign_status)
-      } else if (pendingAction === 'add') {
-        addLocation(esign_status)
-      }
-    }
-    setPendingAction(null)
-  }, [formData, pendingAction])
+
+    useEffect(() => {
+        const handleUserAction = async () => {
+          if (formData && pendingAction) {
+            const esign_status = config?.config?.esign_status && config?.role != 'admin' ? "pending" : "approved";
+            if (pendingAction === "edit") {
+              await editLocation(esign_status); 
+            } else if (pendingAction === "add") {
+              await addLocation(esign_status);  
+            }
+            setPendingAction(null);
+          }
+        };
+        handleUserAction();
+      }, [formData, pendingAction]);
 
   const tableBody = locationData.map((item, index) => [
     index + 1,

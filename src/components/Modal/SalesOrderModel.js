@@ -234,7 +234,7 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
         <Modal open={open} onClose={handleClose} aria-labelledby='Purchase'>
             <Box sx={{
                 ...style,
-                maxHeight: '60vh',
+                maxHeight: '70vh',
                 overflowY: 'auto',
             }}>
                 <Typography variant='h4' className='my-2'>
