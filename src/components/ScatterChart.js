@@ -36,21 +36,8 @@ const Scatterchart = ({ data }) => {
           type={data?.length && typeof data[0]?.name == 'number' ? 'number' : 'category'}
           {...(data?.length && typeof data[0]?.name === 'number' ? { domain: ['auto', 'auto'] } : {})}
           textAnchor='end'
-          tickFormatter={(tick, index) => {
-            // If it's a number, just return it as string
-            if (typeof tick === 'number') return tick.toString()
-
-            // For month names, show only every nth tick to avoid repetition
-            const showEvery = Math.ceil(data.length / 10) // Adjust denominator to control label density
-            if (index % showEvery !== 0) return ''
-
-            // Convert to 3-letter month abbreviation if it's a full month name
-            if (typeof tick === 'string' && tick.length > 3) {
-              return tick.substring(0, 3)
-            }
-            return tick
-          }}
-          interval={0}
+          allowDuplicatedCategory={false}
+          tickFormatter={(tick) => (tick)}
         />
         <YAxis dataKey='y' type='number' />
         <Tooltip cursor={{ strokeDasharray: '3 3' }} />
