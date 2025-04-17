@@ -41,7 +41,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
           {row.mfg_name}
         </TableCell>
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
-          {row.address}
+          {row.location_type}
         </TableCell>
 
         {config?.config?.esign_status === true && config?.role!=='admin' && (
@@ -93,7 +93,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Location Name</TableCell>
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Mfg. Licence No.</TableCell>
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Mfg. Name</TableCell>
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Address</TableCell>
+                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Location Type</TableCell>
                         {config?.config?.esign_status === true  && config?.role!=='admin' && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>E-Sign</TableCell>}
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Updated At</TableCell>
                       </TableRow>
@@ -108,7 +108,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.location_name}</TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.mfg_licence_no}</TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.mfg_name}</TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.address}</TableCell>
+                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.location_type}</TableCell>
                           {config?.config?.esign_status === true && config?.role!=='admin' && (
                             <StatusChip
                               label={historyRow.esign_status}
@@ -156,7 +156,6 @@ const TableCollapsiblelocation = ({
   const [sortBy, setSortBy] = useState('');
   const [openRows, setOpenRows] = useState({});
   const [historyData, setHistoryData] = useState({});
-
    const { settings } = useSettings();
     const [page, setPage] = useState(0)
     const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
@@ -235,26 +234,6 @@ const TableCollapsiblelocation = ({
       setIsLoading(false)
     }
   }
-
-  // const handleSortBy = (value) => {
-  //   if (value === 'ID') {
-  //     handleSortByID();
-  //     setSortBy('ID');
-  //   } else if (value === 'Name') {
-  //     handleSortByName();
-  //     setSortBy('Name');
-  //   } else if (value === 'Mfg') {
-  //     handleSortByMfgLicNo();
-  //     setSortBy('Mfg');
-  //   } else if (value === 'MfgName') {
-  //     handleSortByMfgName();
-  //     setSortBy('MfgName');
-  //   } else if (value === 'Address') {
-  //     handleSortByAddress();
-  //     setSortBy('Address');
-  //   }
-  // };
-
   return (
     <CustomTable
       locationData={locationData?.data}
@@ -294,10 +273,10 @@ const TableCollapsiblelocation = ({
                   {getSortIcon(sortBy, 'mfg_name', sortDirection)}
                 </IconButton>
               </TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('address')}>
-                Address
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('location_type')}>
+                Location Type
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'address', sortDirection)}
+                  {getSortIcon(sortBy, 'location_type', sortDirection)}
                 </IconButton>
               </TableCell>
               {config?.config?.esign_status === true && config?.role!=='admin' && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >E-Sign</TableCell>}

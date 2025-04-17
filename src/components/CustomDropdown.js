@@ -12,7 +12,7 @@ const CustomDropdown = ({ name, label, control, options, disabled}) => {
        
         <FormControl fullWidth error={!!error}>
           <InputLabel id={`${name}-label`}>{label}</InputLabel>
-          <Select {...field} labelId={`${name}-label`} disabled={disabled}>
+          <Select {...field} labelId={`${name}-label`} label={label} disabled={disabled}>
             {options?.map((option) => (
               <MenuItem key={option.id} value={option.id}>
                 {option.label}

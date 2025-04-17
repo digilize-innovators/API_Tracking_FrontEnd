@@ -182,6 +182,13 @@ const handleSort = (key,child) => {
           }
           return 0
         }
+        else if(key='updated_at')
+          {
+       const dateA = new Date(a.updatedAt);
+      const dateB = new Date(b.updatedAt);
+      return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+  
+          }
         else{
             if (a[key][child] > b[key][child]) {
                 return newSortDirection === 'asc' ? 1 : -1
@@ -282,8 +289,12 @@ const handleSort = (key,child) => {
                 </IconButton>
               </TableCell>
               {config?.config?.esign_status === true && config?.role!=='admin' && <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >E-Sign</TableCell>}
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >Update At</TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >Action</TableCell>
+ <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('updated_at')} >
+                Update At
+                <IconButton align='center' aria-label='expand row' size='small'>
+                  {getSortIcon(sortBy, 'updated_at', sortDirection)}
+                </IconButton>
+                </TableCell>              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

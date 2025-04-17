@@ -1,6 +1,6 @@
 
-import { useFieldArray, useForm } from 'react-hook-form';
-import { Modal, Box, Typography, Button, Grid2 } from '@mui/material';
+import { useFieldArray, useForm, Controller, useWatch } from 'react-hook-form';
+import { Modal, Box, Typography, Button, Grid2, FormControl, InputLabel, MenuItem, FormHelperText, Select } from '@mui/material';
 import CustomTextField from 'src/components/CustomTextField';
 import { style } from 'src/configs/generalConfig';
 import { useEffect, useState } from 'react';
@@ -9,33 +9,31 @@ import * as yup from 'yup';
 import CustomDropdown from '../CustomDropdown';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { api } from 'src/utils/Rest-API';
-import { useWatch } from 'react-hook-form';
-
 
 const purchaseSchema = yup.object().shape({
     orderNo: yup.string().required('Order No is required'),
     from: yup.string().required('From location is required'),
     to: yup.string().required('To location is required'),
     addPurchase: yup
-      .array()
-      .of(
-        yup.object().shape({
-          product: yup.mixed().required('Product is required'),
-          batch: yup.mixed().required('Batch is required'),
-          qty: yup
-            .number()
-            .typeError('Quantity must be a number')
-            .required('Quantity is required')
-            .positive('Quantity must be greater than zero'),
-        })
-      )
-      .min(1, 'At least one purchase item is required'),
-  });
+        .array()
+        .of(
+            yup.object().shape({
+                product: yup.mixed().required('Product is required'),
+                batch: yup.mixed().required('Batch is required'),
+                qty: yup
+                    .number()
+                    .typeError('Quantity must be a number')
+                    .required('Quantity is required')
+                    .positive('Quantity must be greater than zero'),
+            })
+        )
+        .min(1, 'At least one purchase item is required'),
+});
 
 const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
     const { setIsLoading } = useLoading();
     const [locationFrom, setLocationFrom] = useState([])
-    const [locationTo, setLocationTo] = useState([])
+    const [locationTo, setLocationTo] = useState({})
     const [productData, setProductData] = useState([])
     const [batchOptionsMap, setBatchOptionsMap] = useState({});
 
@@ -46,18 +44,19 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
         control,
         reset,
         formState: { errors },
+
     } = useForm({
         resolver: yupResolver(purchaseSchema),
         defaultValues: {
-          orderNo:editData.orderNo ||'',
-          from:editData.from|| '',
-          to:editData.to|| '',
-          orders:editData.orders?.length
-          ? editData.orders.map(order => ({
-              productId: order.productId || '',
-              batchId: order.batchId || '',
-              qty: order.qty || '',
-            })): [{ productId: '', batchId: '', qty: '' }],
+            orderNo: editData.orderNo || '',
+            from: editData.from || '',
+            to: editData.to || '',
+            orders: editData.orders?.length
+                ? editData.orders.map(order => ({
+                    productId: order.productId || '',
+                    batchId: order.batchId || '',
+                    qty: order.qty || '',
+                })) : [{ productId: '', batchId: '', qty: '' }],
         },
     });
     const { fields, append, remove } = useFieldArray({
@@ -67,36 +66,36 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
     useEffect(() => {
         if (editData) {
             reset({
-                orderNo:editData.orderNo ||'',
-                from:editData.from|| '',
-                to:editData.to|| '',
-                orders:editData.orders?.length
-                ? editData.orders.map(order => ({
-                    productId: order.productId || '',
-                    batchId: order.batchId || '',
-                    qty: order.qty || '',
-                  })): [{ productId: '', batchId: '', qty: '' }],
+                orderNo: editData.orderNo || '',
+                from: editData.from || '',
+                to: editData.to || '',
+                orders: editData.orders?.length
+                    ? editData.orders.map(order => ({
+                        productId: order.productId || '',
+                        batchId: order.batchId || '',
+                        qty: order.qty || '',
+                    })) : [{ productId: '', batchId: '', qty: '' }],
             });
         }
     }, [editData]);
     const watchedProducts = useWatch({
         control,
         name: 'orders'
-      });
-      console.log("watchedProducts",watchedProducts)
-      useEffect(() => {
+    });
+    console.log("watchedProducts", watchedProducts)
+    useEffect(() => {
         watchedProducts?.forEach((purchase, index) => {
             const productId = purchase?.productId;
             console.log(productId)
             if (!productId) return;
-                const existing = batchOptionsMap[index];
-           if (existing && existing.productId === productId) return;
+            const existing = batchOptionsMap[index];
+            if (existing && existing.productId === productId) return;
 
-    
+
             const fetchBatches = async () => {
                 try {
                     const res = await api(`/batch/getbatchesbyproduct/${productId}`, {}, 'get', true);
-                    console.log('batches',res.data.data)
+                    console.log('batches', res.data.data)
                     if (res.data.success) {
                         const options = res.data.data.map(batch => ({
                             id: batch.id,
@@ -108,18 +107,18 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                             [index]: {
                                 productId,
                                 options,
-                              }
+                            }
                         }));
                     }
                 } catch (error) {
                     console.error(`Error fetching batches for product ${productId}`, error);
                 }
             };
-    
+
             fetchBatches();
         });
     }, [watchedProducts]);
-    
+
 
     useEffect(() => {
         const getLocation = async () => {
@@ -160,11 +159,11 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                 if (res.data.success) {
                     console.log(res.data.data.location)
 
-                    setLocationTo([{
+                    setLocationTo({
                         id: res.data.data.location.id,
                         value: res.data.data.location.id,
                         label: res.data.data.location.location_name
-                    }])
+                    })
 
 
                 } else {
@@ -186,7 +185,6 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                 const res = await api('/product?limit=-1', {}, 'get', true)
                 setIsLoading(false);
                 if (res.data.success) {
-                    // setAllProductData(res.data.data.products)
                     const data = res.data.data.products?.map((item) => ({
                         id: item.id,
                         value: item.id,
@@ -245,13 +243,31 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
 
                         </Grid2>
                         <Grid2 size={4}>
-                            <CustomDropdown
-                                name='to'
-                                label='To'
-                                control={control}
-                                options={locationTo}
-                            />
 
+                            {locationTo && (
+                                <Controller
+                                    name='to'
+                                    control={control}
+                                    defaultValue={locationTo?.id}
+                                    render={({ field, fieldState: { error } }) => (
+                                        <FormControl fullWidth error={!!error}>
+                                            <InputLabel id='to-label'>To</InputLabel>
+                                            <Select
+                                                {...field}
+                                                labelId='to-label'
+                                                label='To'
+                                                value={locationTo?.id}
+                                                disabled
+                                            >
+                                                <MenuItem value={locationTo?.id}>
+                                                    {locationTo?.label}
+                                                </MenuItem>
+                                            </Select>
+                                            <FormHelperText>{error?.message}</FormHelperText>
+                                        </FormControl>
+                                    )}
+                                />
+                            )}
 
                         </Grid2>
                     </Grid2>
@@ -267,32 +283,61 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                         </Grid2>
 
                         {fields.map((field, index) => (
-    <Grid2 container spacing={2} key={field.id}>
-        <Grid2 size={4}>
-            <CustomDropdown
-                name={`orders.${index}.productId`}
-                label="Product"
-                control={control}
-                options={productData}
-            />
-        </Grid2>
-        <Grid2 size={4}>
-            <CustomDropdown
-                name={`orders.${index}.batchId`}
-                label="batch"
-                control={control}
-                options={batchOptionsMap[index]?.options || []}
-            />
-        </Grid2>
-        <Grid2 size={4}>
-            <CustomTextField
-                name={`orders.${index}.qty`}
-                label="Quantity"
-                control={control}
-            />
-        </Grid2>
-    </Grid2>
-))}
+                            <Grid2 container spacing={2} key={field.id}>
+                                <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                        {index + 1}
+                                    </Typography>    </Grid2>
+                                <Grid2 size={3.5}>
+                                    <CustomDropdown
+                                        name={`orders.${index}.productId`}
+                                        label="Product"
+                                        control={control}
+                                        options={productData}
+                                    />
+                                </Grid2>
+                                <Grid2 size={3.5}>
+                                    <CustomDropdown
+                                        name={`orders.${index}.batchId`}
+                                        label="Batch"
+                                        control={control}
+                                        options={batchOptionsMap[index]?.options || []}
+                                    />
+                                </Grid2>
+                                <Grid2 size={3}>
+                                    <CustomTextField
+                                        name={`orders.${index}.qty`}
+                                        label="Quantity"
+                                        control={control}
+                                    />
+                                </Grid2>
+                                <Grid2
+                                    size={1.5}
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',   
+                                    }}
+                                >
+                                    <Box sx={{ marginTop: 2 }}> 
+                                        <Button
+                                            type="button"
+                                            variant="contained"
+                                            onClick={() => remove(index)}
+                                            disabled={fields.length === 1}
+                                            sx={{
+                                                width: '100%',
+                                                backgroundColor: '#e53935',
+                                                '&:hover': {
+                                                    backgroundColor: '#c62828',
+                                                },
+                                            }}
+                                        >
+                                            Remove
+                                        </Button>
+                                    </Box>
+                                </Grid2>         
+                           </Grid2>
+                        ))}
 
                     </Grid2>
 

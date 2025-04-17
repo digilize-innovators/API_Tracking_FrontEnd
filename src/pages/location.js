@@ -77,13 +77,13 @@ const Index = () => {
     item.location_name,
     item.mfg_licence_no,
     item.mfg_name,
-    item.address,
+    item.location_type,
     item.esign_status || 'N/A'
   ])
 
   const tableData = useMemo(
     () => ({
-      tableHeader: ['Sr.No.', 'Id', 'Name', 'Mfg.Licence No.', 'Mfg Name', 'Address', 'E-Sign'],
+      tableHeader: ['Sr.No.', 'Id', 'Name', 'Mfg.Licence No.', 'Mfg Name', 'Location Type', 'E-Sign'],
       tableHeaderText: 'Location Master Report',
       tableBodyText: 'Location Master Data',
       filename: 'LocationMaster'

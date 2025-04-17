@@ -42,10 +42,10 @@ const locationSchema = yup.object().shape({
 const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
 
   const locationData=[
-   {id: 'PLANT', value: 'PLANT', label: 'plant'},
+   {id: 'PLANT', value: 'PLANT', label: 'Plant'},
    {id: 'CFA', value: 'CFA', label: 'CFA'} ,
    {id: 'DISTRIBUTOR', value: 'DISTRIBUTOR', label: 'Distributor'},
-   {id: 'DEALER', value: 'DEALER', label: 'Deales'},
+   {id: 'DEALER', value: 'DEALER', label: 'Dealer'},
    {id: 'VENDOR', value: 'VENDOR', label: 'Vendor'},
    {id: 'WAREHOUSE', value: 'WAREHOUSE', label: 'WareHouse'},
    {id: 'CUSTOMER', value: 'CUSTOMER', label: 'Customer'}
@@ -100,7 +100,7 @@ const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
             <Grid2 size={6}>
               <CustomDropdown
                               name='locationType'
-                              label='location type'
+                              label='Location Type'
                               control={control}
                               options={locationData}
                                 />

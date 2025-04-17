@@ -160,11 +160,11 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
     const getLocation = async () => {
       try {
         setIsLoading(true)
-        const res = await api(`/location?limit=-1`, {}, 'get', true)
+        const res = await api(`/location/type-so-sto`, {}, 'get', true)
         setIsLoading(false)
         console.log('All location ', res.data)
         if (res.data.success) {
-          const data = res.data.data.locations.map((item) => ({
+          const data = res.data.data?.map((item) => ({
             id: item.id,
             value: item.id,
             label: item.location_name,
@@ -279,7 +279,7 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
                       {...field}
                       sx={{ mb: 3 }}
                       fullWidth
-                      label='password'
+                      label='Password'
                       placeholder='password'
                       type="password"
                       error={!!error} s

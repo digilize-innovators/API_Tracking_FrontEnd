@@ -1,5 +1,5 @@
 
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm,useWatch } from 'react-hook-form';
 import { Modal, Box, Typography, Button, Grid2 } from '@mui/material';
 import CustomTextField from 'src/components/CustomTextField';
 import { style } from 'src/configs/generalConfig';
@@ -9,7 +9,6 @@ import * as yup from 'yup';
 import CustomDropdown from '../CustomDropdown';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { api } from 'src/utils/Rest-API';
-import { useWatch } from 'react-hook-form';
 
 
 const SalesOrderSchema = yup.object().shape({
@@ -238,7 +237,7 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
                 overflowY: 'auto',
             }}>
                 <Typography variant='h4' className='my-2'>
-                    {editData?.orderNo ? 'Edit Purchase Order' : 'Add Purchase Order'}
+                    {editData?.orderNo ? 'Edit Sale Order' : 'Add Sale Order'}
                 </Typography>
 
                 <form onSubmit={handleSubmit(handleSubmitForm)}>
@@ -246,7 +245,7 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
                         <Grid2 size={6}>
                             <CustomDropdown
                                 name='type'
-                                label='order Type'
+                                label='Order Type'
                                 control={control}
                                 options={orderType}
                                 Grid2
@@ -295,7 +294,11 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
 
                         {fields.map((field, index) => (
                             <Grid2 container spacing={2} key={field.id}>
-                                <Grid2 size={4}>
+                                <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                        {index + 1}
+                                    </Typography>    </Grid2>
+                                <Grid2 size={3.5}>
                                     <CustomDropdown
                                         name={`orders.${index}.productId`}
                                         label="Product"
@@ -303,23 +306,49 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
                                         options={productData}
                                     />
                                 </Grid2>
-                                <Grid2 size={4}>
+                                <Grid2 size={3.5}>
                                     <CustomDropdown
                                         name={`orders.${index}.batchId`}
-                                        label="batch"
+                                        label="Batch"
                                         control={control}
                                         options={batchOptionsMap[index]?.options || []}
                                     />
                                 </Grid2>
-                                <Grid2 size={4}>
+                                <Grid2 size={3}>
                                     <CustomTextField
                                         name={`orders.${index}.qty`}
                                         label="Quantity"
                                         control={control}
                                     />
                                 </Grid2>
+                                <Grid2
+                                    size={1.5}
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
+                                    <Box sx={{ marginTop: 2 }}>
+                                        <Button
+                                            type="button"
+                                            variant="contained"
+                                            onClick={() => remove(index)}
+                                            disabled={fields.length === 1}
+                                            sx={{
+                                                width: '100%',
+                                                backgroundColor: '#e53935',
+                                                '&:hover': {
+                                                    backgroundColor: '#c62828',
+                                                },
+                                            }}
+                                        >
+                                            Remove
+                                        </Button>
+                                    </Box>
+                                </Grid2>
                             </Grid2>
                         ))}
+
 
                     </Grid2>
 

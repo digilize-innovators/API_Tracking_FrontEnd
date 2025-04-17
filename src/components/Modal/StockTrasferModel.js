@@ -1,5 +1,5 @@
 
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm,useWatch } from 'react-hook-form';
 import { Modal, Box, Typography, Button, Grid2 } from '@mui/material';
 import CustomTextField from 'src/components/CustomTextField';
 import { style } from 'src/configs/generalConfig';
@@ -9,7 +9,6 @@ import * as yup from 'yup';
 import CustomDropdown from '../CustomDropdown';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { api } from 'src/utils/Rest-API';
-import { useWatch } from 'react-hook-form';
 
 
 const StockTrasferSchema = yup.object().shape({
@@ -45,29 +44,29 @@ const StockTrasferModel = ({ open, handleClose, editData, handleSubmitForm }) =>
     } = useForm({
         resolver: yupResolver(StockTrasferSchema),
         defaultValues: {
-            orderNo:editData.orderNo ||'',
-            from:editData.from|| '',
-            to:editData.to|| '',
-            orders:editData.orders?.length
-            ? editData.orders.map(order => ({
-                productId: order.productId || '',
-                batchId: order.batchId || '',
-                qty: order.qty || '',
-              })): [{ productId: '', batchId: '', qty: '' }],
-          },
-    });
-    useEffect(() => {
-        if (editData) {
-            reset({
-                orderNo:editData.orderNo ||'',
-                from:editData.from|| '',
-                to:editData.to|| '',
-                orders:editData.orders?.length
+            orderNo: editData.orderNo || '',
+            from: editData.from || '',
+            to: editData.to || '',
+            orders: editData.orders?.length
                 ? editData.orders.map(order => ({
                     productId: order.productId || '',
                     batchId: order.batchId || '',
                     qty: order.qty || '',
-                  })): [{ productId: '', batchId: '', qty: '' }],
+                })) : [{ productId: '', batchId: '', qty: '' }],
+        },
+    });
+    useEffect(() => {
+        if (editData) {
+            reset({
+                orderNo: editData.orderNo || '',
+                from: editData.from || '',
+                to: editData.to || '',
+                orders: editData.orders?.length
+                    ? editData.orders.map(order => ({
+                        productId: order.productId || '',
+                        batchId: order.batchId || '',
+                        qty: order.qty || '',
+                    })) : [{ productId: '', batchId: '', qty: '' }],
             });
         }
     }, [editData]);
@@ -234,7 +233,11 @@ const StockTrasferModel = ({ open, handleClose, editData, handleSubmitForm }) =>
 
                         {fields.map((field, index) => (
                             <Grid2 container spacing={2} key={field.id}>
-                                <Grid2 size={4}>
+                                <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                        {index + 1}
+                                    </Typography>    </Grid2>
+                                <Grid2 size={3.5}>
                                     <CustomDropdown
                                         name={`orders.${index}.productId`}
                                         label="Product"
@@ -242,23 +245,49 @@ const StockTrasferModel = ({ open, handleClose, editData, handleSubmitForm }) =>
                                         options={productData}
                                     />
                                 </Grid2>
-                                <Grid2 size={4}>
+                                <Grid2 size={3.5}>
                                     <CustomDropdown
                                         name={`orders.${index}.batchId`}
-                                        label="batch"
+                                        label="Batch"
                                         control={control}
                                         options={batchOptionsMap[index]?.options || []}
                                     />
                                 </Grid2>
-                                <Grid2 size={4}>
+                                <Grid2 size={3}>
                                     <CustomTextField
                                         name={`orders.${index}.qty`}
                                         label="Quantity"
                                         control={control}
                                     />
                                 </Grid2>
+                                <Grid2
+                                    size={1.5}
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
+                                    <Box sx={{ marginTop: 2 }}>
+                                        <Button
+                                            type="button"
+                                            variant="contained"
+                                            onClick={() => remove(index)}
+                                            disabled={fields.length === 1}
+                                            sx={{
+                                                width: '100%',
+                                                backgroundColor: '#e53935',
+                                                '&:hover': {
+                                                    backgroundColor: '#c62828',
+                                                },
+                                            }}
+                                        >
+                                            Remove
+                                        </Button>
+                                    </Box>
+                                </Grid2>
                             </Grid2>
                         ))}
+
 
                     </Grid2>
 
