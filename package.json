@@ -81,6 +81,7 @@
     "react-select-country-list": "^2.2.3",
     "react-use": "^17.5.1",
     "reactflow": "^11.11.4",
+    "recharts": "^2.15.2",
     "sharp": "^0.33.5",
     "socket.io-client": "^4.8.1",
     "yup": "^1.6.1"
