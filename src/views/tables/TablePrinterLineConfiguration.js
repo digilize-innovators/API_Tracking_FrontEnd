@@ -34,9 +34,6 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
                     {row.printer_line_name}
                 </TableCell>
                 <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                    {row.PrinterMaster.printer_id}
-                </TableCell>
-                <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                     {row?.area_category.area_category_name}
                 </TableCell>
                 <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
@@ -46,8 +43,16 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
                     {row?.PrinterCategory?.printer_category_name}
                 </TableCell>
                 <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
+                    {row.PrinterMaster.printer_id}
+                </TableCell>
+                <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                     {row?.locations?.location_name}
                 </TableCell>
+                <StatusChip
+                          label={row.camera_enable ? 'enabled' : 'disabled'}
+                          color={statusObj[row.camera_enable ? 'enabled' : 'disabled']?.color || 'default'}
+                        />
+                       
                 <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                     {row?.ControlPanel?.name}
                 </TableCell>
@@ -303,12 +308,7 @@ const TablePrinterLineConfiguration = ({
                                     {getSortIcon(sortBy, 'PrinterLineName', sortDirection)}
                                 </IconButton>
                             </TableCell>
-                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('PrinterMaster','printer_id')}>
-                                Printer Name
-                                <IconButton align='center' aria-label='expand row' size='small'>
-                                    {getSortIcon(sortBy, 'PrinterMaster', sortDirection)}
-                                </IconButton>
-                            </TableCell>
+                            
                             <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('area_category','area_category_name')}>
                                 Area Category
                                 <IconButton align='center' aria-label='expand row' size='small'>
@@ -327,8 +327,20 @@ const TablePrinterLineConfiguration = ({
                                     {getSortIcon(sortBy, 'PrinterCategory', sortDirection)}
                                 </IconButton>
                             </TableCell>
+                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('PrinterMaster','printer_id')}>
+                                Printer Name
+                                <IconButton align='center' aria-label='expand row' size='small'>
+                                    {getSortIcon(sortBy, 'PrinterMaster', sortDirection)}
+                                </IconButton>
+                            </TableCell>
                             <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('locations','location_name')}>
                                 Location
+                                <IconButton align='center' aria-label='expand row' size='small'>
+                                    {getSortIcon(sortBy, 'locations', sortDirection)}
+                                </IconButton>
+                            </TableCell>
+                            <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('locations','location_name')}>
+                                Camera Enable
                                 <IconButton align='center' aria-label='expand row' size='small'>
                                     {getSortIcon(sortBy, 'locations', sortDirection)}
                                 </IconButton>

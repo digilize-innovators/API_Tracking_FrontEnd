@@ -22,7 +22,7 @@ const PrinterLineCongSchema = yup.object().shape({
   locationId: yup.string().trim().required("Location can't be empty"),
 
   areaCategoryId: yup.string().trim().required("Area category can't be empty"),
-  
+
   areaId: yup.string().trim().required("Area can't be empty"),
 
   printerCategoryId: yup
@@ -40,8 +40,8 @@ const PrinterLineCongSchema = yup.object().shape({
   controlpanelId: yup.string().trim().required("Control Panel can't be empty"),
 
   lineNo: yup
-  .string()
-  .trim()
+    .string()
+    .trim()
     .matches(/^\d+$/, 'Line no. must be a number')
     .test('isValidRange', 'Line no. must be between 1 and 5', value => {
       const num = parseInt(value, 10)
@@ -49,36 +49,23 @@ const PrinterLineCongSchema = yup.object().shape({
     })
     .required("Line no. can't be empty"),
 
-    cameraIp: yup.string()
-        .matches(
-            /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/,
-            'Invalid IP address format'
-        )
-        .required("Camera IP can't be empty")
-        
-        ,
+  cameraEnable: yup.boolean().default(false).optional(),
+  cameraId: yup.string().when('cameraEnable', {
+    is: true,
+    then: schema => schema.required('Camera ID is required when camera is enabled'),
+    otherwise: schema => schema.default('')
+  }),
 
-        cameraPort: yup.string()
-        .typeError('Camera port must be a number')
-        // .integer('Camera port must be an integer')
-        .min(1, 'Camera port must be at least 1')
-        .max(65535, 'Camera port must be less than 65536')
-        .required("Camera port can't be empty"),
-
-        linePcAddress: yup.string()
-        .matches(
-            /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/,
-            'Invalid IP address format'
-        )
-        .required("Line PC Address can't be empty"),
+  linePcAddress: yup
+    .string()
+    .matches(
+      /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/,
+      'Invalid IP address format'
+    )
+    .required("Line PC Address can't be empty")
 })
 
-function PrinterLineConfigurationModal({
-  open,
-  handleClose,
-  editData,
-  handleSubmitForm,
-}) {
+function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubmitForm }) {
   const {
     handleSubmit,
     control,
@@ -94,28 +81,32 @@ function PrinterLineConfigurationModal({
       areaId: '',
       printerCategoryId: '',
       printer: '',
-      controlpanelId: '',
+      controlpanelId:  '',
       lineNo: '',
-      cameraIp: '',
-      cameraPort: '',
+      cameraEnable: false,
+      cameraId: '',
       linePcAddress: '',
       printerEnabled: false
     }
   })
-
+  
   const [allAreaCategory, setAllAreaCategory] = useState([])
   const [allArea, setAllArea] = useState([])
   const [allLocation, setAllLocation] = useState([])
   const [allPrinterCategory, setAllPrinterCatergory] = useState([])
   const [allPrinter, setAllPrinter] = useState([])
-  const router=useRouter()
+  const router = useRouter()
   const [printerCategoryId, setPrinterCategoryId] = useState('')
-    const [areaCategoryId, setAreaCategoryId] = useState('')
-  
-  const [allControlPanelData, setAllControlPanelData] = useState([])
-  const {setIsLoading}=useLoading()
-  const {removeAuthToken}=useAuth()
+  const [areaCategoryId, setAreaCategoryId] = useState('')
 
+  const [allControlPanelData, setAllControlPanelData] = useState([])
+  const [allCameraMasterData, setAllCameraMasterData] = useState([])
+
+  const { setIsLoading } = useLoading()
+  const { removeAuthToken } = useAuth()
+  const camera_enable=watch('cameraEnable');
+  console.log(camera_enable)
+  
   useEffect(() => {
     if (editData) {
       reset({
@@ -127,8 +118,8 @@ function PrinterLineConfigurationModal({
         printer: editData?.printer_id || '',
         controlpanelId: editData?.control_panel_id || '',
         lineNo: editData?.line_no || '',
-        cameraIp: editData?.camera_ip || '',
-        cameraPort: editData?.camera_port || '',
+        cameraEnable: editData?.camera_enable || false,
+        cameraId: editData?.cameraId ,
         linePcAddress: editData?.line_pc_ip || '',
         printerEnabled: editData?.enabled || false
       })
@@ -143,18 +134,28 @@ function PrinterLineConfigurationModal({
     return () => {}
   }, [])
 
-  useEffect(() => {
-      if (areaCategoryId !== '') {
-        console.log('area cate changed')
-        getAllArea()
-      }
-    }, [areaCategoryId])
+  useEffect(()=>{
+    console.log("camera is ",camera_enable?"no":"off")
+    if(camera_enable){
+      getAllCameraMaster()
+    }
+    else if(!editData.id &&allCameraMasterData.length && !camera_enable){
+    // setAllCameraMasterData([])
+    }
+  },[camera_enable])
 
-    useEffect(() => {
-        if (printerCategoryId !== '') {
-          getAllPrinterMaster(printerCategoryId)
-        }
-      }, [printerCategoryId])
+  useEffect(() => {
+    if (areaCategoryId !== '') {
+      console.log('area cate changed')
+      getAllArea()
+    }
+  }, [areaCategoryId])
+
+  useEffect(() => {
+    if (printerCategoryId !== '') {
+      getAllPrinterMaster(printerCategoryId)
+    }
+  }, [printerCategoryId])
 
   const getAllAreaCategory = async () => {
     try {
@@ -218,7 +219,12 @@ function PrinterLineConfigurationModal({
   const getAllPrinterMaster = async printerCategoryID => {
     try {
       setIsLoading(true)
-      const res = await api(`/printermaster/printerByCategory/?printerCategoryID=${printerCategoryID}?limit=-1`, {}, 'get', true)
+      const res = await api(
+        `/printermaster/printerByCategory/?printerCategoryID=${printerCategoryID}&&limit=-1`,
+        {},
+        'get',
+        true
+      )
       setIsLoading(false)
       if (res.data.success) {
         setAllPrinter(res.data.data.printerCategories)
@@ -274,6 +280,25 @@ function PrinterLineConfigurationModal({
       setIsLoading(false)
     }
   }
+  const getAllCameraMaster = async () => {
+    try {
+      setIsLoading(true)
+      const res = await api('/cameramaster?limit=-1', {}, 'get', true)
+      setIsLoading(false)
+      if (res.data.success) {
+        setAllCameraMasterData(res.data.data.cameraMasters)
+      } else {
+        console.log('Error to get all Camera Masters ', res.data)
+        if (res.data.code === 401) {
+          removeAuthToken()
+          router.push('/401')
+        }
+      }
+    } catch (error) {
+      console.log('Error in get Camera Masters', error)
+      setIsLoading(false)
+    }
+  }
   const locationId = allLocation?.map(item => ({
     id: item.id,
     value: item.id,
@@ -284,13 +309,13 @@ function PrinterLineConfigurationModal({
     value: item.id,
     label: item.area_category_name
   }))
-  
+
   const AreaCategoryId = watch('areaCategoryId')
   const printerCategory = watch('printerCategoryId')
-  useEffect(()=>{
-      setPrinterCategoryId(printerCategory)
-      setAreaCategoryId(AreaCategoryId)
-  },[AreaCategoryId,printerCategory])
+  useEffect(() => {
+    setPrinterCategoryId(printerCategory)
+    setAreaCategoryId(AreaCategoryId)
+  }, [AreaCategoryId, printerCategory])
 
   const areaName = allArea?.map(item => ({
     id: item.id,
@@ -303,7 +328,6 @@ function PrinterLineConfigurationModal({
     label: item.printer_category_name
   }))
 
-
   const printers = allPrinter?.map(item => ({
     id: item.id,
     value: item.id,
@@ -315,6 +339,14 @@ function PrinterLineConfigurationModal({
     value: item.id,
     label: item.name
   }))
+
+  const cameraData = allCameraMasterData?.map(item => ({
+    id: item.id,
+    value: item.id,
+    label: item.name
+  }))
+
+  console.log()
   return (
     <Modal
       open={open}
@@ -368,13 +400,17 @@ function PrinterLineConfigurationModal({
           </Grid2>
           <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
             <Grid2 size={6}>
-              <CustomTextField name='cameraIp' label='Camera Ip' control={control} />
+              <Typography>
+                <Controller
+                  name='printerEnabled'
+                  control={control}
+                  render={({ field }) => (
+                    <FormControlLabel control={<Switch {...field} checked={field.value} color='primary' />} />
+                  )}
+                />
+                Printer Status
+              </Typography>
             </Grid2>
-            <Grid2 size={6}>
-              <CustomTextField name='cameraPort' label='Camera Port' control={control} />
-            </Grid2>
-          </Grid2>
-          <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
             <Grid2 size={6}>
               <CustomTextField name='linePcAddress' label='Line Pc Address' control={control} />
             </Grid2>
@@ -382,17 +418,20 @@ function PrinterLineConfigurationModal({
           <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
             <Grid2 size={6}>
               <Typography>
-           
-              <Controller
-                name='printerEnabled'
-                control={control}
-                render={({ field }) => (
-                  <FormControlLabel control={<Switch {...field} checked={field.value} color='primary' />} />
-                )}
-              />
-              Printer Status  
+                <Controller
+                  name='cameraEnable'
+                  control={control}
+                  render={({ field }) => (
+                    <FormControlLabel control={<Switch {...field} checked={field.value} color='primary' />} />
+                  )}
+                />
+                Camera Enable
               </Typography>
+              {/* <CustomTextField name='cameraIp' label='Camera Ip' control={control} /> */}
             </Grid2>
+            {camera_enable && (<Grid2 size={6}>
+              <CustomDropdown name='cameraId' label='Camera Name' control={control} options={cameraData} />
+            </Grid2>)}
           </Grid2>
           <Grid2 item xs={12} className='mt-3'>
             <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'>
