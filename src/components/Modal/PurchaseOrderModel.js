@@ -60,7 +60,6 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
 
 
     } = useForm({
-        mode: 'onChange',
         resolver: yupResolver(purchaseSchema),
         defaultValues: {
             orderNo: editData.orderNo || '',
