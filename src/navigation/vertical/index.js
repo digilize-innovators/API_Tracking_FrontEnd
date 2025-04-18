@@ -15,7 +15,8 @@ import {
   MdSettingsOverscan,
   MdListAlt,
   MdInventory2,
-  MdReceiptLong
+  MdReceiptLong,
+  MdCameraAlt
 } from 'react-icons/md'
 
 import { AiOutlineProduct, AiOutlineAudit } from 'react-icons/ai'
@@ -146,10 +147,17 @@ const navigation = () => {
       path: '/controlpanelmaster',
       mainTitle: false
     },
+    
     {
       title: 'Printer Line Configuration',
       icon: TfiLayoutMediaRightAlt,
       path: '/printerlineconfiguration',
+      mainTitle: false
+    },
+    {
+      title: 'Camera Master',
+      icon: MdCameraAlt,
+      path: '/cameramaster',
       mainTitle: false
     }
   ]
