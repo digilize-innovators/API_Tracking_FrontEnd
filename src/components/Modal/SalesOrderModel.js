@@ -1,5 +1,4 @@
-
-import { useFieldArray, useForm,useWatch } from 'react-hook-form';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { Modal, Box, Typography, Button, Grid2 } from '@mui/material';
 import CustomTextField from 'src/components/CustomTextField';
 import { style } from 'src/configs/generalConfig';
@@ -16,20 +15,32 @@ const SalesOrderSchema = yup.object().shape({
     orderNo: yup.string().required('Order No is required'),
     from: yup.string().required('From location is required'),
     to: yup.string().required('To location is required'),
-    addPurchase: yup
+    orders: yup
         .array()
         .of(
             yup.object().shape({
-                product: yup.mixed().required('Product is required'),
-                batch: yup.mixed().required('Batch is required'),
+                productId: yup.string().required('Product is required'),
+                batchId: yup.string().required('Batch is required'),
                 qty: yup
                     .number()
-                    .typeError('Quantity must be a number')
                     .required('Quantity is required')
+                    .typeError('Quantity must be a number')
                     .positive('Quantity must be greater than zero'),
             })
         )
-        .min(1, 'At least one purchase item is required'),
+        .min(1, 'At least one purchase item is required')
+        .test('no-duplicate-batch', 'Duplicate batch not allowed', (orders) => {
+            if (!orders) return true;
+            const seen = new Set();
+            for (let i = 0; i < orders.length; i++) {
+                const key = `${orders[i]?.productId}-${orders[i]?.batchId}`;
+                if (seen.has(key)) {
+                    return false;
+                }
+                seen.add(key);
+            }
+            return true;
+        }),
 });
 
 const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
@@ -314,15 +325,16 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
                                         options={batchOptionsMap[index]?.options || []}
                                     />
                                 </Grid2>
-                                <Grid2 size={3}>
+                                <Grid2 size={3.5}>
                                     <CustomTextField
+                                        type='Number'
                                         name={`orders.${index}.qty`}
                                         label="Quantity"
                                         control={control}
                                     />
                                 </Grid2>
                                 <Grid2
-                                    size={1.5}
+                                    size={0.5}
                                     sx={{
                                         display: 'flex',
                                         flexDirection: 'column',
@@ -335,21 +347,31 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
                                             onClick={() => remove(index)}
                                             disabled={fields.length === 1}
                                             sx={{
-                                                width: '100%',
+                                                minWidth: 0,
+                                                width: 36,
+                                                height: 36,
+                                                minHeight: 0,
+                                                padding: 0,
                                                 backgroundColor: '#e53935',
                                                 '&:hover': {
                                                     backgroundColor: '#c62828',
                                                 },
                                             }}
                                         >
-                                            Remove
+                                            -
                                         </Button>
                                     </Box>
                                 </Grid2>
                             </Grid2>
                         ))}
 
-
+                        {errors.orders?.root?.message && (
+                            <Grid2>
+                                <Typography color="error" sx={{ mt: 2, fontSize: 14 }}>
+                                    {errors.orders.root.message}
+                                </Typography>
+                            </Grid2>
+                        )}
                     </Grid2>
 
 

@@ -1,4 +1,3 @@
-
 import { useFieldArray, useForm, Controller, useWatch } from 'react-hook-form';
 import { Modal, Box, Typography, Button, Grid2, FormControl, InputLabel, MenuItem, FormHelperText, Select } from '@mui/material';
 import CustomTextField from 'src/components/CustomTextField';
@@ -14,20 +13,32 @@ const purchaseSchema = yup.object().shape({
     orderNo: yup.string().required('Order No is required'),
     from: yup.string().required('From location is required'),
     to: yup.string().required('To location is required'),
-    addPurchase: yup
+    orders: yup
         .array()
         .of(
             yup.object().shape({
-                product: yup.mixed().required('Product is required'),
-                batch: yup.mixed().required('Batch is required'),
+                productId: yup.string().required('Product is required'),
+                batchId: yup.string().required('Batch is required'),
                 qty: yup
                     .number()
-                    .typeError('Quantity must be a number')
                     .required('Quantity is required')
+                    .typeError('Quantity must be a number')
                     .positive('Quantity must be greater than zero'),
             })
         )
-        .min(1, 'At least one purchase item is required'),
+        .min(1, 'At least one purchase item is required')
+        .test('no-duplicate-batch', 'Duplicate batch not allowed', (orders) => {
+            if (!orders) return true;
+            const seen = new Set();
+            for (let i = 0; i < orders.length; i++) {
+                const key = `${orders[i]?.productId}-${orders[i]?.batchId}`;
+                if (seen.has(key)) {
+                    return false;
+                }
+                seen.add(key);
+            }
+            return true;
+        }),
 });
 
 const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
@@ -43,14 +54,18 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
         handleSubmit,
         control,
         reset,
+        trigger,
         formState: { errors },
+        setValue,
+
 
     } = useForm({
+        mode: 'onChange',
         resolver: yupResolver(purchaseSchema),
         defaultValues: {
             orderNo: editData.orderNo || '',
             from: editData.from || '',
-            to: editData.to || '',
+            to: editData.to || locationTo.id || '',
             orders: editData.orders?.length
                 ? editData.orders.map(order => ({
                     productId: order.productId || '',
@@ -68,7 +83,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
             reset({
                 orderNo: editData.orderNo || '',
                 from: editData.from || '',
-                to: editData.to || '',
+                to: editData.to || locationTo.id || '',
                 orders: editData.orders?.length
                     ? editData.orders.map(order => ({
                         productId: order.productId || '',
@@ -102,6 +117,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                             value: batch.id,
                             label: batch.batch_no,
                         }));
+
                         setBatchOptionsMap(prev => ({
                             ...prev,
                             [index]: {
@@ -157,14 +173,15 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                 setIsLoading(false)
                 console.log('All locations ', res.data)
                 if (res.data.success) {
-                    console.log(res.data.data.location)
+                    const location = res.data.data.location;
+                    const mapped = {
+                        id: location.id,
+                        value: location.id,
+                        label: location.location_name
+                    };
 
-                    setLocationTo({
-                        id: res.data.data.location.id,
-                        value: res.data.data.location.id,
-                        label: res.data.data.location.location_name
-                    })
-
+                    setLocationTo(mapped);
+                    setValue('to', mapped.id, { shouldValidate: true, shouldDirty: true });
 
                 } else {
                     console.log('Error to get all userLocation ', res.data)
@@ -209,7 +226,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
         getLocation()
 
     }, [])
-
+    console.log(errors.orders?.root?.message)
     return (
         <Modal open={open} onClose={handleClose} aria-labelledby='Purchase'>
             <Box sx={{
@@ -244,30 +261,30 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                         </Grid2>
                         <Grid2 size={4}>
 
-                            {locationTo && (
-                                <Controller
-                                    name='to'
-                                    control={control}
-                                    defaultValue={locationTo?.id}
-                                    render={({ field, fieldState: { error } }) => (
-                                        <FormControl fullWidth error={!!error}>
-                                            <InputLabel id='to-label'>To</InputLabel>
-                                            <Select
-                                                {...field}
-                                                labelId='to-label'
-                                                label='To'
-                                                value={locationTo?.id}
-                                                disabled
-                                            >
-                                                <MenuItem value={locationTo?.id}>
-                                                    {locationTo?.label}
-                                                </MenuItem>
-                                            </Select>
-                                            <FormHelperText>{error?.message}</FormHelperText>
-                                        </FormControl>
-                                    )}
-                                />
-                            )}
+
+                            <Controller
+                                name='to'
+                                control={control}
+                                defaultValue={locationTo?.id}
+                                render={({ field, fieldState: { error } }) => (
+                                    <FormControl fullWidth error={!!error}>
+                                        <InputLabel id='to-label'>To</InputLabel>
+                                        <Select
+                                            {...field}
+                                            labelId='to-label'
+                                            label='To'
+                                            value={locationTo?.id}
+                                            disabled
+                                        >
+                                            <MenuItem value={locationTo?.id}>
+                                                {locationTo?.label}
+                                            </MenuItem>
+                                        </Select>
+                                        <FormHelperText>{error?.message}</FormHelperText>
+                                    </FormControl>
+                                )}
+                            />
+
 
                         </Grid2>
                     </Grid2>
@@ -304,40 +321,54 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                                         options={batchOptionsMap[index]?.options || []}
                                     />
                                 </Grid2>
-                                <Grid2 size={3}>
+                                <Grid2 size={3.5}>
                                     <CustomTextField
+                                        type='Number'
                                         name={`orders.${index}.qty`}
                                         label="Quantity"
                                         control={control}
                                     />
                                 </Grid2>
                                 <Grid2
-                                    size={1.5}
+                                    size={0.5}
                                     sx={{
                                         display: 'flex',
-                                        flexDirection: 'column',   
+                                        flexDirection: 'column',
                                     }}
                                 >
-                                    <Box sx={{ marginTop: 2 }}> 
+                                    <Box sx={{ marginTop: 2 }}>
                                         <Button
                                             type="button"
                                             variant="contained"
                                             onClick={() => remove(index)}
                                             disabled={fields.length === 1}
                                             sx={{
-                                                width: '100%',
+                                                minWidth: 0,
+                                                width: 36,
+                                                height: 36,
+                                                minHeight: 0,
+                                                padding: 0,
                                                 backgroundColor: '#e53935',
                                                 '&:hover': {
                                                     backgroundColor: '#c62828',
                                                 },
                                             }}
                                         >
-                                            Remove
+                                            -
                                         </Button>
                                     </Box>
-                                </Grid2>         
-                           </Grid2>
+                                </Grid2>
+
+                            </Grid2>
+
                         ))}
+                        {errors.orders?.root?.message && (
+                            <Grid2>
+                                <Typography color="error" sx={{ mt: 2, fontSize: 14 }}>
+                                    {errors.orders.root.message}
+                                </Typography>
+                            </Grid2>
+                        )}
 
                     </Grid2>
 
