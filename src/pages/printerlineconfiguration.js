@@ -80,12 +80,14 @@ const Index = () => {
     index + 1,
     item.printer_line_name,
     item.PrinterMaster.printer_id,
+    item.camera_enable,
+    item.cameraMaster.name,
     item.esign_status || 'N/A'
   ])
 
   const tableData = useMemo(
     () => ({
-      tableHeader: ['Sr.No.', 'Printer Line Name', 'Printer', 'E-Sign'],
+      tableHeader: ['Sr.No.', 'Printer Line Name', 'Printer','Camera Enable','Camera Name','E-Sign'],
       tableHeaderText: 'Printer Line Configuration Report',
       tableBodyText: 'Printer Line Configuration Data',
       filename: 'PrinterLineConfiguration'
