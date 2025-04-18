@@ -105,9 +105,15 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       }
     ]
   });
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [openModalApprove, setOpenModalApprove] = useState(false);
+  const [approveData, setApproveData] = useState({ approveAPIName: "", approveAPImethod: "", approveAPIEndPoint: "", session: "" });
+  const [config, setConfig] = useState(null);
 
   useEffect(() => {
     getPrintlineSetting();
+    const decodedToken = getTokenValues();
+    setConfig(decodedToken);
     return () => {
     }
   }, []);
@@ -142,28 +148,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       console.log('Error to get printline setting ', error);
       setIsLoading(false);
     }
-  }
-
-  const applyValidated = () => {
-    // if (label === '') {
-    //   setErrorLabel({ isError: true, message: 'Label must be required' })
-    // } else {
-    //   setErrorLabel({ isError: false, message: '' })
-    // }
-    // if (dateFormat === null) {
-    //   setErrorDateFormat({ isError: true, message: 'DateFormat must be required' })
-    // } else {
-    //   setErrorDateFormat({ isError: false, message: '' })
-    // }
-    // if (!selectedVariable.length) {
-    //   setErrorNoOfVariable({ isError: true, message: 'No of Variable must be required' })
-    // } else {
-    //   setErrorNoOfVariable({ isError: false, message: '' })
-    // }
-  }
-
-  const validated = () => {
-    // return label != '' && selectedVariable.length >= 0 && dateFormat !== ''
   }
 
   const addSetting = async () => {
@@ -223,7 +207,12 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
   }
 
   const applySettings = async () => {
-    editId ? await editSetting() : await addSetting()
+    if (config?.config?.esign_status) {
+      setApproveData({ approveAPIName: "batch-printing-create", approveAPImethod: "POST", approveAPIEndPoint: "/api/v1/batch-printing", session: "start" });
+      setAuthModalOpen(true);
+    } else {
+      editId ? await editSetting() : await addSetting()
+    }
   }
 
   const closeModal = () => {
@@ -257,6 +246,69 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       setIsLoading(false)
     }
   }
+
+  const handleAuthModalClose = () => {
+    setAuthModalOpen(false);
+    setOpenModalApprove(false);
+  };
+
+  const handleAuthModalOpen = () => {
+    console.log("Open auth model again");
+    setApproveData({ ...approveData, approveAPIName: "batch-printing-approve", approveAPImethod: "PATCH", approveAPIEndPoint: "/api/v1/batch-printing" });
+    setAuthModalOpen(true);
+  };
+
+  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+    const resetState = () => {
+      setApproveData({ approveAPIName: "", approveAPImethod: "", approveAPIEndPoint: "", session: "" });
+      setAuthModalOpen(false);
+    };
+    if (!isAuthenticated) {
+      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true });
+      return;
+    }
+    const prepareData = () => ({
+      esignStatus: esignStatus,
+      audit_log: config?.config?.audit_logs ? {
+        "user_id": user.userId,
+        "user_name": user.userName,
+        "performed_action": 'approved',
+        "remarks": remarks.length > 0 ? remarks : `Batch printing session start approved`,
+      } : {}
+    });
+    const handleEsignApproved = async () => {
+      console.log("esign is approved for creator.");
+      const data = {
+        esignStatus: "approved",
+        audit_log: config?.config?.audit_logs ? {
+          "user_id": user.userId,
+          "user_name": user.userName,
+          "performed_action": 'approved',
+          "remarks": remarks.length > 0 ? remarks : `Batch printing session start requested`,
+        } : {}
+      }
+      await api('/esign-status/double-esign', data, 'patch', true);
+      handleAuthModalOpen();
+    };
+    const handleApproverActions = async () => {
+      console.log("esign approve by approver.");
+      const data = prepareData();
+      await api('/esign-status/double-esign', data, 'patch', true);
+    };
+    if (isApprover && esignStatus === "approved") {
+      await handleApproverActions();
+      editId ? await editSetting() : await addSetting();
+    } else {
+      if (esignStatus === "rejected") {
+        console.log("esign is rejected.");
+        setAuthModalOpen(false);
+        setOpenModalApprove(false);
+      } else if (esignStatus === "approved") {
+        handleEsignApproved();
+      }
+    }
+    resetState();
+  };
 
   return (
     <>
@@ -395,6 +447,17 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         </Box>
       </Modal>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+      <AuthModal
+        open={authModalOpen}
+        handleClose={handleAuthModalClose}
+        approveAPIName={approveData.approveAPIName}
+        approveAPImethod={approveData.approveAPImethod}
+        approveAPIEndPoint={approveData.approveAPIEndPoint}
+        handleAuthResult={handleAuthResult}
+        config={config}
+        handleAuthModalOpen={handleAuthModalOpen}
+        openModalApprove={openModalApprove}
+      />
     </>
   )
 }
@@ -1058,14 +1121,22 @@ const Index = ({ userId, ip }) => {
     }
   }
 
-  const handleSessionStart = async (line) => {
-    setApproveData({ approveAPIName: "batch-printing-create", approveAPImethod: "POST", approveAPIEndPoint: "/api/v1/batch-printing", session: "start" });
-    setAuthModalOpen(true);
+  const handleSessionStart = async () => {
+    if(config?.config?.esign_status){
+      setApproveData({ approveAPIName: "batch-printing-create", approveAPImethod: "POST", approveAPIEndPoint: "/api/v1/batch-printing", session: "start" });
+      setAuthModalOpen(true);
+    } else {
+      handleAfterStartSession();
+    }
   }
 
   const handleSessionStop = async () => {
-    setApproveData({ approveAPIName: "batch-printing-create", approveAPImethod: "POST", approveAPIEndPoint: "/api/v1/batch-printing", session: "stop" });
-    setAuthModalOpen(true);
+    if(config?.config?.esign_status){
+      setApproveData({ approveAPIName: "batch-printing-create", approveAPImethod: "POST", approveAPIEndPoint: "/api/v1/batch-printing", session: "stop" });
+      setAuthModalOpen(true);
+    } else {
+      handleAfterStopSession();
+    }
   }
 
   const handleAuthModalClose = () => {
@@ -1354,7 +1425,7 @@ const Index = ({ userId, ip }) => {
                         <Button
                           variant='contained'
                           className='py-2'
-                          onClick={() => handleSessionStart(line)}
+                          onClick={() => handleSessionStart()}
                           disabled={line.disabledStartSession}
                         >
                           Start Session
