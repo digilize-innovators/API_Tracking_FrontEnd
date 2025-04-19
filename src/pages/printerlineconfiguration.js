@@ -78,11 +78,11 @@ const Index = () => {
 
   const tableBody = allPrinterLineConfigurationData?.map((item, index) => [
     index + 1,
-    item.printer_line_name,
-    item.PrinterMaster.printer_id,
-    item.camera_enable,
-    item.cameraMaster.name,
-    item.esign_status || 'N/A'
+    item?.printer_line_name,
+    item?.PrinterMaster.printer_id,
+    item?.camera_enable,
+    item?.cameraMaster?.name,
+    item?.esign_status || 'N/A'
   ])
 
   const tableData = useMemo(
@@ -190,7 +190,6 @@ const Index = () => {
       console.log("formData",formData);
       
       const data = { ...formData}
-      data.cameraPort = String(formData.cameraPort)
       const auditlogRemark = remarks
       let audit_log
       if (config?.config?.audit_logs) {

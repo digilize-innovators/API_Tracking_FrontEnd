@@ -69,6 +69,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   const {
     handleSubmit,
     control,
+    setValue,
     watch,
     reset,
     formState: { errors }
@@ -119,7 +120,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
         controlpanelId: editData?.control_panel_id || '',
         lineNo: editData?.line_no || '',
         cameraEnable: editData?.camera_enable || false,
-        cameraId: editData?.cameraId ,
+        cameraId: editData?.cameraId||'' ,
         linePcAddress: editData?.line_pc_ip || '',
         printerEnabled: editData?.enabled || false
       })
@@ -139,8 +140,9 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     if(camera_enable){
       getAllCameraMaster()
     }
-    else if(!editData.id &&allCameraMasterData.length && !camera_enable){
+    else if(allCameraMasterData.length && !camera_enable){
     // setAllCameraMasterData([])
+    setValue('cameraId','')
     }
   },[camera_enable])
 
