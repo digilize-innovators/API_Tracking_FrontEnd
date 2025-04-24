@@ -1,5 +1,5 @@
-import { useFieldArray, useForm, useWatch } from 'react-hook-form';
-import { Modal, Box, Typography, Button, Grid2 } from '@mui/material';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { Modal, Box, Typography, Button, Grid2, TextField } from '@mui/material';
 import CustomTextField from 'src/components/CustomTextField';
 import { style } from 'src/configs/generalConfig';
 import { useEffect, useState } from 'react';
@@ -13,6 +13,7 @@ import { api } from 'src/utils/Rest-API';
 const SalesOrderSchema = yup.object().shape({
     type: yup.string().required('Select OrderType'),
     orderNo: yup.string().required('Order No is required'),
+    orderDate:yup.string().required('Select order date'),
     from: yup.string().required('From location is required'),
     to: yup.string().required('To location is required'),
     orders: yup
@@ -60,6 +61,7 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
         defaultValues: {
             type: editData.type || '',
             orderNo: editData.orderNo || '',
+            orderDate:editData.orderDate||'',
             from: editData.from || '',
             to: editData.to || '',
             orders: editData.orders?.length
@@ -75,6 +77,7 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
             reset({
                 type: editData.type || '',
                 orderNo: editData.orderNo || '',
+                orderDate:editData.orderDate||'',
                 from: editData.from || '',
                 to: editData.to || '',
                 orders: editData.orders?.length
@@ -253,7 +256,7 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
 
                 <form onSubmit={handleSubmit(handleSubmitForm)}>
                     <Grid2 container spacing={2}>
-                        <Grid2 size={6}>
+                        <Grid2 size={4}>
                             <CustomDropdown
                                 name='type'
                                 label='Order Type'
@@ -262,12 +265,31 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
                                 Grid2
                             />
                         </Grid2>
-                        <Grid2 size={6}>
+                        <Grid2 size={4}>
                             <CustomTextField
                                 name='orderNo'
                                 label='Order No'
                                 control={control}
                             />
+                        </Grid2>
+                        <Grid2 size={4}>
+                        <Controller
+                            name="orderDate"
+                            control={control}
+                            rules={{ required: 'Order date is required' }}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    fullWidth
+                                    id="Order-date"
+                                    label="Order Date"
+                                    type="date"
+                                    InputLabelProps={{ shrink: true }}
+                                    error={!!errors.orderDate}
+                                    helperText={errors.orderDate?.message || ''}   
+                                />
+                            )}
+                        />
                         </Grid2>
 
                     </Grid2>

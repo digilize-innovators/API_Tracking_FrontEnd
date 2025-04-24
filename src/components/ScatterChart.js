@@ -42,10 +42,10 @@ const Scatterchart = ({ data }) => {
         <YAxis dataKey='y' type='number' />
         <Tooltip cursor={{ strokeDasharray: '3 3' }} />
         <Legend />
-        <Scatter name='executedCode' data={data?.map(el => ({ name: el.name, y: el.executedCode }))} fill='#8884d8' />
+        <Scatter name='executedBatch' data={data?.map(el => ({ name: el.name, y: el.executedBatch }))} fill='#8884d8' />
         <Scatter
-          name='totalCodeCreate'
-          data={data?.map(el => ({ name: el.name, y: el.totalCodeCreate }))}
+          name='totalBatch'
+          data={data?.map(el => ({ name: el.name, y: el.totalBatch }))}
           fill='#82ca9d'
         />
       </ScatterChart>

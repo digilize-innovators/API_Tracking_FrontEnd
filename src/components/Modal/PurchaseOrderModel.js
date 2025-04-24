@@ -1,5 +1,5 @@
 import { useFieldArray, useForm, Controller, useWatch } from 'react-hook-form';
-import { Modal, Box, Typography, Button, Grid2, FormControl, InputLabel, MenuItem, FormHelperText, Select } from '@mui/material';
+import { Modal, Box, Typography, Button, Grid2, FormControl, InputLabel, MenuItem, FormHelperText, Select, TextField } from '@mui/material';
 import CustomTextField from 'src/components/CustomTextField';
 import { style } from 'src/configs/generalConfig';
 import { useEffect, useState } from 'react';
@@ -11,6 +11,7 @@ import { api } from 'src/utils/Rest-API';
 
 const purchaseSchema = yup.object().shape({
     orderNo: yup.string().required('Order No is required'),
+    orderDate: yup.string().required('Select orders date'),
     from: yup.string().required('From location is required'),
     to: yup.string().required('To location is required'),
     orders: yup
@@ -63,6 +64,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
         resolver: yupResolver(purchaseSchema),
         defaultValues: {
             orderNo: editData.orderNo || '',
+            orderDate:editData.orderDate||'',
             from: editData.from || '',
             to: editData.to || locationTo.id || '',
             orders: editData.orders?.length
@@ -81,6 +83,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
         if (editData) {
             reset({
                 orderNo: editData.orderNo || '',
+                orderDate:editData.orderDate||'',
                 from: editData.from || '',
                 to: editData.to || locationTo.id || '',
                 orders: editData.orders?.length
@@ -239,7 +242,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
 
                 <form onSubmit={handleSubmit(handleSubmitForm)}>
                     <Grid2 container spacing={2}>
-                        <Grid2 size={4}>
+                        <Grid2 size={6}>
                             <CustomTextField
                                 name='orderNo'
                                 label='Order No'
@@ -247,7 +250,28 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                                 disabled={!!editData?.location_id}
                             />
                         </Grid2>
-                        <Grid2 size={4}>
+                        <Grid2 size={6}>
+                        <Controller
+                            name="orderDate"
+                            control={control}
+                            rules={{ required: 'Order date is required' }}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    fullWidth
+                                    id="Order-date"
+                                    label="Order Date"
+                                    type="date"
+                                    InputLabelProps={{ shrink: true }}
+                                    error={!!errors.orderDate}
+                                    helperText={errors.orderDate?.message || ''}   
+                                />
+                            )}
+                        />
+                    </Grid2>
+                        </Grid2>
+                        <Grid2 container spacing={2}>
+                        <Grid2 size={6}>
                             <CustomDropdown
                                 name='from'
                                 label='From'
@@ -255,12 +279,8 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
                                 options={locationFrom}
                                 Grid2
                             />
-
-
-                        </Grid2>
-                        <Grid2 size={4}>
-
-
+                         </Grid2>
+                        <Grid2 size={6}>
                             <Controller
                                 name='to'
                                 control={control}
@@ -391,3 +411,5 @@ const PurchaseOrderModel = ({ open, handleClose, editData, handleSubmitForm }) =
 };
 
 export default PurchaseOrderModel;
+
+

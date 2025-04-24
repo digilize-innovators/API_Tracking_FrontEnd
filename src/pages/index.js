@@ -9,7 +9,8 @@ import {
   FormLabel,
   styled,
   TextField,
-  Button
+  Button,
+  Box
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -28,7 +29,13 @@ import Areachart from 'src/components/AreaChart'
 import Linechart from 'src/components/LineChart'
 import Scatterchart from 'src/components/ScatterChart'
 import Piechart from 'src/components/PieChart'
+import Widget from 'src/components/Widget/Widget';
 import moment from 'moment';
+import Featured from 'src/components/Featured';
+import List from 'src/components/DashboardTable'
+import ProductionDashboard from 'src/components/ProductionDashboard'
+import { useAuth } from 'src/Context/AuthContext'
+import { useRouter } from 'next/router'
 
 
 const ChatbotComponent = dynamic(() => import('src/components/ChatbotComponent'), {
@@ -70,10 +77,37 @@ const Dashboard = () => {
   const [timePeriod, setTimePeriod] = useState('yearly')
   const [customDate, setCustomDate] = useState({ customEndDate: '', customStartDate: '' }) //useoneState
   
-  const [data, setData] = useState([])
+  const [batchData, setBatchData] = useState([])
+
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [monthlyDate, setMonthlyDate] = useState({ start: '', end: '' })
-  const getData = async () => {
+    const [data,setData]=useState()
+       const { removeAuthToken } = useAuth()
+           const router=useRouter()
+      const getData = async () => {
+         try {   
+           const response = await api(`/dashboard`, {}, 'get', true)
+           console.log('GET sale order response :- ', response.data.data)
+           if (response?.data?.success) {
+             setData(response.data.data)
+           } else {
+             console.log('Error to get all purchase-order  ', response.data)
+             if (response.data.code === 401) {
+               removeAuthToken();
+               router.push('/401');
+             }
+           }
+         } catch (error) {
+           console.log(error)
+           console.log('Error in get locations ', error)
+         } 
+         
+       }
+     
+       useEffect(()=>{ 
+        getData()
+       },[])
+  const getBatchData = async () => {
     try {
       // const param = {}
       const params = new URLSearchParams();
@@ -123,7 +157,7 @@ const Dashboard = () => {
       }
       else{
         const response = await api(`/dashboard/batch?&${params.toString()}`, {}, 'get', true)
-        setData(response?.data.data)
+        setBatchData(response?.data.data)
         setAlertData({
           ...alertData,
           openSnackbar: true,
@@ -138,10 +172,10 @@ const Dashboard = () => {
       console.error(error)
     }
   }
-
+ 
   const handleChange = event => {
     setTimePeriod(event.target.value)
-    setData([])
+    setBatchData([])
     if (event.target.value !== 'custom') {
       setCustomDate({ customEndDate: '', customStartDate: '' })
     }
@@ -176,18 +210,18 @@ const Dashboard = () => {
   }
 
   const handleMonthlySubmit = async () => {
-    await getData()
+    await getBatchData()
   }
 
 
   const handleCustomSubmit = async () => {
     console.log('custom submit btn press..')
-    await getData()
+    await getBatchData()
   }
 
   useEffect(() => {
     if (timePeriod != undefined && timePeriod==="yearly") {
-      getData()
+      getBatchData()
     }
   }, [timePeriod])
 
@@ -220,7 +254,7 @@ const Dashboard = () => {
           </Grid2>
 
           {timePeriod === 'custom' && (
-            <Grid2 item xs={12} sx={{ mt: 2 }}>
+            <Grid2 item xs={12} sx={{ mt: 2 ,mb:4  }}>
               <Grid2 container spacing={3}>
                 <Grid2 item xs={12} sm={6} md={4}>
                   <DatePicker
@@ -244,7 +278,7 @@ const Dashboard = () => {
           )}
 
           {timePeriod === 'monthly' && (
-            <Grid2 item xs={12} sx={{ mt: 2 }}>
+            <Grid2 item xs={12} sx={{ mt: 2, mb:4  }}>
               <Grid2 container spacing={3} alignItems='center'>
                 <Grid2 item xs={12} sm={6} md={4}>
                   {/* <StyledTextField
@@ -306,34 +340,47 @@ const Dashboard = () => {
               </Grid2>
             </Grid2>
           )}
-
+             
           {/* <Barchart />
           <Areachart />
           <Linechart />
           <Scatterchart />
           <Piechart />
-          <PieChartWithYearValues Data={data}/> */}
+           <PiarValues Data={data}/> */}
 
-          <Grid2 container spacing={16} sx={{ mt: 3 }}>
-            <Grid2 sm={12} md={6}>
-              <Barchart data={data} />
-            </Grid2>
-            <Grid2 sm={12} md={6}>
-              <Areachart data={data} />
-            </Grid2>
-            <Grid2 sm={12} md={6}>
-              <Linechart data={data} />
-            </Grid2>
-            <Grid2 sm={12} md={6}>
-              <Scatterchart data={data} />
-            </Grid2>
-            <Grid2 sm={12} md={6}>
-              <Piechart data={data} />
-            </Grid2>
-            <Grid2 item sm={12} md={6}>
-              <PieChartWithYearValues Data={data} />
-            </Grid2>
-          </Grid2>
+                 <Widget data={data} />
+          
+                <Grid2 sx={{width:'100%'}}>
+           <ProductionDashboard data={data?.currentPrintingStatus}/>
+           </Grid2>
+           <Grid2 container spacing={16} sx={{ mt: 3 }}>
+           <Featured data={data}/>
+           <Grid2 sm={12} md={6}>
+           <Areachart data={batchData} />
+           </Grid2>
+           <Grid2 sx={{ width: '100%' }}> 
+            <List data={data}/>
+           </Grid2>
+         
+           <Grid2 sm={12} md={6}>
+           <Barchart data={batchData} />
+
+           </Grid2>
+           <Grid2 sm={12} md={6}>
+             <Linechart data={batchData} />
+           </Grid2>
+           <Grid2 sm={12} md={6}>
+             <Scatterchart data={batchData} />
+           </Grid2>
+           <Grid2 sm={12} md={6}>
+             <Piechart data={batchData} />
+           </Grid2>
+           <Grid2 item sm={12} md={6}>
+             <PieChartWithYearValues Data={batchData} />
+           </Grid2>
+         </Grid2>
+         
+         
         </Grid2>
         <AccessibilitySettings />
         <ChatbotComponent />

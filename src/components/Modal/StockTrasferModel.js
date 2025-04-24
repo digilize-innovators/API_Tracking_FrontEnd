@@ -1,5 +1,5 @@
-import { useFieldArray, useForm, useWatch } from 'react-hook-form';
-import { Modal, Box, Typography, Button, Grid2 } from '@mui/material';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { Modal, Box, Typography, Button, Grid2, TextField } from '@mui/material';
 import CustomTextField from 'src/components/CustomTextField';
 import { style } from 'src/configs/generalConfig';
 import { useEffect, useState } from 'react';
@@ -12,6 +12,7 @@ import { api } from 'src/utils/Rest-API';
 
 const StockTrasferSchema = yup.object().shape({
     orderNo: yup.string().required('Order No is required'),
+    orderDate:yup.string().required('Select orders date'),
     from: yup.string().required('From location is required'),
     to: yup.string().required('To location is required'),
     orders: yup
@@ -56,6 +57,7 @@ const StockTrasferModel = ({ open, handleClose, editData, handleSubmitForm }) =>
         resolver: yupResolver(StockTrasferSchema),
         defaultValues: {
             orderNo: editData.orderNo || '',
+            orderDate:editData.orderDate||'',
             from: editData.from || '',
             to: editData.to || '',
             orders: editData.orders?.length
@@ -71,6 +73,7 @@ const StockTrasferModel = ({ open, handleClose, editData, handleSubmitForm }) =>
             reset({
                 orderNo: editData.orderNo || '',
                 from: editData.from || '',
+                orderDate:editData.orderDate||'',
                 to: editData.to || '',
                 orders: editData.orders?.length
                     ? editData.orders.map(order => ({
@@ -201,7 +204,7 @@ const StockTrasferModel = ({ open, handleClose, editData, handleSubmitForm }) =>
 
                 <form onSubmit={handleSubmit(handleSubmitForm)}>
                     <Grid2 container spacing={2}>
-                        <Grid2 size={4}>
+                        <Grid2 size={6}>
                             <CustomTextField
                                 name='orderNo'
                                 label='Order No'
@@ -209,7 +212,28 @@ const StockTrasferModel = ({ open, handleClose, editData, handleSubmitForm }) =>
                                 disabled={!!editData?.location_id}
                             />
                         </Grid2>
-                        <Grid2 size={4}>
+                        <Grid2 size={6}>
+                        <Controller
+                            name="orderDate"
+                            control={control}
+                            rules={{ required: 'Order date is required' }}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    fullWidth
+                                    id="Order-date"
+                                    label="Order Date"
+                                    type="date"
+                                    InputLabelProps={{ shrink: true }}
+                                    error={!!errors.orderDate}
+                                    helperText={errors.orderDate?.message || ''}   
+                                />
+                            )}
+                        />
+                        </Grid2>
+                        </Grid2>
+                        <Grid2 container spacing={2}>
+                        <Grid2 size={6}>
                             <CustomDropdown
                                 name='from'
                                 label='From'
@@ -220,15 +244,13 @@ const StockTrasferModel = ({ open, handleClose, editData, handleSubmitForm }) =>
 
 
                         </Grid2>
-                        <Grid2 size={4}>
+                        <Grid2 size={6}>
                             <CustomDropdown
                                 name='to'
                                 label='To'
                                 control={control}
                                 options={location}
                             />
-
-
                         </Grid2>
                     </Grid2>
 
