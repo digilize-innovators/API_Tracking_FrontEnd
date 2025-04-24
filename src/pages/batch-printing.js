@@ -1452,9 +1452,13 @@ const Index = ({ userId, ip }) => {
                       <Grid2 size={3} item>
                         <Typography variant='h4'>{`Printed: ${line.printCount || 0}`}</Typography>
                       </Grid2>
-                      <Grid2 size={3} item>
-                        <Typography variant='h4'>{`Scanned: ${line.scanned || 0}`}</Typography>
-                      </Grid2>
+                      {
+                        line.camera_enable && (
+                          <Grid2 size={3} item>
+                            <Typography variant='h4'>{`Scanned: ${line.scanned || 0}`}</Typography>
+                          </Grid2>
+                        )
+                      }
                       <Grid2 size={3} item>
                         <Box className='w-100' sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                           <Button
