@@ -22,15 +22,15 @@ const Piechart = ({data}) => {
     const [newData,setNewData]=useState([])
     useEffect(()=>{
         const tempData=data?.reduce((preValue,currentVal,index)=>{
-            preValue['totalCreate']+=currentVal['totalCodeCreate'];
-            preValue['executeCode']+=currentVal['executedCode'];
+            preValue['totalCreate']+=currentVal['totalBatch'];
+            preValue['executeCode']+=currentVal['executedBatch'];
             if(index==data.length-1){
                 preValue['totalCreate']/=data.length;
                 preValue['executeCode']/=data.length
             }
             return preValue
         },{totalCreate:0,executeCode:0});
-        setNewData([{name:"totalCodeCreate", value:tempData?.totalCreate},{name:'executedCode',value:tempData?.executeCode}])
+        setNewData([{name:"totalBatch", value:tempData?.totalCreate},{name:'executedBatch',value:tempData?.executeCode}])
     },[data])
         // setReData()
         // const tempdata=data.map((el,)=>({name:el.name,value:el.totalCodeCreate/el.executedCode}))

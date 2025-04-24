@@ -26,8 +26,8 @@ const Barchart = ({data}) => {
         <YAxis />
         <Tooltip />
         <Legend />
-        <Bar dataKey="executedCode" fill="#8884d8" />
-        <Bar dataKey="totalCodeCreate" fill="#82ca9d" />
+        <Bar dataKey="executedBatch" fill="#8884d8" />
+        <Bar dataKey="totalBatch" fill="#82ca9d" />
       </BarChart>
     </div >
   );

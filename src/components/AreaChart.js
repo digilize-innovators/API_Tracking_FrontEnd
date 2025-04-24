@@ -17,8 +17,9 @@ const Areachart = ({data}) => {
         }}>
             <div style={{
                 marginBottom: '20px',
+                paddingBottom:"10px"
             }}>
-                Area Graph</div>
+                Total Baches v/s Executed Batches </div>
             <AreaChart width={600} height={300} data={data}
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }} >
                 <defs>
@@ -34,8 +35,8 @@ const Areachart = ({data}) => {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Area type="monotone" dataKey="executedCode" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
-                <Area type="monotone" dataKey="totalCodeCreate" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)" />
+                <Area type="monotone" dataKey="executedBatch" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
+                <Area type="monotone" dataKey="totalBatch" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)" />
             </AreaChart>
         </div>
     )

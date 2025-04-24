@@ -10,8 +10,8 @@ const validationSchema = yup.object().shape({
     name: yup.string()
         .trim()
         .matches(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/, "Control Panel Name cannot contain any special symbols")
-        .max(256, "Control Panel Name length should be less than 256")
-        .required("Control Panel Name can't be empty"),
+        .max(256, "Camera Name length should be less than 256")
+        .required("Camera Name can't be empty"),
 
     ip: yup.string()
         .trim()

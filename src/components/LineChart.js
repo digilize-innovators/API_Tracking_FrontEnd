@@ -23,8 +23,8 @@ const Linechart = ({data}) => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="executedCode" stroke="#8884d8" />
-                <Line type="monotone" dataKey="totalCodeCreate" stroke="#82ca9d" />
+                <Line type="monotone" dataKey="executedBatch" stroke="#8884d8" />
+                <Line type="monotone" dataKey="totalBatch" stroke="#82ca9d" />
             </LineChart>
         </div>
     )
