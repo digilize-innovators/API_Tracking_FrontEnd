@@ -37,6 +37,7 @@ const Index = () => {
   const [formData, setFormData] = useState({})
   const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''})
   const [orderTypeFilter,setOrderTypeFilter]=useState('')
+  const [saleDetail,setSaleDetail]=useState([])
 
   const apiAccess = useApiAccess('sales-order-create', 'sales-order-update','sales-order-approve')
   console.log("apiAccess",apiAccess)
@@ -68,18 +69,41 @@ const Index = () => {
     index + 1,
     item.order_type,
     item.order_no,
+    item.status,
     item.order_from_location.location_name,
     item.order_to_location.location_name,
     moment(item.order_date ).format('DD/MM/YYYY, hh:mm:ss a')  
   ])
 
+  
   const tableData = useMemo(
     () => ({
-      tableHeader: ['Sr.No.','Order Type', 'Order No', 'From', 'To',  'Order Date'],
+      tableHeader: ['Sr.No.','Order Type', 'Order No','Status', 'From', 'To',  'Order Date'],
       tableHeaderText: 'Sale Order Report',
       tableBodyText: 'Sale  Order Data',
       filename: 'saleOrder'
     }),[])
+    const getSaleDetail = async (id) => {
+              setIsLoading(true);
+              try {
+                  const res = await api(`/sales-order/details/${id}`, {}, 'get', true);
+                  if (res.data.success) {
+                      const fetchedOrders = res.data.data.orders || [];
+                      // Set raw detail (if needed elsewhere)
+                      setSaleDetail(fetchedOrders);
+                         
+                  } else if (res.data.code === 401) {
+                      removeAuthToken();
+                      router.push('/401');
+                  } else {
+                      console.log('Error: Unexpected response', res.data);
+                  }
+              } catch (error) {
+                  console.log('Error in getPurchaseDetail', error);
+              } finally {
+                  setIsLoading(false);
+              }
+          };
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
@@ -94,6 +118,7 @@ const Index = () => {
     setOpenModal(false)
     setFormData({})
     setEditData({})
+    setSaleDetail([])
   }
   const handleSubmitForm = async data => {
     console.log('handle submit form data : ', data)
@@ -104,7 +129,7 @@ const Index = () => {
   const handleOrderTypeChange = (e) => {
     setOrderTypeFilter(e.target.value);
   }
-  const addSaleOrder = async (esign_status, remarks) => {
+  const addSaleOrder = async () => {
     try {
       console.log('formdata', formData)
       const data = { ...formData }
@@ -143,7 +168,13 @@ const Index = () => {
   const editSaleOrder = async (esign_status, remarks) => {
     try {
       const data = { ...formData }
+
       console.log('EDIT FORM DATA :->', data)
+      const filteredOrders = data.orders.filter(order =>
+        !saleDetail.some(purchase => purchase.product_id === order.productId)
+      );
+      filteredOrders.length>0 ? data.orders=filteredOrders : delete data.orders
+
       setIsLoading(true)
       const res = await api(`/sales-order/${editData.id}`, data, 'put', true)
       setIsLoading(false)
@@ -170,7 +201,8 @@ const Index = () => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
   }
 
-  const handleUpdate = item => {
+  const handleUpdate = async item => {
+    await getSaleDetail(item.id)
     setEditData(item)
     setOpenModal(true)
    
@@ -274,6 +306,7 @@ const Index = () => {
         open={openModal}
         handleClose={handleCloseModal}
         editData={editData}
+        saleDetail={saleDetail}
         handleSubmitForm={handleSubmitForm}
       />
       <AccessibilitySettings />

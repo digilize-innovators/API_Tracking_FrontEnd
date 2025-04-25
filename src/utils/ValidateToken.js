@@ -35,7 +35,7 @@ export const validateToken = (context, screenName) => {
       props: {
         isAuthenticated: !!token,
         userId: decoded.userId,
-        ip: ip.split(':')[3]
+        ip: ip.split(':')[3]||null
       },
     };
     

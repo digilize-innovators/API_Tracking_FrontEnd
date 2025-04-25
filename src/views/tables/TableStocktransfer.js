@@ -13,7 +13,6 @@ import { CiExport } from 'react-icons/ci';
 import TableStockTranferDetail from './TableStockTranferDetail';
 
 const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
-  console.log(row,'row')
    const [state, setState] = useState({ addDrawer: false })
      const [orderId,setOrderId]=useState('')
    
@@ -101,6 +100,9 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                    <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
                      {row.order_to_location.location_name}
                    </TableCell>
+                    <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
+                             {row.status}
+                     </TableCell>
                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >
                      {moment(row?.order_date).format('DD/MM/YYYY, hh:mm:ss a')}
                    </TableCell>
@@ -109,12 +111,12 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                    </TableCell>
                    <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
                    
-                       <Tooltip title={!apiAccess.editApiAccess ? 'No edit access' : ''}>
+                       <Tooltip title={!apiAccess.editApiAccess || row.status === "SCANNING_IN_PROGRESS" ? 'No edit access' : ''}>
                          <span>
                            <MdModeEdit
                              fontSize={20}
                              data-testid={`edit-icon-${index + 1}`}
-                             onClick={apiAccess.editApiAccess ? () => handleUpdate(row) : null}
+                             onClick={apiAccess.editApiAccess && row.status !== 'SCANNING_IN_PROGRESS' ? () => handleUpdate(row) : null}
                              style={{ cursor: apiAccess.editApiAccess ? 'pointer' : 'not-allowed', opacity: apiAccess.editApiAccess ? 1 : 0.5 }}
                            />
                          </span>
@@ -282,6 +284,12 @@ const TableStocktransfer = ({
                                             To
                                             <IconButton align='center' aria-label='expand row' size='small'>
                                               {getSortIcon(sortBy, 'order_to_location', sortDirection)}
+                                            </IconButton>
+                                          </TableCell>
+                                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort("status")}>
+                                            Status
+                                            <IconButton align='center' aria-label='expand row' size='small'>
+                                              {getSortIcon(sortBy, 'status', sortDirection)}
                                             </IconButton>
                                           </TableCell>
                                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('order_date')}>

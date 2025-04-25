@@ -44,6 +44,7 @@ const Index = () => {
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [formData, setFormData] = useState({})
   const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''})
+  const [stocktransferDetail,setStocktranferDetail]=useState([])
 
   const apiAccess = useApiAccess('stocktransfer-order-create', 'stocktransfer-order-update','stocktransfer-order-approve')
   console.log("apiAccess",apiAccess)
@@ -74,6 +75,7 @@ const Index = () => {
   const tableBody = stocktransfer?.map((item, index) => [
         index + 1,
         item.order_no,
+        item.status,
         item.order_from_location.location_name,
         item.order_to_location.location_name,
         moment(item.order_date ).format('DD/MM/YYYY, hh:mm:ss a')   
@@ -81,12 +83,34 @@ const Index = () => {
 
   const tableData = useMemo(
     () => ({
-      tableHeader: ['Sr.No.', 'Order No', 'From', 'To',  'Order Date'],
+      tableHeader: ['Sr.No.', 'Order No','Status', 'From', 'To',  'Order Date'],
       tableHeaderText: 'stock Transfer Order Report',
       tableBodyText: 'stock Transfer Order Data',
       filename: 'stocktransfer'
     }),[])
-
+   const getStockTransferDetail = async (id) => {
+            setIsLoading(true);
+            try {
+                const res = await api(`/stocktransfer-order/details/${id}`, {}, 'get', true);
+                if (res.data.success) {
+                    const fetchedOrders = res.data.data.orders || [];
+        
+                    // Set raw detail (if needed elsewhere)
+                    setStocktranferDetail(fetchedOrders);
+        
+                       
+                } else if (res.data.code === 401) {
+                    removeAuthToken();
+                    router.push('/401');
+                } else {
+                    console.log('Error: Unexpected response', res.data);
+                }
+            } catch (error) {
+                console.log('Error in getPurchaseDetail', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
@@ -104,6 +128,7 @@ const Index = () => {
     setOpenModal(false)
     setFormData({})
     setEditData({})
+    setStocktranferDetail([])
   }
 
   const handleAuthModalClose = () => {
@@ -153,9 +178,13 @@ const Index = () => {
       setIsLoading(false)
     }
   }
-  const editStockTrasfer = async (esign_status, remarks) => {
+  const editStockTrasfer = async () => {
     try {
       const data = { ...formData }
+      const filteredOrders = data.orders.filter(order =>
+        !stocktransferDetail.some(purchase => purchase.product_id === order.productId)
+      );
+      filteredOrders.length>0?data.orders=filteredOrders:delete data.orders
       setIsLoading(true)
       const res = await api(`/stocktransfer-order/${editData.id}`, data, 'put', true)
       setIsLoading(false)
@@ -182,7 +211,8 @@ const Index = () => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
   }
 
-  const handleUpdate = item => {
+  const handleUpdate = async item => {
+    await getStockTransferDetail(item.id)
     setEditData(item)
     setOpenModal(true)
   }
@@ -262,6 +292,7 @@ const Index = () => {
         open={openModal}
         handleClose={handleCloseModal}
         editData={editData}
+        stocktransferDetail={stocktransferDetail}
         handleSubmitForm={handleSubmitForm}
       />
       <AccessibilitySettings />

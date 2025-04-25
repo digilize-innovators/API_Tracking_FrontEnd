@@ -13,7 +13,8 @@ const Areachart = ({data}) => {
             padding: '10px',
             color: 'gray',
             marginBottom: '10px',
-            marginTop: '10px'
+            marginTop: '10px',
+            width:'38.5vw'
         }}>
             <div style={{
                 marginBottom: '20px',

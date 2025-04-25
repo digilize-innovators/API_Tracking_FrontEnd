@@ -66,7 +66,7 @@ const metrics = [
           borderRadius: '10px',
            boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)',
           borderRadius: '10px',
-          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.50)', // Updated shadow for more depth
+          // boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.50)', // Updated shadow for more depth
          backgroundColor: 'transparent'
         // borderRadius: '10px',
         // boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.3)', // Subtle elegant shadow
