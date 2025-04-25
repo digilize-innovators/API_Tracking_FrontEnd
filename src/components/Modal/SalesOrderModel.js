@@ -572,4 +572,3 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
 export default SalesOrderModel;
 
 
-sales-order
