@@ -1,13 +1,10 @@
 import React, { useState, Fragment, useEffect, useMemo } from 'react';
-import { Box, Table, Collapse, TableRow, TableHead, TableBody, TableCell, Typography, IconButton, Tooltip, Button, SwipeableDrawer, Grid2 } from '@mui/material'
-import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md';
-import ChevronUp from 'mdi-material-ui/ChevronUp';
-import ChevronDown from 'mdi-material-ui/ChevronDown';
+import { Box, Table,  TableRow, TableHead, TableBody, TableCell, Typography, IconButton, Tooltip, Button, SwipeableDrawer, Grid2 } from '@mui/material'
+import { MdModeEdit } from 'react-icons/md';
+
 import CustomTable from 'src/components/CustomTable';
 import PropTypes from 'prop-types';
-import { statusObj } from 'src/configs/statusConfig';
 import { getSortIcon } from 'src/utils/sortUtils';
-import StatusChip from 'src/components/StatusChip';
 import moment from 'moment';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { useSettings } from 'src/@core/hooks/useSettings';
@@ -35,7 +32,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
 
       <Grid2 item xs={12}>
         <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8, textAlign: "center" }}>
-          Sale Order Detail For: {saleDetail?.orderNo}
+          Sale Order Detail For: {saleDetail?.order_no}
         </Typography>
 
         <Box
@@ -126,7 +123,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                 fontSize={20}
                 data-testid={`edit-icon-${index + 1}`}
                 onClick={apiAccess.editApiAccess  && row.status !== 'SCANNING_IN_PROGRESS' ? () => handleUpdate(row) : null}
-                style={{ cursor: apiAccess.editApiAccess || row.status !== 'SCANNING_IN_PROGRESS'   ? 'pointer' : 'not-allowed', opacity: apiAccess.editApiAccess ? 1 : 0.5 }}
+                style={{ cursor: apiAccess.editApiAccess && row.status !== 'SCANNING_IN_PROGRESS'   ? 'pointer' : 'not-allowed', opacity: apiAccess.editApiAccess ? 1 : 0.5 }}
               />
             </span>
           </Tooltip>

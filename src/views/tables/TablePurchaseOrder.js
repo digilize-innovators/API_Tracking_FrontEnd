@@ -1,8 +1,6 @@
 import React, { useState, Fragment, useEffect, useMemo } from 'react';
 import {Box,Table,TableRow,TableHead,Grid2,TableBody,TableCell,Typography,IconButton,Tooltip, Button, SwipeableDrawer} from '@mui/material'
 import { MdModeEdit } from 'react-icons/md';
-import ChevronUp from 'mdi-material-ui/ChevronUp';
-import ChevronDown from 'mdi-material-ui/ChevronDown';
 import CustomTable from 'src/components/CustomTable';
 import PropTypes from 'prop-types';
 import { getSortIcon } from 'src/utils/sortUtils';
@@ -36,7 +34,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess 
 
 <Grid2 item xs={12}>
   <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8 }}>
-    Purchase Order Detail For: {row?.orderNo}
+    Purchase Order Detail For: {row?.order_no}
   </Typography>
 
   {/* Scanning Transaction Box with Download Button on Right */}
@@ -124,7 +122,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess 
                   fontSize={20}
                   data-testid={`edit-icon-${index + 1}`}
                   onClick={apiAccess.editApiAccess && row.status !== 'SCANNING_IN_PROGRESS'? () => handleUpdate(row) : null}
-                  style={{ cursor: apiAccess.editApiAccess ? 'pointer' : 'not-allowed', opacity: apiAccess.editApiAccess ? 1 : 0.5 }}
+                  style={{ cursor: apiAccess.editApiAccess  &&  row.status !== 'SCANNING_IN_PROGRESS'? 'pointer' : 'not-allowed', opacity: apiAccess.editApiAccess ? 1 : 0.5 }}
                 />
               </span>
             </Tooltip>

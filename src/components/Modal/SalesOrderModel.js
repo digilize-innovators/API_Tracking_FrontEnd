@@ -64,15 +64,16 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
         control,
         reset,
         formState: { errors },
+        getValues,
         watch
     } = useForm({
         resolver: yupResolver(SalesOrderSchema),
         defaultValues: {
-            type: editData.type || '',
+            type: editData.order_type || '',
             orderNo: editData.order_no || '',
             orderDate:editData.orderDate||'',
-            from: editData.from || '',
-            to: editData.to || '',
+            from: editData.from_location || '',
+            to: editData.to_location || '',
             orders: saleDetail?.length
                 ? saleDetail.map(order => ({
                     productId: order.product_id || '',
@@ -91,12 +92,22 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
         name: 'orders'
     });
     const orderType = [
-        { id: 'salesOrder', value: 'salesOrder', label: 'SO' },
-        { id: 'salesReturn', value: 'salesReturn', label: 'SR' }]
+        { id: 'SALES_ORDER', value: 'SALES_ORDER', label: 'SO' },
+        { id: 'SALES_RETURN', value: 'SALES_RETURN', label: 'SR' }]
+
+        const formatDate = (date) => {
+            const d = new Date(date);
+            if (d instanceof Date && !isNaN(d)) {
+                return d.toISOString().split('T')[0];
+            }
+            return '';
+        };
+        
 
         useEffect(() => {
             if (editData?.id) {
                 reset({
+                    type: editData.order_type || '',
                     orderNo: editData.order_no || '',
                     orderDate: formatDate(editData.order_date) || '',
                     from: editData.from_location || '',
@@ -159,9 +170,9 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
     const orderTypeValue = watch('type');
 
     const getLocationOptions = () => {
-        if (orderTypeValue === 'salesReturn') {
+        if (orderTypeValue === 'SALES_RETURN') {
             return { from: locationOth, to: locationPW };
-        } else if (orderTypeValue === 'salesOrder') {
+        } else if (orderTypeValue === 'SALES_ORDER') {
             return { from: locationPW, to: locationOth };
         } else {
             return { from: [], to: [] };
@@ -298,7 +309,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
             // Save mode
             const updatedItem = getValues(`orders.${index}`);
             updatedItem.orderId=editData.id
-            const itemId = stocktransferDetail?.[index]?.id;
+            const itemId = saleDetail?.[index]?.id;
            
             if (itemId) {
                 try {
@@ -327,7 +338,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
         }
     };
 
-
+    console.log(editData,saleDetail)
 
     return (
         <>
@@ -550,7 +561,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                         variant='contained'
                         color='error'
                         onClick={() => {
-                            const orderItem = stocktransferDetail && stocktransferDetail[deleteIndex];
+                            const orderItem = saleDetail && saleDetail[deleteIndex];
                             if (orderItem && orderItem.id) {
                                 handleDeleteOrder(orderItem.id, deleteIndex);
                             } else {

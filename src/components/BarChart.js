@@ -313,7 +313,13 @@ const Barchart = ({ data }) => {
             width={75} // Force narrow left space
             axisLine={true}
             tickLine={false} />
-          <Tooltip />
+          <Tooltip  contentStyle={{
+        backgroundColor: '#333', // Dark background
+        borderRadius: '10px',    // Rounded corners
+        border: 'none',          // Remove default border if you want
+        color: '#fff'            // Text color inside the tooltip
+    }}
+    />
           <Legend />
           <Bar dataKey="executedBatch" fill="#5e5eff" radius={[0, 10, 10, 0]} barSize={20} />
           <Bar dataKey="totalBatch" fill="#00d09c" radius={[0, 10, 10, 0]} barSize={20} />

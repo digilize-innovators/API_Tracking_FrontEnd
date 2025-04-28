@@ -81,13 +81,16 @@ const Index = () => {
       tableHeader: ['Sr.No.','Order Type', 'Order No','Status', 'From', 'To',  'Order Date'],
       tableHeaderText: 'Sale Order Report',
       tableBodyText: 'Sale  Order Data',
-      filename: 'saleOrder'
+      filename: 'saleOrder',
+      Filter:['Order Type',orderTypeFilter],
     }),[])
     const getSaleDetail = async (id) => {
+              console.log('hello aaa')
               setIsLoading(true);
               try {
                   const res = await api(`/sales-order/details/${id}`, {}, 'get', true);
                   if (res.data.success) {
+                     console.log(res.data.data.orders)
                       const fetchedOrders = res.data.data.orders || [];
                       // Set raw detail (if needed elsewhere)
                       setSaleDetail(fetchedOrders);
@@ -109,7 +112,6 @@ const Index = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
   const handleOpenModal = () => {
-
     setEditData({})
     setFormData({})
     setOpenModal(true)
@@ -168,6 +170,7 @@ const Index = () => {
   const editSaleOrder = async (esign_status, remarks) => {
     try {
       const data = { ...formData }
+      delete data.type
 
       console.log('EDIT FORM DATA :->', data)
       const filteredOrders = data.orders.filter(order =>
@@ -203,6 +206,7 @@ const Index = () => {
 
   const handleUpdate = async item => {
     await getSaleDetail(item.id)
+
     setEditData(item)
     setOpenModal(true)
    
@@ -251,10 +255,10 @@ const Index = () => {
                     label='Order Type'
                     onChange={handleOrderTypeChange}
                   >
-              <MenuItem key='salesOrder' value='salesOrder'>
+              <MenuItem key='salesOrder' value='SALES_ORDER'>
                 Sale Order
               </MenuItem>
-              <MenuItem key='salesReturn' value='salesReturn'>
+              <MenuItem key='salesReturn' value='SALES_RETURN'>
                 Sale Return
               </MenuItem>
                    

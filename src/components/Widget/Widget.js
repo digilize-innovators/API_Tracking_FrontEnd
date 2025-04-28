@@ -59,7 +59,7 @@ const metrics = [
       display: 'grid',
       gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
       gap: 2,
-      pb: 2   ,   
+      pb: 2   ,
     }}>
       {metrics.map((metric, index) => (
         <Card key={index} sx={{ 
@@ -67,7 +67,7 @@ const metrics = [
            boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)',
           borderRadius: '10px',
           // boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.50)', // Updated shadow for more depth
-         backgroundColor: 'transparent'
+         backgroundColor: '#fff'
         // borderRadius: '10px',
         // boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.3)', // Subtle elegant shadow
         // backgroundColor: 'rgba(255, 255, 255, 0.4)', // Semi-transparent white
