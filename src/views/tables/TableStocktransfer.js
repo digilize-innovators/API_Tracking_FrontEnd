@@ -1,6 +1,6 @@
 import React, { useState, Fragment, useEffect, useMemo } from 'react';
 import {Box,Table,TableRow,TableHead,TableBody,TableCell,Typography,IconButton,Tooltip, Button, SwipeableDrawer, Grid2} from '@mui/material'
-import { MdModeEdit } from 'react-icons/md';
+import { MdModeEdit, MdVisibility } from 'react-icons/md';
 import CustomTable from 'src/components/CustomTable';
 import PropTypes from 'prop-types';
 import { getSortIcon } from 'src/utils/sortUtils';
@@ -11,6 +11,8 @@ import { api } from 'src/utils/Rest-API';
 import { IoIosAdd } from 'react-icons/io';
 import { CiExport } from 'react-icons/ci';
 import TableStockTranferDetail from './TableStockTranferDetail';
+import TableTransactionPurchase from './TableTransactionPurchase';
+import TableStockTransaction from './TableStockTransaction';
 
 const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
    const [state, setState] = useState({ addDrawer: false })
@@ -28,62 +30,82 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
      setOrderId(row.id)
    }
    const list = anchor => (
- <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
- 
- <Grid2 item xs={12}>
-   <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8,textAlign:'center' }}>
-     Stock Tranfer Order Detail For: {row?.order_no}
-   </Typography>
- 
-   <Box
-     sx={{
-       position: 'relative',
-       border: '1px solid #ccc',
-       borderRadius: 2,
-       p: 3,
-       m: 4,
-       backgroundColor: '#f9f9f9',
-     }}
-   >
-    <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 1 ,textAlign:'center'}}>
-       Scanning Transaction
-     </Typography>
-     <Button
-       variant='contained'
-       sx={{
-         position: 'absolute',
-         top: 30,
-         right: 16,
-         zIndex: 1,
+     <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
+     
+     <Grid2 item xs={12}>
+       <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8 }}>
+         Stock Tranfer Order Detail 
+       </Typography>
+     
+       <Box
+       sx={{ 
+         px: 6,
+         mx: 3,
+     
        }}
      >
-
-       <Box sx={{ display: 'flex', alignItems: 'center' }}>
+       
      
-         <CiExport fontSize={20} />
-         <span style={{ marginLeft: 6 }}>Export</span>
+       {/* Row with left and right sides */}
+       <Box
+         sx={{
+           display: 'flex',
+           justifyContent: 'column',
+           alignItems: 'flex-start',
+           mb: 2,
+         }}
+       >
+         {/* Left side: Order No and Order Date */}
+         <Box>
+           <Typography variant='body1' sx={{fontSize:16}}>
+           <Box component="span" sx={{ fontWeight: 'bold' }}>Order No:</Box> {row.order_no}
+           </Typography>
+           <Typography variant='body1' sx={{fontSize:16}}>
+           <Box component="span" sx={{ fontWeight: 'bold' }}>Order Date:</Box>  {moment(row.order_date).format('DD-MM-YYYY')}
+           </Typography>
+           <Typography variant='body1' sx={{fontSize:16}}>
+           <Box component="span" sx={{ fontWeight: 'bold' }}> From:</Box>  {row.order_from_location.location_name}
+           </Typography>
+           <Typography variant='body1' sx={{fontSize:16}}>
+           <Box component="span" sx={{ fontWeight: 'bold' }}> To: </Box>{row.order_to_location.location_name}
+           </Typography>
+         </Box>
        </Box>
-     </Button>
- 
-    
-     <Typography variant='body1'>
-       Status: <strong>{row?.status} </strong>
-     </Typography>
-     <Typography variant='body1'>
-       User: <strong> 'N/A'</strong>
-     </Typography>
-   </Box>
- </Grid2>
- 
- <Grid2 item xs={12}>
-   <Typography variant='h4' className='mx-4 mt-3'>
-                   Stock Tranfer Order Detail
-                 </Typography>
-   <TableStockTranferDetail orderId={orderId} />
- </Grid2>
- 
- </Box>
- 
+     
+     </Box>
+     </Grid2>
+         <Button  variant='contained'
+                 sx={{
+                   ml:8,
+                   my:6
+                 }}
+               >
+                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                   <CiExport fontSize={20} />
+                   <span style={{ marginLeft: 6 }}>Export</span>
+                 </Box>
+               </Button>
+               <Button  variant='contained'
+                 sx={{
+                   ml:8,
+                   my:6
+                 }}
+               >
+                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                   <span style={{ marginLeft: 6 }}>Invoice</span>
+                 </Box>
+               </Button>
+               
+     <Grid2 item xs={12}>
+        <Typography variant='h4' className='mx-4 mt-3'sx={{mb:3}}> Transaction Detail</Typography>
+       <TableStockTransaction  />
+     </Grid2>
+     <Grid2 item xs={12}>
+       <TableStockTranferDetail orderId={orderId} />
+     </Grid2>
+     
+     </Box>
+     
    )
   return (
     <Fragment>
@@ -122,8 +144,8 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                          </span>
                        </Tooltip>
           <Button onClick={toggleDrawer('addDrawer', true)}>
-                          <IoIosAdd
-                            fontSize={30}
+                          <MdVisibility
+                            fontSize={24}
                             onClick={() => {
                               console.log('Add button clicked')
                               handleDrawerOpen(row)

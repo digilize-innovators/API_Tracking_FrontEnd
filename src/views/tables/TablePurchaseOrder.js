@@ -9,10 +9,12 @@ import moment from 'moment';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { useSettings } from 'src/@core/hooks/useSettings';
 import { api } from 'src/utils/Rest-API';
-import { IoIosAdd } from 'react-icons/io';
 import { CiExport } from 'react-icons/ci';
 import TablePurchaseDetail from './TablePurchaseDetail';
 import { id } from 'date-fns/locale';
+import { MdVisibility } from 'react-icons/md';
+import TableTransactionPurchase from './TableTransactionPurchase';
+
 
 const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess }) => {
     const [state, setState] = useState({ addDrawer: false })
@@ -34,55 +36,73 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess 
 
 <Grid2 item xs={12}>
   <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8 }}>
-    Purchase Order Detail For: {row?.order_no}
+    Purchase Order Detail 
   </Typography>
 
-  {/* Scanning Transaction Box with Download Button on Right */}
+  <Box
+  sx={{ 
+    px: 6,
+    mx: 3,
+
+  }}
+>
+  
+
+  {/* Row with left and right sides */}
   <Box
     sx={{
-      position: 'relative',
-      border: '1px solid #ccc',
-      borderRadius: 2,
-      p: 3,
-      m: 4,
-      backgroundColor: '#f9f9f9',
+      display: 'flex',
+      justifyContent: 'column',
+      alignItems: 'flex-start',
+      mb: 2,
     }}
   >
-     <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 1 ,textAlign:'center'}}>
-      Scanning Transaction
-    </Typography>
-    {/* Download button on top-right corner inside the box */}
-    <Button
-      variant='contained'
-      sx={{
-        position: 'absolute',
-        top: 30,
-        right: 16,
-        zIndex: 1,
-      }}
-    >
-      
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <CiExport fontSize={20} />
-        <span style={{ marginLeft: 6 }}>Export</span>
-      </Box>
-    </Button>
-
-    {/* Scanning Transaction content */}
-   
-    <Typography variant='body1'>
-      Status: <strong> 'Pending'</strong>
-    </Typography>
-    <Typography variant='body1'>
-      User: <strong> 'N/A'</strong>
-    </Typography>
+    {/* Left side: Order No and Order Date */}
+    <Box>
+      <Typography variant='body1' sx={{fontSize:16}}>
+      <Box component="span" sx={{ fontWeight: 'bold' }}>Order No:</Box> {row.order_no}
+      </Typography>
+      <Typography variant='body1' sx={{fontSize:16}}>
+      <Box component="span" sx={{ fontWeight: 'bold' }}>Order Date:</Box>  {moment(row.order_date).format('DD-MM-YYYY')}
+      </Typography>
+      <Typography variant='body1' sx={{fontSize:16}}>
+      <Box component="span" sx={{ fontWeight: 'bold' }}> From:</Box>  {row.order_from_location.location_name}
+      </Typography>
+      <Typography variant='body1' sx={{fontSize:16}}>
+      <Box component="span" sx={{ fontWeight: 'bold' }}> To: </Box>{row.order_to_location.location_name}
+      </Typography>
+    </Box>
   </Box>
-</Grid2>
 
+</Box>
+</Grid2>
+    <Button  variant='contained'
+            sx={{
+              ml:8,
+              my:6
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <CiExport fontSize={20} />
+              <span style={{ marginLeft: 6 }}>Export</span>
+            </Box>
+          </Button>
+          <Button  variant='contained'
+            sx={{
+              ml:8,
+              my:6
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ marginLeft: 6 }}>Invoice</span>
+            </Box>
+          </Button>
+          
 <Grid2 item xs={12}>
-  <Typography variant='h4' className='mx-4 mt-3'>
-                  Purchase Order Detail
-                </Typography>
+   <Typography variant='h4' className='mx-4 mt-3'sx={{mb:3}}> Transaction Detail</Typography>
+  <TableTransactionPurchase  />
+</Grid2>
+<Grid2 item xs={12}>
   <TablePurchaseDetail orderId={orderId} />
 </Grid2>
 
@@ -127,8 +147,8 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess 
               </span>
             </Tooltip>
           <Button onClick={toggleDrawer('addDrawer', true)}>
-              <IoIosAdd
-                fontSize={30}
+              <MdVisibility
+                fontSize={24}
                 onClick={() => {
                   console.log('Add button clicked')
                   handlePurchaseDrawerOpen(row)

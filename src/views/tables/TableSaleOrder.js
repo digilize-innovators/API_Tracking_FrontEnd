@@ -12,10 +12,14 @@ import { api } from 'src/utils/Rest-API';
 import { IoIosAdd } from 'react-icons/io';
 import { CiExport } from 'react-icons/ci';
 import TableSaleDetail from './TableSaleDetail';
+import TableTransactionPurchase from './TableTransactionPurchase';
+import { MdVisibility } from 'react-icons/md';
+import TableSaleTransaction from './TableSaleTransaction';
+
 
 const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
   const [state, setState] = useState({ addDrawer: false })
-  const [saleDetail, setSaleDetail] = useState('')
+  const [orderId, setOrderId] = useState('')
   const toggleDrawer = (anchor, open) => event => {
     console.log('open drawer', open)
     if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -25,66 +29,85 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
   }
   const handleDrawerOpen = row => {
     console.log('data', row)
-    setSaleDetail(row)
+    setOrderId(row.id)
   }
   const list = anchor => (
     <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
-
-      <Grid2 item xs={12}>
-        <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8, textAlign: "center" }}>
-          Sale Order Detail For: {saleDetail?.order_no}
-        </Typography>
-
-        <Box
-          sx={{
-            position: 'relative',
-            border: '1px solid #ccc',
-            borderRadius: 2,
-            p: 3,
-            m: 4,
-            backgroundColor: '#f9f9f9',
-          }}
-        >
-          <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 1, textAlign: 'center' }}>
-            Scanning Transaction
+    
+    <Grid2 item xs={12}>
+      <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8 }}>
+        Sale Order Detail 
+      </Typography>
+    
+      <Box
+      sx={{ 
+        px: 6,
+        mx: 3,
+    
+      }}
+    >
+      
+    
+      {/* Row with left and right sides */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'column',
+          alignItems: 'flex-start',
+          mb: 2,
+        }}
+      >
+        {/* Left side: Order No and Order Date */}
+        <Box>
+          <Typography variant='body1' sx={{fontSize:16}}>
+          <Box component="span" sx={{ fontWeight: 'bold' }}>Order No:</Box> {row.order_no}
           </Typography>
-          {/* Download button on top-right corner inside the box */}
-          <Button
-            variant='contained'
-            sx={{
-              position: 'absolute',
-              top: 30,
-              right: 16,
-              zIndex: 1,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <CiExport fontSize={20} />
-              <span style={{ marginLeft: 6 }}>Export</span>
-            </Box>
-          </Button>
-
-          {/* Scanning Transaction content */}
-
-          <Typography variant='body1'>
-            Status: <strong>{saleDetail?.status || 'Pending'}</strong>
+          <Typography variant='body1' sx={{fontSize:16}}>
+          <Box component="span" sx={{ fontWeight: 'bold' }}>Order Date:</Box>  {moment(row.order_date).format('DD-MM-YYYY')}
           </Typography>
-          <Typography variant='body1'>
-            User: <strong>{saleDetail?.username || 'N/A'}</strong>
+          <Typography variant='body1' sx={{fontSize:16}}>
+          <Box component="span" sx={{ fontWeight: 'bold' }}> From:</Box>  {row.order_from_location.location_name}
+          </Typography>
+          <Typography variant='body1' sx={{fontSize:16}}>
+          <Box component="span" sx={{ fontWeight: 'bold' }}> To: </Box>{row.order_to_location.location_name}
           </Typography>
         </Box>
-      </Grid2>
-
-      <Grid2 item xs={12}>
-        <Typography variant='h4' className='mx-4 mt-3'>
-          Sale Order Detail
-        </Typography>
-        <TableSaleDetail saleDetail={saleDetail} />
-      </Grid2>
-
+      </Box>
+    
     </Box>
-
-
+    </Grid2>
+        <Button  variant='contained'
+                sx={{
+                  ml:8,
+                  my:6
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <CiExport fontSize={20} />
+                  <span style={{ marginLeft: 6 }}>Export</span>
+                </Box>
+              </Button>
+              <Button  variant='contained'
+                sx={{
+                  ml:8,
+                  my:6
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <span style={{ marginLeft: 6 }}>Invoice</span>
+                </Box>
+              </Button>
+              
+    <Grid2 item xs={12}>
+       <Typography variant='h4' className='mx-4 mt-3'sx={{mb:3}}> Transaction Detail</Typography>
+      <TableSaleTransaction />
+    </Grid2>
+    <Grid2 item xs={12}>
+      <TableSaleDetail orderId={orderId} />
+    </Grid2>
+    
+    </Box>
+    
   )
 
   return (
@@ -128,8 +151,8 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
             </span>
           </Tooltip>
           <Button onClick={toggleDrawer('addDrawer', true)}>
-            <IoIosAdd
-              fontSize={30}
+            <MdVisibility
+              fontSize={24}
               onClick={() => {
                 console.log('Add button clicked')
                 handleDrawerOpen(row)
@@ -138,7 +161,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
             />
           </Button>
         </TableCell>
-        {saleDetail.id && (
+        {orderId && (
           <SwipeableDrawer
             anchor={'right'}
             open={state['addDrawer']}
