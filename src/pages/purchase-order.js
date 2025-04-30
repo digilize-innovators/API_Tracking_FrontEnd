@@ -209,6 +209,9 @@ const Index = () => {
     }
     setTableHeaderData({ ...tableHeaderData, searchVal: '' })
   }
+  const handleView=async item => {
+    await getPurchaseDetail(item.id)
+  }
 
   
   const handleDownloadPdf = () => {
@@ -266,7 +269,8 @@ const Index = () => {
                   pendingAction={pendingAction}
                   setPurchaseOrder={setPurchaseOrder}
                   apiAccess={apiAccess}
-                  config={config}
+                  purchaseDetail={purchaseDetail}
+                  handleView={handleView}
                 />
               </TableContainer>
             </Grid2>

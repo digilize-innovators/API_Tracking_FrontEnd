@@ -4,7 +4,6 @@ import { MdModeEdit } from 'react-icons/md';
 import CustomTable from 'src/components/CustomTable';
 import PropTypes from 'prop-types';
 import { getSortIcon } from 'src/utils/sortUtils';
-import { handleRowToggleHelper } from 'src/utils/rowUtils';
 import moment from 'moment';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { useSettings } from 'src/@core/hooks/useSettings';
@@ -14,12 +13,34 @@ import TablePurchaseDetail from './TablePurchaseDetail';
 import { id } from 'date-fns/locale';
 import { MdVisibility } from 'react-icons/md';
 import TableTransactionPurchase from './TableTransactionPurchase';
+import { useAuth } from 'src/Context/AuthContext';
+import downloadPdf from 'src/utils/DownloadPdf';
 
 
-const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess }) => {
+const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,handleView,purchaseDetail }) => {
     const [state, setState] = useState({ addDrawer: false })
     const [orderId,setOrderId]=useState('')
+    const [orderDetail,setOrderDetail] =useState([])
+      const [userDataPdf, setUserDataPdf] = useState()
+      const { getUserData } = useAuth()
   
+
+   const tableBody = orderDetail?.map((item, index) => [
+        index + 1,
+        item.product_name,
+        item.batch_no,
+        item.qty,
+        0,
+      ])
+    
+      const tableData = useMemo(
+        () => ({
+          tableHeader: ['Sr.No.', 'Product','Batch', 'Total Quantity', 'Scanned Quantity'],
+          tableHeaderText: `Purchase Order`,
+          tableBodyText: `${row.order_no} list`,
+          filename: `PurchaseOrder_${row.order_no}`
+        }),[])
+        
   const toggleDrawer = (anchor, open) => event => {
     console.log('open drawer', open)
     if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -30,6 +51,11 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess 
   const handlePurchaseDrawerOpen = row => {
     console.log('data', row)
     setOrderId(row,id)
+  }
+  const handleDownloadPdf = () => {
+    let data = getUserData()
+    setUserDataPdf(data)
+    downloadPdf(tableData, null, tableBody, orderDetail, userDataPdf)
   }
   const list = anchor => (
 <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
@@ -81,6 +107,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess 
               ml:8,
               my:6
             }}
+            onClick={handleDownloadPdf}
           >
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <CiExport fontSize={20} />
@@ -103,7 +130,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess 
   <TableTransactionPurchase  />
 </Grid2>
 <Grid2 item xs={12}>
-  <TablePurchaseDetail orderId={orderId} />
+  <TablePurchaseDetail orderId={orderId} purchaseDetail={purchaseDetail} setOrderDetail={setOrderDetail}/>
 </Grid2>
 
 </Box>
@@ -151,6 +178,7 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess 
                 fontSize={24}
                 onClick={() => {
                   console.log('Add button clicked')
+                  handleView(row)
                   handlePurchaseDrawerOpen(row)
                 }}
                 style={{ cursor: 'pointer' }}
@@ -176,10 +204,11 @@ Row.propTypes = {
   index: PropTypes.any,
   page: PropTypes.any,
   rowsPerPage: PropTypes.any,
-  openRows: PropTypes.any,
   handleRowToggle: PropTypes.any,
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
+  handelView:PropTypes.any,
+  purchaseDetail:PropTypes.any
 };
 const TablePurchaseOrder = ({
   handleUpdate,
@@ -187,6 +216,9 @@ const TablePurchaseOrder = ({
   setPurchaseOrder,
   pendingAction,
   tableHeaderData,
+  purchaseDetail,
+  handleView,
+
 }) => {
   const [sortBy, setSortBy] = useState('');
    const { settings } = useSettings();
@@ -341,6 +373,8 @@ const handleSort = (key,child) => {
                 rowsPerPage={rowsPerPage}
                 handleUpdate={handleUpdate}
                 apiAccess={apiAccess}
+                handleView={handleView}
+                purchaseDetail={purchaseDetail}
               />
             ))}
             {purchaseOrderData?.data?.length === 0 && (
@@ -361,8 +395,9 @@ TablePurchaseOrder.propTypes = {
   tableHeaderData: PropTypes.any,
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
-  pendingAction:PropTypes.any
-
+  pendingAction:PropTypes.any,
+  purchaseDetail:PropTypes.any,
+  handleView:PropTypes.any
 };
 
 export default TablePurchaseOrder;

@@ -11,13 +11,34 @@ import { api } from 'src/utils/Rest-API';
 import { IoIosAdd } from 'react-icons/io';
 import { CiExport } from 'react-icons/ci';
 import TableStockTranferDetail from './TableStockTranferDetail';
-import TableTransactionPurchase from './TableTransactionPurchase';
 import TableStockTransaction from './TableStockTransaction';
+import { useAuth } from 'src/Context/AuthContext';
+import downloadPdf from 'src/utils/DownloadPdf';
 
-const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
+const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,updateView,stocktransferDetail }) => {
    const [state, setState] = useState({ addDrawer: false })
      const [orderId,setOrderId]=useState('')
-   
+     const[orderDetail,setOrderDetail]=useState([])
+     const [userDataPdf,setUserDataPdf]=useState()
+
+  const { getUserData } = useAuth()
+    
+     const tableBody = orderDetail?.map((item, index) => [
+          index + 1,
+          item.product_name,
+          item.batch_no,
+          item.qty,
+          0,
+        ])
+      
+        const tableData = useMemo(
+          () => ({
+            tableHeader: ['Sr.No.', 'Product','Batch', 'Total Quantity', 'Scanned Quantity'],
+            tableHeaderText: `Stock Tranfer`,
+            tableBodyText: `${row.order_no} list`,
+            filename: `StockTranfer_${row.order_no}`
+          }),[])
+       
    const toggleDrawer = (anchor, open) => event => {
      console.log('open drawer', open)
      if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -29,6 +50,12 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
      console.log('data', row)
      setOrderId(row.id)
    }
+   const handleDownloadPdf = () => {
+    console.log('helll to download pdf',orderDetail)
+    let data = getUserData()
+    setUserDataPdf(data)
+    downloadPdf(tableData, null, tableBody, orderDetail, userDataPdf)
+  }
    const list = anchor => (
      <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
      
@@ -79,6 +106,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                    ml:8,
                    my:6
                  }}
+                 onClick={handleDownloadPdf}
                >
                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
                    <CiExport fontSize={20} />
@@ -101,7 +129,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
        <TableStockTransaction  />
      </Grid2>
      <Grid2 item xs={12}>
-       <TableStockTranferDetail orderId={orderId} />
+       <TableStockTranferDetail orderId={orderId} stocktransferDetail={stocktransferDetail} setOrderDetail={setOrderDetail} />
      </Grid2>
      
      </Box>
@@ -148,6 +176,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                             fontSize={24}
                             onClick={() => {
                               console.log('Add button clicked')
+                              updateView(row)
                               handleDrawerOpen(row)
                             }}
                             style={{ cursor: 'pointer' }}
@@ -175,6 +204,8 @@ Row.propTypes = {
   rowsPerPage: PropTypes.any,
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
+  updateView:PropTypes.any,
+  stocktransferDetail:PropTypes.any
 };
 const TableStocktransfer = ({
   handleUpdate,
@@ -182,6 +213,8 @@ const TableStocktransfer = ({
   setStocktransfer,
   pendingAction,
   tableHeaderData,
+  updateView,
+  stocktransferDetail
 }) => {
   const [sortBy, setSortBy] = useState('');
  
@@ -339,6 +372,8 @@ const TableStocktransfer = ({
                 rowsPerPage={rowsPerPage}
                 handleUpdate={handleUpdate}
                 apiAccess={apiAccess}
+                updateView={updateView}
+                stocktransferDetail={stocktransferDetail}
               />
             ))}
             {stocktransferData?.data?.length === 0 && (
@@ -359,7 +394,10 @@ TableStocktransfer.propTypes = {
   tableHeaderData: PropTypes.any,
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
-  pendingAction:PropTypes.any
+  pendingAction:PropTypes.any,
+  updateView:PropTypes.any,
+  stocktransferDetail:PropTypes.any
+
 };
 
 export default TableStocktransfer;

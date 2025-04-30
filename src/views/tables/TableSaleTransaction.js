@@ -20,22 +20,12 @@ const Row = ({
   row,
   index,
   openRows,
-  handleRowToggle,
-  historyData,
-  handleAuthCheck,
-  apiAccess,
-  handleUpdateDes,
-  config_dept
+ 
 }) => {
-  const isOpen = openRows[row.id];
   return (
     <Fragment>
       <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
-        <TableCell className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          <IconButton align='center' aria-label='expand row' size='small' onClick={() => handleRowToggle(row.id)}>
-            {isOpen ? <ChevronUp /> : <ChevronDown />}
-          </IconButton>
-        </TableCell>
+        
         <TableCell
           align='center'
           component='th'
@@ -45,7 +35,7 @@ const Row = ({
         >
           {index + 1}
         </TableCell>
-        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.designation_id}</TableCell>
+        {/* <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.designation_id}</TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.designation_name}</TableCell>
         {config_dept?.config?.esign_status === true && config_dept?.role!=='admin' && (
           <StatusChip
@@ -73,73 +63,9 @@ const Row = ({
               </span>
             </Tooltip>
           )}
-        </TableCell>
+        </TableCell> */}
       </TableRow>
-      {isOpen && (
-        <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          <TableCell colSpan={12} sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-            <Collapse in={isOpen} timeout='auto' unmountOnExit>
-              <Box sx={{ mx: 2 }}>
-                <Typography variant='h6' gutterBottom component='div'>
-                  History
-                </Typography>
-                <Box style={{ display: 'flex', justifyContent: 'center' }}>
-                  <Table size='small' aria-label='purchases'>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)', fontSize: '10px' }}>
-                          Sr.No.
-                        </TableCell>
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)', fontSize: '8px' }}>
-                          Designation ID
-                        </TableCell>
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Designation Name
-                        </TableCell>
-                        {
-
-                          config_dept?.config?.esign_status === true  && config_dept?.role!=='admin' &&
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            E-Sign
-                          </TableCell>
-                        }
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)', width: '20%' }}>
-                          Updated At
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {historyData[row.id]?.map((historyRow, idx) => (
-                        <TableRow key={historyRow.created_at} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          <TableCell component='th' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} scope='row' align='center'>
-                            {idx + 1}
-                          </TableCell>
-                          <TableCell component='th' scope='row' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center'>
-                            {historyRow.designation_id}
-                          </TableCell>
-                          <TableCell component='th' scope='row' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center'>
-                            {historyRow.designation_name}
-                          </TableCell>
-                          {
-                            config_dept?.config?.esign_status === true  && config_dept?.role!=='admin' &&
-                            <StatusChip
-                              label={historyRow.esign_status}
-                              color={statusObj[historyRow.esign_status]?.color || 'default'}
-                            />
-                          }
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {moment(historyRow.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Box>
-              </Box>
-            </Collapse>
-          </TableCell>
-        </TableRow>
-      )}
+     
     </Fragment>
   );
 };
@@ -155,7 +81,7 @@ Row.propTypes = {
   config_dept: PropTypes.any
 };
 const TableSaleTransaction = ({
-  
+  saleDetail
 }) => {
   const [sortBy, setSortBy] = useState('');
   const [sortDirection, setSortDirection] = useState('asc')
@@ -218,6 +144,7 @@ const TableSaleTransaction = ({
     setSortDirection(newSortDirection);
     setSortBy(key)
   };
+  console.log("saleDetail",'in view',saleDetail)
   return (
       <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', width: '100%' }}>
       
@@ -252,27 +179,21 @@ const TableSaleTransaction = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {/* {designationData?.map((item, index) => (
+             {saleDetail?.map((item, index) => (
               <Row
                 key={index + 1}
                 row={item}
                 index={index}
                 openRows={openRows}
-                handleRowToggle={handleRowToggle}
-                historyData={historyData}
-                handleAuthCheck={handleAuthCheck}
-                apiAccess={apiAccess}
-                handleUpdateDes={handleUpdateDes}
-                config_dept={config_dept}
               />
-            ))} */}
-            {/* {designationData?.length === 0 && (
+            ))} 
+            {saleDetail?.length === 0 && (
               <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 <TableCell colSpan={12} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                   No data
                 </TableCell>
               </TableRow>
-            )} */}
+            )}
           </TableBody>
         </Table>
       </Box>
@@ -280,6 +201,6 @@ const TableSaleTransaction = ({
   );
 };
 TableSaleTransaction.propTypes = {
- 
+  saleDetail:PropTypes.any
 };
 export default TableSaleTransaction;

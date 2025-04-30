@@ -216,6 +216,9 @@ const Index = () => {
     setEditData(item)
     setOpenModal(true)
   }
+  const updateView= async item =>{
+    await getStockTransferDetail(item.id)
+  }
 
   const resetFilter = () => {
     if (searchRef.current) {
@@ -280,6 +283,8 @@ const Index = () => {
                   pendingAction={pendingAction}
                   setStocktransfer={setStocktransfer}
                   apiAccess={apiAccess}
+                  updateView={updateView}
+                  stocktransferDetail={stocktransferDetail}
                 />
               </TableContainer>
             </Grid2>

@@ -16,7 +16,8 @@ import {
   MdListAlt,
   MdInventory2,
   MdReceiptLong,
-  MdCameraAlt
+  MdCameraAlt,
+  MdSync
 } from 'react-icons/md'
 
 import { AiOutlineProduct, AiOutlineAudit } from 'react-icons/ai'
@@ -31,6 +32,7 @@ import { HiDocumentReport } from 'react-icons/hi'
 import Cookies from 'js-cookie'
 import jwt from 'jsonwebtoken'
 
+import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
 const navigation = () => {
   let role = ''
   let screens = (Cookies.get('screens')?.length ? JSON.parse(Cookies.get('screens')) : []) || []
@@ -232,7 +234,14 @@ const navigation = () => {
     path: '/sales-order',
     mainTitle: false
 
-  }
+  },
+  {
+    title: 'Stock Reconciliation',
+    icon: MdSync,
+    path: '/stock-reconciliation',
+    mainTitle: false
+
+  },
 ]
   const configurationScreen = [
     {

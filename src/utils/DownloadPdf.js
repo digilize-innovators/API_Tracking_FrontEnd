@@ -14,7 +14,7 @@ const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) =
         headerContentFix(doc, `${tableData.tableHeaderText}`);
 
         doc.setFontSize(10);
-        doc.text('Search : ' + (tableHeaderData?.searchVal || '__'), 15, 25);
+        tableHeaderData!==null?doc.text('Search : ' + (tableHeaderData?.searchVal || '__'), 15, 25):'';
         doc.text('Filters :\n', 15, 30);
 
         if (tableData.Filter) {

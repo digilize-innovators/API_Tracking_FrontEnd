@@ -15,11 +15,36 @@ import TableSaleDetail from './TableSaleDetail';
 import TableTransactionPurchase from './TableTransactionPurchase';
 import { MdVisibility } from 'react-icons/md';
 import TableSaleTransaction from './TableSaleTransaction';
+import { useAuth } from 'src/Context/AuthContext';
+import downloadPdf from 'src/utils/DownloadPdf';
+  
 
 
-const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
+
+const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,saleDetail,handleView }) => {
   const [state, setState] = useState({ addDrawer: false })
   const [orderId, setOrderId] = useState('')
+  const [orderDetail,setOrderDetail] =useState([])
+  const [userDataPdf, setUserDataPdf] = useState()
+  const { getUserData } = useAuth()
+
+   const tableBody = orderDetail?.map((item, index) => [
+      index + 1,
+      item.product_name,
+      item.batch_no,
+      item.qty,
+      0,
+    ])
+  
+    const tableData = useMemo(
+      () => ({
+        tableHeader: ['Sr.No.', 'Product','Batch', 'Total Quantity', 'Scanned Quantity'],
+        tableHeaderText: `Sale Order`,
+        tableBodyText: `${row.order_no} list`,
+        filename: `SaleOrder_${row.order_no}`
+      }),[])
+  
+
   const toggleDrawer = (anchor, open) => event => {
     console.log('open drawer', open)
     if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -30,6 +55,12 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
   const handleDrawerOpen = row => {
     console.log('data', row)
     setOrderId(row.id)
+  }
+
+  const handleDownloadPdf = () => {
+    let data = getUserData()
+    setUserDataPdf(data)
+    downloadPdf(tableData, null, tableBody, orderDetail, userDataPdf)
   }
   const list = anchor => (
     <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
@@ -81,9 +112,10 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                   ml:8,
                   my:6
                 }}
+                onClick={handleDownloadPdf}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <CiExport fontSize={20} />
+                  <CiExport fontSize={20}  />
                   <span style={{ marginLeft: 6 }}>Export</span>
                 </Box>
               </Button>
@@ -94,16 +126,16 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ marginLeft: 6 }}>Invoice</span>
+                  <span style={{ marginLeft: 6 }}> Generate Invoice</span>
                 </Box>
               </Button>
               
     <Grid2 item xs={12}>
        <Typography variant='h4' className='mx-4 mt-3'sx={{mb:3}}> Transaction Detail</Typography>
-      <TableSaleTransaction />
+      <TableSaleTransaction  />
     </Grid2>
     <Grid2 item xs={12}>
-      <TableSaleDetail orderId={orderId} />
+      <TableSaleDetail orderId={orderId} saleDetail={saleDetail} setOrderDetail={setOrderDetail} />
     </Grid2>
     
     </Box>
@@ -116,9 +148,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' component='th' scope='row' className='p-2'>
           {index + 1 + page * rowsPerPage}
         </TableCell>
-        <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
-          {row.order_type}
-        </TableCell>
+       
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
           {row.order_no}
         </TableCell>
@@ -128,6 +158,9 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
         </TableCell>
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
           {row.order_to_location.location_name}
+        </TableCell>
+        <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
+          {row.order_type}
         </TableCell>
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
           {row.status}
@@ -155,6 +188,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
               fontSize={24}
               onClick={() => {
                 console.log('Add button clicked')
+                handleView(row)
                 handleDrawerOpen(row)
               }}
               style={{ cursor: 'pointer' }}
@@ -195,6 +229,8 @@ const TableSaleOrder = ({
   pendingAction,
   orderTypeFilter,
   tableHeaderData,
+  saleDetail,
+  handleView
 }) => {
   const [sortBy, setSortBy] = useState('');
   const { settings } = useSettings();
@@ -303,12 +339,6 @@ const TableSaleOrder = ({
           <TableHead style={{ backgroundColor: '#fff' }}>
             <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >Sr.No.</TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('order_type')}>
-                Type
-                <IconButton align='center' aria-label='expand row' size='small' data-testid={`sort-icon-${sortBy}`}>
-                  {getSortIcon(sortBy, 'order_type', sortDirection)}
-                </IconButton>
-              </TableCell>
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('order_no')}>
                 Order No
                 <IconButton align='center' aria-label='expand row' size='small' data-testid={`sort-icon-${sortBy}`}>
@@ -327,8 +357,14 @@ const TableSaleOrder = ({
                   {getSortIcon(sortBy, 'order_to_location', sortDirection)}
                 </IconButton>
               </TableCell>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('order_type')}>
+                Type
+                <IconButton align='center' aria-label='expand row' size='small' data-testid={`sort-icon-${sortBy}`}>
+                  {getSortIcon(sortBy, 'order_type', sortDirection)}
+                </IconButton>
+              </TableCell>
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort("status")}>
-                status
+                Status
                 <IconButton align='center' aria-label='expand row' size='small'>
                   {getSortIcon(sortBy, 'status', sortDirection)}
                 </IconButton>
@@ -340,7 +376,7 @@ const TableSaleOrder = ({
                 </IconButton>
               </TableCell>
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('updated_at')} >
-                Update At
+                Updated At
                 <IconButton align='center' aria-label='expand row' size='small'>
                   {getSortIcon(sortBy, 'updated_at', sortDirection)}
                 </IconButton>
@@ -358,6 +394,8 @@ const TableSaleOrder = ({
                 rowsPerPage={rowsPerPage}
                 handleUpdate={handleUpdate}
                 apiAccess={apiAccess}
+                saleDetail={saleDetail}
+                handleView={handleView}
               />
             ))}
             {orderSaleData?.data?.length === 0 && (
@@ -380,8 +418,9 @@ TableSaleOrder.propTypes = {
   apiAccess: PropTypes.any,
   handleAuthCheck: PropTypes.any,
   pendingAction: PropTypes.any,
-  orderTypeFilter: PropTypes.any
-
+  orderTypeFilter: PropTypes.any,
+  saleDetail:PropTypes.any,
+  handleView: PropTypes.any
 
 };
 
