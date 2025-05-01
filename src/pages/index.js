@@ -354,7 +354,10 @@ const Dashboard = () => {
            <ProductionDashboard data={data?.currentPrintingStatus}/>
            </Grid2>
            <Grid2 container spacing={16} sx={{ mt: 3 }}>
-           <Featured data={data}/>
+           <Grid2 sm={12} md={6}>
+           <Barchart data={batchData} />
+           </Grid2>
+
            <Grid2 sm={12} md={6}>
            <Areachart data={batchData} />
            </Grid2>
@@ -363,8 +366,7 @@ const Dashboard = () => {
            </Grid2>
          
            <Grid2 sm={12} md={6}>
-           <Barchart data={batchData} />
-
+           <Featured data={data}/>
            </Grid2>
            <Grid2 sm={12} md={6}>
              <Linechart data={batchData} />

@@ -1,5 +1,5 @@
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
-import { Modal, Box, Typography, Button, Grid2, TextField } from '@mui/material';
+import { Modal, Box, Typography, Button, Grid2,  TextField, Dialog, DialogActions } from '@mui/material';
 import CustomTextField from 'src/components/CustomTextField';
 import { style } from 'src/configs/generalConfig';
 import { useEffect, useState } from 'react';
@@ -8,6 +8,11 @@ import * as yup from 'yup';
 import CustomDropdown from '../CustomDropdown';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { api } from 'src/utils/Rest-API';
+import { IconButton, Tooltip } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import SaveIcon from '@mui/icons-material/Save';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useSettings } from 'src/@core/hooks/useSettings';
 
 
 const SalesOrderSchema = yup.object().shape({
@@ -44,52 +49,40 @@ const SalesOrderSchema = yup.object().shape({
         }),
 });
 
-const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
+const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitForm }) => {
     const { setIsLoading } = useLoading();
     const [locationPW, setlocationPW] = useState([])
     const [locationOth, setlocationOth] = useState([])
     const [productData, setProductData] = useState([])
     const [batchOptionsMap, setBatchOptionsMap] = useState({});
+    const [editableIndex, setEditableIndex] = useState(null);
+    const [openConfirm, setOpenConfirm] = useState(false);
+    const [deleteIndex, setDeleteIndex] = useState(null);
+    const { settings } = useSettings();
     const {
         handleSubmit,
         control,
         reset,
         formState: { errors },
+        getValues,
         watch
     } = useForm({
         resolver: yupResolver(SalesOrderSchema),
         defaultValues: {
-            type: editData.type || '',
-            orderNo: editData.orderNo || '',
+            type: editData.order_type || '',
+            orderNo: editData.order_no || '',
             orderDate:editData.orderDate||'',
-            from: editData.from || '',
-            to: editData.to || '',
-            orders: editData.orders?.length
-                ? editData.orders.map(order => ({
-                    productId: order.productId || '',
-                    batchId: order.batchId || '',
+            from: editData.from_location || '',
+            to: editData.to_location || '',
+            orders: saleDetail?.length
+                ? saleDetail.map(order => ({
+                    productId: order.product_id || '',
+                    batchId: order.batch_id || '',
                     qty: order.qty || '',
                 })) : [{ productId: '', batchId: '', qty: '' }],
         },
     });
-    useEffect(() => {
-        if (editData) {
-            reset({
-                type: editData.type || '',
-                orderNo: editData.orderNo || '',
-                orderDate:editData.orderDate||'',
-                from: editData.from || '',
-                to: editData.to || '',
-                orders: editData.orders?.length
-                    ? editData.orders.map(order => ({
-                        productId: order.productId || '',
-                        batchId: order.batchId || '',
-                        qty: order.qty || '',
-                    })) : [{ productId: '', batchId: '', qty: '' }],
-            });
-        }
-    }, [editData]);
-
+    
     const { fields, append, remove } = useFieldArray({
         control,
         name: 'orders'
@@ -99,9 +92,44 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
         name: 'orders'
     });
     const orderType = [
-        { id: 'salesOrder', value: 'salesOrder', label: 'SO' },
-        { id: 'salesReturn', value: 'salesReturn', label: 'SR' }]
+        { id: 'SALES_ORDER', value: 'SALES_ORDER', label: 'SO' },
+        { id: 'SALES_RETURN', value: 'SALES_RETURN', label: 'SR' }]
 
+        const formatDate = (date) => {
+            const d = new Date(date);
+            if (d instanceof Date && !isNaN(d)) {
+                return d.toISOString().split('T')[0];
+            }
+            return '';
+        };
+        
+
+        useEffect(() => {
+            if (editData?.id) {
+                reset({
+                    type: editData.order_type || '',
+                    orderNo: editData.order_no || '',
+                    orderDate: formatDate(editData.order_date) || '',
+                    from: editData.from_location || '',
+                    to: editData.to_location || '',
+                    orders: saleDetail?.length
+                        ? saleDetail.map(order => ({
+                            productId: order.product_id || '',
+                            batchId: order.batch_id || '',
+                            qty: order.qty || '',
+                        })) : [{ productId: '', batchId: '', qty: '' }],
+    
+                });
+            } else {
+                reset({
+                    orderNo: '',
+                    orderDate: '',
+                    from: '',
+                    to: '',
+                    orders: [{ productId: '', batchId: '', qty: '' }],
+                });
+            }
+        }, [editData]);
 
     useEffect(() => {
         watchedProducts?.forEach((purchase, index) => {
@@ -142,9 +170,9 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
     const orderTypeValue = watch('type');
 
     const getLocationOptions = () => {
-        if (orderTypeValue === 'salesReturn') {
+        if (orderTypeValue === 'SALES_RETURN') {
             return { from: locationOth, to: locationPW };
-        } else if (orderTypeValue === 'salesOrder') {
+        } else if (orderTypeValue === 'SALES_ORDER') {
             return { from: locationPW, to: locationOth };
         } else {
             return { from: [], to: [] };
@@ -242,8 +270,78 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
         getlocationOth()
 
     }, [])
+    useEffect(() => {
+        if (open) {
+            const initialEditable = {};
+            const totalRows = editData?.orders?.length || 1;
+            for (let i = 0; i < totalRows; i++) {
+                initialEditable[i] = false; // disable all by default
+            }
+            setEditableIndex(initialEditable);
+        }
+    }, [open, editData]);
+
+    const handleDeleteOrder = async (orderId, index) => {
+
+        console.log('hello')
+        try {
+            setIsLoading(true);
+            const res = await api(`/sales-order/details/${orderId}`, {"orderId":editData.id}, 'delete', true);
+            if (res.data.success) {
+                remove(index); // remove from form UI
+            } else {
+                console.error('Failed to delete item:', res.data);
+                // optionally show a toast or snackbar here
+            }
+        } catch (error) {
+            console.error('Error deleting order item:', error);
+        } finally {
+            setIsLoading(false);
+            setOpenConfirm(false);
+            setDeleteIndex(null);
+        }
+
+    };
+    const handleEditOrSave = async (index) => {
+        const isEditing = editableIndex?.[index];
+
+        if (isEditing) {
+            // Save mode
+            const updatedItem = getValues(`orders.${index}`);
+            updatedItem.orderId=editData.id
+            const itemId = saleDetail?.[index]?.id;
+           
+            if (itemId) {
+                try {
+                    setIsLoading(true);
+                    const res = await api(`/sales-order/details/${itemId}`, updatedItem, 'put', true);
+                    if (res.data.success) {
+                        setEditableIndex(prev => ({
+                            ...prev,
+                            [index]: false, // Exit edit mode
+                        }));
+                    } else {
+                        console.error('Failed to update order', res.data);
+                    }
+                } catch (err) {
+                    console.error('Error updating order', err);
+                } finally {
+                    setIsLoading(false);
+                }
+            }
+        } else {
+            // Enter edit mode
+            setEditableIndex(prev => ({
+                ...prev,
+                [index]: true,
+            }));
+        }
+    };
+
+    console.log(editData,saleDetail)
 
     return (
+        <>
         <Modal open={open} onClose={handleClose} aria-labelledby='Purchase'>
             <Box sx={{
                 ...style,
@@ -251,7 +349,7 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
                 overflowY: 'auto',
             }}>
                 <Typography variant='h4' className='my-2'>
-                    {editData?.orderNo ? 'Edit Sale Order' : 'Add Sale Order'}
+                    {editData?.order_no ? 'Edit Sale Order' : 'Add Sale Order'}
                 </Typography>
 
                 <form onSubmit={handleSubmit(handleSubmitForm)}>
@@ -326,67 +424,98 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
                         </Grid2>
 
                         {fields.map((field, index) => (
-                            <Grid2 container spacing={2} key={field.id}>
-                                <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                    <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>
-                                        {index + 1}
-                                    </Typography>    </Grid2>
-                                <Grid2 size={3.5}>
-                                    <CustomDropdown
-                                        name={`orders.${index}.productId`}
-                                        label="Product"
-                                        control={control}
-                                        options={productData}
-                                    />
-                                </Grid2>
-                                <Grid2 size={3.5}>
-                                    <CustomDropdown
-                                        name={`orders.${index}.batchId`}
-                                        label="Batch"
-                                        control={control}
-                                        options={batchOptionsMap[index]?.options || []}
-                                    />
-                                </Grid2>
-                                <Grid2 size={3.5}>
-                                    <CustomTextField
-                                        type='Number'
-                                        name={`orders.${index}.qty`}
-                                        label="Quantity"
-                                        control={control}
-                                    />
-                                </Grid2>
-                                <Grid2
-                                    size={0.5}
-                                    sx={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                    }}
-                                >
-                                    <Box sx={{ marginTop: 2 }}>
-                                        <Button
-                                            type="button"
-                                            variant="contained"
-                                            onClick={() => remove(index)}
-                                            disabled={fields.length === 1}
-                                            sx={{
-                                                minWidth: 0,
-                                                width: 36,
-                                                height: 36,
-                                                minHeight: 0,
-                                                padding: 0,
-                                                backgroundColor: '#e53935',
-                                                '&:hover': {
-                                                    backgroundColor: '#c62828',
-                                                },
-                                            }}
-                                        >
-                                            -
-                                        </Button>
-                                    </Box>
-                                </Grid2>
-                            </Grid2>
-                        ))}
+                                <Grid2 container spacing={2} key={field.id}>
+                                    <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                        <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                            {index + 1}
+                                        </Typography>    </Grid2>
+                                    <Grid2 size={3.5}>
+                                        <CustomDropdown
+                                            name={`orders.${index}.productId`}
+                                            label="Product"
+                                            control={control}
+                                            options={productData}
+                                            disabled={!!editData.id && !!saleDetail?.[index]?.id && !editableIndex?.[index]}
 
+                                        />
+                                    </Grid2>
+                                    <Grid2 size={3}>
+                                        <CustomDropdown
+                                            name={`orders.${index}.batchId`}
+                                            label="Batch"
+                                            control={control}
+                                            options={batchOptionsMap[index]?.options || []}
+                                            disabled={!!editData.id && !!saleDetail?.[index]?.id && !editableIndex?.[index]}
+
+                                        />
+                                    </Grid2>
+                                    <Grid2 size={3.5}>
+                                        <CustomTextField
+                                            type='Number'
+                                            name={`orders.${index}.qty`}
+                                            label="Quantity"
+                                            control={control}
+                                            disabled={!!editData.id && !!saleDetail?.[index]?.id && !editableIndex?.[index]}
+
+                                        />
+                                    </Grid2>
+                                    <Grid2
+                                        size={0.5}
+                                        sx={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                        }}
+                                    >
+                                        <Box sx={{ marginTop: 2 }}>
+                                            <IconButton
+                                                onClick={() => {
+                                                    setDeleteIndex(index);
+                                                    setOpenConfirm(true);
+                                                }}
+                                                disabled={fields.length === 1}
+                                                sx={{
+                                                    color: '#e53935',
+                                                    '&:hover': {
+                                                        color: '#c62828',
+                                                    },
+
+                                                }}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Box>
+                                    </Grid2>
+                                    <Grid2
+                                        size={0.5}
+                                        sx={{
+                                            ml: 6,
+                                            display: 'flex',
+                                            alignItems: 'flex-start', // Align to the top
+                                            justifyContent: 'center',
+                                            // Move slightly upward
+
+                                        }}
+                                    >
+                                        {saleDetail?.[index]?.id && (
+                                            <Tooltip title={editableIndex?.[index] ? 'Save' : 'Edit'}>
+                                                <IconButton
+                                                    onClick={() => handleEditOrSave(index)}
+                                                    sx={{
+                                                        color: settings.themeColor,
+
+                                                        mt: 1
+
+                                                    }}
+                                                >
+                                                    {editableIndex?.[index] ? <SaveIcon /> : <EditIcon />}
+                                                </IconButton>
+                                            </Tooltip>
+                                        )}
+                                    </Grid2>
+
+                                </Grid2>
+
+                            ))}
                         {errors.orders?.root?.message && (
                             <Grid2>
                                 <Typography color="error" sx={{ mt: 2, fontSize: 14 }}>
@@ -412,7 +541,45 @@ const SalesOrderModel = ({ open, handleClose, editData, handleSubmitForm }) => {
                 </form>
             </Box>
         </Modal>
+        {openConfirm && (
+            <Dialog
+                open={openConfirm}
+                onClose={() => setOpenConfirm(false)}
+                aria-labelledby="confirm-dialog"
+            >
+                <Typography variant="h4" sx={{ mx: 4, mt: 8, mb: 2 }}>
+                    Confirm delete item
+                </Typography>
+                <DialogActions sx={{ pb: 4, px: 4 }}>
+                    <Button
+                        variant='outlined'
+                        onClick={() => setOpenConfirm(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant='contained'
+                        color='error'
+                        onClick={() => {
+                            const orderItem = saleDetail && saleDetail[deleteIndex];
+                            if (orderItem && orderItem.id) {
+                                handleDeleteOrder(orderItem.id, deleteIndex);
+                            } else {
+                                remove(deleteIndex);
+                                setOpenConfirm(false);
+                                setDeleteIndex(null);
+                            }
+                        }}
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        )}
+    </>
     );
 };
 
 export default SalesOrderModel;
+
+

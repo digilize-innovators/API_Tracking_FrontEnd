@@ -1,6 +1,6 @@
 import React, { useState, Fragment, useEffect, useMemo } from 'react';
 import {Box,Table,TableRow,TableHead,TableBody,TableCell,Typography,IconButton,Tooltip, Button, SwipeableDrawer, Grid2} from '@mui/material'
-import { MdModeEdit } from 'react-icons/md';
+import { MdModeEdit, MdVisibility } from 'react-icons/md';
 import CustomTable from 'src/components/CustomTable';
 import PropTypes from 'prop-types';
 import { getSortIcon } from 'src/utils/sortUtils';
@@ -11,12 +11,34 @@ import { api } from 'src/utils/Rest-API';
 import { IoIosAdd } from 'react-icons/io';
 import { CiExport } from 'react-icons/ci';
 import TableStockTranferDetail from './TableStockTranferDetail';
+import TableStockTransaction from './TableStockTransaction';
+import { useAuth } from 'src/Context/AuthContext';
+import downloadPdf from 'src/utils/DownloadPdf';
 
-const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
-  console.log(row,'row')
+const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,updateView,stocktransferDetail }) => {
    const [state, setState] = useState({ addDrawer: false })
      const [orderId,setOrderId]=useState('')
-   
+     const[orderDetail,setOrderDetail]=useState([])
+     const [userDataPdf,setUserDataPdf]=useState()
+
+  const { getUserData } = useAuth()
+    
+     const tableBody = orderDetail?.map((item, index) => [
+          index + 1,
+          item.product_name,
+          item.batch_no,
+          item.qty,
+          0,
+        ])
+      
+        const tableData = useMemo(
+          () => ({
+            tableHeader: ['Sr.No.', 'Product','Batch', 'Total Quantity', 'Scanned Quantity'],
+            tableHeaderText: `Stock Tranfer`,
+            tableBodyText: `${row.order_no} list`,
+            filename: `StockTranfer_${row.order_no}`
+          }),[])
+       
    const toggleDrawer = (anchor, open) => event => {
      console.log('open drawer', open)
      if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -28,63 +50,90 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
      console.log('data', row)
      setOrderId(row.id)
    }
+   const handleDownloadPdf = () => {
+    console.log('helll to download pdf',orderDetail)
+    let data = getUserData()
+    setUserDataPdf(data)
+    downloadPdf(tableData, null, tableBody, orderDetail, userDataPdf)
+  }
    const list = anchor => (
- <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
- 
- <Grid2 item xs={12}>
-   <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8,textAlign:'center' }}>
-     Stock Tranfer Order Detail For: {row?.orderNo}
-   </Typography>
- 
-   <Box
-     sx={{
-       position: 'relative',
-       border: '1px solid #ccc',
-       borderRadius: 2,
-       p: 3,
-       m: 4,
-       backgroundColor: '#f9f9f9',
-     }}
-   >
-    <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 1 ,textAlign:'center'}}>
-       Scanning Transaction
-     </Typography>
-     <Button
-       variant='contained'
-       sx={{
-         position: 'absolute',
-         top: 30,
-         right: 16,
-         zIndex: 1,
+     <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
+     
+     <Grid2 item xs={12}>
+       <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8 }}>
+         Stock Tranfer Order Detail 
+       </Typography>
+     
+       <Box
+       sx={{ 
+         px: 6,
+         mx: 3,
+     
        }}
      >
-
-       <Box sx={{ display: 'flex', alignItems: 'center' }}>
+       
      
-         <CiExport fontSize={20} />
-         <span style={{ marginLeft: 6 }}>Export</span>
+       {/* Row with left and right sides */}
+       <Box
+         sx={{
+           display: 'flex',
+           justifyContent: 'column',
+           alignItems: 'flex-start',
+           mb: 2,
+         }}
+       >
+         {/* Left side: Order No and Order Date */}
+         <Box>
+           <Typography variant='body1' sx={{fontSize:16}}>
+           <Box component="span" sx={{ fontWeight: 'bold' }}>Order No:</Box> {row.order_no}
+           </Typography>
+           <Typography variant='body1' sx={{fontSize:16}}>
+           <Box component="span" sx={{ fontWeight: 'bold' }}>Order Date:</Box>  {moment(row.order_date).format('DD-MM-YYYY')}
+           </Typography>
+           <Typography variant='body1' sx={{fontSize:16}}>
+           <Box component="span" sx={{ fontWeight: 'bold' }}> From:</Box>  {row.order_from_location.location_name}
+           </Typography>
+           <Typography variant='body1' sx={{fontSize:16}}>
+           <Box component="span" sx={{ fontWeight: 'bold' }}> To: </Box>{row.order_to_location.location_name}
+           </Typography>
+         </Box>
        </Box>
-     </Button>
- 
-    
-     <Typography variant='body1'>
-       Status: <strong> 'Pending'</strong>
-     </Typography>
-     <Typography variant='body1'>
-       User: <strong> 'N/A'</strong>
-     </Typography>
-   </Box>
- </Grid2>
- 
- <Grid2 item xs={12}>
-   <Typography variant='h4' className='mx-4 mt-3'>
-                   Stock Tranfer Order Detail
-                 </Typography>
-   <TableStockTranferDetail orderId={orderId} />
- </Grid2>
- 
- </Box>
- 
+     
+     </Box>
+     </Grid2>
+         <Button  variant='contained'
+                 sx={{
+                   ml:8,
+                   my:6
+                 }}
+                 onClick={handleDownloadPdf}
+               >
+                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                   <CiExport fontSize={20} />
+                   <span style={{ marginLeft: 6 }}>Export</span>
+                 </Box>
+               </Button>
+               <Button  variant='contained'
+                 sx={{
+                   ml:8,
+                   my:6
+                 }}
+               >
+                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                   <span style={{ marginLeft: 6 }}>Invoice</span>
+                 </Box>
+               </Button>
+               
+     <Grid2 item xs={12}>
+        <Typography variant='h4' className='mx-4 mt-3'sx={{mb:3}}> Transaction Detail</Typography>
+       <TableStockTransaction  />
+     </Grid2>
+     <Grid2 item xs={12}>
+       <TableStockTranferDetail orderId={orderId} stocktransferDetail={stocktransferDetail} setOrderDetail={setOrderDetail} />
+     </Grid2>
+     
+     </Box>
+     
    )
   return (
     <Fragment>
@@ -101,6 +150,9 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                    <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
                      {row.order_to_location.location_name}
                    </TableCell>
+                    <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
+                             {row.status}
+                     </TableCell>
                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >
                      {moment(row?.order_date).format('DD/MM/YYYY, hh:mm:ss a')}
                    </TableCell>
@@ -109,21 +161,22 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                    </TableCell>
                    <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
                    
-                       <Tooltip title={!apiAccess.editApiAccess ? 'No edit access' : ''}>
+                       <Tooltip title={!apiAccess.editApiAccess || row.status === "SCANNING_IN_PROGRESS" ? 'No edit access' : ''}>
                          <span>
                            <MdModeEdit
                              fontSize={20}
                              data-testid={`edit-icon-${index + 1}`}
-                             onClick={apiAccess.editApiAccess ? () => handleUpdate(row) : null}
-                             style={{ cursor: apiAccess.editApiAccess ? 'pointer' : 'not-allowed', opacity: apiAccess.editApiAccess ? 1 : 0.5 }}
+                             onClick={apiAccess.editApiAccess && row.status !== 'SCANNING_IN_PROGRESS' ? () => handleUpdate(row) : null}
+                             style={{ cursor: apiAccess.editApiAccess && row.status !== 'SCANNING_IN_PROGRESS' ? 'pointer' : 'not-allowed', opacity: apiAccess.editApiAccess ? 1 : 0.5 }}
                            />
                          </span>
                        </Tooltip>
           <Button onClick={toggleDrawer('addDrawer', true)}>
-                          <IoIosAdd
-                            fontSize={30}
+                          <MdVisibility
+                            fontSize={24}
                             onClick={() => {
                               console.log('Add button clicked')
+                              updateView(row)
                               handleDrawerOpen(row)
                             }}
                             style={{ cursor: 'pointer' }}
@@ -151,6 +204,8 @@ Row.propTypes = {
   rowsPerPage: PropTypes.any,
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
+  updateView:PropTypes.any,
+  stocktransferDetail:PropTypes.any
 };
 const TableStocktransfer = ({
   handleUpdate,
@@ -158,6 +213,8 @@ const TableStocktransfer = ({
   setStocktransfer,
   pendingAction,
   tableHeaderData,
+  updateView,
+  stocktransferDetail
 }) => {
   const [sortBy, setSortBy] = useState('');
  
@@ -284,6 +341,12 @@ const TableStocktransfer = ({
                                               {getSortIcon(sortBy, 'order_to_location', sortDirection)}
                                             </IconButton>
                                           </TableCell>
+                                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort("status")}>
+                                            Status
+                                            <IconButton align='center' aria-label='expand row' size='small'>
+                                              {getSortIcon(sortBy, 'status', sortDirection)}
+                                            </IconButton>
+                                          </TableCell>
                                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('order_date')}>
                                              Order Date
                                             <IconButton align='center' aria-label='expand row' size='small'>
@@ -309,6 +372,8 @@ const TableStocktransfer = ({
                 rowsPerPage={rowsPerPage}
                 handleUpdate={handleUpdate}
                 apiAccess={apiAccess}
+                updateView={updateView}
+                stocktransferDetail={stocktransferDetail}
               />
             ))}
             {stocktransferData?.data?.length === 0 && (
@@ -329,7 +394,10 @@ TableStocktransfer.propTypes = {
   tableHeaderData: PropTypes.any,
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
-  pendingAction:PropTypes.any
+  pendingAction:PropTypes.any,
+  updateView:PropTypes.any,
+  stocktransferDetail:PropTypes.any
+
 };
 
 export default TableStocktransfer;

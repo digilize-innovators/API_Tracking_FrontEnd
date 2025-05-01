@@ -37,6 +37,7 @@ const Index = () => {
   const [config, setConfig] = useState(null)
   const [formData, setFormData] = useState({})
   const [tableHeaderData, setTableHeaderData] = useState({searchVal: ''})
+  const [purchaseDetail,setPurchaseDetail]=useState([])
   const apiAccess = useApiAccess('purchase-order-create', 'purchase-order-update','purchase-order-approve')
   console.log("apiAccess",apiAccess)
 
@@ -63,10 +64,10 @@ const Index = () => {
     }, [formData, pendingAction]);
   
 
-  console.log(purchaseOrder)
   const tableBody = purchaseOrder?.map((item, index) => [
     index + 1,
     item.order_no,
+    item.status,
     item.order_from_location.location_name,
     item.order_to_location.location_name,
     moment(item.order_date ).format('DD/MM/YYYY, hh:mm:ss a')
@@ -74,7 +75,7 @@ const Index = () => {
 
   const tableData = useMemo(
     () => ({
-      tableHeader: ['Sr.No.', 'Order No', 'From', 'To',  'Order Date'],
+      tableHeader: ['Sr.No.', 'Order No','Status', 'From', 'To',  'Order Date'],
       tableHeaderText: 'Purchase Order Report',
       tableBodyText: 'Purchase Order Data',
       filename: 'PurchaseOrder'
@@ -88,10 +89,30 @@ const Index = () => {
     setFormData({})
     setOpenModal(true)
   }
+   const getPurchaseDetail = async (id) => {
+          setIsLoading(true);
+          try {
+              const res = await api(`/purchase-order/details/${id}`, {}, 'get', true);
+              if (res.data.success) {
+                  const fetchedOrders = res.data.data.orders || [];
+                  setPurchaseDetail(fetchedOrders);            
+              } else if (res.data.code === 401) {
+                  removeAuthToken();
+                  router.push('/401');
+              } else {
+                  console.log('Error: Unexpected response', res.data);
+              }
+          } catch (error) {
+              console.log('Error in getPurchaseDetail', error);
+          } finally {
+              setIsLoading(false);
+          }
+      };
   const handleCloseModal = () => {
     setOpenModal(false)
     setFormData({})
     setEditData({})
+    setPurchaseDetail([])
   }
 
   const handleSubmitForm = async data => {
@@ -100,7 +121,7 @@ const Index = () => {
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
 
-  const addPurchaseOrder = async (esign_status, remarks) => {
+  const addPurchaseOrder = async () => {
     try {
       console.log('formdata', formData)
       const data = { ...formData }
@@ -136,9 +157,16 @@ const Index = () => {
         setIsLoading(false)
     }
   }
-  const editPurchaseOrder = async (esign_status, remarks) => {
+  const editPurchaseOrder = async () => {   
     try {
       const data = { ...formData }
+      console.log("editPurchaseOrder editPurchaseOrder ", data);
+
+      const filteredOrders = data.orders.filter(order =>
+        !purchaseDetail.some(purchase => purchase.product_id === order.productId)
+      );
+      filteredOrders.length>0 ? data.orders=filteredOrders : delete data.orders
+      delete data.to
       console.log('EDIT FORM DATA :->', data)
       setIsLoading(true)
       const res = await api(`/purchase-order/${editData.id}`, data, 'put', true)
@@ -167,7 +195,9 @@ const Index = () => {
     setTableHeaderData({  searchVal: val.trim().toLowerCase() })
   }
 
-  const handleUpdate = item => {
+  const handleUpdate =async item => {
+    await getPurchaseDetail(item.id)
+    console.log(item)
     setEditData(item)
     setOpenModal(true)
     
@@ -178,6 +208,9 @@ const Index = () => {
       searchRef.current.resetSearch()
     }
     setTableHeaderData({ ...tableHeaderData, searchVal: '' })
+  }
+  const handleView=async item => {
+    await getPurchaseDetail(item.id)
   }
 
   
@@ -236,7 +269,8 @@ const Index = () => {
                   pendingAction={pendingAction}
                   setPurchaseOrder={setPurchaseOrder}
                   apiAccess={apiAccess}
-                  config={config}
+                  purchaseDetail={purchaseDetail}
+                  handleView={handleView}
                 />
               </TableContainer>
             </Grid2>
@@ -248,6 +282,7 @@ const Index = () => {
         open={openModal}
         handleClose={handleCloseModal}
         editData={editData}
+        purchaseDetail={purchaseDetail}
         handleSubmitForm={handleSubmitForm}
       />
       <AccessibilitySettings />

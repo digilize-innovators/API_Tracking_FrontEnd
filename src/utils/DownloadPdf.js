@@ -14,7 +14,7 @@ const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) =
         headerContentFix(doc, `${tableData.tableHeaderText}`);
 
         doc.setFontSize(10);
-        doc.text('Search : ' + (tableHeaderData?.searchVal || '__'), 15, 25);
+        tableHeaderData!==null?doc.text('Search : ' + (tableHeaderData?.searchVal || '__'), 15, 25):'';
         doc.text('Filters :\n', 15, 30);
 
         if (tableData.Filter) {
@@ -22,7 +22,7 @@ const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) =
             doc.text(`${tableData.Filter[0]} : ` + (tableData.Filter[1] || '__'), 20, 35);
             const statusText = tableData.Filter[0] === 'department' 
                 ? `Status : ${tableData?.statusFilter || '__'}` 
-                : `E-Sign : ${tableHeaderData?.esignStatus || '__'}`;
+                :tableData.Filter[0] !== 'Order Type' ? `E-Sign : ${tableHeaderData?.esignStatus || '__'}`:'';
             doc.text(statusText, 20, 40);
         } else if(tableHeaderData?.esignStatus) {
             doc.text('E-Sign : ' + (tableHeaderData?.esignStatus || '__'), 20, 35);

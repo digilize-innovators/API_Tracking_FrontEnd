@@ -1,25 +1,46 @@
 import React, { useState, Fragment, useEffect, useMemo } from 'react';
 import {Box,Table,TableRow,TableHead,Grid2,TableBody,TableCell,Typography,IconButton,Tooltip, Button, SwipeableDrawer} from '@mui/material'
 import { MdModeEdit } from 'react-icons/md';
-import ChevronUp from 'mdi-material-ui/ChevronUp';
-import ChevronDown from 'mdi-material-ui/ChevronDown';
 import CustomTable from 'src/components/CustomTable';
 import PropTypes from 'prop-types';
 import { getSortIcon } from 'src/utils/sortUtils';
-import { handleRowToggleHelper } from 'src/utils/rowUtils';
 import moment from 'moment';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { useSettings } from 'src/@core/hooks/useSettings';
 import { api } from 'src/utils/Rest-API';
-import { IoIosAdd } from 'react-icons/io';
 import { CiExport } from 'react-icons/ci';
 import TablePurchaseDetail from './TablePurchaseDetail';
 import { id } from 'date-fns/locale';
+import { MdVisibility } from 'react-icons/md';
+import TableTransactionPurchase from './TableTransactionPurchase';
+import { useAuth } from 'src/Context/AuthContext';
+import downloadPdf from 'src/utils/DownloadPdf';
 
-const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess }) => {
+
+const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,handleView,purchaseDetail }) => {
     const [state, setState] = useState({ addDrawer: false })
     const [orderId,setOrderId]=useState('')
+    const [orderDetail,setOrderDetail] =useState([])
+      const [userDataPdf, setUserDataPdf] = useState()
+      const { getUserData } = useAuth()
   
+
+   const tableBody = orderDetail?.map((item, index) => [
+        index + 1,
+        item.product_name,
+        item.batch_no,
+        item.qty,
+        0,
+      ])
+    
+      const tableData = useMemo(
+        () => ({
+          tableHeader: ['Sr.No.', 'Product','Batch', 'Total Quantity', 'Scanned Quantity'],
+          tableHeaderText: `Purchase Order`,
+          tableBodyText: `${row.order_no} list`,
+          filename: `PurchaseOrder_${row.order_no}`
+        }),[])
+        
   const toggleDrawer = (anchor, open) => event => {
     console.log('open drawer', open)
     if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -31,61 +52,85 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess 
     console.log('data', row)
     setOrderId(row,id)
   }
+  const handleDownloadPdf = () => {
+    let data = getUserData()
+    setUserDataPdf(data)
+    downloadPdf(tableData, null, tableBody, orderDetail, userDataPdf)
+  }
   const list = anchor => (
 <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
 
 <Grid2 item xs={12}>
   <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8 }}>
-    Purchase Order Detail For: {row?.orderNo}
+    Purchase Order Detail 
   </Typography>
 
-  {/* Scanning Transaction Box with Download Button on Right */}
+  <Box
+  sx={{ 
+    px: 6,
+    mx: 3,
+
+  }}
+>
+  
+
+  {/* Row with left and right sides */}
   <Box
     sx={{
-      position: 'relative',
-      border: '1px solid #ccc',
-      borderRadius: 2,
-      p: 3,
-      m: 4,
-      backgroundColor: '#f9f9f9',
+      display: 'flex',
+      justifyContent: 'column',
+      alignItems: 'flex-start',
+      mb: 2,
     }}
   >
-     <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 1 ,textAlign:'center'}}>
-      Scanning Transaction
-    </Typography>
-    {/* Download button on top-right corner inside the box */}
-    <Button
-      variant='contained'
-      sx={{
-        position: 'absolute',
-        top: 30,
-        right: 16,
-        zIndex: 1,
-      }}
-    >
-      
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <CiExport fontSize={20} />
-        <span style={{ marginLeft: 6 }}>Export</span>
-      </Box>
-    </Button>
-
-    {/* Scanning Transaction content */}
-   
-    <Typography variant='body1'>
-      Status: <strong> 'Pending'</strong>
-    </Typography>
-    <Typography variant='body1'>
-      User: <strong> 'N/A'</strong>
-    </Typography>
+    {/* Left side: Order No and Order Date */}
+    <Box>
+      <Typography variant='body1' sx={{fontSize:16}}>
+      <Box component="span" sx={{ fontWeight: 'bold' }}>Order No:</Box> {row.order_no}
+      </Typography>
+      <Typography variant='body1' sx={{fontSize:16}}>
+      <Box component="span" sx={{ fontWeight: 'bold' }}>Order Date:</Box>  {moment(row.order_date).format('DD-MM-YYYY')}
+      </Typography>
+      <Typography variant='body1' sx={{fontSize:16}}>
+      <Box component="span" sx={{ fontWeight: 'bold' }}> From:</Box>  {row.order_from_location.location_name}
+      </Typography>
+      <Typography variant='body1' sx={{fontSize:16}}>
+      <Box component="span" sx={{ fontWeight: 'bold' }}> To: </Box>{row.order_to_location.location_name}
+      </Typography>
+    </Box>
   </Box>
-</Grid2>
 
+</Box>
+</Grid2>
+    <Button  variant='contained'
+            sx={{
+              ml:8,
+              my:6
+            }}
+            onClick={handleDownloadPdf}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <CiExport fontSize={20} />
+              <span style={{ marginLeft: 6 }}>Export</span>
+            </Box>
+          </Button>
+          <Button  variant='contained'
+            sx={{
+              ml:8,
+              my:6
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ marginLeft: 6 }}>Invoice</span>
+            </Box>
+          </Button>
+          
 <Grid2 item xs={12}>
-  <Typography variant='h4' className='mx-4 mt-3'>
-                  Purchase Order Detail
-                </Typography>
-  <TablePurchaseDetail orderId={orderId} />
+   <Typography variant='h4' className='mx-4 mt-3'sx={{mb:3}}> Transaction Detail</Typography>
+  <TableTransactionPurchase  />
+</Grid2>
+<Grid2 item xs={12}>
+  <TablePurchaseDetail orderId={orderId} purchaseDetail={purchaseDetail} setOrderDetail={setOrderDetail}/>
 </Grid2>
 
 </Box>
@@ -107,7 +152,9 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess 
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
           {row.order_to_location.location_name}
         </TableCell>
-
+        <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
+          {row.status}
+        </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >
           {moment(row?.order_date).format('DD/MM/YYYY, hh:mm:ss a')}
         </TableCell>
@@ -116,21 +163,22 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleUpdate, apiAccess 
         </TableCell>
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
         
-            <Tooltip title={!apiAccess.editApiAccess ? 'No edit access' : ''}>
+            <Tooltip title={!apiAccess.editApiAccess || row.status === "SCANNING_IN_PROGRESS"? 'No edit access' : ''}>
               <span>
                 <MdModeEdit
                   fontSize={20}
                   data-testid={`edit-icon-${index + 1}`}
-                  onClick={apiAccess.editApiAccess ? () => handleUpdate(row) : null}
-                  style={{ cursor: apiAccess.editApiAccess ? 'pointer' : 'not-allowed', opacity: apiAccess.editApiAccess ? 1 : 0.5 }}
+                  onClick={apiAccess.editApiAccess && row.status !== 'SCANNING_IN_PROGRESS'? () => handleUpdate(row) : null}
+                  style={{ cursor: apiAccess.editApiAccess  &&  row.status !== 'SCANNING_IN_PROGRESS'? 'pointer' : 'not-allowed', opacity: apiAccess.editApiAccess ? 1 : 0.5 }}
                 />
               </span>
             </Tooltip>
           <Button onClick={toggleDrawer('addDrawer', true)}>
-              <IoIosAdd
-                fontSize={30}
+              <MdVisibility
+                fontSize={24}
                 onClick={() => {
                   console.log('Add button clicked')
+                  handleView(row)
                   handlePurchaseDrawerOpen(row)
                 }}
                 style={{ cursor: 'pointer' }}
@@ -156,10 +204,11 @@ Row.propTypes = {
   index: PropTypes.any,
   page: PropTypes.any,
   rowsPerPage: PropTypes.any,
-  openRows: PropTypes.any,
   handleRowToggle: PropTypes.any,
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
+  handelView:PropTypes.any,
+  purchaseDetail:PropTypes.any
 };
 const TablePurchaseOrder = ({
   handleUpdate,
@@ -167,6 +216,9 @@ const TablePurchaseOrder = ({
   setPurchaseOrder,
   pendingAction,
   tableHeaderData,
+  purchaseDetail,
+  handleView,
+
 }) => {
   const [sortBy, setSortBy] = useState('');
    const { settings } = useSettings();
@@ -290,6 +342,12 @@ const handleSort = (key,child) => {
                   {getSortIcon(sortBy, 'order_to_location', sortDirection)}
                 </IconButton>
               </TableCell>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort("status")}>
+                Status
+                <IconButton align='center' aria-label='expand row' size='small'>
+                  {getSortIcon(sortBy, 'status', sortDirection)}
+                </IconButton>
+              </TableCell>
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('order_date')}>
                  Order Date
                 <IconButton align='center' aria-label='expand row' size='small'>
@@ -313,9 +371,10 @@ const handleSort = (key,child) => {
                 index={index}
                 page={page}
                 rowsPerPage={rowsPerPage}
-                openRows={openRows}
                 handleUpdate={handleUpdate}
                 apiAccess={apiAccess}
+                handleView={handleView}
+                purchaseDetail={purchaseDetail}
               />
             ))}
             {purchaseOrderData?.data?.length === 0 && (
@@ -336,8 +395,9 @@ TablePurchaseOrder.propTypes = {
   tableHeaderData: PropTypes.any,
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
-  pendingAction:PropTypes.any
-
+  pendingAction:PropTypes.any,
+  purchaseDetail:PropTypes.any,
+  handleView:PropTypes.any
 };
 
 export default TablePurchaseOrder;
