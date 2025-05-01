@@ -39,7 +39,6 @@ const Row = ({
   handleUpdate,
   apiAccess
 }) => {
-  console.log(row)
   const serialNumber = getSerialNumber(index, page, rowsPerPage)
   return (
     <Fragment>
@@ -329,8 +328,7 @@ const TableProduct = ({
       setIsLoading(false)
       if (res.data.success) {
         setProductData({ data: res.data.data.products, total: res.data.data.total })
-        setProduct(res.data.data.products)
-        console.log('Set Product Data')
+        setProduct(res.data.data.products);
       } else {
         console.log('Error to get all products ', res.data)
         console.log('Error to get all products ', res.data)

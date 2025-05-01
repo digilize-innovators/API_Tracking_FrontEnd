@@ -327,12 +327,10 @@ const Index = () => {
             remarks: `none`
           }
       data.audit_log = audit_log
-      data.esign_status = esign_status
-      console.log('Add product data ', data)
+      data.esign_status = esign_status;
       setIsLoading(true)
       const res = await api('/product/', data, 'post', true)
-      setIsLoading(false)
-      console.log('REs of add product ', res.data)
+      setIsLoading(false);
       if (res?.data?.success) {
         console.log('res data of add product', res?.data)
         setAlertData({ ...alertData, type: 'success', message: 'Product added successfully', openSnackbar: true })
@@ -385,9 +383,8 @@ const Index = () => {
           remarks: `none`
         }
       }
-      data.audit_log = audit_log
-      data.esign_status = esign_status
-      console.log('Edit product data ', data)
+      data.audit_log = audit_log;
+      data.esign_status = esign_status;
       setIsLoading(true)
       const res = await api(`/product/${editData.id}`, data, 'put', true)
       setIsLoading(false)
@@ -474,9 +471,7 @@ const Index = () => {
     }
     console.log(productData)
     downloadPdf(tableData, tableHeaderData, tableBody, productData, userDataPdf)
-  }
-
-  console.log('Product Data', productData)
+  };
 
   const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })

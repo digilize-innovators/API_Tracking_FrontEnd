@@ -124,7 +124,7 @@ const Index = () => {
     }
     const processApproval = async () => {
       const data = {
-        modelName: 'CodeGenerationRequest',
+        modelName: 'codeGenerationRequest',
         esignStatus,
         id: eSignStatusId,
         audit_log: config?.config?.audit_logs
@@ -336,7 +336,7 @@ const Index = () => {
 
     for (let i = 0; i < packagingHierarchyLevel; i++) {
       const batchQty = batchSize * (baseLevel[i] / baseLevel[0])
-      const generatedCodes = levelWiseData.find(item => item.packaging_hierarchy === `level${i}`).no_of_codes
+      const generatedCodes = levelWiseData.find(item => item.packaging_hierarchy === `level${i}`)?.no_of_codes
       packagingHierarchyData.push({
         id: i,
         level: i,

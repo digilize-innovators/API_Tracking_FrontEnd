@@ -482,8 +482,7 @@ function ProductModal({
     try {
       setIsLoading(true)
       const res = await api('/country-master?limit=-1', {}, 'get', true)
-      setIsLoading(false)
-      console.log('All country master : ', res?.data?.data)
+      setIsLoading(false);
       if (res.data.success) {
         setCountries(res.data.data.countryMaster)
       } else {
@@ -493,9 +492,8 @@ function ProductModal({
           router.push('/401')
         }
       }
-      console.log('All country master  ', countries)
     } catch (error) {
-      console.log('Error in get companies ', error)
+      console.log('Error in get country ', error)
       setIsLoading(false)
     }
   }

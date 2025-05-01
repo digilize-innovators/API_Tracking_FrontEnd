@@ -151,8 +151,7 @@ const TableCountryMaster = ({
         try {
           setIsLoading(true)
           const res = await api(`/country-master`, {}, 'get', true)
-          setIsLoading(false)
-          console.log('All Country Master Data : ', res?.data?.data)
+          setIsLoading(false);
           if (res.data.success) {
             setCountryMasterData({data:res.data.data.countryMaster,total:res.data.data.totalRecords})
 

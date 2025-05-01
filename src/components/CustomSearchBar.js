@@ -23,7 +23,6 @@ const CustomSearchBar = forwardRef(({ handleSearchClick }, ref) => {
 
     return (
         <Box display="flex" alignItems="center">
-            {console.log('renderCustom search bar')}
             <Box className='mx-2'>
                 <TextField
                     inputRef={searchInputRef}
