@@ -1,18 +1,15 @@
 import React from "react";
-import { MdKeyboardArrowDown, MdKeyboardArrowUp, MdMoreVert } from "react-icons/md";
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
-const Featured = ({data}) => {
+const Featured = ({ data }) => {
 
   const styles = {
     featured: {
       flex: 1,
       boxShadow: "2px 4px 10px 1px rgba(201, 201, 201, 0.47)",
       padding: "10px",
-      background:'#fff',
-      marginTop: "10px", // ⬅️ add some spacing from the top
-
+      background: '#fff',
     },
     top: {
       display: "flex",
@@ -31,7 +28,7 @@ const Featured = ({data}) => {
       alignItems: "center",
       justifyContent: "center",
       gap: "10px",
-     
+
     },
     featuredChart: {
       width: "100px",
@@ -66,7 +63,9 @@ const Featured = ({data}) => {
       fontSize: "14px",
     },
     positive: {
-      color: "green",
+      color: "#50BDA0",
+      fontSize:18,
+      
     },
     negative: {
       color: "red",
@@ -76,8 +75,13 @@ const Featured = ({data}) => {
   return (
     <div style={styles.featured}>
       <div style={styles.top}>
-        <h1 style={styles.title}>Parent-Child Mapping Status</h1>
-        
+        <h1 style={{
+          marginBottom: '12px',
+          fontSize: '20px',
+          color: 'gray',
+          fontWeight: '580'
+        }}>Parent - Child Mapping Status</h1>
+
       </div>
       <div style={styles.bottom}>
         <div style={styles.featuredChart}>
@@ -85,12 +89,12 @@ const Featured = ({data}) => {
         </div>
         <p style={styles.title}>Total number of Aggregated</p>
         <p style={styles.amount}>{data?.aggregationStats.aggCount}</p>
-       
+
         <div style={styles.summary}>
           <div style={styles.item}>
             <div style={styles.itemTitle}>Today</div>
             <div style={{ ...styles.itemResult, ...styles.positive }}>
-            {data?.aggregationStats?.todayAggCount}
+              {data?.aggregationStats?.todayAggCount}
             </div>
           </div>
           <div style={styles.item}>
@@ -101,7 +105,7 @@ const Featured = ({data}) => {
           </div>
           <div style={styles.item}>
             <div style={styles.itemTitle}>Last Month</div>
-            <div style={{ ...styles.itemResult, ...styles.positive}}>
+            <div style={{ ...styles.itemResult, ...styles.positive }}>
               {data?.aggregationStats?.pastMonthAggCount}
 
             </div>
