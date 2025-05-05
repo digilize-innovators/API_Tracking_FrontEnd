@@ -1,21 +1,36 @@
 //src/components/AreaChart.js
 
 import React from "react";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Tooltip, XAxis, YAxis, ResponsiveContainer, Legend } from "recharts";
 
-
-
-const Areachart = ({data}) => {
+const Areachart = ({ data }) => {
     return (
-        <div className="w-full bg-white rounded-md shadow-md p-4 text-gray-600 my-4">
-        <div className="mb-5 pb-2 font-medium">
-            Total Batches v/s Executed Batches
-        </div>
-        <div className="w-full h-72">
+        <div style={{
+            background: '#fff',
+            //boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
+            boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)',
+            padding: '20px',
+            margin: '10px auto',
+            width: '24vw',
+            height: '18.5vw',
+            fontFamily: 'sans-serif',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+        }}>
+            <div style={{
+                marginBottom: '12px',
+                fontSize: '20px',
+                color: 'gray',
+                fontWeight: '580'
+            }}>
+                Total Batches vs Executed Batches
+            </div>
+
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                     data={data}
-                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
                     <defs>
                         <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
@@ -29,27 +44,36 @@ const Areachart = ({data}) => {
                     </defs>
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip />
-                    <Area 
-                        type="monotone" 
-                        dataKey="executedBatch" 
-                        stroke="#8884d8" 
-                        fillOpacity={1} 
-                        fill="url(#colorUv)" 
+                    {/* <Tooltip /> */}
+                    <Tooltip
+                        contentStyle={{
+                            backgroundColor: '#333',
+                            borderRadius: '4px',
+                            border: 'none',
+                            color: '#fff',
+                            fontSize: 12,
+                        }}
                     />
-                    <Area 
-                        type="monotone" 
-                        dataKey="totalBatch" 
-                        stroke="#82ca9d" 
-                        fillOpacity={1} 
-                        fill="url(#colorPv)" 
+                    <Legend />
+                    <Area
+                        type="monotone"
+                        dataKey="executedBatch"
+                        stroke="#8884d8"
+                        fillOpacity={1}
+                        fill="url(#colorUv)"
+                    />
+                    <Area
+                        type="monotone"
+                        dataKey="totalBatch"
+                        stroke="#82ca9d"
+                        fillOpacity={1}
+                        fill="url(#colorPv)"
                     />
                 </AreaChart>
             </ResponsiveContainer>
         </div>
-    </div>
-
-    )
-}
+    );
+};
 
 export default Areachart;
+
