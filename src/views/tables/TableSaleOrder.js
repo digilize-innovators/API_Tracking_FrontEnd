@@ -12,21 +12,53 @@ import { api } from 'src/utils/Rest-API';
 import { IoIosAdd } from 'react-icons/io';
 import { CiExport } from 'react-icons/ci';
 import TableSaleDetail from './TableSaleDetail';
-import TableTransactionPurchase from './TableTransactionPurchase';
 import { MdVisibility } from 'react-icons/md';
 import TableSaleTransaction from './TableSaleTransaction';
 import { useAuth } from 'src/Context/AuthContext';
 import downloadPdf from 'src/utils/DownloadPdf';
+import { useRouter } from 'next/router';
+import SnackbarAlert from 'src/components/SnackbarAlert';
   
 
 
 
-const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,saleDetail,handleView }) => {
+const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
   const [state, setState] = useState({ addDrawer: false })
   const [orderId, setOrderId] = useState('')
+  const [saleDetail,setSalDetail]= useState('')
+  const [status,setStatus]=useState(false)
   const [orderDetail,setOrderDetail] =useState([])
+   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
+  
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData } = useAuth()
+    const { setIsLoading } = useLoading()
+    const { removeAuthToken } = useAuth()
+    const router = useRouter()
+
+  const getTractionDetail = async (id) => {
+    try {
+      setIsLoading(true)
+      const res = await api(`/sales-order/transaction-details/${id}`, {}, 'get', true)
+      console.log(" in table traction sale",res)
+      setIsLoading(false)
+      if (res.data.success) {
+        setSalDetail(res.data.data)
+        setStatus(res.data.data.transactions.every(item => item.status === 'COMPLETED') && row.status!=='INVOICE_GENERATED')
+      } else if (res.data.code === 401) {
+        removeAuthToken()
+        router.push('/401')
+      }
+    } catch (error) {
+      console.log('Error in get designation ', error)
+      setIsLoading(false)
+    }
+    
+  }
+  useEffect(()=>{
+    let data = getUserData()
+    setUserDataPdf(data)
+  },[])
 
    const tableBody = orderDetail?.map((item, index) => [
       index + 1,
@@ -58,9 +90,44 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,saleDetail
   }
 
   const handleDownloadPdf = () => {
-    let data = getUserData()
-    setUserDataPdf(data)
+   
     downloadPdf(tableData, null, tableBody, orderDetail, userDataPdf)
+  }
+  const closeSnackbar = () => {
+    setAlertData({ ...alertData, openSnackbar: false })
+  }
+  const handleGenerate=async ()=>{
+        try {
+            
+             const data = {orderId:orderId }
+             setIsLoading(true)
+             const res = await api('/sales-order/generate-invoice/', data, 'post', true)
+             console.log('res generate Invoice ', res)
+       
+             setIsLoading(false)
+       
+             if (res?.data?.success) {
+               setOpenModal(false)
+               setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Invoice Generated successfully' })
+             } else {
+               setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
+               if (res.data.code === 401) {
+                 removeAuthToken()
+                 router.push('/401')
+               } else if (res.data.code === 409) {
+                 setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
+                 console.log('409 :', res.data.message)
+               } else if (res.data.code == 500) {
+                 setOpenModal(false)
+               }
+             }
+           } catch (error) {
+  
+             console.log('Error in add locaiton ', error)
+             router.push('/500')
+           } finally {
+               setIsLoading(false)
+           }
   }
   const list = anchor => (
     <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
@@ -102,6 +169,9 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,saleDetail
           <Typography variant='body1' sx={{fontSize:16}}>
           <Box component="span" sx={{ fontWeight: 'bold' }}> To: </Box>{row.order_to_location.location_name}
           </Typography>
+          <Typography variant='body1' sx={{fontSize:16}}>
+          <Box component="span" sx={{ fontWeight: 'bold' }}> Status: </Box>{row.status}
+          </Typography>
         </Box>
       </Box>
     
@@ -124,19 +194,21 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,saleDetail
                   ml:8,
                   my:6
                 }}
+                disabled={!status} 
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ marginLeft: 6 }}> Generate Invoice</span>
+                  <span style={{ marginLeft: 6 }} onClick={handleGenerate}> Generate Invoice</span>
                 </Box>
               </Button>
               
     <Grid2 item xs={12}>
        <Typography variant='h4' className='mx-4 mt-3'sx={{mb:3}}> Transaction Detail</Typography>
-      <TableSaleTransaction  />
+      <TableSaleTransaction  saleDetail={saleDetail} />
     </Grid2>
     <Grid2 item xs={12}>
-      <TableSaleDetail orderId={orderId} saleDetail={saleDetail} setOrderDetail={setOrderDetail} />
+      <TableSaleDetail saleDetail={saleDetail} setOrderDetail={setOrderDetail} orderDetail={row} userDataPdf={userDataPdf} />
     </Grid2>
+          <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
     
     </Box>
     
@@ -188,8 +260,9 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,saleDetail
               fontSize={24}
               onClick={() => {
                 console.log('Add button clicked')
-                handleView(row)
                 handleDrawerOpen(row)
+                getTractionDetail(row.id)
+
               }}
               style={{ cursor: 'pointer' }}
             />
@@ -229,8 +302,7 @@ const TableSaleOrder = ({
   pendingAction,
   orderTypeFilter,
   tableHeaderData,
-  saleDetail,
-  handleView
+ 
 }) => {
   const [sortBy, setSortBy] = useState('');
   const { settings } = useSettings();
@@ -394,8 +466,7 @@ const TableSaleOrder = ({
                 rowsPerPage={rowsPerPage}
                 handleUpdate={handleUpdate}
                 apiAccess={apiAccess}
-                saleDetail={saleDetail}
-                handleView={handleView}
+               
               />
             ))}
             {orderSaleData?.data?.length === 0 && (

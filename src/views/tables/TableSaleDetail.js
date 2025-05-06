@@ -9,10 +9,111 @@ import CustomTable from 'src/components/CustomTable'
 import { getSortIcon } from 'src/utils/sortUtils'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { CiExport } from 'react-icons/ci'
+import { useLoading } from 'src/@core/hooks/useLoading'
+import { useRouter } from 'next/router'
+import { api } from 'src/utils/Rest-API'
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { headerContentFix } from 'src/utils/headerContentPdfFix';
+import { footerContent } from 'src/utils/footerContentPdf';
+
+
+
+
 
 const Row = ({
-  key, row,index, page, rowsPerPage
+  key, row,index, page, rowsPerPage,orderDetail,userDataPdf
 }) => {
+    const { setIsLoading } = useLoading()
+    const [codes,SetCodes]=useState([])
+    console.log("orderDetail",orderDetail,row)
+    const downloadPdf = (data) => {
+      console.log('Clicked on download button',codes);
+      const doc = new jsPDF();
+  
+      const headerContent = () => {
+          headerContentFix(doc, 'Scanned Detail');
+  
+          doc.setFontSize(10);
+          doc.text('Order No : ' + (orderDetail.order_no|| '__'), 15, 25);
+          
+          doc.text('Product Name  : ' + (row.product_name || '__'), 15, 30);
+          doc.text('Batch No. : ' + (row.batch_no || '__'), 15, 35);
+
+
+          doc.setFontSize(12);
+          doc.text('Unique Code', 15, 55);
+      };
+  
+      const bodyContent = () => {
+          let currentPage = 1;
+          let dataIndex = 0;
+          const totalPages = Math.ceil(data.length / 25);
+          headerContent();
+  
+          while (dataIndex < data.length) {
+              if (currentPage > 1) {
+                  doc.addPage();
+                  headerContent(); // Ensure header is added on new pages
+              }
+               let codes = data.map((item,index)=>[
+                index + 1,
+                item,
+              ])
+              const body = codes.slice(dataIndex, dataIndex + 25);
+  
+              autoTable(doc, {
+                  startY: currentPage === 1 ? 60 : 50, // Ensure consistent spacing
+                  styles: { halign: 'center' },
+                  headStyles: { fontSize: 8, fillColor: [80, 189, 160] },
+                  alternateRowStyles: { fillColor: [249, 250, 252] },
+                  tableLineColor: [80, 189, 160],
+                  tableLineWidth: 0.1,
+                  head: [['Sr.No.', 'UniqueCode']],
+                  body: body,
+                  columnWidth: 'wrap',
+                  margin: { bottom: 20 }, // Add margin to prevent footer overlap
+                  didDrawPage: function (data) {
+                      footerContent(currentPage, totalPages, userDataPdf, doc);
+                  }
+              });
+  
+              dataIndex += 25;
+              currentPage++;
+          }
+      };
+  
+      bodyContent();
+  
+      const currentDate = new Date();
+      const formattedDate = currentDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
+      const formattedTime = currentDate.toLocaleTimeString('en-US', { hour12: false }).replace(/:/g, '-');
+      const fileName = `Scanned_Detil_${formattedDate}_${formattedTime}.pdf`;
+      doc.save(fileName);
+  };
+   const getUniqueCode=async (row) => {
+      try {
+        let query = `/sales-order/scanned-codes/${orderDetail.id}/${row.batch_id}`
+       
+        setIsLoading(true)
+        const res = await api(query, {}, 'get', true)
+        console.log('get scanned code', res.data)
+        setIsLoading(false)
+        if (res.data.success) {
+          downloadPdf(res.data.data.codes)
+        } else {
+          console.log('Error to get scanned code', res.data)
+          if (res.data.code === 401) {
+            removeAuthToken()
+            router.push('/401')
+          }
+        }
+      } catch (error) {
+        console.log('Error in get scanned code ', error)
+        setIsLoading(false)
+      }
+    }
+
   
   return (
     <Fragment>
@@ -38,14 +139,14 @@ const Row = ({
           {row.qty}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          0
+          {/* {row.} */} {row.o_scan_qty}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           <span>
                       
                       <Tooltip title="Export">
           <IconButton data-testid={`auth-check-icon-${row.id}`}>
-                                <CiExport fontSize={20} />
+           <CiExport fontSize={20} onClick={()=> getUniqueCode(row)} />
           </IconButton>
           </Tooltip>
                     </span>
@@ -64,9 +165,12 @@ Row.propTypes = {
 }
 const TableSaleDetail = ({
     saleDetail,
-    setOrderDetail
+    setOrderDetail,
+    orderDetail,
+    userDataPdf
+   
 }) => {
-
+    console.log("saleDetail",saleDetail)
   const [sortBy, setSortBy] = useState('')
   const [page, setPage] = useState(0)
   const { settings } = useSettings()
@@ -84,8 +188,8 @@ const TableSaleDetail = ({
     setPage(0)
   }
   useEffect(() => {
-    setData(saleDetail)
-    setOrderDetail(saleDetail.slice(page*rowsPerPage,page*rowsPerPage+rowsPerPage))
+    setData(saleDetail?.orders)
+    setOrderDetail(saleDetail?.orders?.slice(page*rowsPerPage,page*rowsPerPage+rowsPerPage))
 
   }, [saleDetail,page,rowsPerPage])
   
@@ -127,7 +231,7 @@ const TableSaleDetail = ({
        data={data}
       page={page}
       rowsPerPage={rowsPerPage}
-      totalRecords={saleDetail.length}
+      totalRecords={saleDetail?.orders?.length}
       handleChangePage={handleChangePage}
       handleChangeRowsPerPage={handleChangeRowsPerPage}
     >
@@ -196,6 +300,8 @@ const TableSaleDetail = ({
             {data?.slice(page*rowsPerPage,page*rowsPerPage+rowsPerPage).map((item, index) => (
               <Row
               key={index + 1}
+              orderDetail={orderDetail}
+              userDataPdf={userDataPdf}
               row={item}
               index={index}
               page={page}
@@ -213,10 +319,14 @@ const TableSaleDetail = ({
         </Table>
       </Box>
     </CustomTable>
+    
   )
 }
 TableSaleDetail.propTypes = {
-  saleDetail:PropTypes.any
+  saleDetail:PropTypes.any,
+  setOrderDetail:PropTypes.any,
+  orderDetail:PropTypes.any,
+  userDataPdf:PropTypes.any
   
 }
 export default TableSaleDetail

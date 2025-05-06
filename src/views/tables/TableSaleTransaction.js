@@ -19,14 +19,14 @@ import { useRouter } from 'next/router'
 const Row = ({
   row,
   index,
-  openRows,
+  
  
 }) => {
   return (
     <Fragment>
       <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
-        
-        <TableCell
+{        console.log(row)
+}        <TableCell
           align='center'
           component='th'
           scope='row'
@@ -35,6 +35,46 @@ const Row = ({
         >
           {index + 1}
         </TableCell>
+        <TableCell
+          align='center'
+          component='th'
+          scope='row'
+          className='p-2'
+          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+        >
+          {row.status}
+        </TableCell>
+       
+        <TableCell
+          align='center'
+          component='th'
+          scope='row'
+          className='p-2'
+          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+        >
+          {row.transaction_id}
+          
+        </TableCell>
+        <TableCell
+          align='center'
+          component='th'
+          scope='row'
+          className='p-2'
+          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+        >
+         {row.user.user_name}
+        </TableCell>
+        <TableCell
+          align='center'
+          component='th'
+          scope='row'
+          className='p-2'
+          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+        >
+         
+          {moment(row?.order.created_at).format('DD/MM/YYYY')}
+        </TableCell>
+
         {/* <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.designation_id}</TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.designation_name}</TableCell>
         {config_dept?.config?.esign_status === true && config_dept?.role!=='admin' && (
@@ -81,70 +121,9 @@ Row.propTypes = {
   config_dept: PropTypes.any
 };
 const TableSaleTransaction = ({
-  saleDetail
+saleDetail
 }) => {
-  const [sortBy, setSortBy] = useState('');
-  const [sortDirection, setSortDirection] = useState('asc')
-  const [openRows, setOpenRows] = useState({});
-  const [historyData, setHistoryData] = useState({});
-  const [designationData, setDesignationData] = useState([])
-  const handleRowToggle = async (rowId) => {
-    await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/designation/history');
-  };
-
-  const { setIsLoading } = useLoading()
-  const { removeAuthToken } = useAuth()
-  const router = useRouter()
-
-
-
-  const getDesignations = async () => {
-    try {
-      setIsLoading(true)
-      const res = await api(`/designation/${departmentId}`, {}, 'get', true)
-      setIsLoading(false)
-      console.log('All designations ', res.data)
-      if (res.data.success) {
-        setDesignationData(res.data.data.designations)
-        setArrayDesignation(res.data.data.designations)
-      } else if (res.data.code === 401) {
-        removeAuthToken()
-        router.push('/401')
-      }
-    } catch (error) {
-      console.log('Error in get designation ', error)
-      setIsLoading(false)
-    }
-  }
-  useEffect(() => {
-    console.log('1212')
-    getDesignations()
-  }, [])
-  
-  const handleSort = (key, isBoolean = false) => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    const booleanSort = (a, b) => {
-      if (a[key] === b[key]) return 0;
-      let comparison = a[key] ? 1 : -1;
-      if (newSortDirection !== 'asc') {
-        comparison = a[key] ? -1 : 1;
-      }
-      return comparison;
-    };
-    const regularSort = (a, b) => {
-      if (a[key] === b[key]) return 0;
-      let comparison = a[key] > b[key] ? 1 : -1;
-      if (newSortDirection !== 'asc') {
-        comparison = a[key] > b[key] ? -1 : 1;
-      }
-      return comparison;
-    };
-    const sorted = [...designationData].sort(isBoolean ? booleanSort : regularSort);
-    setDesignationData(sorted);
-    setSortDirection(newSortDirection);
-    setSortBy(key)
-  };
-  console.log("saleDetail",'in view',saleDetail)
+   
   return (
       <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', width: '100%' }}>
       
@@ -152,42 +131,32 @@ const TableSaleTransaction = ({
           <TableHead>
             <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>Sr.No.</TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('designation_id')}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} >
                Status
-                <IconButton align='center' aria-label='expand row' size='small' data-testid={`sort-icon-${sortBy}`}>
-                  {getSortIcon(sortBy, 'designation_id', sortDirection)}
-                </IconButton>
               </TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('designation_name')}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} >
                 Transaction Id
-                <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'designation_name', sortDirection)}
-                </IconButton>
+               
               </TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('designation_name')}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} >
                 User
-                <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'designation_name', sortDirection)}
-                </IconButton>
+               
               </TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} onClick={() => handleSort('designation_name')}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} style={{ cursor: 'pointer' }} >
                    Created At
-                <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'designation_name', sortDirection)}
-                </IconButton>
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-             {saleDetail?.map((item, index) => (
+             {saleDetail?.transactions?.map((item, index) => (
               <Row
                 key={index + 1}
                 row={item}
                 index={index}
-                openRows={openRows}
+                
               />
             ))} 
-            {saleDetail?.length === 0 && (
+            {saleDetail?.transactions?.length === 0 && (
               <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 <TableCell colSpan={12} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                   No data

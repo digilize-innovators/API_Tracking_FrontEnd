@@ -211,11 +211,7 @@ const Index = () => {
     setOpenModal(true)
    
   }
-  const handleView=async item => {
-    await getSaleDetail(item.id)
-  }
-
-  const resetFilter = () => {
+    const resetFilter = () => {
     if (searchRef.current) {
       searchRef.current.resetSearch() // Call the reset method in the child
     }
@@ -300,8 +296,6 @@ const Index = () => {
                   setSaleOrder={setSaleOrder}
                   apiAccess={apiAccess}
                   config={config}
-                  saleDetail={saleDetail}
-                  handleView={handleView}
                 />
               </TableContainer>
             </Grid2>
