@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   BarChart,
@@ -13,12 +14,12 @@ import {
 const TopProductShow = ({ data }) => {
   console.log("Top 10 Products :=>", data);
 
-  // Dynamically handle both 'month' and 'year' based labeling
   const chartData = data?.map((item) => {
-    const timeLabel = item.month || item.year || ''; // Use month if available, else year
+    const timeLabel = item.month || item.year || '';
     return {
-      name: `${item.product_name} (${timeLabel})`,
+      name: item.product_name,
       topProducts: parseInt(item.total, 10),
+      tooltipLabel: `${item.product_name} (${timeLabel})`,
     };
   });
 
@@ -26,15 +27,12 @@ const TopProductShow = ({ data }) => {
     <div
       style={{
         background: '#fff',
-        boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)',
         padding: '20px',
         margin: '10px auto',
-        width: '24.1vw',
+        width: '23.5vw',
         height: '18.5vw',
         fontFamily: 'sans-serif',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
+        boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)',
       }}
     >
       <h3
@@ -52,9 +50,8 @@ const TopProductShow = ({ data }) => {
         <BarChart
           layout="vertical"
           data={chartData}
-          // margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
-          margin={{ top: 2, right: 20, left: 0, bottom: 20 }}
-          barCategoryGap={8}
+          margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+          barCategoryGap={10}
         >
           <XAxis
             type="number"
@@ -62,31 +59,54 @@ const TopProductShow = ({ data }) => {
             axisLine={false}
             tickLine={false}
           />
+        
           <YAxis
             dataKey="name"
             type="category"
-            tick={{ fontSize: 12 }}
-            width={120}
+            tick={({ x, y, payload }) => {
+              return (
+                <text
+                  x={x - 5}
+                  y={y + 4}
+                  textAnchor="end"
+                  fill="#666"
+                  fontSize={12}
+                >
+                  {payload.value}
+                </text>
+              );
+            }}
+            width={138}
+            interval={0}
             axisLine={false}
             tickLine={false}
           />
+
           <Tooltip
+            formatter={(value) => [value, 'Total']}
+            labelFormatter={(label) => `Product : ${label}`}
             contentStyle={{
-              backgroundColor: '#333',
+              backgroundColor: '#393939',
               borderRadius: '4px',
               border: 'none',
               color: '#fff',
               fontSize: 12,
             }}
           />
-          <Bar dataKey="topProducts" fill="#00c49f" barSize={18}>
+          <Legend
+            layout="horizontal"
+            verticalAlign="bottom"
+            align="center"
+          />
+
+          <Bar dataKey="topProducts" fill="#00d09c" barSize={20} >
             <LabelList
               dataKey="topProducts"
               position="right"
-              style={{ fontSize: 12, fill: '#333' }}
+              // style={{ fontSize: 12, fill: '#333' }}
+              style={{fontSize:12}}
             />
           </Bar>
-          <Legend />
         </BarChart>
       </ResponsiveContainer>
     </div>

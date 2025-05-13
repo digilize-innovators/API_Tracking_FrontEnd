@@ -9,7 +9,8 @@ const Featured = ({ data }) => {
       flex: 1,
       boxShadow: "2px 4px 10px 1px rgba(201, 201, 201, 0.47)",
       padding: "10px",
-      background: '#fff',
+      //background: '#fff',
+      backgroundColor:'#fff'
     },
     top: {
       display: "flex",
@@ -63,9 +64,8 @@ const Featured = ({ data }) => {
       fontSize: "14px",
     },
     positive: {
-      color: "#50BDA0",
+      color: "#00d09c",
       fontSize:18,
-      
     },
     negative: {
       color: "red",
