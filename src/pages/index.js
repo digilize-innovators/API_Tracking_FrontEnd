@@ -10,7 +10,7 @@ import {
   styled,
   TextField,
   Button,
-  Box
+  Box, Card, CardContent
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -37,6 +37,11 @@ import ProductionDashboard from 'src/components/ProductionDashboard'
 import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
 import TopProductShow from 'src/components/TopProducts'
+import TopUserShow from 'src/components/TopUsers'
+import TopLineShow from 'src/components/TopLines'
+import TotalOrdersDispatched from 'src/components/OrdersDispatchGraph'
+import CasesInwarded from 'src/components/CasesInwardedGraph'
+import OrdersInwarded from 'src/components/OrdersInwardedGraph'
 
 const ChatbotComponent = dynamic(() => import('src/components/ChatbotComponent'), {
   ssr: false
@@ -80,6 +85,7 @@ const Dashboard = () => {
   const [batchData, setBatchData] = useState([]);
   const [codeGenerationData, setCodeGenerationData] = useState([]);
   const [topProductsData, setTopProductsData] = useState([]);
+  const [topUsersData, setTopUsersData] = useState([]);
 
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [monthlyDate, setMonthlyDate] = useState({ start: '', end: '' })
@@ -165,6 +171,79 @@ const Dashboard = () => {
         console.log("GET top Products APIs RESPONSE :->", res);
         // console.log("GET top Products APIs RESPONSE :->", res?.data.data);
         setTopProductsData(res?.data.data)
+
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: res.data.message,
+          type: 'success',
+          variant: 'filled'
+        })
+      }
+
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const getTopUsersData = async () => {
+    console.log("AAAAA");
+    try {
+      const params = new URLSearchParams();
+      console.log("PARAMS ===>>", params);
+      
+      let errorMessage = '';
+      switch (timePeriod) {
+        case 'yearly':
+          params.append('selectOption', 'year');
+          console.log("params yearly 12463576587:",params);
+          
+          break;
+
+        case 'monthly':
+          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
+          params.append('selectOption', 'month');
+          if (monthlyDate?.start != '' && monthlyDate?.end != '') {
+            params.append('start', monthlyDate.start);
+            params.append('end', monthlyDate.end);
+          } else {
+            errorMessage = 'Please select both the start and end month and year.';
+          }
+          break;
+
+        // case 'custom':
+        //   params.append('selectOption', 'custom');
+        //   console.log(
+        //     (customDate?.customStartDate != '' && customDate?.customEndDate != '')
+        //   )
+        //   if (customDate?.customStartDate != '' && customDate?.customEndDate != '') {
+        //     params.append('startDate', customDate.customStartDate);
+        //     params.append('endDate', customDate.customEndDate);
+        //   } else {
+        //     errorMessage = 'Please select both the start and end date.';
+        //   }
+        //   break;
+
+        default:
+          errorMessage = 'Invalid time period selected.';
+      }
+
+      if (errorMessage) {
+        console.error(errorMessage);
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: errorMessage,
+          type: 'error',
+          variant: 'filled'
+        })
+      }
+      else {
+        const res = await api(`/dashboard/topusers?&${params.toString()}`, {}, 'get', true)
+        console.log('res $$:', res);
+        
+        console.log("GET top Users APIs RESPONSE #####:->", res.data.data);
+        setTopUsersData(res?.data?.data)
 
         setAlertData({
           ...alertData,
@@ -323,6 +402,7 @@ const Dashboard = () => {
     setBatchData([])
     setCodeGenerationData([])
     setTopProductsData([])
+    setTopUsersData([])
     if (event.target.value !== 'custom') {
       setCustomDate({ customEndDate: '', customStartDate: '' })
     }
@@ -360,6 +440,7 @@ const Dashboard = () => {
     await getBatchData()
     await getCodeGenerationData()
     await getTopProductsData()
+    await getTopUsersData()
   }
 
 
@@ -368,6 +449,7 @@ const Dashboard = () => {
     await getBatchData()
     await getCodeGenerationData()
     await getTopProductsData()
+    await getTopUsersData()
   }
 
   useEffect(() => {
@@ -375,6 +457,7 @@ const Dashboard = () => {
       getBatchData()
       getCodeGenerationData()
       getTopProductsData()
+      getTopUsersData()
     }
   }, [timePeriod])
 
@@ -467,51 +550,223 @@ const Dashboard = () => {
             <ProductionDashboard data={data} />
           </Grid2>
 
-          <Box sx={{ mt: 3 }}>
-            <Grid2 container spacing={2}>
-              <Grid2 xs={12} md={6} lg={4}>
-                <Barchart data={codeGenerationData} />
-              </Grid2>
-              <Grid2 xs={12} md={6} lg={4}>
-                <TopProductShow data={topProductsData} />
-              </Grid2>
-              <Grid2 xs={12} md={12} lg={4}>
-                <Areachart data={batchData} />
-              </Grid2>
-            </Grid2>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: {
+                xs: 'column',   // Mobile
+                sm: 'column',   // Tablet (portrait)
+                md: 'row',      // Tablet (landscape) or small laptop
+                lg: 'row',      // Laptop
+                xl: 'row',      // Desktop
+              },
+              gap: {
+                xs: 3,         // Mobile
+                sm: 3,         // Tablet
+                md: 2,         // Medium devices
+                lg: 2,         // Laptop
+                xl: 2,         // Desktop
+              },
+              alignItems: 'stretch',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              mt: 4,
+              //backgroundColor:'red'
+            }}
+          >
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',
+                  sm: '100%',
+                  md: '300px',
+                },
+                p: 0,
+              }}
+            >
+              <Barchart data={codeGenerationData} />
+
+            </CardContent>
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',
+                  sm: '100%',
+                  md: '300px',
+                },
+                p: 0,
+              }}
+            >
+
+              <TopProductShow data={topProductsData} />
+
+            </CardContent>
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',
+                  sm: '100%',
+                  md: '300px',
+                },
+                p: 0,
+              }}
+            >
+              <Areachart data={batchData} />
+
+            </CardContent>
           </Box>
 
-
-          <Grid2 sx={{ width: '100%', mt: 3 }}>
+          <Grid2 sx={{ width: '100%', mt: 0 }}>
             <List data={data} />
           </Grid2>
 
-          <Box sx={{ mt: 6 }}>
-            <Grid2 container spacing={2}>
-              <Grid2 xs={12} md={6} lg={4}>
-                <Piechart data={batchData} />
-              </Grid2>
-              <Grid2 xs={12} md={6} lg={4}>
-                <Linechart data={batchData} />
-              </Grid2>
-              <Grid2 xs={12} md={12} lg={4}>
-                <Scatterchart data={batchData} />
-              </Grid2>
-            </Grid2>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: {
+                xs: 'column',   // Mobile
+                sm: 'column',   // Tablet (portrait)
+                md: 'row',      // Tablet (landscape) or small laptop
+                lg: 'row',      // Laptop
+                xl: 'row',      // Desktop
+              },
+              gap: {
+                xs: 3,         // Mobile
+                sm: 3,         // Tablet
+                md: 2,         // Medium devices
+                lg: 2,         // Laptop
+                xl: 2,         // Desktop
+              },
+              alignItems: 'stretch',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              mt: 6,
+            }}
+          >
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',   // Mobile
+                  sm: '100%',   // Tablet portrait
+                  md: '300px',  // Tablet landscape and up
+                },
+                p: 0,
+              }}
+            >
+              <Piechart data={batchData} />
+            </CardContent>
 
-            <Grid2 container spacing={2} marginTop={5}>
-              <Grid2 xs={12} md={6} lg={4}>
-                <Featured data={data} />
-              </Grid2>
-            </Grid2>
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',
+                  sm: '100%',
+                  md: '300px',
+                },
+                p: 0,
+              }}
+            >
+              <Linechart data={batchData} />
+            </CardContent>
+
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',
+                  sm: '100%',
+                  md: '300px',
+                },
+                p: 0,
+              }}
+            >
+              <Scatterchart data={batchData} />
+            </CardContent>
           </Box>
 
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: {
+                xs: 'column',   // Mobile
+                sm: 'column',   // Tablet (portrait)
+                md: 'row',      // Tablet (landscape) or small laptop
+                lg: 'row',      // Laptop
+                xl: 'row',      // Desktop
+              },
+              gap: {
+                xs: 3,         // Mobile
+                sm: 3,         // Tablet
+                md: 2,         // Medium devices
+                lg: 2,         // Laptop
+                xl: 2,         // Desktop
+              },
+              alignItems: 'stretch',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+            }}
+          >
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',   // Mobile
+                  sm: '100%',   // Tablet portrait
+                  md: '300px',  // Tablet landscape and up
+                },
+                p: 0,
+              }}
+            >
+              <TotalOrdersDispatched  />
+            </CardContent>
 
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',
+                  sm: '100%',
+                  md: '300px',
+                },
+                p: 0,
+              }}
+            >
+              <CasesInwarded  />
+            </CardContent>
+
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',
+                  sm: '100%',
+                  md: '300px',
+                },
+                p: 0,
+              }}
+            >
+              <OrdersInwarded  />
+            </CardContent>
+          </Box>
+
+          <Grid2 container spacing={2} marginTop={1}>
+            <Grid2 xs={12} md={6} lg={4}>
+              <Featured data={data} />
+            </Grid2>
+          </Grid2>
+          
           {/* <PieChartWithYearValues Data={batchData} /> */}
 
-
-
         </Grid2>
+
+          <TopUserShow data={topUsersData}/>
+          <TopLineShow data={topUsersData}/>
+
         <AccessibilitySettings />
         <ChatbotComponent />
       </Grid2>

@@ -46,7 +46,7 @@ const Barchart = ({ data }) => {
           />
           <YAxis
             type="number"
-            tick={{ fontSize: 13 }}
+            tick={{ fontSize: 12 }}
             axisLine={true}
             tickLine={false}
           />
@@ -55,14 +55,15 @@ const Barchart = ({ data }) => {
               backgroundColor: '#393939',
               borderRadius: '4px',
               border: 'none',
-              color: '#fff'
+              color: '#fff',
+              fontSize: 12,
             }}
           />
           <Legend />
           <Bar
             dataKey="codeGenerated"
             fill="#00d09c"
-            radius={[10, 10, 0, 0]}
+            //radius={[10, 10, 0, 0]}
             barSize={20}
           />
         </BarChart>

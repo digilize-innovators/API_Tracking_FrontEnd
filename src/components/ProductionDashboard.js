@@ -68,9 +68,10 @@ export default function ExcelLikeDashboard({ data }) {
     return filtered;
   }, [selectedLine, currentPrintingStatus]);
 
-  console.log('Selected line:', selectedLine);
-  console.log('Line orders:', lineOrders);
-
+  console.log('Selected line:-', selectedLine);
+  console.log('Line orders:-', lineOrders);
+  console.log("User pro img :", lineOrders.profile_photo);
+  
 
   // If no data is available, show a message
   if (!currentPrintingStatus || currentPrintingStatus.length === 0) {
@@ -80,11 +81,10 @@ export default function ExcelLikeDashboard({ data }) {
       </Box>
     );
   }
-  console.log(lineOrders[0]?.profile_photo)
+  console.log("Current User Profile Photo :->",lineOrders[0]?.profile_photo)
 
   return (
     <>
-      {/* Excel-style tab bar */}
       <Box
         sx={{
           display: 'flex',
@@ -94,7 +94,6 @@ export default function ExcelLikeDashboard({ data }) {
           whiteSpace: 'nowrap',
           px: 0,
           minHeight: 60,
-          //marginBottom: 2,
         }}
       >
         {lineNumbers.length > 0 ? (
@@ -134,7 +133,7 @@ export default function ExcelLikeDashboard({ data }) {
       </Box>
 
       {/* Main content */}
-      <Grid2 container spacing={2} sx={{ width: '100%', ml: 0, mt: 0, backgroundColor: '#fff', boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)', borderRadius: 0, paddingBottom: 5 }} >
+      <Grid2 container spacing={2} sx={{ width: '100%', ml: 0, mt: 0, backgroundColor: '#fff', boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)', borderRadius: 0, paddingBottom: 5, display:'flex',justifyContent: 'space-between'} }>
         <Grid2 item size={6}  >
           <CurrentOrder selectedLine={lineOrders} />
         </Grid2>
@@ -144,6 +143,11 @@ export default function ExcelLikeDashboard({ data }) {
           xs={12}
           md={5}
           mt={2}
+          style={{
+            marginRight:'80px'
+          }}
+         
+          //backgroundColor={'red'}
         >
           <Typography
             sx={{ alignSelf: 'flex-start' }}
@@ -172,16 +176,16 @@ export default function ExcelLikeDashboard({ data }) {
               fontWeight={600}
               sx={{ mt: 2, px: 2, py: 0.5, backgroundColor: '#f0f2f5', borderRadius: 0 }}
             >
-              {lineOrders[0]?.user_name || 'N/A'}
+              {lineOrders[0]?.user_name}
             </Typography>
           </Box>
-          <Box sx={{ mt: 4, textAlign: 'center' }}>
+          <Box sx={{ marginLeft: 0, textAlign: 'center'}}>
             <Typography variant="caption" sx={{ color: 'gray' , fontSize:'1rem'}}>
               Last Activity At
             </Typography>
             <Typography
               variant="body1"
-              sx={{ color: '#50BDA0', fontWeight: 550 }}
+              sx={{ color: '#50BDA0', fontWeight: 580 }}
             >
               {moment(lineOrders[0]?.performed_at).calendar()}
             </Typography>
@@ -215,7 +219,7 @@ const CurrentOrder = ({ selectedLine }) => {
 
   return (
     <>
-      <Grid2 container spacing={2} sx={{ mb: 2, pl: 4, py: 2 }}>
+      <Grid2 container spacing={2} sx={{ mb: 2, pl: 4, py: 3 }}>
         <Grid2 item size={12}>
           <Typography
             variant="subtitle2"
@@ -226,7 +230,7 @@ const CurrentOrder = ({ selectedLine }) => {
             Active Line
           </Typography>
         </Grid2>
-        <Grid2 item size={6} >
+        <Grid2 item size={4} >
           <Typography variant="caption" sx={{ color: subtitleColor , fontSize:'1rem'}}>
             Batch Number
           </Typography>
@@ -234,7 +238,7 @@ const CurrentOrder = ({ selectedLine }) => {
             {currentItem?.batch_no || 'N/A'}
           </Typography>
         </Grid2>
-        <Grid2 item size={6} mb={1}>
+        <Grid2 item size={4} mb={1}>
           <Typography variant="caption" sx={{ color: subtitleColor, fontSize:'1rem' }}>
             Product ID
           </Typography>
@@ -242,7 +246,7 @@ const CurrentOrder = ({ selectedLine }) => {
             {currentItem?.product_id || 'N/A'}
           </Typography>
         </Grid2>
-        <Grid2 item size={6}>
+        <Grid2 item size={4}>
           <Typography variant="caption" sx={{ color: subtitleColor, fontSize:'1rem' }}>
             Product Name
           </Typography>
@@ -250,7 +254,7 @@ const CurrentOrder = ({ selectedLine }) => {
             {currentItem?.product_name || 'N/A'}
           </Typography>
         </Grid2>
-        <Grid2 item size={6} mb={1}>
+        <Grid2 item size={4} mb={1}>
           <Typography variant="caption" sx={{ color: subtitleColor, fontSize:'1rem' }}>
             Manufacture Date
           </Typography>
@@ -260,7 +264,7 @@ const CurrentOrder = ({ selectedLine }) => {
               : 'N/A'}
           </Typography>
         </Grid2>
-        <Grid2 item size={6}>
+        <Grid2 item size={4}>
           <Typography variant="caption" sx={{ color: subtitleColor, fontSize:'1rem' }}>
             Expiry Date
           </Typography>
@@ -270,7 +274,7 @@ const CurrentOrder = ({ selectedLine }) => {
               : 'N/A'}
           </Typography>
         </Grid2>
-        <Grid2 item size={6} >
+        <Grid2 item size={4} >
           <Typography variant="caption" sx={{ color: subtitleColor, fontSize:'1rem' }}>
             Total Quantity
           </Typography>
