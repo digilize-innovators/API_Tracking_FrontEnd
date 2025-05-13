@@ -151,7 +151,7 @@ const Piechart = () => {
         color: 'gray',
         fontWeight: '580'
       }}>
-        Top Selling Products
+        Total Orders Dispatched
       </h3>
 
       <ResponsiveContainer width="100%" height="100%">

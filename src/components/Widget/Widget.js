@@ -6,6 +6,9 @@ import Typography from '@mui/material/Typography';
 import { MdOutlinePersonOutline, MdOutlineBatchPrediction } from "react-icons/md";
 import { AiOutlineProduct, } from 'react-icons/ai'
 import { TfiLayoutMediaRightAlt } from 'react-icons/tfi'
+import { TbLocation } from "react-icons/tb";
+import { MdProductionQuantityLimits } from "react-icons/md";
+import { MdOutlineInventory2 } from "react-icons/md";
 import Link from 'next/link';
 
 const Widget = ({ data }) => {
@@ -45,6 +48,33 @@ const Widget = ({ data }) => {
       route: '/printerlineconfiguration',
       value: data?.statistics?.activeManufacturingLines,
       icon: <TfiLayoutMediaRightAlt fontSize="medium" />,
+      color: 'purple',
+      bgColor: 'rgba(128, 0, 128, 0.2)'
+    },
+    {
+      title: 'Top selling products',
+      link: 'See all selling products',
+      route: '/sales-order',
+      value: data?.statistics?.topSellingProducts,
+      icon: <MdOutlineInventory2 fontSize="large" />,
+      color: 'crimson',
+      bgColor: 'rgba(255, 0, 0, 0.2)',
+    },
+    {
+      title: 'Top Performing Locations',
+      link: 'See all locations',
+      route: '/batch-master',
+      value: data?.statistics?.totalBatches,
+      icon: <TbLocation fontSize="medium" />,
+      color: 'green',
+      bgColor: 'rgba(0, 128, 0, 0.2)'
+    },
+    {
+      title: 'Total Orders Dispatched',
+      link: 'See all orders dispatched',
+      route: '/printerlineconfiguration',
+      value: data?.statistics?.activeManufacturingLines,
+      icon: <MdProductionQuantityLimits fontSize="medium" />,
       color: 'purple',
       bgColor: 'rgba(128, 0, 128, 0.2)'
     }
@@ -101,10 +131,10 @@ const Widget = ({ data }) => {
                 <Typography variant="body2" sx={{
                   fontSize: '16px',
                   //color: '#333333',
-                  color:'#50BDA0',
-                  fontWeight:570,
+                  color: '#50BDA0',
+                  fontWeight: 570,
                   borderBottom: '0px solid gray',
-                  '&:hover': { textDecoration: 'underline', cursor:'pointer' }
+                  '&:hover': { textDecoration: 'underline', cursor: 'pointer' }
                 }}>
                   {metric.link}
                 </Typography>
@@ -127,7 +157,7 @@ const Widget = ({ data }) => {
                 color: metric.color,
                 backgroundColor: metric.bgColor,
                 marginTop: 4,
-                cursor:'not-allowed'
+                cursor: 'not-allowed'
               }}>
                 {metric.icon}
               </Box>

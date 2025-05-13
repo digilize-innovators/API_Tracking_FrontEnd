@@ -1,4 +1,3 @@
-
 // import React from 'react';
 // import {
 //   BarChart,
@@ -162,7 +161,7 @@ const TotalOrdersDispatched = () => {
           fontWeight: '580',
         }}
       >
-        Total Orders Dispatched
+        Top Selling Products
       </h3>
 
       <ResponsiveContainer width="100%" height="100%">
