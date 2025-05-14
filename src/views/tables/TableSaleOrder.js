@@ -65,7 +65,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
       item.product_name,
       item.batch_no,
       item.qty,
-      0,
+      item.o_scan_qty,
     ])
   
     const tableData = useMemo(
