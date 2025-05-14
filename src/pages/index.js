@@ -86,6 +86,7 @@ const Dashboard = () => {
   const [codeGenerationData, setCodeGenerationData] = useState([]);
   const [topProductsData, setTopProductsData] = useState([]);
   const [topUsersData, setTopUsersData] = useState([]);
+  const [InwardedOrdersData, setInwardedOrdersData] = useState([]);
 
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [monthlyDate, setMonthlyDate] = useState({ start: '', end: '' })
@@ -171,6 +172,65 @@ const Dashboard = () => {
         console.log("GET top Products APIs RESPONSE :->", res);
         // console.log("GET top Products APIs RESPONSE :->", res?.data.data);
         setTopProductsData(res?.data.data)
+
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: res.data.message,
+          type: 'success',
+          variant: 'filled'
+        })
+      }
+
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+   const getOrdersInwardedData = async () => {
+    try {
+      const params = new URLSearchParams();
+      console.log("PARAMS ;->", params);
+      
+      let errorMessage = '';
+      switch (timePeriod) {
+        case 'yearly':
+          params.append('selectOption', 'year');
+          console.log("params yearly 12463576587:",params);
+          break;
+
+        case 'monthly':
+          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
+          params.append('selectOption', 'month');
+          if (monthlyDate?.start != '' && monthlyDate?.end != '') {
+            params.append('start', monthlyDate.start);
+            params.append('end', monthlyDate.end);
+          } else {
+            errorMessage = 'Please select both the start and end month and year.';
+          }
+          break;
+
+        default:
+          errorMessage = 'Invalid time period selected.';
+      }
+
+      if (errorMessage) {
+        console.error(errorMessage);
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: errorMessage,
+          type: 'error',
+          variant: 'filled'
+        })
+      }
+      else {
+        const res = await api(`/dashboard/ordersInwarded?&${params.toString()}`, {}, 'get', true)
+        console.log('res ORDERS INWARDED :',  res?.data);
+        const ordersInwardRes = res?.data?.data;
+        console.log("ordersInwardRes :::::->", ordersInwardRes);
+        
+        setInwardedOrdersData(ordersInwardRes)
 
         setAlertData({
           ...alertData,
@@ -441,6 +501,7 @@ const Dashboard = () => {
     await getCodeGenerationData()
     await getTopProductsData()
     await getTopUsersData()
+    await getOrdersInwardedData()
   }
 
 
@@ -450,6 +511,7 @@ const Dashboard = () => {
     await getCodeGenerationData()
     await getTopProductsData()
     await getTopUsersData()
+    await getOrdersInwardedData()
   }
 
   useEffect(() => {
@@ -458,6 +520,7 @@ const Dashboard = () => {
       getCodeGenerationData()
       getTopProductsData()
       getTopUsersData()
+      getOrdersInwardedData()
     }
   }, [timePeriod])
 
@@ -750,7 +813,7 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              <OrdersInwarded  />
+              <OrdersInwarded  data={InwardedOrdersData}/>
             </CardContent>
           </Box>
 

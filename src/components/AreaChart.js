@@ -110,7 +110,7 @@ const Areachart = ({ data }) => {
                 color: 'gray',
                 fontWeight: '580'
             }}>
-                Total Batches vs Executed Batches
+                Total vs Executed Batches
             </h3>
 
             <ResponsiveContainer width="100%" height="100%">

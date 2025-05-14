@@ -72,8 +72,8 @@ const Widget = ({ data }) => {
     {
       title: 'Total Orders Dispatched',
       link: 'See all orders dispatched',
-      route: '/printerlineconfiguration',
-      value: data?.statistics?.activeManufacturingLines,
+      route: '/sales-order',
+      value: data?.statistics?.totalDidpatchedOrder,
       icon: <MdProductionQuantityLimits fontSize="medium" />,
       color: 'purple',
       bgColor: 'rgba(128, 0, 128, 0.2)'

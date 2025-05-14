@@ -121,10 +121,6 @@ const TopUserShow = ({ data }) => {
                     src={user?.profile_photo}
                     crossOrigin="anonymous"
                     alt="Profile"
-                    // onError={(e) => {
-                    //   e.target.onerror = null; // Prevents infinite loop in case fallback also fails
-                    //   e.target.src = "https://via.placeholder.com/80?text=User"; // Fallback placeholder
-                    // }}
                     style={{
                       width: '80px',
                       height: '80px',
