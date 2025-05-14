@@ -100,6 +100,7 @@ const Row = ({
         console.log('get scanned code', res.data)
         setIsLoading(false)
         if (res.data.success) {
+          if(res.data.data.codes)
           downloadPdf(res.data.data.codes)
         } else {
           console.log('Error to get scanned code', res.data)

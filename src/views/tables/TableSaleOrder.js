@@ -29,7 +29,6 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
   const [status,setStatus]=useState(false)
   const [orderDetail,setOrderDetail] =useState([])
    const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData } = useAuth()
     const { setIsLoading } = useLoading()
@@ -44,6 +43,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
       setIsLoading(false)
       if (res.data.success) {
         setSalDetail(res.data.data)
+
         setStatus(res.data.data.transactions.every(item => item.status === 'COMPLETED') && row.status!=='INVOICE_GENERATED')
       } else if (res.data.code === 401) {
         removeAuthToken()
@@ -103,12 +103,13 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
              setIsLoading(true)
              const res = await api('/sales-order/generate-invoice/', data, 'post', true)
              console.log('res generate Invoice ', res)
+     
        
              setIsLoading(false)
        
              if (res?.data?.success) {
-               setOpenModal(false)
                setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Invoice Generated successfully' })
+               setStatus(false)
              } else {
                setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
                if (res.data.code === 401) {
@@ -117,9 +118,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                } else if (res.data.code === 409) {
                  setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
                  console.log('409 :', res.data.message)
-               } else if (res.data.code == 500) {
-                 setOpenModal(false)
-               }
+               } 
              }
            } catch (error) {
   
@@ -194,7 +193,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
                   ml:8,
                   my:6
                 }}
-                disabled={!status} 
+                disabled={!status } 
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <span style={{ marginLeft: 6 }} onClick={handleGenerate}> Generate Invoice</span>
