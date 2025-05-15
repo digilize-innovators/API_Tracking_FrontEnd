@@ -51,25 +51,7 @@ const Widget = ({ data }) => {
       color: 'purple',
       bgColor: 'rgba(128, 0, 128, 0.2)'
     },
-    {
-      title: 'Top selling products',
-      link: 'See all selling products',
-      route: '/sales-order',
-      value: data?.statistics?.topSellingProducts,
-      icon: <MdOutlineInventory2 fontSize="large" />,
-      color: 'crimson',
-      bgColor: 'rgba(255, 0, 0, 0.2)',
-    },
-    {
-      title: 'Top Performing Locations',
-      link: 'See all locations',
-      route: '/batch-master',
-      value: data?.statistics?.totalBatches,
-      icon: <TbLocation fontSize="medium" />,
-      color: 'green',
-      bgColor: 'rgba(0, 128, 0, 0.2)'
-    },
-    {
+     {
       title: 'Total Orders Dispatched',
       link: 'See all orders dispatched',
       route: '/sales-order',
@@ -77,7 +59,25 @@ const Widget = ({ data }) => {
       icon: <MdProductionQuantityLimits fontSize="medium" />,
       color: 'purple',
       bgColor: 'rgba(128, 0, 128, 0.2)'
-    }
+    },
+    {
+      title: 'Top Performing Locations',
+      link: 'See all locations',
+      route: '/batch-master',
+      value: data?.statistics?.topPerformingLocationsCount,
+      icon: <TbLocation fontSize="medium" />,
+      color: 'green',
+      bgColor: 'rgba(0, 128, 0, 0.2)'
+    },
+    // {
+    //   title: 'Top selling products',
+    //   link: 'See all selling products',
+    //   route: '/sales-order',
+    //   value: data?.statistics?.topSellingProducts,
+    //   icon: <MdOutlineInventory2 fontSize="large" />,
+    //   color: 'crimson',
+    //   bgColor: 'rgba(255, 0, 0, 0.2)',
+    // },
   ];
   // useEffect(()=>{ 
   //  getData()
@@ -100,7 +100,7 @@ const Widget = ({ data }) => {
           <CardContent sx={{
             display: 'flex',
             justifyContent: 'space-between',
-            p: 2,
+            p: 3,
 
           }}>
             {/* Left Section */}

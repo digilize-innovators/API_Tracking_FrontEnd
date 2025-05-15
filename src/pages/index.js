@@ -39,9 +39,9 @@ import { useRouter } from 'next/router'
 import TopProductShow from 'src/components/TopProducts'
 import TopUserShow from 'src/components/TopUsers'
 import TopLineShow from 'src/components/TopLines'
-import TotalOrdersDispatched from 'src/components/OrdersDispatchGraph'
 import CasesInwarded from 'src/components/CasesInwardedGraph'
 import OrdersInwarded from 'src/components/OrdersInwardedGraph'
+import TopSellingProductsData from 'src/components/TopSellingProductsGraph'
 
 const ChatbotComponent = dynamic(() => import('src/components/ChatbotComponent'), {
   ssr: false
@@ -87,6 +87,8 @@ const Dashboard = () => {
   const [topProductsData, setTopProductsData] = useState([]);
   const [topUsersData, setTopUsersData] = useState([]);
   const [InwardedOrdersData, setInwardedOrdersData] = useState([]);
+  const [topSellingProductsData, setTopSellingProductsData] = useState([]);
+  const [casesDispatchedData, setCasesDispatchedData] = useState([]);
 
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [monthlyDate, setMonthlyDate] = useState({ start: '', end: '' })
@@ -187,7 +189,7 @@ const Dashboard = () => {
     }
   }
 
-   const getOrdersInwardedData = async () => {
+    const getCasesDispatched = async () => {
     try {
       const params = new URLSearchParams();
       console.log("PARAMS ;->", params);
@@ -196,7 +198,117 @@ const Dashboard = () => {
       switch (timePeriod) {
         case 'yearly':
           params.append('selectOption', 'year');
-          console.log("params yearly 12463576587:",params);
+          console.log("params yearly :--<<",params);
+          break;
+
+        case 'monthly':
+          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
+          params.append('selectOption', 'month');
+          if (monthlyDate?.start != '' && monthlyDate?.end != '') {
+            params.append('start', monthlyDate.start);
+            params.append('end', monthlyDate.end);
+          } else {
+            errorMessage = 'Please select both the start and end month and year.';
+          }
+          break;
+
+        default:
+          errorMessage = 'Invalid time period selected.';
+      }
+
+      if (errorMessage) {
+        console.error(errorMessage);
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: errorMessage,
+          type: 'error',
+          variant: 'filled'
+        })
+      }
+      else {
+        const res = await api(`/dashboard/casesDispatched?&${params.toString()}`, {}, 'get', true)
+        console.log('RES of casesDispatched &&&&&&&&&&&&&&&&:',  res.data.data);
+        setCasesDispatchedData(res?.data?.data)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: res.data.message,
+          type: 'success',
+          variant: 'filled'
+        })
+      }
+
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+   const getTopSellingProductsData = async () => {
+    try {
+      const params = new URLSearchParams();
+      console.log("PARAMS ;->", params);
+      
+      let errorMessage = '';
+      switch (timePeriod) {
+        case 'yearly':
+          params.append('selectOption', 'year');
+          console.log("params yearly :--<<",params);
+          break;
+
+        case 'monthly':
+          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
+          params.append('selectOption', 'month');
+          if (monthlyDate?.start != '' && monthlyDate?.end != '') {
+            params.append('start', monthlyDate.start);
+            params.append('end', monthlyDate.end);
+          } else {
+            errorMessage = 'Please select both the start and end month and year.';
+          }
+          break;
+
+        default:
+          errorMessage = 'Invalid time period selected.';
+      }
+
+      if (errorMessage) {
+        console.error(errorMessage);
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: errorMessage,
+          type: 'error',
+          variant: 'filled'
+        })
+      }
+      else {
+        const res = await api(`/dashboard/topSellingProducts?&${params.toString()}`, {}, 'get', true)
+        console.log('RES of TOP Selling Products:',  res.data);
+        setTopSellingProductsData(res?.data?.data)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: res.data.message,
+          type: 'success',
+          variant: 'filled'
+        })
+      }
+
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const getOrdersInwardedData = async () => {
+    try {
+      const params = new URLSearchParams();
+      console.log("PARAMS ;->", params);
+
+      let errorMessage = '';
+      switch (timePeriod) {
+        case 'yearly':
+          params.append('selectOption', 'year');
+          console.log("params yearly 12463576587:", params);
           break;
 
         case 'monthly':
@@ -226,10 +338,10 @@ const Dashboard = () => {
       }
       else {
         const res = await api(`/dashboard/ordersInwarded?&${params.toString()}`, {}, 'get', true)
-        console.log('res ORDERS INWARDED :',  res?.data);
+        console.log('res ORDERS INWARDED :', res?.data);
         const ordersInwardRes = res?.data?.data;
         console.log("ordersInwardRes :::::->", ordersInwardRes);
-        
+
         setInwardedOrdersData(ordersInwardRes)
 
         setAlertData({
@@ -251,13 +363,13 @@ const Dashboard = () => {
     try {
       const params = new URLSearchParams();
       console.log("PARAMS ===>>", params);
-      
+
       let errorMessage = '';
       switch (timePeriod) {
         case 'yearly':
           params.append('selectOption', 'year');
-          console.log("params yearly 12463576587:",params);
-          
+          console.log("params yearly 12463576587:", params);
+
           break;
 
         case 'monthly':
@@ -301,7 +413,7 @@ const Dashboard = () => {
       else {
         const res = await api(`/dashboard/topusers?&${params.toString()}`, {}, 'get', true)
         console.log('res $$:', res);
-        
+
         console.log("GET top Users APIs RESPONSE #####:->", res.data.data);
         setTopUsersData(res?.data?.data)
 
@@ -502,8 +614,9 @@ const Dashboard = () => {
     await getTopProductsData()
     await getTopUsersData()
     await getOrdersInwardedData()
+    await getTopSellingProductsData()
+    await getCasesDispatched()
   }
-
 
   const handleCustomSubmit = async () => {
     console.log('custom submit btn press..')
@@ -512,6 +625,8 @@ const Dashboard = () => {
     await getTopProductsData()
     await getTopUsersData()
     await getOrdersInwardedData()
+    await getTopSellingProductsData()
+    await getCasesDispatched()
   }
 
   useEffect(() => {
@@ -521,6 +636,8 @@ const Dashboard = () => {
       getTopProductsData()
       getTopUsersData()
       getOrdersInwardedData()
+      getTopSellingProductsData()
+      getCasesDispatched()
     }
   }, [timePeriod])
 
@@ -748,7 +865,7 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              <Scatterchart data={batchData} />
+              <Scatterchart data={casesDispatchedData} />
             </CardContent>
           </Box>
 
@@ -785,7 +902,7 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              <TotalOrdersDispatched  />
+              <TopSellingProductsData data={topSellingProductsData} />
             </CardContent>
 
             <CardContent
@@ -799,7 +916,7 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              <CasesInwarded  />
+              <CasesInwarded />
             </CardContent>
 
             <CardContent
@@ -813,7 +930,7 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              <OrdersInwarded  data={InwardedOrdersData}/>
+              <OrdersInwarded data={InwardedOrdersData} />
             </CardContent>
           </Box>
 
@@ -822,13 +939,13 @@ const Dashboard = () => {
               <Featured data={data} />
             </Grid2>
           </Grid2>
-          
+
           {/* <PieChartWithYearValues Data={batchData} /> */}
 
         </Grid2>
 
-          <TopUserShow data={topUsersData}/>
-          <TopLineShow data={topUsersData}/>
+        <TopUserShow data={topUsersData} />
+        <TopLineShow data={topUsersData} />
 
         <AccessibilitySettings />
         <ChatbotComponent />

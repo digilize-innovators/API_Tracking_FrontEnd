@@ -5,14 +5,16 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   ResponsiveContainer,
+  LabelList,
+  Legend,
 } from 'recharts';
 
-const OrdersInwarded = ({ data }) => {
-  console.log("Orders Inwarded data :===>>", data);
-  const xAxisKey = data?.[0]?.year ? 'year' :'month';
-  console.log(xAxisKey);
+const TopSellingProductsData = ({ data }) => {
+  console.log("TopSellingProductsData Chart Data:", data);
+  
+  const yAxisKey = data?.[0]?.year ? 'year' : 'month';
+  console.log("yAxisKey",yAxisKey);
   
   return (
     <div
@@ -34,24 +36,33 @@ const OrdersInwarded = ({ data }) => {
           fontWeight: '580',
         }}
       >
-        Orders Inwarded ({xAxisKey})
+        Top Selling Products ({yAxisKey})
       </h3>
 
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
+          layout="vertical"
           data={data}
           margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+          barCategoryGap={10}
         >
           <XAxis
-            dataKey={xAxisKey}
+            type="number"
             tick={{ fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
           />
           <YAxis
+            dataKey={yAxisKey}
+            type="category"
             tick={{ fontSize: 12 }}
-            axisLine={true}
+            width={50}
+            axisLine={false}
             tickLine={false}
           />
           <Tooltip
+            formatter={(value) => [value, 'Total']}
+            labelFormatter={(label) => `${yAxisKey.charAt(0).toUpperCase() + yAxisKey.slice(1)}: ${label}`}
             contentStyle={{
               backgroundColor: '#393939',
               borderRadius: '4px',
@@ -60,23 +71,18 @@ const OrdersInwarded = ({ data }) => {
               fontSize: 12,
             }}
           />
-          <Legend />
-          <Bar
-            dataKey="SALES_RETURN"
-            fill="#00d09c"
-            name="Sales Return"
-            barSize={20}
-          />
-          <Bar
-            dataKey="STOCKTRANSFER_ORDER"
-            fill="#5EADAE"
-            name="Stock Transfer"
-            barSize={20}
-          />
+          <Legend layout="horizontal" verticalAlign="bottom" align="center" />
+          <Bar dataKey="total" fill="#00d09c" barSize={20}>
+            <LabelList
+              dataKey="total"
+              position="right"
+              style={{ fontSize: 12 }}
+            />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>
   );
 };
 
-export default OrdersInwarded;
+export default TopSellingProductsData;
