@@ -10,16 +10,18 @@ import {
   Legend,
 } from 'recharts';
 
-const TopSellingProductsData = ({ data }) => {
+const TopPerformingLocationsData = ({ data }) => {
+    console.log("getTopPerformingLocationsData :",data);
+    
   const yAxisKey = data?.[0]?.year ? 'year' : 'month';
 
   // Prepare chart data with dynamic tooltip label
   const chartData = data?.map((item) => {
     const timeLabel = item.month || item.year || '';
     return {
-      name: item.product_name,
-      topProducts: parseInt(item.total, 10),
-      tooltipLabel: `${item.product_name} (${timeLabel})`,
+      name: item.location_name,
+      topLocations: parseInt(item.total, 10),
+      tooltipLabel: `${item.location_name} (${timeLabel})`,
     };
   });
 
@@ -43,7 +45,7 @@ const TopSellingProductsData = ({ data }) => {
           fontWeight: '580',
         }}
       >
-        Top Selling Products ({yAxisKey})
+        Top Performing Locations ({yAxisKey})
       </h3>
 
       <ResponsiveContainer width="100%" height="100%">
@@ -62,7 +64,7 @@ const TopSellingProductsData = ({ data }) => {
           <YAxis
             dataKey="name"
             type="category"
-            width={145}
+            width={65}
             fontSize={12}
             interval={0}
             axisLine={false}
@@ -85,9 +87,9 @@ const TopSellingProductsData = ({ data }) => {
           />
 
           <Legend layout="horizontal" verticalAlign="bottom" align="center" />
-          <Bar dataKey="topProducts" fill="#00d09c" barSize={20}>
+          <Bar dataKey="topLocations" fill="#00d09c" barSize={20}>
             <LabelList
-              dataKey="topProducts"
+              dataKey="topLocations"
               position="right"
               style={{ fontSize: 12 }}
             />
@@ -98,4 +100,4 @@ const TopSellingProductsData = ({ data }) => {
   );
 };
 
-export default TopSellingProductsData;
+export default TopPerformingLocationsData;

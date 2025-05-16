@@ -6,9 +6,7 @@ import Typography from '@mui/material/Typography';
 import { MdOutlinePersonOutline, MdOutlineBatchPrediction } from "react-icons/md";
 import { AiOutlineProduct, } from 'react-icons/ai'
 import { TfiLayoutMediaRightAlt } from 'react-icons/tfi'
-import { TbLocation } from "react-icons/tb";
 import { MdProductionQuantityLimits } from "react-icons/md";
-import { MdOutlineInventory2 } from "react-icons/md";
 import Link from 'next/link';
 
 const Widget = ({ data }) => {
@@ -60,24 +58,6 @@ const Widget = ({ data }) => {
       color: 'purple',
       bgColor: 'rgba(128, 0, 128, 0.2)'
     },
-    {
-      title: 'Top Performing Locations',
-      link: 'See all locations',
-      route: '/batch-master',
-      value: data?.statistics?.topPerformingLocationsCount,
-      icon: <TbLocation fontSize="medium" />,
-      color: 'green',
-      bgColor: 'rgba(0, 128, 0, 0.2)'
-    },
-    // {
-    //   title: 'Top selling products',
-    //   link: 'See all selling products',
-    //   route: '/sales-order',
-    //   value: data?.statistics?.topSellingProducts,
-    //   icon: <MdOutlineInventory2 fontSize="large" />,
-    //   color: 'crimson',
-    //   bgColor: 'rgba(255, 0, 0, 0.2)',
-    // },
   ];
   // useEffect(()=>{ 
   //  getData()

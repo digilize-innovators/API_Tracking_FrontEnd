@@ -42,6 +42,7 @@ import TopLineShow from 'src/components/TopLines'
 import CasesInwarded from 'src/components/CasesInwardedGraph'
 import OrdersInwarded from 'src/components/OrdersInwardedGraph'
 import TopSellingProductsData from 'src/components/TopSellingProductsGraph'
+import TopPerformingLocationsData from 'src/components/TopPerformingLocationsGraph'
 
 const ChatbotComponent = dynamic(() => import('src/components/ChatbotComponent'), {
   ssr: false
@@ -89,6 +90,7 @@ const Dashboard = () => {
   const [InwardedOrdersData, setInwardedOrdersData] = useState([]);
   const [topSellingProductsData, setTopSellingProductsData] = useState([]);
   const [casesDispatchedData, setCasesDispatchedData] = useState([]);
+  const [topPerformingLocations, setTopPerformingLocationsData] = useState([]);
 
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [monthlyDate, setMonthlyDate] = useState({ start: '', end: '' })
@@ -285,6 +287,59 @@ const Dashboard = () => {
         const res = await api(`/dashboard/topSellingProducts?&${params.toString()}`, {}, 'get', true)
         console.log('RES of TOP Selling Products:',  res.data);
         setTopSellingProductsData(res?.data?.data)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: res.data.message,
+          type: 'success',
+          variant: 'filled'
+        })
+      }
+
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+   const getTopPerformingLocationsData = async () => {
+    try {
+      const params = new URLSearchParams();
+      console.log("TopPerformingLocations PARAMS", params);
+      
+      let errorMessage = '';
+      switch (timePeriod) {
+        case 'yearly':
+          params.append('selectOption', 'year');
+          break;
+
+        case 'monthly':
+          params.append('selectOption', 'month');
+          if (monthlyDate?.start != '' && monthlyDate?.end != '') {
+            params.append('start', monthlyDate.start);
+            params.append('end', monthlyDate.end);
+          } else {
+            errorMessage = 'Please select both the start and end month and year.';
+          }
+          break;
+
+        default:
+          errorMessage = 'Invalid time period selected.';
+      }
+
+      if (errorMessage) {
+        console.error(errorMessage);
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: errorMessage,
+          type: 'error',
+          variant: 'filled'
+        })
+      }
+      else {
+        const res = await api(`/dashboard/topPerformingLocations?&${params.toString()}`, {}, 'get', true)
+        console.log('RES of TopPerformingLocations:',  res.data);
+        setTopPerformingLocationsData(res?.data?.data)
         setAlertData({
           ...alertData,
           openSnackbar: true,
@@ -616,6 +671,7 @@ const Dashboard = () => {
     await getOrdersInwardedData()
     await getTopSellingProductsData()
     await getCasesDispatched()
+    await getTopPerformingLocationsData()
   }
 
   const handleCustomSubmit = async () => {
@@ -627,6 +683,7 @@ const Dashboard = () => {
     await getOrdersInwardedData()
     await getTopSellingProductsData()
     await getCasesDispatched()
+    await getTopPerformingLocationsData()
   }
 
   useEffect(() => {
@@ -638,6 +695,7 @@ const Dashboard = () => {
       getOrdersInwardedData()
       getTopSellingProductsData()
       getCasesDispatched()
+      getTopPerformingLocationsData()
     }
   }, [timePeriod])
 
@@ -837,7 +895,8 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              <Piechart data={batchData} />
+              {/* <Piechart data={batchData} /> */}
+              <TopPerformingLocationsData data={topPerformingLocations}/>
             </CardContent>
 
             <CardContent
@@ -851,7 +910,8 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              <Linechart data={batchData} />
+              {/* <Linechart data={batchData} /> */}
+              <OrdersInwarded data={InwardedOrdersData} />
             </CardContent>
 
             <CardContent
@@ -930,7 +990,7 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              <OrdersInwarded data={InwardedOrdersData} />
+              {/* <OrdersInwarded data={InwardedOrdersData} /> */}
             </CardContent>
           </Box>
 
