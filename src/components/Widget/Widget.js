@@ -105,7 +105,7 @@ const Widget = ({ data }) => {
                 my: 3,
                 fontWeight: 300,
               }}>
-                {metric.value || 230}
+                {metric.value || 0}
               </Typography>
               <Link href={metric.route} passHref sx={{}}>
                 <Typography variant="body2" sx={{

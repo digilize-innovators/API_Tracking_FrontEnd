@@ -9,7 +9,9 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-const Scatterchart = ({ data }) => {
+const ScatterchartGraph = ({ data }) => {
+  console.log("ScatterchartGraph :=>>", data);
+  
   if (!data || data.length === 0) return <div>No data available</div>;
 
   // Determine key: 'year' or 'month'
@@ -79,4 +81,4 @@ const Scatterchart = ({ data }) => {
   );
 };
 
-export default Scatterchart;
+export default ScatterchartGraph;

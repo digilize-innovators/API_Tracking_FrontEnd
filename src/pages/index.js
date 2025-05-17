@@ -26,9 +26,8 @@ import { api } from 'src/utils/Rest-API'
 import SnackbarAlert from 'src/components/SnackbarAlert'
 import Barchart from 'src/components/BarChart'
 import Areachart from 'src/components/AreaChart'
-import Linechart from 'src/components/LineChart'
-import Scatterchart from 'src/components/ScatterChart'
-import Piechart from 'src/components/PieChart'
+// import Linechart from 'src/components/LineChart';
+// import Piechart from 'src/components/PieChart';
 import Widget from 'src/components/Widget/Widget';
 import moment from 'moment';
 import Featured from 'src/components/Featured';
@@ -43,10 +42,11 @@ import CasesInwarded from 'src/components/CasesInwardedGraph'
 import OrdersInwarded from 'src/components/OrdersInwardedGraph'
 import TopSellingProductsData from 'src/components/TopSellingProductsGraph'
 import TopPerformingLocationsData from 'src/components/TopPerformingLocationsGraph'
+import ScatterchartGraph from 'src/components/ScatterChart';
 
 const ChatbotComponent = dynamic(() => import('src/components/ChatbotComponent'), {
   ssr: false
-})
+});
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
   '& .MuiInputBase-root': {
@@ -66,8 +66,8 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
     paddingRight: '225px !important',
     fontSize: theme.typography.h5.fontSize,
     lineHeight: 1
-  }
-}))
+  },
+}));
 
 const StyledRadio = styled(props => <Radio color='primary' {...props} />)(({ theme }) => ({
   '& .MuiSvgIcon-root': {
@@ -77,7 +77,7 @@ const StyledRadio = styled(props => <Radio color='primary' {...props} />)(({ the
     fontWeight: 500,
     color: theme.palette.primary.main
   }
-}))
+}));
 
 const Dashboard = () => {
   const [timePeriod, setTimePeriod] = useState('yearly')
@@ -91,6 +91,7 @@ const Dashboard = () => {
   const [topSellingProductsData, setTopSellingProductsData] = useState([]);
   const [casesDispatchedData, setCasesDispatchedData] = useState([]);
   const [topPerformingLocations, setTopPerformingLocationsData] = useState([]);
+  const [casesInwardedData,setCasesInwardedData]=useState([]);
 
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [monthlyDate, setMonthlyDate] = useState({ start: '', end: '' })
@@ -413,6 +414,60 @@ const Dashboard = () => {
     }
   }
 
+   const getCasesInwardedData = async () => {
+    try {
+      const params = new URLSearchParams();
+      console.log("PARAMS getCasesInwardedData->", params);
+
+      let errorMessage = '';
+      switch (timePeriod) {
+        case 'yearly':
+          params.append('selectOption', 'year');
+          console.log("params yearly getCasesInwardedData:", params);
+          break;
+
+        case 'monthly':
+          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
+          params.append('selectOption', 'month');
+          if (monthlyDate?.start != '' && monthlyDate?.end != '') {
+            params.append('start', monthlyDate.start);
+            params.append('end', monthlyDate.end);
+          } else {
+            errorMessage = 'Please select both the start and end month and year.';
+          }
+          break;
+
+        default:
+          errorMessage = 'Invalid time period selected.';
+      }
+
+      if (errorMessage) {
+        console.error(errorMessage);
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: errorMessage,
+          type: 'error',
+          variant: 'filled'
+        })
+      }
+      else {
+        const res = await api(`/dashboard/casesInwarded?&${params.toString()}`, {}, 'get', true)
+        console.log('res getCasesInwardedData :', res?.data);
+        setCasesInwardedData(res?.data)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          message: res.data.message,
+          type: 'success',
+          variant: 'filled'
+        })
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   const getTopUsersData = async () => {
     console.log("AAAAA");
     try {
@@ -672,6 +727,7 @@ const Dashboard = () => {
     await getTopSellingProductsData()
     await getCasesDispatched()
     await getTopPerformingLocationsData()
+    await getCasesInwardedData()
   }
 
   const handleCustomSubmit = async () => {
@@ -684,7 +740,8 @@ const Dashboard = () => {
     await getTopSellingProductsData()
     await getCasesDispatched()
     await getTopPerformingLocationsData()
-  }
+    await getCasesInwardedData()
+  };
 
   useEffect(() => {
     if (timePeriod != undefined && timePeriod === "yearly") {
@@ -696,6 +753,7 @@ const Dashboard = () => {
       getTopSellingProductsData()
       getCasesDispatched()
       getTopPerformingLocationsData()
+      getCasesInwardedData()
     }
   }, [timePeriod])
 
@@ -925,7 +983,7 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              <Scatterchart data={casesDispatchedData} />
+              <ScatterchartGraph data={casesDispatchedData} />
             </CardContent>
           </Box>
 
@@ -976,7 +1034,7 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              <CasesInwarded />
+              <CasesInwarded data={casesInwardedData}/>
             </CardContent>
 
             <CardContent
