@@ -11,17 +11,20 @@ import {
 
 const OrdersInwarded = ({ data }) => {
   console.log("Orders Inwarded data :===>>", data);
-  const xAxisKey = data?.[0]?.year ? 'year' :'month';
+  const xAxisKey = data?.[0]?.year ? 'year' : 'month';
   console.log(xAxisKey);
-  
+
   return (
     <div
       style={{
         background: '#fff',
         padding: '20px',
         margin: '10px auto',
-        width: '23.5vw',
-        height: '18.5vw',
+        // width: '23.5vw',
+        // height: '18.5vw',
+        width: '100%',
+        aspectRatio: '4 / 3', // Ensures height adjusts with width
+        maxHeight: '400px',
         fontFamily: 'sans-serif',
         boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)',
       }}
@@ -40,7 +43,7 @@ const OrdersInwarded = ({ data }) => {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
-          margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+          margin={{ top: 5, right: 20, left: 0, bottom: 0 }}
         >
           <XAxis
             dataKey={xAxisKey}
