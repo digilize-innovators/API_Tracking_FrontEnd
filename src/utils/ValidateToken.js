@@ -8,7 +8,7 @@ export const validateToken = (context, screenName) => {
   const token = cookies.token;
   const screens = cookies.screens;
   
-  if (!token) {
+  if (!token || !screens) {
     return {
       redirect: {
         destination: '/login',
@@ -20,7 +20,7 @@ export const validateToken = (context, screenName) => {
   try {
     const decoded = verify(token, jwt_secret);
     
-    if (!screens.includes(screenName)) {
+    if (!screens?.includes(screenName)) {
       return {
         redirect: {
           destination: '/401',

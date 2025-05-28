@@ -1,32 +1,16 @@
 import { useState, Fragment, useEffect } from 'react'
-import{Box,Table,Collapse,TableRow,TableHead,TableBody,TableCell,Typography} from '@mui/material'
-import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md'
-import IconButton from '@mui/material/IconButton'
-import ChevronUp from 'mdi-material-ui/ChevronUp'
-import ChevronDown from 'mdi-material-ui/ChevronDown'
+import{Box,Table,TableRow,TableHead,TableBody,TableCell} from '@mui/material'
 import moment from 'moment'
-import { Tooltip } from '@mui/material';
 import PropTypes from 'prop-types';
-import { statusObj } from 'src/configs/statusConfig';
-import { getSortIcon } from 'src/utils/sortUtils';
-import { handleRowToggleHelper } from 'src/utils/rowUtils'
-import StatusChip from 'src/components/StatusChip'
-import { useLoading } from 'src/@core/hooks/useLoading'
-import { useAuth } from 'src/Context/AuthContext'
-import { api } from 'src/utils/Rest-API'
-import { useRouter } from 'next/router'
 
 const Row = ({
   row,
   index,
-  
- 
 }) => {
   return (
     <Fragment>
       <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
-{        console.log(row)
-}        <TableCell
+        <TableCell
           align='center'
           component='th'
           scope='row'

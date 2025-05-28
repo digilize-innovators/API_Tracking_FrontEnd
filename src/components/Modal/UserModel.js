@@ -131,8 +131,7 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
         })
         const res = await api(`/designation/${departmentId}/?${params.toString()}`, {}, 'get', true)
         console.log('designation by department ', res.data)
-        setIsLoading(false)
-        console.log('All Designation ', res.data)
+        setIsLoading(false);
         if (res.data.success) {
           const data = res.data.data.designations.map((item) => ({
             id: item.id,
@@ -207,7 +206,6 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
             <Box >
               <Grid2 item xs={12} sx={{ marginTop: 5, marginBottom: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  {console.log("profilePhoto", profilePhoto)}
                   <ImgStyled src={profilePhoto} alt='Profile Pic' />
                   <Box>
                     <ButtonStyled

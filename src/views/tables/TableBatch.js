@@ -31,7 +31,6 @@ const Row = ({
   apiAccess,
   isBatchCloud
 }) => {
-console.log(row)
   const isOpen = openRows[row.id]
   const serialNumber = getSerialNumber(index, page, rowsPerPage)
   return (
@@ -104,11 +103,11 @@ console.log(row)
                 </span>
               </Tooltip>
             ) : (
-              <Tooltip title={!apiAccess.editApiAccess ? 'No edit access' : ''}>
+              <Tooltip title={!apiAccess.editApiAccess || row.isBatchEnd  ? `${row.isBatchEnd ? 'Can not edit batch due to mark end-batch' : 'No edit access'}` : ''}>
                 <span>
                   <MdModeEdit
                     fontSize={20}
-                    onClick={apiAccess.editApiAccess ? () => handleUpdate(row) : null}
+                    onClick={apiAccess.editApiAccess && !row.isBatchEnd ? () => handleUpdate(row) : null}
                     style={{
                       cursor: apiAccess.editApiAccess ? 'pointer' : 'not-allowed',
                       opacity: apiAccess.editApiAccess ? 1 : 0.5
@@ -311,11 +310,9 @@ const TableBatch = ({
       if (paramsFilterLocationVal) query += `&locationName=${paramsFilterLocationVal}`
       if (paramsFilterProductVal) query += `&productName=${paramsFilterProductVal}`
       setIsLoading(true)
-      const res = await api(query, {}, 'get', true)
-      console.log('get batches', res.data)
+      const res = await api(query, {}, 'get', true);
       setIsLoading(false)
       if (res.data.success) {
-        console.log(res.data)
         setBatchData({data:res.data.data.batches,total:res.data.data.totalRecords})
         setBatch(res.data.data.batches)
       } else {

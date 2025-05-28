@@ -179,7 +179,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
           </Grid2>
 
           <Grid2 item xs={12} className='my-3 '>
-            <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={() => handleSubmit()}>
+            <Button variant='contained' sx={{ marginRight: 3.5 }} disabled={availableCodeData?.batch?.isBatchEnd} onClick={() => handleSubmit()}>
               Generate
             </Button>
             <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={onClose}>

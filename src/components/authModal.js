@@ -79,12 +79,16 @@ const AuthModal = ({ open, handleClose, handleAuthResult, approveAPIName, approv
     };
 
     const handleVerify = async (esignStatus) => {
-        if (!username || !password) {
-            setError('Please enter username and password.');
-            return;
-        }
         try {
+            if (!username || !password) {
+                setError('Please enter username and password.');
+                return;
+            }
             const authData = { userId: username, password, securityCheck: true, approveAPIName, approveAPImethod };
+            if (esignStatus === 'rejected' && approveAPIName.includes('create')) {
+                handleClose();
+                return;
+            }
             const res = await api('/auth/security-check', authData, 'post', true);
             console.log('Response of security check: ', res?.data);
             if (res.data.success && res.data.code === 401) {
@@ -95,7 +99,7 @@ const AuthModal = ({ open, handleClose, handleAuthResult, approveAPIName, approv
                 const { userId, userName, user_id } = res.data.data;
                 const user = { userId, userName, user_id };
                 const isAuthenticated = true;
-                const isApprover = config.userId !== user.user_id;
+                const isApprover = approveAPIName.includes('approve') && config.userId !== user.user_id;
 
                 handleAuthResult(isAuthenticated, user, isApprover, esignStatus, remarks);
                 resetFields();

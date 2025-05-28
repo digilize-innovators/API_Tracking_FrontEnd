@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Box,Select,Grid2,Typography,FormControl,InputLabel,Button, MenuItem  } from '@mui/material'
+import { Box, Select, Grid2, Typography, FormControl, InputLabel, Button, MenuItem } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -14,10 +14,10 @@ import { useRouter } from 'next/router'
 import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
-import { validateToken } from 'src/utils/ValidateToken';
-import { useApiAccess } from 'src/@core/hooks/useApiAccess';
+import { validateToken } from 'src/utils/ValidateToken'
+import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
-import BatchModal from "src/components/Modal/BatchModal";
+import BatchModal from 'src/components/Modal/BatchModal'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import downloadPdf from 'src/utils/DownloadPdf'
@@ -25,138 +25,152 @@ import { getTokenValues } from 'src/utils/tokenUtils'
 import moment from 'moment'
 
 const Index = () => {
-  const { settings } = useSettings();
-  const [openModal, setOpenModal] = useState(false);
+  const { settings } = useSettings()
+  const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [editData, setEditData] = useState({});
-  const { setIsLoading } = useLoading();
-  const [pendingAction,setPendingAction]=useState()
-  const { getUserData, removeAuthToken } = useAuth();
-  const [userDataPdf, setUserDataPdf] = useState();
-  const router = useRouter();
-  const [config, setConfig] = useState(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [editData, setEditData] = useState({})
+  const { setIsLoading } = useLoading()
+  const [pendingAction, setPendingAction] = useState()
+  const { getUserData, removeAuthToken } = useAuth()
+  const [userDataPdf, setUserDataPdf] = useState()
+  const router = useRouter()
+  const [config, setConfig] = useState(null)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-  const [eSignStatusId, setESignStatusId] = useState('');
-  const [auditLogMark, setAuditLogMark] = useState('');
-  const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
-  const [openModalApprove, setOpenModalApprove] = useState(false);
-  const apiAccess = useApiAccess("batch-create", "batch-update", "batch-approve");
-  const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''});
+  const [eSignStatusId, setESignStatusId] = useState('')
+  const [auditLogMark, setAuditLogMark] = useState('')
+  const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
+  const [openModalApprove, setOpenModalApprove] = useState(false)
+  const apiAccess = useApiAccess('batch-create', 'batch-update', 'batch-approve')
+  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const searchBarRef = useRef('')
-  const [allProductData, setAllProductData] = useState([]);
-  const [ allLocationData,setAllLocationData]=useState([])
+  const [allProductData, setAllProductData] = useState([])
+  const [allLocationData, setAllLocationData] = useState([])
   const [formData, setFormData] = useState({})
-  const [filterLocationVal, setFilterLocationVal] = useState('');
-  const [filterProductVal, setFilterProductVal] = useState('');
-  const [batchData,setBatch]=useState([])
-
+  const [filterLocationVal, setFilterLocationVal] = useState('')
+  const [filterProductVal, setFilterProductVal] = useState('')
+  const [batchData, setBatch] = useState([])
 
   useLayoutEffect(() => {
-    getAllProducts();
-    getAllLocations();
-    let data = getUserData();
-    const decodedToken = getTokenValues();
-    setConfig(decodedToken);
-    setUserDataPdf(data);
-    return () => { }
- }, [])
+    getAllProducts()
+    getAllLocations()
+    let data = getUserData()
+    const decodedToken = getTokenValues()
+    setConfig(decodedToken)
+    setUserDataPdf(data)
+    return () => {}
+  }, [])
 
-   useEffect(() => {
-     if (pendingAction && formData) {
-       const esign_status=config?.config?.esign_status?"pending":"approved";
-       if (pendingAction === 'edit') {
-         editBatch(esign_status)
-       } 
-       else if(pendingAction=='add') {
-         addBatch(esign_status)
-       }
-     }
-     setPendingAction(null)
-   }, [formData, pendingAction])
- 
-  const tableBody = batchData?.map((item, index) =>[
-      index + 1, 
-      item.batch_no, 
-      item?.productHistory?.product_name, 
-      item?.location?.location_name, 
-      item?.manufacturing_date ? moment(item.manufacturing_date).format("DD-MM-YYYY") : "N/A",
-      item?.expiry_date ? moment(item.expiry_date).format("DD-MM-YYYY") : "N/A",
-      item?.qty, 
-      item?.esign_status
-    ]);
+  useEffect(() => {
+    if (pendingAction && formData) {
+      const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
+      if (pendingAction === 'edit') {
+        editBatch(esign_status)
+      } else if (pendingAction == 'add') {
+        addBatch(esign_status)
+      }
+    }
+    setPendingAction(null)
+  }, [formData, pendingAction])
 
-  const tableData = useMemo(() => ({
-    tableHeader: ['Sr.No.', 'Batch No', 'Product Name', 'Location Name', 'Manufacturing Date', 'Expiry Date', 'Quantity', 'E-Sign'],
-    tableHeaderText: 'Batch Master Report',
-    tableBodyText: 'Batch Master Data',
-    filename: "BatchMaster",
-    Filter:['location',filterLocationVal],
+  const tableBody = batchData?.map((item, index) => [
+    index + 1,
+    item.batch_no,
+    item?.productHistory?.product_name,
+    item?.location?.location_name,
+    item?.manufacturing_date ? moment(item.manufacturing_date).format('DD-MM-YYYY') : 'N/A',
+    item?.expiry_date ? moment(item.expiry_date).format('DD-MM-YYYY') : 'N/A',
+    item?.qty,
+    item?.esign_status
+  ])
 
-  }), [filterLocationVal]);
+  const tableData = useMemo(
+    () => ({
+      tableHeader: [
+        'Sr.No.',
+        'Batch No',
+        'Product Name',
+        'Location Name',
+        'Manufacturing Date',
+        'Expiry Date',
+        'Quantity',
+        'E-Sign'
+      ],
+      tableHeaderText: 'Batch Master Report',
+      tableBodyText: 'Batch Master Data',
+      filename: 'BatchMaster',
+      Filter: ['location', filterLocationVal]
+    }),
+    [filterLocationVal]
+  )
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
 
   const handleOpenModal = () => {
-    setApproveAPI({approveAPIName: "batch-create",approveAPImethod: "POST",approveAPIEndPoint: "/api/v1/batch"});
+    setApproveAPI({ approveAPIName: 'batch-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/batch' })
     setEditData({})
     setOpenModal(true)
   }
 
   const handleAuthModalClose = () => {
-    setAuthModalOpen(false);
-    setOpenModalApprove(false);
-  };
+    setAuthModalOpen(false)
+    setOpenModalApprove(false)
+  }
 
   const handleCloseModal = () => {
     setEditData({})
     setOpenModal(false)
   }
 
-  const handleSearch = (val) => {
-    setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() });
+  const handleSearch = val => {
+    setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
   }
 
   const resetForm = () => {
     setEditData({})
   }
 
-  const handleSubmitForm = async (data) => {
-    console.log('Data :', data)
+  const handleSubmitForm = async data => {
     setFormData(data)
     if (editData?.id) {
-      setApproveAPI(()=>({approveAPIName: "batch-update",approveAPImethod: "PUT",approveAPIEndPoint: "/api/v1/batch"}));
+      setApproveAPI(() => ({
+        approveAPIName: 'batch-update',
+        approveAPImethod: 'PUT',
+        approveAPIEndPoint: '/api/v1/batch'
+      }))
     } else {
-      setApproveAPI({approveAPIName: "batch-create",approveAPImethod: "POST",approveAPIEndPoint: "/api/v1/batch"});
+      setApproveAPI({ approveAPIName: 'batch-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/batch' })
     }
     if (config?.config?.esign_status) {
-      setAuthModalOpen(true);
-      return;
+      setAuthModalOpen(true)
+      return
     }
-    setPendingAction(editData?.id?"edit":"add")
+    setPendingAction(editData?.id ? 'edit' : 'add')
   }
 
   const addBatch = async (esign_status, remarks) => {
     try {
-      const data = {...formData}
-      const auditlogRemark = remarks;
-      const audit_log = config?.config?.audit_logs ? {
-        audit_log: true,
-        performed_action: "add",
-        remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Batch added - ${formData.batchNo}`,
-      } : {
-        audit_log: false,
-        performed_action: "none",
-        remarks: `none`,
-      };
-      data.audit_log = audit_log;
-      data.esign_status = esign_status;
+      const data = { ...formData }
+      const auditlogRemark = remarks
+      const audit_log = config?.config?.audit_logs
+        ? {
+            audit_log: true,
+            performed_action: 'add',
+            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Batch added - ${formData.batchNo}`
+          }
+        : {
+            audit_log: false,
+            performed_action: 'none',
+            remarks: `none`
+          }
+      data.audit_log = audit_log
+      data.esign_status = esign_status
       console.log('Add batch data ', data)
-      setIsLoading(true);
+      setIsLoading(true)
       const res = await api('/batch/', data, 'post', true)
-      setIsLoading(false);
+      setIsLoading(false)
       if (res?.data?.success) {
         console.log('res ', res?.data)
         setAlertData({ ...alertData, type: 'success', message: 'Batch added successfully', openSnackbar: true })
@@ -166,45 +180,45 @@ const Index = () => {
         console.log('error to add batch ', res.data)
         setAlertData({ ...alertData, type: 'error', message: res.data?.message, openSnackbar: true })
         if (res.data.code === 401) {
-          removeAuthToken();
-          router.push('/401');
+          removeAuthToken()
+          router.push('/401')
         }
       }
     } catch (error) {
       console.log('Erorr to add batch ', error)
-      router.push('/500');
+      router.push('/500')
     } finally {
       setApproveAPI({
-        approveAPIName: "",
-        approveAPImethod: "",
-        approveAPIEndPoint: ""
-      });
+        approveAPIName: '',
+        approveAPImethod: '',
+        approveAPIEndPoint: ''
+      })
     }
   }
 
   const editBatch = async (esign_status, remarks) => {
     try {
-      const data = { ...formData}
-      const auditlogRemark = remarks;
-      let audit_log;
+      const data = { qty: formData.qty }
+      const auditlogRemark = remarks
+      let audit_log
       if (config?.config?.audit_logs) {
         audit_log = {
           audit_log: true,
-          performed_action: "edit",
-          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Batch editted - ${formData.batchNo}`,
-        };
+          performed_action: 'edit',
+          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Batch editted - ${formData.batchNo}`
+        }
       } else {
         audit_log = {
           audit_log: false,
-          performed_action: "none",
-          remarks: `none`,
-        };
+          performed_action: 'none',
+          remarks: `none`
+        }
       }
-      data.audit_log = audit_log;
-      data.esign_status = esign_status;
-      setIsLoading(true);
+      data.audit_log = audit_log
+      data.esign_status = esign_status
+      setIsLoading(true)
       const res = await api(`/batch/${editData.id}`, data, 'put', true)
-      setIsLoading(false);
+      setIsLoading(false)
       if (res.data.success) {
         setAlertData({ ...alertData, type: 'success', message: 'Batch updated successfully', openSnackbar: true })
         resetForm()
@@ -213,40 +227,37 @@ const Index = () => {
         console.log('error to edit batch ', res.data)
         setAlertData({ ...alertData, type: 'error', message: res.data.message, openSnackbar: true })
         if (res.data.code === 401) {
-          removeAuthToken();
-          router.push('/401');
+          removeAuthToken()
+          router.push('/401')
         }
       }
     } catch (error) {
       console.log('Erorr to edit batch ', error)
-      router.push('/500');
+      router.push('/500')
     } finally {
       setIsLoading(false)
       setApproveAPI({
-        approveAPIName: "",
-        approveAPImethod: "",
-        approveAPIEndPoint: ""
-      });
+        approveAPIName: '',
+        approveAPImethod: '',
+        approveAPIEndPoint: ''
+      })
     }
   }
 
   const handleUpdate = item => {
     resetForm()
     setEditData(item)
-    console.log('edit Batch master', item)
+    // console.log('edit Batch master', item)
     setOpenModal(true)
   }
 
-  const handleLocationFilter = (e) => {
-    setFilterLocationVal(e.target.value);
+  const handleLocationFilter = e => {
+    setFilterLocationVal(e.target.value)
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-    console.log('handleAuthResult 02', config?.userId, user.user_id)
-
     const resetState = () => {
-      setApproveAPI({approveAPIName: '',approveAPImethod: '',approveAPIEndPoint: ''})
+      setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
       setAuthModalOpen(false)
       setEsignDownloadPdf(false)
     }
@@ -313,111 +324,116 @@ const Index = () => {
     }
 
     if (!isAuthenticated) {
-      handleUnauthenticated()
-      return
+      handleUnauthenticated();
+      return;
     }
     if (!isApprover && esignDownloadPdf) {
       setAlertData({
         ...alertData,
         openSnackbar: true,
         type: 'error',
-        message: "Access denied: Download pdf disabled for this user."
+        message: 'Access denied: Download pdf disabled for this user.'
       })
-      resetState()
-      return
+      resetState();
+      return;
     }
-    
+    if(!isApprover && esignStatus === "rejected"){
+      setAlertData({ type: 'error', message: 'You are not authorized to perform this action.', openSnackbar: true })
+      resetState();
+      return;
+    }
     if (isApprover) {
-      await processApproverActions()
-      return
+      await processApproverActions();
+      return;
     }
-    processNonApproverActions()
-    resetState()
+    processNonApproverActions();
+    resetState();
   }
-  
-  const handleAuthCheck = async (row) => {
+
+  const handleAuthCheck = async row => {
     setApproveAPI({
-      approveAPIName: "batch-approve",
-      approveAPImethod: "PATCH",
-      approveAPIEndPoint: "/api/v1/batch"
-    });
-    setAuthModalOpen(true);
-    setESignStatusId(row.id);
+      approveAPIName: 'batch-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/batch'
+    })
+    setAuthModalOpen(true)
+    setESignStatusId(row.id)
     setAuditLogMark(row.batch_no)
   }
 
   const resetFilter = () => {
     if (searchBarRef.current) {
-      searchBarRef.current.resetSearch();
+      searchBarRef.current.resetSearch()
     }
     setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '' })
-    setFilterLocationVal('');
-    setFilterProductVal('');
+    setFilterLocationVal('')
+    setFilterProductVal('')
   }
 
   const handleAuthModalOpen = () => {
-    console.log("OPen auth model");
+    console.log('OPen auth model')
     setApproveAPI({
-      approveAPIName: "batch-approve",
-      approveAPImethod: "PATCH",
-      approveAPIEndPoint: "/api/v1/batch"
-    });
-    setAuthModalOpen(true);
+      approveAPIName: 'batch-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/batch'
+    })
+    setAuthModalOpen(true)
   }
 
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: "batch-create",
-      approveAPImethod: "POST",
-      approveAPIEndPoint: "/api/v1/batch"
-    });
+      approveAPIName: 'batch-create',
+      approveAPImethod: 'POST',
+      approveAPIEndPoint: '/api/v1/batch'
+    })
     if (config?.config?.esign_status) {
-      console.log("Esign enabled for download pdf");
-      setEsignDownloadPdf(true);
-      setAuthModalOpen(true);
-      return;
+      console.log('Esign enabled for download pdf')
+      setEsignDownloadPdf(true)
+      setAuthModalOpen(true)
+      return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, batchData, userDataPdf);
+    downloadPdf(tableData, tableHeaderData, tableBody, batchData, userDataPdf)
   }
 
   const getAllProducts = async () => {
     try {
-      setIsLoading(true);
+      setIsLoading(true)
       const res = await api('/product?limit=-1', {}, 'get', true)
-      setIsLoading(false);
+      setIsLoading(false)
       if (res.data.success) {
         setAllProductData(res.data.data.products)
       } else {
         console.log('Error to get all products ', res.data)
         if (res.data.code === 401) {
-          removeAuthToken();
-          router.push('/401');
+          removeAuthToken()
+          router.push('/401')
         }
       }
     } catch (error) {
       console.log('Error in get products ', error)
-      setIsLoading(true);``
+      setIsLoading(true)
+      ;``
     }
   }
 
-const getAllLocations = async () => {
-  try {
-      setIsLoading(true);
+  const getAllLocations = async () => {
+    try {
+      setIsLoading(true)
       const res = await api('/location?limit=-1', {}, 'get', true)
-      setIsLoading(false);
+      setIsLoading(false)
       console.log('All locations ', res.data)
       if (res.data.success) {
         setAllLocationData(res.data.data.locations)
       } else {
         console.log('Error to get all locations ', res.data)
         if (res.data.code === 401) {
-          removeAuthToken();
-          router.push('/401');
+          removeAuthToken()
+          router.push('/401')
         }
       }
     } catch (error) {
       console.log('Error in get locations ', error)
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
@@ -437,9 +453,9 @@ const getAllLocations = async () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex-row justify-content-start align-items-center mx-4 my-3 '>
-                {config?.config?.esign_status &&
+                {config?.config?.esign_status && (
                   <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
-                }
+                )}
                 <FormControl className='w-25 mx-2'>
                   <InputLabel id='batch-filter-by-location'>Location</InputLabel>
                   <Select
@@ -449,14 +465,13 @@ const getAllLocations = async () => {
                     label='Location'
                     onChange={handleLocationFilter}
                   >
-                    {
-                      allLocationData?.map(item => {
-                        return (
-                          <MenuItem key={item?.id} value={item?.location_name}>
-                            {item?.location_name}
-                          </MenuItem>
-                        )
-                      })}
+                    {allLocationData?.map(item => {
+                      return (
+                        <MenuItem key={item?.id} value={item?.location_name}>
+                          {item?.location_name}
+                        </MenuItem>
+                      )
+                    })}
                   </Select>
                 </FormControl>
 
@@ -467,9 +482,9 @@ const getAllLocations = async () => {
                     id='product-select-by-product'
                     value={filterProductVal}
                     label='Product'
-                    onChange={(e) => setFilterProductVal(e.target.value)}
+                    onChange={e => setFilterProductVal(e.target.value)}
                   >
-                    {allProductData?.map((item) => {
+                    {allProductData?.map(item => {
                       return (
                         <MenuItem key={item?.id} value={item?.product_name}>
                           {item?.product_name}
@@ -478,22 +493,19 @@ const getAllLocations = async () => {
                     })}
                   </Select>
                 </FormControl>
-
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
-                  {
-                    apiAccess.addApiAccess && (
-                      <Button variant='contained' className='mx-2' onClick={handleOpenModal} role='button'>
-                        <span>
-                          <IoMdAdd />
-                        </span>
-                        <span>Add</span>
-                      </Button>
-                    )
-                  }
+                  {apiAccess.addApiAccess && (
+                    <Button variant='contained' className='mx-2' onClick={handleOpenModal} role='button'>
+                      <span>
+                        <IoMdAdd />
+                      </span>
+                      <span>Add</span>
+                    </Button>
+                  )}
                 </Box>
               </Box>
             </Grid2>
@@ -517,18 +529,18 @@ const getAllLocations = async () => {
           </Box>
         </Grid2>
       </Grid2>
-      
+
       <BatchModal
         setUserDataPdf={setUserDataPdf}
-        openModal={openModal} 
-        handleCloseModal={handleCloseModal} 
-        editData={editData} 
-        allProductData={allProductData} 
-        allLocationData={allLocationData} 
+        openModal={openModal}
+        handleCloseModal={handleCloseModal}
+        editData={editData}
+        allProductData={allProductData}
+        allLocationData={allLocationData}
         handleSubmitForm={handleSubmitForm}
       />
 
-      <SnackbarAlert alertData={alertData} closeSnackbar={closeSnackbar} openSnackbar={alertData.openSnackbar}  />
+      <SnackbarAlert alertData={alertData} closeSnackbar={closeSnackbar} openSnackbar={alertData.openSnackbar} />
 
       <AuthModal
         open={authModalOpen}
@@ -543,7 +555,7 @@ const getAllLocations = async () => {
       />
       <AccessibilitySettings />
       <ChatbotComponent />
-    </Box >
+    </Box>
   )
 }
 export async function getServerSideProps(context) {

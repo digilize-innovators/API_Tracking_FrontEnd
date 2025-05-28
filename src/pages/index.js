@@ -43,6 +43,7 @@ import OrdersInwarded from 'src/components/OrdersInwardedGraph'
 import TopSellingProductsData from 'src/components/TopSellingProductsGraph'
 import TopPerformingLocationsData from 'src/components/TopPerformingLocationsGraph'
 import ScatterchartGraph from 'src/components/ScatterChart';
+import { validateToken } from 'src/utils/ValidateToken'
 
 const ChatbotComponent = dynamic(() => import('src/components/ChatbotComponent'), {
   ssr: false
@@ -1075,35 +1076,7 @@ const Dashboard = () => {
 }
 
 export async function getServerSideProps(context) {
-  const cookies = parseCookies(context)
-  const token = cookies.token
-  try {
-    verify(token, jwt_secret)
-  } catch (error) {
-    console.error('Error verifying authentication token:', error)
-    if (error.name === 'TokenExpiredError') {
-      console.log('Token expired')
-      return {
-        redirect: {
-          destination: '/login',
-          permanent: false
-        }
-      }
-    }
-  }
-  if (!token) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false
-      }
-    }
-  }
-  return {
-    props: {
-      isAuthenticated: !!token
-    }
-  }
+  return validateToken(context, "Dashboard");
 }
 
 export default ProtectedRoute(Dashboard)

@@ -74,7 +74,6 @@ function BatchModal({ openModal, handleCloseModal, editData, allProductData, all
             return ''; 
         };
         if (editData) {
-            console.log(editData)
             reset({
                 batchNo: editData?.batch_no || '',
                 productId: editData?.productHistory?.product_uuid || '',
@@ -95,7 +94,6 @@ function BatchModal({ openModal, handleCloseModal, editData, allProductData, all
             })
         }
     }, [editData,openModal]);
-console.log("editData",editData);
 
     return (
     <Modal
@@ -118,7 +116,7 @@ console.log("editData",editData);
                             label='Product *'
                             control={control}
                             options={ProductData}
-                            disabled={!!editData?.productHistory?.product_uuid} 
+                            disabled={editData?.code_generated} 
                         />
 
                     </Grid2>
@@ -128,14 +126,14 @@ console.log("editData",editData);
                             label='Location *'
                             control={control}
                             options={LocationData}
-                            disabled={!!editData?.location?.id} 
+                            disabled={editData?.code_generated} 
                         />
                     </Grid2>
                 </Grid2>
 
                 <Grid2 container spacing={2} sx={{ margin: "0.5rem 0rem" }}>
                     <Grid2 size={6}>
-                        <CustomTextField label='Batch No.' name={"batchNo"} control={control}/>
+                        <CustomTextField label='Batch No.' name={"batchNo"} control={control} disabled={editData?.code_generated}/>
                     </Grid2>
                     <Grid2 size={6}>
                         <CustomTextField name='qty' label='Quantity (Basis Primary Level)'control={control} />
@@ -148,6 +146,7 @@ console.log("editData",editData);
                             name="manufacturingDate"
                             control={control}
                             rules={{ required: 'Manufacturing date is required' }}
+                            disabled={editData?.code_generated}
                             render={({ field }) => (
                                 <TextField
                                     {...field}
@@ -167,6 +166,7 @@ console.log("editData",editData);
                             name="expiryDate"
                             control={control}
                             rules={{ required: 'Expiry date is required' }}
+                            disabled={editData?.code_generated}
                             render={({ field }) => (
                                 <TextField
                                     {...field}
