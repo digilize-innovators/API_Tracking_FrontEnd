@@ -198,7 +198,7 @@ const Index = () => {
 
   const editBatch = async (esign_status, remarks) => {
     try {
-      const data = { qty: formData.qty }
+      const data = { ...formData }
       const auditlogRemark = remarks
       let audit_log
       if (config?.config?.audit_logs) {
