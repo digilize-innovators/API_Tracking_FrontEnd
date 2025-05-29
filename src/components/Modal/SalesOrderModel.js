@@ -218,14 +218,11 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                 setIsLoading(false)
                 console.log('All locations ', res.data)
                 if (res.data.success) {
-                    console.log(res.data.data)
-
                     const data = res.data.data?.map((item) => ({
                         id: item.id,
                         value: item.id,
                         label: item.location_name,
                     }));
-                    console.log("Area category in dropdown ", data);
 
                     setlocationOth(data);
                 } else {

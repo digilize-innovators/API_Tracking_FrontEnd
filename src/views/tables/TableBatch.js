@@ -304,13 +304,16 @@ const TableBatch = ({
     const paramsFilterLocationVal = filterLocation === '' ? filterLocation : filterLocationVal
     const paramsFilterProductVal = filterProductVal === '' ? filterProductVal : filterProductVal
     try {
-      let query = `/batch?page=${paramsPage+1}&limit=${paramsRows}`
-      if (paramsSearchVal) query += `&search=${paramsSearchVal}`
-      if (paramsEsignStatus) query += `&esign_status=${paramsEsignStatus}`
-      if (paramsFilterLocationVal) query += `&locationName=${paramsFilterLocationVal}`
-      if (paramsFilterProductVal) query += `&productName=${paramsFilterProductVal}`
+      const params = new URLSearchParams({
+          page: paramsPage + 1,
+          limit: paramsRows,
+          search: paramsSearchVal,
+          esign_status: paramsEsignStatus,
+          locationName: paramsFilterLocationVal,
+          productName: paramsFilterProductVal
+      })
       setIsLoading(true)
-      const res = await api(query, {}, 'get', true);
+      const res = await api(`/batch/?${params.toString()}`, {}, 'get', true);
       setIsLoading(false)
       if (res.data.success) {
         setBatchData({data:res.data.data.batches,total:res.data.data.totalRecords})

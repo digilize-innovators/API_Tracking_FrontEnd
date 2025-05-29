@@ -173,8 +173,6 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
                 setIsLoading(false)
                 console.log('All locations ', res.data)
                 if (res.data.success) {
-                    console.log(res.data.data)
-
                     const data = res.data.data?.map((item) => ({
                         id: item.id,
                         value: item.id,

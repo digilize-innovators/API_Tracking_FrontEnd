@@ -8,8 +8,6 @@ import PropTypes from 'prop-types'
 
 const EsignStatusDropdown = ({ tableHeaderData, setTableHeaderData }) => {
     const handleDropdown = (e)=> {
-        console.log("e sign ", e.target.value);
-        
         setTableHeaderData({ ...tableHeaderData, esignStatus: e.target.value });
     }
     return (

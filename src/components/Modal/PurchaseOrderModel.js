@@ -183,8 +183,6 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                 setIsLoading(false)
                 console.log('All locations vendors', res.data)
                 if (res.data.success) {
-                    console.log(res.data.data)
-
                     const data = res.data.data?.map((item) => ({
                         id: item.id,
                         value: item.id,

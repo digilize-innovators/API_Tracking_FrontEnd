@@ -214,7 +214,6 @@ const TableCollapsiblelocation = ({
         search: tableHeaderData.searchVal,
         esign_status: tableHeaderData.esignStatus
       })
-      console.log(params.toString())
       const response = await api(`/location/?${params.toString()}`, {}, 'get', true)
       console.log('GET Location data response :- ', response.data)
       if (response?.data?.success) {
