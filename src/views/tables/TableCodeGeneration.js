@@ -247,8 +247,7 @@ const TableCodeGeneration = ({
             handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
         >
-{            console.log("codeRequestData",codeRequestData.data)
-}            <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+            <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>

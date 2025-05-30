@@ -44,7 +44,7 @@ const Index = () => {
         try {
             const response = await api(`/superadmin-configuration/`, {}, 'get', true);
             if (response.data.success && response.data.data.length > 0) {
-                const config = response.data.data[0];
+                const config = response.data.data;
                 setCodeLength(config.code_length)
                 setProductCodeLength(config.product_code_length)
                 console.log("config", config);

@@ -260,7 +260,7 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
       setIsLoading(false)
       console.log('All superadmin config ', res?.data?.data)
       if (res.data.success) {
-        console.log(res.data.data[0].crm_url)
+        console.log(res.data.data.crm_url)
         console.log(editData)
         setCrmURL({ value: res.data.data[0].crm_url, checked: false })
       } else {

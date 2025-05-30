@@ -204,6 +204,12 @@ const Row = ({
       if (esignStatus === 'rejected') {
         setAuthModalOpen(false)
         setOpenModalApprove(false)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied for this user.'
+        })
       } else {
         console.log('esign is approved for creator')
         setPendingAction(editData?.id ? 'edit' : 'add')
@@ -388,8 +394,8 @@ const Row = ({
   }
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: 'designation-create',
-      approveAPImethod: 'POST',
+      approveAPIName: 'designation-approve',
+      approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/designation'
     })
     if (config?.config?.esign_status && config?.role !== 'admin') {

@@ -316,6 +316,12 @@ const Index = () => {
     const handleCreatorRejection = () => {
       setAuthModalOpen(false);
       setOpenModalApprove(false);
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied for this user.'
+      })
     };
     
     if (!isAuthenticated) {
@@ -337,7 +343,6 @@ const Index = () => {
     } else if (esignStatus === "rejected") {
       handleCreatorRejection();
     } else {
-
       handleApprovalActions();
     }
     resetState();
@@ -382,7 +387,7 @@ const Index = () => {
   }
 
   const handleDownloadPdf = () => {
-    setApproveAPI({approveAPIEndPoint: '/api/v1/printermaster',approveAPImethod: 'POST',approveAPIName: 'printermaster-create'})
+    setApproveAPI({approveAPIEndPoint: '/api/v1/printermaster',approveAPImethod: 'PATCH',approveAPIName: 'printermaster-approve'})
     if (config?.config?.esign_status) {
       console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)

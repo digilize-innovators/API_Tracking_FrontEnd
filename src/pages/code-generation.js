@@ -44,30 +44,20 @@ const Index = () => {
   const [availableCodeData, setAvailableCodeData] = useState({})
   const [formData, setFormData] = useState({})
   const [isCodeReGeneration, setIsCodeReGeneration] = useState(false)
-  const apiAccess = useApiAccess('codegeneration-create', 'codegeneration-update', 'codegeneration-approve');
-  const searchRef = useRef();
+  const apiAccess = useApiAccess('codegeneration-create', 'codegeneration-update', 'codegeneration-approve')
+  const searchRef = useRef()
 
   useLayoutEffect(() => {
     let data = getUserData()
     const decodedToken = getTokenValues()
     setConfig(decodedToken)
     setUserDataPdf(data)
-    return () => { }
+    return () => {}
   }, [])
-
-
 
   const tableData = useMemo(
     () => ({
-      tableHeader: [
-        'Sr.No.',
-        'Product Name',
-        'Batch No',
-        'Location',
-        'Batch Qty',
-        'Codes Generated',
-        'Status',
-      ],
+      tableHeader: ['Sr.No.', 'Product Name', 'Batch No', 'Location', 'Batch Qty', 'Codes Generated', 'Status'],
       tableHeaderText: 'Code Generation Report ',
       tableBodyText: 'Code Generation Data',
       filename: 'CodeGeneration'
@@ -90,7 +80,11 @@ const Index = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
   const handleOpenModal = () => {
-    setApproveAPI({ approveAPIName: 'codegeneration-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/codegeneration' })
+    setApproveAPI({
+      approveAPIName: 'codegeneration-create',
+      approveAPImethod: 'POST',
+      approveAPIEndPoint: '/api/v1/codegeneration'
+    })
     setOpenModal(true)
   }
   const handleCloseModal = () => {
@@ -122,58 +116,76 @@ const Index = () => {
       resetState()
       return
     }
-    const processApproval = async () => {
+
+    const handleApproverActions = async () => {
       const data = {
         modelName: 'codeGenerationRequest',
         esignStatus,
         id: eSignStatusId,
         audit_log: config?.config?.audit_logs
           ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            performed_action: 'approved',
-            remarks: remarks || `code generation approved - ${auditLogMark}`
-          }
+              user_id: user.userId,
+              user_name: user.userName,
+              performed_action: 'approved',
+              remarks: remarks || `code generation approved - ${auditLogMark}`
+            }
           : {}
       }
-      await api('/esign-status/update-esign-status', data, 'patch', true)
-      setTableHeaderData({ ...tableHeaderData })
-      console.log('eSign status updated')
-      if (esignDownloadPdf) {
+      if (esignStatus === 'approved' && esignDownloadPdf) {
+        setOpenModalApprove(false)
+        console.log('esign is approved for approver')
         downloadPdf(tableData, tableHeaderData, tableBody, codeRequestData, userDataPdf)
+        resetState()
+        return
+      }
+      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+      console.log('esign status update', esignStatus, res?.data);
+      if (res?.data.esign_status === 'rejected') {
+        console.log('approver rejected')
+        setOpenModalApprove(false)
+        resetState()
       }
     }
-    const handleEsignStatus = () => {
+
+    const handleCreatorActions = () => {
+      if (esignStatus === 'rejected') {
+        setAuthModalOpen(false)
+        setOpenModalApprove(false)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied for this user.'
+        })
+      }
       if (esignStatus === 'approved') {
         if (esignDownloadPdf) {
+          console.log('esign is approved for creator to download')
           setOpenModalApprove(true)
         } else {
-          isCodeReGeneration ? handleGenerateCode(true, null, 'pending') : handleGenerateCode(false, formData, 'pending')
+          console.log('esign is approved for creator')
+          isCodeReGeneration
+            ? handleGenerateCode(true, null, 'pending')
+            : handleGenerateCode(false, formData, 'pending')
         }
-      } else if (esignStatus === 'rejected') {
-        closeApprovalModal()
       }
     }
+
     if (!isApprover && esignDownloadPdf) {
       setAlertData({
         ...alertData,
         openSnackbar: true,
         type: 'error',
-        message: "Access denied: Download pdf disabled for this user."
+        message: 'Access denied: Download pdf disabled for this user.'
       })
       resetState()
       return
     }
+
     if (isApprover) {
-      if (esignStatus === 'approved' && esignDownloadPdf) {
-        closeApprovalModal()
-        await processApproval()
-      } else {
-        await processApproval()
-        if (esignStatus === 'rejected') closeApprovalModal()
-      }
+      await handleApproverActions()
     } else {
-      handleEsignStatus()
+      handleCreatorActions()
     }
     resetState()
   }
@@ -186,20 +198,18 @@ const Index = () => {
       approveAPIEndPoint: '/api/v1/codegeneration'
     })
     setAuthModalOpen(true)
-    setESignStatusId(row.id)
+    setESignStatusId(row.batch_id)
     setAuditLogMark(row.product_id)
-    console.log('row', row)
   }
 
   const resetFilter = () => {
     if (searchRef.current) {
-      searchRef.current.resetSearch(); // Call the reset method in the child
+      searchRef.current.resetSearch() // Call the reset method in the child
     }
-    setTableHeaderData({ ...tableHeaderData, searchVal: "", esignStatus: "" })
+    setTableHeaderData({ ...tableHeaderData, searchVal: '', esignStatus: '' })
   }
   const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
-
   }
 
   const handleAuthModalOpen = () => {
@@ -213,8 +223,8 @@ const Index = () => {
   }
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: 'codegeneration-create',
-      approveAPImethod: 'POST',
+      approveAPIName: 'codegeneration-approve',
+      approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/codegeneration'
     })
     if (config?.config?.esign_status) {
@@ -250,16 +260,13 @@ const Index = () => {
         }
         const audit_log = config?.config?.audit_logs
           ? {
-            audit_log: true,
-            performed_action: 'codeGenerated',
-            remarks: `code Generated  - ${data.batch?.batch_no}`
-          }
-          : {
-
-          }
+              audit_log: true,
+              performed_action: 'codeGenerated',
+              remarks: `code Generated  - ${data.batch?.batch_no}`
+            }
+          : {}
         data.audit_log = audit_log
         data.esign_status = esign_status
-
       } else {
         data = {
           product_id: payload.productId,
@@ -268,16 +275,13 @@ const Index = () => {
         }
         const audit_log = config?.config?.audit_logs
           ? {
-            audit_log: true,
-            performed_action: 'codeReGenrated',
-            remarks: `code Generated  - ${payload.batch}`
-          }
-          : {
-
-          }
+              audit_log: true,
+              performed_action: 'codeReGenrated',
+              remarks: `code Generated  - ${payload.batch}`
+            }
+          : {}
         data.audit_log = audit_log
         data.esign_status = esign_status
-
       }
       console.log('data on handleGenerateCode', data)
       setIsLoading(true)
@@ -306,8 +310,7 @@ const Index = () => {
       setIsLoading(false)
       handleCloseModal()
       handleCloseModal2()
-    }
-    finally {
+    } finally {
       setIsCodeReGeneration(false)
     }
   }
@@ -347,14 +350,7 @@ const Index = () => {
       })
     }
     const outerBatchQty = (batchSize * 1) / baseLevel[0]
-    console.log('TOTAL outer ', outerBatchQty)
-    const lastLevelSize = levelWiseData.find(
-      item => item.packaging_hierarchy === `level${packagingHierarchyLevel - 1}`
-    ).no_of_codes
-    console.log('TOTAL outer ', lastLevelSize, baseLevel[packagingHierarchyLevel - 1])
-
-    const generatedOuter = lastLevelSize * (1 / baseLevel[packagingHierarchyLevel - 1])
-    console.log('generatedOuter outer ', generatedOuter)
+    const generatedOuter = levelWiseData.find(item => item.packaging_hierarchy === `level5`)?.no_of_codes
 
     packagingHierarchyData.push({
       id: packagingHierarchyData.length,
@@ -366,7 +362,9 @@ const Index = () => {
     })
     setAvailableCodeData({ ...row, packagingHierarchyData })
     setApproveAPI({
-      approveAPIName: 'codegeneration-update', approveAPImethod: 'PUT', approveAPIEndPoint: '/api/v1/codegeneration'
+      approveAPIName: 'codegeneration-update',
+      approveAPImethod: 'PUT',
+      approveAPIEndPoint: '/api/v1/codegeneration'
     })
     setIsCodeReGeneration(true)
     setOpenModal2(true)
@@ -437,7 +435,6 @@ const Index = () => {
         setForm={setFormData}
         setAuthModalOpen={setAuthModalOpen}
         config={config}
-
       />
       <CodeReGenerationModal
         open={openModal2}
@@ -445,7 +442,6 @@ const Index = () => {
         availableCodeData={availableCodeData}
         setAvailableCodeData={setAvailableCodeData}
         handleGenerateCode={handleGenerateCode}
-        setForm={setFormData}
         setAuthModalOpen={setAuthModalOpen}
         config={config}
       />

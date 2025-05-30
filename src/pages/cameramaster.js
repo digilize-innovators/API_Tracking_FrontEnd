@@ -322,6 +322,29 @@ const Index = () => {
       }
     }
 
+    const handleCreatorActions = () => {
+      if (esignStatus === 'rejected') {
+        setAuthModalOpen(false)
+        setOpenModalApprove(false)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied for this user.'
+        })
+      }
+
+      if (esignStatus === 'approved') {
+        if (esignDownloadPdf) {
+          console.log('esign is approved for creator to download')
+          setOpenModalApprove(true)
+        } else {
+          console.log('esign is approved for creator')
+          setPendingAction(editData?.id ? 'edit' : 'add')
+        }
+      }
+    }
+
     if (!isAuthenticated) {
       handleUnauthenticated()
       return
@@ -337,10 +360,10 @@ const Index = () => {
       return
     }
     if (isApprover) {
-      await processApproverActions()
-      return
+      await processApproverActions();
+    } else {
+      handleCreatorActions()
     }
-    processNonApproverActions()
     resetState()
   }
 
@@ -375,8 +398,8 @@ const Index = () => {
 
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: 'cameramaster-create',
-      approveAPImethod: 'POST',
+      approveAPIName: 'cameramaster-approve',
+      approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/cameramaster'
     })
 

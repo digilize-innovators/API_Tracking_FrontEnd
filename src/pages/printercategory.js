@@ -332,6 +332,12 @@ const Index = () => {
       if (esignStatus === 'rejected') {
         setAuthModalOpen(false)
         setOpenModalApprove(false)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied for this user.'
+        })
       }
       if (esignStatus === 'approved') {
         if (esignDownloadPdf) {
@@ -360,16 +366,6 @@ const Index = () => {
     if (isApprover) {
       await handleApproverActions()
     } else {
-      if(approveAPI.approveAPIName==="printercategory-approve"){
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: 'error',
-          message: 'Access denied: Download pdf disabled for this user.'
-        })
-        resetState()
-        return 
-      }
       handleCreatorActions()
     }
     resetState()
@@ -409,8 +405,8 @@ const Index = () => {
   }
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: 'printercategory-create',
-      approveAPImethod: 'POST',
+      approveAPIName: 'printercategory-approve',
+      approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/printercategory'
     })
     if (config?.config?.esign_status) {

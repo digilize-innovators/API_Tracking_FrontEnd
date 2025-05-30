@@ -203,6 +203,12 @@ const Index = () => {
       if (esignStatus === "rejected") {
         setAuthModalOpen(false);
         setOpenModalApprove(false);
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied for this user.'
+        })
       } else if (esignStatus === "approved" && esignDownloadPdf) {
         console.log("esign is approved for creator to download");
         setOpenModalApprove(true);
@@ -360,8 +366,8 @@ const Index = () => {
   };
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: "uom-create",
-      approveAPImethod: "POST",
+      approveAPIName: "uom-approve",
+      approveAPImethod: "PATCH",
       approveAPIEndPoint: "/api/v1/uom"
     })
     if (config?.config?.esign_status) {

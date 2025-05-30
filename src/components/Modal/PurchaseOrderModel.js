@@ -151,7 +151,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                     const res = await api(`/batch/${productId}`, {}, 'get', true);
                     console.log('batches', res.data.data)
                     if (res.data.success) {
-                        const options = res.data.data.map(batch => ({
+                        const options = res.data.data.batches?.map(batch => ({
                             id: batch.id,
                             value: batch.id,
                             label: batch.batch_no,

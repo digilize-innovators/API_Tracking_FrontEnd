@@ -297,8 +297,14 @@ const Index = () => {
     
     const handleCreatorActions = () => {
       if (esignStatus === 'rejected') {
-        setAuthModalOpen(false)
-        setOpenModalApprove(false)
+        setAuthModalOpen(false);
+        setOpenModalApprove(false);
+         setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied for this user.'
+        });
       } 
       if(!isApprover && esignDownloadPdf) {
         setAlertData({
@@ -371,7 +377,7 @@ const Index = () => {
   }
 
   const handleDownloadPdf = () => {
-    setApproveAPI({ approveAPIName: 'company-create', approveAPIEndPoint: '/api/v1/company', approveAPImethod: 'POST' })
+    setApproveAPI({ approveAPIName: 'company-approve', approveAPIEndPoint: '/api/v1/company', approveAPImethod: 'PATCH' })
     if (config?.config?.esign_status) {
       console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)

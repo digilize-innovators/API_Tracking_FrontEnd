@@ -156,8 +156,8 @@ const Index = () => {
       setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' });
       resetState();
     };
-    const handleApproverActions = async () => {
 
+    const handleApproverActions = async () => {
       if (!esignDownloadPdf && isApprover && approveAPI.approveAPIName !== "department-approve") {
         setAlertData({
           ...alertData,
@@ -169,7 +169,6 @@ const Index = () => {
         return
       }
       else {
-
         const data = {
           modelName: "department",
           esignStatus,
@@ -181,7 +180,6 @@ const Index = () => {
             "remarks": remarks.length > 0 ? remarks : `department approved - ${auditLogMark}`,
           } : {}
         };
-
 
         if (isApprover && esignDownloadPdf) {
           if (esignStatus === "approved" && esignDownloadPdf) {
@@ -199,7 +197,6 @@ const Index = () => {
           }
         }
         else if (isApprover && approveAPI.approveAPIName === 'department-approve') {
-
           const res = await api('/esign-status/update-esign-status', data, 'patch', true);
           console.log("esign status update", res?.data);
           setPendingAction(true)
@@ -398,8 +395,8 @@ const Index = () => {
   const handleDownloadPdf = () => {
     console.log(departmentData)
     setApproveAPI({
-      approveAPIName: "department-create",
-      approveAPImethod: "POST",
+      approveAPIName: "department-approve",
+      approveAPImethod: "PATCH",
       approveAPIEndPoint: "/api/v1/department"
     })
     if (config?.config?.esign_status && config?.role!=='admin') {

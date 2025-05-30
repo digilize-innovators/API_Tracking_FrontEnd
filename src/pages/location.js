@@ -43,7 +43,7 @@ const Index = () => {
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [formData, setFormData] = useState({})
-  const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''})
+  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
 
   const apiAccess = useApiAccess('location-create', 'location-update', 'location-approve')
 
@@ -55,21 +55,20 @@ const Index = () => {
     return () => {}
   }, [])
 
-
-    useEffect(() => {
-        const handleUserAction = async () => {
-          if (formData && pendingAction) {
-            const esign_status = config?.config?.esign_status && config?.role != 'admin' ? "pending" : "approved";
-            if (pendingAction === "edit") {
-              await editLocation(esign_status); 
-            } else if (pendingAction === "add") {
-              await addLocation(esign_status);  
-            }
-            setPendingAction(null);
-          }
-        };
-        handleUserAction();
-      }, [formData, pendingAction]);
+  useEffect(() => {
+    const handleUserAction = async () => {
+      if (formData && pendingAction) {
+        const esign_status = config?.config?.esign_status && config?.role != 'admin' ? 'pending' : 'approved'
+        if (pendingAction === 'edit') {
+          await editLocation(esign_status)
+        } else if (pendingAction === 'add') {
+          await addLocation(esign_status)
+        }
+        setPendingAction(null)
+      }
+    }
+    handleUserAction()
+  }, [formData, pendingAction])
 
   const tableBody = locationData.map((item, index) => [
     index + 1,
@@ -87,7 +86,9 @@ const Index = () => {
       tableHeaderText: 'Location Master Report',
       tableBodyText: 'Location Master Data',
       filename: 'LocationMaster'
-    }),[])
+    }),
+    []
+  )
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
@@ -190,6 +191,12 @@ const Index = () => {
       if (esignStatus === 'rejected') {
         setAuthModalOpen(false)
         setOpenModalApprove(false)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied for this user.'
+        })
       }
 
       if (esignStatus === 'approved') {
@@ -202,6 +209,7 @@ const Index = () => {
         }
       }
     }
+
     if (!isApprover && esignDownloadPdf) {
       setAlertData({
         ...alertData,
@@ -362,8 +370,8 @@ const Index = () => {
   }
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: 'location-create',
-      approveAPImethod: 'POST',
+      approveAPIName: 'location-approve',
+      approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/location'
     })
     let data = getUserData()

@@ -1,6 +1,6 @@
 'use-client'
-import React, { useState, useEffect, useRef, useLayoutEffect} from 'react'
-import { Button, TableContainer, Paper,Box,Grid2,Typography } from '@mui/material'
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { Button, TableContainer, Paper, Box, Grid2, Typography } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import TableArea from 'src/views/tables/TableArea'
 import { api } from 'src/utils/Rest-API'
@@ -40,36 +40,36 @@ const Index = () => {
   const [auditLogMark, setAuditLogMark] = useState('')
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
-  const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''})
+  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const apiAccess = useApiAccess('area-create', 'area-update', 'area-approve')
   const searchBarRef = useRef(null)
   const [areaData, setArea] = useState([])
   const [formData, setFormData] = useState({})
 
-    useEffect(() => {
-      const handleUserAction = async () => {
-        if (formData && pendingAction) {
-          const esign_status = config?.config?.esign_status  ? "pending" : "approved";
-          
-          if (pendingAction === "edit") {
-            await editArea(esign_status);  
-          } else if (pendingAction === "add") {
-            await addArea(esign_status); 
-          }
-          
-          setPendingAction(null);
-        }
-      };
-      handleUserAction();
-    }, [formData, pendingAction]);
+  useEffect(() => {
+    const handleUserAction = async () => {
+      if (formData && pendingAction) {
+        const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
 
-    useLayoutEffect(() => {
+        if (pendingAction === 'edit') {
+          await editArea(esign_status)
+        } else if (pendingAction === 'add') {
+          await addArea(esign_status)
+        }
+
+        setPendingAction(null)
+      }
+    }
+    handleUserAction()
+  }, [formData, pendingAction])
+
+  useLayoutEffect(() => {
     let data = getUserData()
     const decodedToken = getTokenValues()
     setConfig(decodedToken)
     setUserDataPdf(data)
     return () => {}
-    }, [])
+  }, [])
 
   const tableBody = areaData?.map((item, index) => [
     index + 1,
@@ -130,7 +130,7 @@ const Index = () => {
   const addArea = async (esign_status, remarks) => {
     console.log('add form ', formData)
     try {
-      const data = {...formData}
+      const data = { ...formData }
       const auditlogRemark = remarks
       const audit_log = config?.config?.audit_logs
         ? {
@@ -171,7 +171,7 @@ const Index = () => {
   const editArea = async (esign_status, remarks) => {
     try {
       console.log(formData, 'formdata')
-      const data = {...formData }
+      const data = { ...formData }
       delete data.areaId
       const auditlogRemark = remarks
       let audit_log
@@ -234,75 +234,87 @@ const Index = () => {
       if (isApproved && esignDownloadPdf) {
         console.log('esign is approved for download')
         downloadPdf(tableData, tableHeaderData, tableBody, areaData, userDataPdf)
-       }
-     }
+      }
+    }
 
-     const createAuditLog = action =>
+    const createAuditLog = action =>
       config?.config?.audit_logs
         ? {
-          user_id: user.userId,
-          user_name: user.userName,
-          performed_action: action,
-          remarks: remarks?.length > 0 ? remarks : `area approved - ${auditLogMark}`
-        }
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: action,
+            remarks: remarks?.length > 0 ? remarks : `area approved - ${auditLogMark}`
+          }
         : {}
-        const handleUpdateStatus = async () => {
-          const data = {
-            modelName: 'area',
-            esignStatus,
-            id: eSignStatusId,
-            audit_log: createAuditLog(esignStatus)
-          }
-          const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-          console.log('esign status update', res?.data)
-          setPendingAction(true)
+    const handleUpdateStatus = async () => {
+      const data = {
+        modelName: 'area',
+        esignStatus,
+        id: eSignStatusId,
+        audit_log: createAuditLog(esignStatus)
       }
+      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+      console.log('esign status update', res?.data)
+      setPendingAction(true)
+    }
 
-      const processApproverActions = async () => {
-        if (esignStatus === 'approved' || esignStatus === 'rejected') {
-          handleModalActions(esignStatus === 'approved')
-          if (esignStatus === 'approved' && esignDownloadPdf) {
-            resetState()
-            return
-          }
-        }
-        await handleUpdateStatus()
-        resetState()
-      }
-      const processNonApproverActions = () => {
-        if (esignStatus === 'rejected') {
+    const processApproverActions = async () => {
+      if (esignStatus === 'approved' || esignStatus === 'rejected') {
+        handleModalActions(esignStatus === 'approved')
+        if (esignStatus === 'approved' && esignDownloadPdf) {
           resetState()
           return
         }
-        if (esignStatus === 'approved') {
-          handleModalActions(true)
-          if (!esignDownloadPdf) {
-            console.log('esign is approved for creator')
-            setPendingAction(editData?.id ? 'edit' : 'add')
-          }
-        }
       }
-      if (!isAuthenticated) {
-        handleUnauthenticated()
-        return
-      }
-      if (!isApprover && esignDownloadPdf) {
+      await handleUpdateStatus()
+      resetState()
+    }
+
+    const handleCreatorActions = () => {
+      if (esignStatus === 'rejected') {
+        setAuthModalOpen(false)
+        setOpenModalApprove(false)
         setAlertData({
           ...alertData,
           openSnackbar: true,
           type: 'error',
-          message: "Access denied: Download pdf disabled for this user."
+          message: 'Access denied for this user.'
         })
-        resetState()
-        return
       }
 
-      if (isApprover) {
-        await processApproverActions()
-        return
+      if (esignStatus === 'approved') {
+        if (esignDownloadPdf) {
+          console.log('esign is approved for creator to download')
+          setOpenModalApprove(true)
+        } else {
+          console.log('esign is approved for creator')
+          setPendingAction(editData?.id ? 'edit' : 'add')
+        }
       }
-      processNonApproverActions()
+    }
+
+    if (!isAuthenticated) {
+      handleUnauthenticated()
+      return
+    }
+
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied: Download pdf disabled for this user.'
+      })
       resetState()
+      return
+    }
+
+    if (isApprover) {
+      await processApproverActions()
+    } else {
+      handleCreatorActions()
+    }
+    resetState()
   }
 
   const handleAuthCheck = async row => {
@@ -323,9 +335,9 @@ const Index = () => {
   }
 
   const resetFilter = () => {
-    setTableHeaderData({...tableHeaderData, esignStatus: '', searchVal: '' })
+    setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '' })
     if (searchBarRef.current) {
-      searchBarRef.current.resetSearch();
+      searchBarRef.current.resetSearch()
     }
   }
 
@@ -340,7 +352,7 @@ const Index = () => {
   }
 
   const handleDownloadPdf = () => {
-    setApproveAPI({ approveAPIName: 'area-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/area' })
+    setApproveAPI({ approveAPIName: 'area-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/area' })
     if (config?.config?.esign_status) {
       console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)

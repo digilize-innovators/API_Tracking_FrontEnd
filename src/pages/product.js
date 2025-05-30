@@ -257,6 +257,12 @@ const Index = () => {
       if (esignStatus === 'rejected') {
         setAuthModalOpen(false)
         setOpenModalApprove(false)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied for this user.'
+        })
       }
 
       if (esignStatus === 'approved') {
@@ -459,8 +465,8 @@ const Index = () => {
 
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: 'product-create',
-      approveAPImethod: 'POST',
+      approveAPIName: 'product-approve',
+      approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/product'
     })
     if (config?.config?.esign_status) {

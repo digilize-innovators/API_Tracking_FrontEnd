@@ -3,7 +3,7 @@ import moment from 'moment'
 import React, { useState } from 'react'
 import { style } from 'src/configs/generalConfig'
 
-const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCodeData, setAvailableCodeData ,setForm,setAuthModalOpen,config}) => {
+const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCodeData, setAvailableCodeData,setAuthModalOpen,config}) => {
   const [selected, setSelected] = useState([])
 
   const handleCheckboxChange = id => {

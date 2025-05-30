@@ -309,14 +309,23 @@ const Index = () => {
       resetState()
     }
 
-    const processNonApproverActions = () => {
+    const handleCreatorActions = () => {
       if (esignStatus === 'rejected') {
-        resetState()
-        return
+        setAuthModalOpen(false)
+        setOpenModalApprove(false)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied for this user.'
+        })
       }
+
       if (esignStatus === 'approved') {
-        handleModalActions(true)
-        if (!esignDownloadPdf) {
+        if (esignDownloadPdf) {
+          console.log('esign is approved for creator to download')
+          setOpenModalApprove(true)
+        } else {
           console.log('esign is approved for creator')
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
@@ -324,8 +333,8 @@ const Index = () => {
     }
 
     if (!isAuthenticated) {
-      handleUnauthenticated();
-      return;
+      handleUnauthenticated()
+      return
     }
     if (!isApprover && esignDownloadPdf) {
       setAlertData({
@@ -334,20 +343,16 @@ const Index = () => {
         type: 'error',
         message: 'Access denied: Download pdf disabled for this user.'
       })
-      resetState();
-      return;
+      resetState()
+      return
     }
-    if(!isApprover && esignStatus === "rejected"){
-      setAlertData({ type: 'error', message: 'You are not authorized to perform this action.', openSnackbar: true })
-      resetState();
-      return;
-    }
+
     if (isApprover) {
-      await processApproverActions();
-      return;
+      await processApproverActions()
+    } else {
+      handleCreatorActions()
     }
-    processNonApproverActions();
-    resetState();
+    resetState()
   }
 
   const handleAuthCheck = async row => {
@@ -382,8 +387,8 @@ const Index = () => {
 
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: 'batch-create',
-      approveAPImethod: 'POST',
+      approveAPIName: 'batch-approve',
+      approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/batch'
     })
     if (config?.config?.esign_status) {

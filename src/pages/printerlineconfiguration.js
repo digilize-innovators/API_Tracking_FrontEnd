@@ -304,20 +304,30 @@ const Index = () => {
         await handleUpdateStatus()
         resetState()
       }
-  
-      const processNonApproverActions = () => {
+
+      const handleCreatorActions = () => {
         if (esignStatus === 'rejected') {
-          resetState()
-          return
+          setAuthModalOpen(false)
+          setOpenModalApprove(false)
+          setAlertData({
+            ...alertData,
+            openSnackbar: true,
+            type: 'error',
+            message: 'Access denied for this user.'
+          })
         }
+
         if (esignStatus === 'approved') {
-          handleModalActions(true)
-          if (!esignDownloadPdf) {
+          if (esignDownloadPdf) {
+            console.log('esign is approved for creator to download')
+            setOpenModalApprove(true)
+          } else {
             console.log('esign is approved for creator')
             setPendingAction(editData?.id ? 'edit' : 'add')
           }
         }
       }
+  
       if (!isAuthenticated) {
         handleUnauthenticated()
         return
@@ -334,10 +344,10 @@ const Index = () => {
       }
 
       if (isApprover) {
-        await processApproverActions()
-        return
+        await processApproverActions();
+      } else {
+        handleCreatorActions()
       }
-      processNonApproverActions()
       resetState()
   }
 
@@ -377,8 +387,8 @@ const Index = () => {
 
     const handleDownloadPdf = () => {
       setApproveAPI({
-        approveAPIName: 'printerlineconfiguration-create',
-        approveAPImethod: 'POST',
+        approveAPIName: 'printerlineconfiguration-approve',
+        approveAPImethod: 'PATCH',
         approveAPIEndPoint: '/api/v1/printerlineconfiguration'
       })
       if (config?.config?.esign_status) {
