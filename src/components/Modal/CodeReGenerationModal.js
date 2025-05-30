@@ -135,10 +135,10 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
                         <TableCell padding='checkbox'>
                           <Checkbox checked={selected.includes(row.id)} onChange={() => handleCheckboxChange(row.id)} />
                         </TableCell>
-                        <TableCell>{row.level}</TableCell>
-                        <TableCell>{row.batchQty}</TableCell>
-                        <TableCell>{row.generatedCodes}</TableCell>
-                        <TableCell>{row.availableCodes}</TableCell>
+                        <TableCell>{parseInt(row.level)}</TableCell>
+                        <TableCell>{parseInt(row.batchQty)}</TableCell>
+                        <TableCell>{parseInt(row.generatedCodes)}</TableCell>
+                        <TableCell>{parseInt(row.availableCodes)}</TableCell>
                         <TableCell>
                           <TextField
                             value={row.generate}
