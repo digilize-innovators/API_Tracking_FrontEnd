@@ -181,7 +181,7 @@ const TableDesignation = ({
   const getDesignations = async () => {
     try {
       setIsLoading(true)
-      const res = await api(`/designation/${departmentId}`, {}, 'get', true)
+      const res = await api(`/designation/${departmentId}/?esign_status=all`, {}, 'get', true)
       setIsLoading(false)
       console.log('All designations ', res.data)
       if (res.data.success) {
@@ -197,7 +197,6 @@ const TableDesignation = ({
     }
   }
   useEffect(() => {
-    console.log('1212')
     getDesignations()
   }, [departmentId,pendingAction])
   

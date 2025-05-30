@@ -60,7 +60,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
       const getBatches = async productId => {
         try {
           setIsLoading(true)
-          const res = await api(`/batch/getbatchesbyproduct/${productId}`, {}, 'get', true)
+          const res = await api(`/batch/${productId}`, {}, 'get', true)
           setIsLoading(false)
           console.log('All batches... ', res?.data?.data)
           if (res.data.success) {
@@ -101,7 +101,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
         try {
           setIsLoading(true)
           setPackagingHierarchyData({})
-          const res = await api(`/batch/getbatchbyproduct/${formData.productId}/${formData.batchId}?limit=-1`, {}, 'get', true)
+          const res = await api(`/batch/getinfo/${formData.productId}/${formData.batchId}?limit=-1`, {}, 'get', true)
           setIsLoading(false)
           console.log('batch from productId and batchNo', res.data)
           if (res.data.success) {

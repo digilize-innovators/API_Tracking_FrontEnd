@@ -10,8 +10,7 @@ import {
   Typography,
   IconButton,
   Button,
-  Tooltip,
-
+  Tooltip
 } from '@mui/material'
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md'
 import ChevronUp from 'mdi-material-ui/ChevronUp'
@@ -81,24 +80,24 @@ const Row = ({
     const decodedToken = getTokenValues()
     setConfig(decodedToken)
     setUserDataPdf(data)
-    return () => { }
+    return () => {}
   }, [openModalDes])
-  
-   useEffect(() => {
-         const handleUserAction = async () => {
-           if (formData && pendingAction) {
-             const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
-             if (pendingAction === "edit") {
-               await editDesignation(esign_status)  // Await editUser
-             } else if (pendingAction === "add") {
-               await  addDesignation(esign_status)  // Await addUser
-             }
-             setPendingAction(null);
-           }
-         };
-       
-         handleUserAction();
-       }, [formData, pendingAction])
+
+  useEffect(() => {
+    const handleUserAction = async () => {
+      if (formData && pendingAction) {
+        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
+        if (pendingAction === 'edit') {
+          await editDesignation(esign_status) // Await editUser
+        } else if (pendingAction === 'add') {
+          await addDesignation(esign_status) // Await addUser
+        }
+        setPendingAction(null)
+      }
+    }
+
+    handleUserAction()
+  }, [formData, pendingAction])
 
   const tableBody = arrayDesignation.map((item, index) => [
     index + 1,
@@ -116,8 +115,6 @@ const Row = ({
     }),
     []
   )
-
-
 
   const toggleDrawer = (anchor, open) => event => {
     console.log('open drawer', open)
@@ -145,11 +142,11 @@ const Row = ({
     const createAuditLog = action =>
       config?.config?.audit_logs
         ? {
-          user_id: user.userId,
-          user_name: user.userName,
-          performed_action: action,
-          remarks: remarks.length > 0 ? remarks : `designation ${action} - ${auditLogMark}`
-        }
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: action,
+            remarks: remarks.length > 0 ? remarks : `designation ${action} - ${auditLogMark}`
+          }
         : {}
     const handleApproverActions = async () => {
       const data = {
@@ -159,17 +156,16 @@ const Row = ({
         audit_log: createAuditLog('approved')
       }
 
-      if (!esignDownloadPdf && isApprover && approveAPI.approveAPIName !== "designation-approve") {
+      if (!esignDownloadPdf && isApprover && approveAPI.approveAPIName !== 'designation-approve') {
         setAlertData({
           ...alertData,
           openSnackbar: true,
           type: 'error',
-          message: "Access denied for this user."
+          message: 'Access denied for this user.'
         })
         resetState()
         return
-      }
-      else {
+      } else {
         const res = await api('/esign-status/update-esign-status', data, 'patch', true)
         setPendingAction(true)
 
@@ -188,33 +184,31 @@ const Row = ({
             resetState()
             return 0
           }
-        }
-        else if (approveAPI.approveAPIName === 'department-approve') {
-          if (esignStatus === "approved") {
-            setOpenModalApprove(false);
-            console.log("esign is approved for approver");
+        } else if (approveAPI.approveAPIName === 'department-approve') {
+          if (esignStatus === 'approved') {
+            setOpenModalApprove(false)
+            console.log('esign is approved for approver')
             setPendingAction(true)
-            resetState();
-            return;
+            resetState()
+            return
           }
-          if (esignStatus === "rejected") {
-            console.log("approver rejected");
-            setOpenModalApprove(false);
-            resetState();
+          if (esignStatus === 'rejected') {
+            console.log('approver rejected')
+            setOpenModalApprove(false)
+            resetState()
           }
         }
       }
-    };
+    }
     const handleNonApproverActions = async () => {
       if (esignStatus === 'rejected') {
         setAuthModalOpen(false)
         setOpenModalApprove(false)
       } else {
         console.log('esign is approved for creator')
-        setPendingAction(editData?.id ? "edit" : "add")
+        setPendingAction(editData?.id ? 'edit' : 'add')
       }
     }
-
 
     const handleUnauthenticated = async () => {
       setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' })
@@ -227,7 +221,7 @@ const Row = ({
       await handleNonApproverActions()
     }
     resetState()
-  };
+  }
   const handleDesigAuthCheck = async row => {
     console.log('handleDesigAuthCheck', row)
 
@@ -280,7 +274,7 @@ const Row = ({
       })
     }
 
-    if (config?.config?.esign_status && config?.role!=='admin') {
+    if (config?.config?.esign_status && config?.role !== 'admin') {
       setAuthModalOpen(true)
       return
     }
@@ -293,15 +287,15 @@ const Row = ({
       const auditlogRemark = remarks
       const audit_log = config?.config?.audit_logs
         ? {
-          audit_log: true,
-          performed_action: 'add',
-          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Designation added - ${formData.designationId}`
-        }
+            audit_log: true,
+            performed_action: 'add',
+            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Designation added - ${formData.designationId}`
+          }
         : {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`
-        }
+            audit_log: false,
+            performed_action: 'none',
+            remarks: `none`
+          }
       data.audit_log = audit_log
       data.esign_status = esign_status
       setIsLoading(true)
@@ -398,7 +392,7 @@ const Row = ({
       approveAPImethod: 'POST',
       approveAPIEndPoint: '/api/v1/designation'
     })
-    if (config?.config?.esign_status && config?.role!=='admin') {
+    if (config?.config?.esign_status && config?.role !== 'admin') {
       console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
@@ -512,14 +506,14 @@ const Row = ({
           <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
             {row.is_location_required ? 'True' : 'False'}
           </TableCell>
-          {config?.config?.esign_status === true && config?.role!=='admin' && (
+          {config?.config?.esign_status === true && config?.role !== 'admin' && (
             <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
           )}
           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
             {moment(row.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
           </TableCell>
           <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
-            {isPendingEsign && config_dept?.role!='admin'? renderAuthIcon() : renderEditIcon()}
+            {isPendingEsign && config_dept?.role != 'admin' ? renderAuthIcon() : renderEditIcon()}
             <Button onClick={toggleDrawer('addDrawer', true)}>
               <IoIosAdd
                 fontSize={30}
@@ -566,7 +560,7 @@ const Row = ({
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             Location Required
                           </TableCell>
-                          {config?.config?.esign_status === true && config?.role!=='admin' && (
+                          {config?.config?.esign_status === true && config?.role !== 'admin' && (
                             <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                               E-Sign
                             </TableCell>
@@ -596,7 +590,7 @@ const Row = ({
                             <TableCell component='th' scope='row' align='center'>
                               {historyRow.is_location_required ? 'True' : 'False'}
                             </TableCell>
-                            {config?.config?.esign_status === true && config?.role!=='admin' && (
+                            {config?.config?.esign_status === true && config?.role !== 'admin' && (
                               <StatusChip
                                 label={historyRow.esign_status}
                                 color={statusObj[historyRow.esign_status]?.color || 'default'}
@@ -649,6 +643,7 @@ Row.propTypes = {
   departmentData: PropTypes.any,
   historyData: PropTypes.any
 }
+
 const TableDepartment = ({
   pendingAction,
   alertData,
@@ -668,11 +663,7 @@ const TableDepartment = ({
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
   const [departmentData, setDepartmentData] = useState({ data: [], total: 0 })
-
-
-
   const router = useRouter()
-
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
   const handleRowToggle = async rowId => {
@@ -681,7 +672,7 @@ const TableDepartment = ({
 
   useMemo(() => {
     setPage(0)
-  }, [tableHeaderData,rowsPerPage])
+  }, [tableHeaderData, rowsPerPage])
   useEffect(() => {
     getDepartments()
   }, [page, rowsPerPage, tableHeaderData, pendingAction])
@@ -790,7 +781,7 @@ const TableDepartment = ({
                   {getSortIcon(sortBy, 'is_location_required', sortDirection)}
                 </IconButton>
               </TableCell>
-              {config_dept?.config?.esign_status === true && config_dept?.role!=='admin' && (
+              {config_dept?.config?.esign_status === true && config_dept?.role !== 'admin' && (
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                   E-Sign
                 </TableCell>
@@ -820,7 +811,6 @@ const TableDepartment = ({
                 departmentData={departmentData.data}
                 historyData={historyData}
                 page={page}
-
                 rowsPerPage={rowsPerPage}
               />
             ))}
@@ -838,7 +828,6 @@ const TableDepartment = ({
   )
 }
 TableDepartment.propTypes = {
-
   tableHeaderData: PropTypes.any,
   alertData: PropTypes.any,
   setAlertData: PropTypes.any,

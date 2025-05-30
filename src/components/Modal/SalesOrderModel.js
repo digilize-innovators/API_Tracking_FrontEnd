@@ -142,7 +142,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
 
             const fetchBatches = async () => {
                 try {
-                    const res = await api(`/batch/getbatchesbyproduct/${productId}`, {}, 'get', true);
+                    const res = await api(`/batch/${productId}`, {}, 'get', true);
                     console.log('batches', res.data.data)
                     if (res.data.success) {
                         const options = res.data.data.map(batch => ({
