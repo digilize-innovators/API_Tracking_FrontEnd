@@ -65,11 +65,11 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
             const getAllAreaCategory = async () => {
                 setIsLoading(true)
                 try {
-                    const res = await api(`/area-category?limit=-1`, {}, 'get', true)
+                    const res = await api(`/area-category?limit=-1&history_latest=true`, {}, 'get', true)
                     if (res.data.success) {
                         const data = res.data.data.areaCategories?.map((item) => ({
-                            id: item.id,
-                            value: item.id,
+                            id: item.areacategory_uuid,
+                            value: item.areacategory_uuid,
                             label: item.area_category_name,
                         }));
                         console.log("Area category in dropdown ", data);
