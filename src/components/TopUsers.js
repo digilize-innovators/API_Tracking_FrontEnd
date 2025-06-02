@@ -14,8 +14,12 @@ import {
   TableRow,
   Paper
 } from "@mui/material";
+import { useSettings } from 'src/@core/hooks/useSettings';
 
 const TopUserShow = ({ data }) => {
+  const { settings } = useSettings();
+    console.log(settings.themeColor)
+
   const userData = data?.topUsers;
   const topUserData = data?.topUserDetails;
   const scrollRef = useRef(null);
@@ -23,10 +27,11 @@ const TopUserShow = ({ data }) => {
   return (
     <Card
       sx={{
-        width: "25%",
+        width: '100%',
         color: 'white',
         boxShadow: 4,
         border: '1px solid #e0e0e0',
+        borderRadius: 0,
       }}
     >
       <Typography
@@ -37,7 +42,8 @@ const TopUserShow = ({ data }) => {
           fontSize: '20px',
           color: '#333',
           fontWeight: 560,
-          background: '#00d09c',
+          //background: '#00d09c',
+          backgroundColor:settings.themeColor,
           padding: 3,
         }}
       >
@@ -118,9 +124,9 @@ const TopUserShow = ({ data }) => {
                     }}
                   /> */}
                   <img
-                    src={user?.profile_photo}
-                    crossOrigin="anonymous"
-                    alt="Profile"
+                    src={user?.profile_photo || '/images/avatars/1.png'}
+                    crossOrigin="anonymous" 
+                    // alt="/images/avtars/1.png"
                     style={{
                       width: '80px',
                       height: '80px',

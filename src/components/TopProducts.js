@@ -16,8 +16,10 @@ const TopProductShow = ({ data }) => {
 
   const chartData = data?.map((item) => {
     const timeLabel = item.month || item.year || '';
+    const fullName = item.product_name;
+    const truncatedName = fullName.length > 10 ? `${fullName.slice(0, 8)} ..` : fullName;
     return {
-      name: item.product_name,
+      name: truncatedName,
       topProducts: parseInt(item.total, 10),
       tooltipLabel: `${item.product_name} (${timeLabel})`,
     };
@@ -29,8 +31,12 @@ const TopProductShow = ({ data }) => {
         background: '#fff',
         padding: '20px',
         margin: '10px auto',
-        width: '23.5vw',
-        height: '18.5vw',
+        // width: '23.5vw',
+        // height: '18.5vw',
+        width: '100%',
+        aspectRatio: '4 / 3', // Ensures height adjusts with width
+        maxHeight: '400px',
+
         fontFamily: 'sans-serif',
         boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)',
       }}
@@ -50,7 +56,7 @@ const TopProductShow = ({ data }) => {
         <BarChart
           layout="vertical"
           data={chartData}
-          margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+          margin={{ top: 5, right: 20, left: 0, bottom: 0 }}
           barCategoryGap={10}
         >
           <XAxis
@@ -59,7 +65,7 @@ const TopProductShow = ({ data }) => {
             axisLine={false}
             tickLine={false}
           />
-        
+
           <YAxis
             dataKey="name"
             type="category"
@@ -76,15 +82,29 @@ const TopProductShow = ({ data }) => {
                 </text>
               );
             }}
-            width={138}
+            width={95}
             interval={0}
             axisLine={false}
             tickLine={false}
           />
 
-          <Tooltip
+          {/* <Tooltip
             formatter={(value) => [value, 'Total']}
             labelFormatter={(label) => `Product : ${label}`}
+            contentStyle={{
+              backgroundColor: '#393939',
+              borderRadius: '4px',
+              border: 'none',
+              color: '#fff',
+              fontSize: 12,
+            }}
+          /> */}
+          <Tooltip
+            formatter={(value, name, props) => [value, 'Total']}
+            labelFormatter={(label, payload) => {
+              const tooltipData = payload?.[0]?.payload;
+              return `Product: ${tooltipData?.tooltipLabel || label}`;
+            }}
             contentStyle={{
               backgroundColor: '#393939',
               borderRadius: '4px',
@@ -104,7 +124,7 @@ const TopProductShow = ({ data }) => {
               dataKey="topProducts"
               position="right"
               // style={{ fontSize: 12, fill: '#333' }}
-              style={{fontSize:12}}
+              style={{ fontSize: 12 }}
             />
           </Bar>
         </BarChart>

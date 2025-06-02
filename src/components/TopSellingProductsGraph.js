@@ -12,12 +12,15 @@ import {
 
 const TopSellingProductsData = ({ data }) => {
   const yAxisKey = data?.[0]?.year ? 'year' : 'month';
-
+  console.log("DATA TOP SELLING...", data);
+  
   // Prepare chart data with dynamic tooltip label
   const chartData = data?.map((item) => {
     const timeLabel = item.month || item.year || '';
+    const fullName = item.product_name;
+    const truncatedName = fullName.length > 10 ? `${fullName.slice(0,8)} ..`: fullName;
     return {
-      name: item.product_name,
+      name: truncatedName,
       topProducts: parseInt(item.total, 10),
       tooltipLabel: `${item.product_name} (${timeLabel})`,
     };
@@ -29,8 +32,11 @@ const TopSellingProductsData = ({ data }) => {
         background: '#fff',
         padding: '20px',
         margin: '10px auto',
-        width: '23.5vw',
-        height: '18.5vw',
+        // width: '23.5vw',
+        // height: '18.5vw',
+        width: '100%',
+        aspectRatio: '4 / 3', // Ensures height adjusts with width
+        maxHeight: '400px',
         fontFamily: 'sans-serif',
         boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)',
       }}
@@ -50,7 +56,7 @@ const TopSellingProductsData = ({ data }) => {
         <BarChart
           layout="vertical"
           data={chartData}
-          margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+          margin={{ top: 5, right: 20, left: 0, bottom: 0 }}
           barCategoryGap={10}
         >
           <XAxis
@@ -62,13 +68,12 @@ const TopSellingProductsData = ({ data }) => {
           <YAxis
             dataKey="name"
             type="category"
-            width={145}
+            width={95}
             fontSize={12}
             interval={0}
             axisLine={false}
             tickLine={false}
           />
-
           <Tooltip
             formatter={(value, name, props) => [value, 'Total']}
             labelFormatter={(label, payload) => {
@@ -83,7 +88,6 @@ const TopSellingProductsData = ({ data }) => {
               fontSize: 12,
             }}
           />
-
           <Legend layout="horizontal" verticalAlign="bottom" align="center" />
           <Bar dataKey="topProducts" fill="#00d09c" barSize={20}>
             <LabelList

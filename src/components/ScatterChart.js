@@ -34,8 +34,11 @@ const ScatterchartGraph = ({ data }) => {
       background: '#fff',
       padding: '20px',
       margin: '10px auto',
-      width: '23.5vw',
-      height: '18.5vw',
+      // width: '23.5vw',
+      // height: '18.5vw',
+      width: '100%',
+      aspectRatio: '4 / 3', // Ensures height adjusts with width
+      maxHeight: '400px',
       fontFamily: 'sans-serif',
       boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)'
     }}>
@@ -49,15 +52,10 @@ const ScatterchartGraph = ({ data }) => {
       </h3>
 
       <ResponsiveContainer width="100%" height="100%">
-        <ScatterChart margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+        <ScatterChart margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
           <XAxis
-            dataKey={xKey}
-            type={isCategory ? 'category' : 'number'}
-            ticks={ticks}
+             dataKey={xKey}
             tick={{ fontSize: 12 }}
-            axisLine
-            tickLine={false}
-            padding={{ left: 25 }}
           />
           <YAxis
             dataKey="cases"

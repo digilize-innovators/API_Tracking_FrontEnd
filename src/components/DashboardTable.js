@@ -70,12 +70,12 @@ const List = ({ data }) => {
       <Typography
         variant="subtitle2"
         sx={{
-          ml: 5,
+          ml: 2,
           fontWeight: 'bold',
           fontSize: '1.3rem',
           //backgroundColor: headerBgColor,
-          px: 2,
-          py: 1,
+          //px: 2,
+          //py: 1,
           borderRadius: 0,
           display: 'inline-block'
         }}

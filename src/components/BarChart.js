@@ -6,11 +6,11 @@ import {
 const Barchart = ({ data }) => {
   const formattedData = Array.isArray(data)
     ? data
-        .filter(item => item && item.codeGenerated !== undefined && (item.year || item.month || item.date))
-        .map(item => ({
-          ...item,
-          name: item.date || item.month || String(item.year),
-        }))
+      .filter(item => item && item.codeGenerated !== undefined && (item.year || item.month || item.date))
+      .map(item => ({
+        ...item,
+        name: item.date || item.month || String(item.year),
+      }))
     : [];
 
   return (
@@ -18,8 +18,11 @@ const Barchart = ({ data }) => {
       background: '#fff',
       padding: '20px',
       margin: '10px auto',
-      width: '23.5vw',
-      height: '18.5vw',
+      // width: '23.5vw',
+      // height: '18.5vw',
+      width: '100%',
+      aspectRatio: '4 / 3', // Ensures height adjusts with width
+      maxHeight: '400px',
       fontFamily: 'sans-serif',
       boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)',
     }}>
@@ -35,7 +38,7 @@ const Barchart = ({ data }) => {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={formattedData}
-          margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+          margin={{ top: 5, right: 20, left: 0, bottom: 0 }}
         >
           {/* Removed CartesianGrid to eliminate dashed background lines */}
 

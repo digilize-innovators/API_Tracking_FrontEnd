@@ -1,22 +1,32 @@
 import React from "react";
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
+import { useSettings } from 'src/@core/hooks/useSettings';
 
 const Featured = ({ data }) => {
+  const { settings } = useSettings();
+  console.log(settings.themeColor)
 
   const styles = {
     featured: {
-      flex: 1,
+      width: '100%',
       boxShadow: "2px 4px 10px 1px rgba(201, 201, 201, 0.47)",
-      padding: "10px",
-      //background: '#fff',
-      backgroundColor:'#fff'
+      background: '#fff',
+      borderRadius: '0px',
+      margin: 'auto',
     },
     top: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      color: "gray",
+      // display: "flex",
+      // alignItems: "center",
+      // justifyContent: "space-between",
+      //color: "gray",
+
+      backgroundColor: settings.themeColor,
+      //background: '#00d09c',
+      paddingTop: 14,
+      paddingBottom: 7,
+      paddingLeft: 5,
+      paddingRight: 5,
     },
     title: {
       fontSize: "16px",
@@ -34,6 +44,7 @@ const Featured = ({ data }) => {
     featuredChart: {
       width: "100px",
       height: "100px",
+      marginTop: 10,
     },
     amount: {
       fontSize: "30px",
@@ -60,12 +71,12 @@ const Featured = ({ data }) => {
     itemResult: {
       display: "flex",
       alignItems: "center",
-      marginTop: "10px",
+      // marginTop: "10px",
       fontSize: "14px",
     },
     positive: {
       color: "#00d09c",
-      fontSize:18,
+      fontSize: 18,
     },
     negative: {
       color: "red",
@@ -76,10 +87,17 @@ const Featured = ({ data }) => {
     <div style={styles.featured}>
       <div style={styles.top}>
         <h1 style={{
-          marginBottom: '12px',
+          // marginBottom: '12px',
+          // fontSize: '20px',
+          // color: 'gray',
+          // fontWeight: '580',
+
+          mb: 0,
+          textAlign: 'center',
           fontSize: '20px',
-          color: 'gray',
-          fontWeight: '580'
+          color: '#333',
+          fontWeight: 600,
+
         }}>Parent - Child Mapping Status</h1>
 
       </div>

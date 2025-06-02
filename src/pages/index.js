@@ -92,7 +92,7 @@ const Dashboard = () => {
   const [topSellingProductsData, setTopSellingProductsData] = useState([]);
   const [casesDispatchedData, setCasesDispatchedData] = useState([]);
   const [topPerformingLocations, setTopPerformingLocationsData] = useState([]);
-  const [casesInwardedData,setCasesInwardedData]=useState([]);
+  const [casesInwardedData, setCasesInwardedData] = useState([]);
 
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [monthlyDate, setMonthlyDate] = useState({ start: '', end: '' })
@@ -193,16 +193,16 @@ const Dashboard = () => {
     }
   }
 
-    const getCasesDispatched = async () => {
+  const getCasesDispatched = async () => {
     try {
       const params = new URLSearchParams();
       console.log("PARAMS ;->", params);
-      
+
       let errorMessage = '';
       switch (timePeriod) {
         case 'yearly':
           params.append('selectOption', 'year');
-          console.log("params yearly :--<<",params);
+          console.log("params yearly :--<<", params);
           break;
 
         case 'monthly':
@@ -232,7 +232,7 @@ const Dashboard = () => {
       }
       else {
         const res = await api(`/dashboard/casesDispatched?&${params.toString()}`, {}, 'get', true)
-        console.log('RES of casesDispatched &&&&&&&&&&&&&&&&:',  res.data.data);
+        console.log('RES of casesDispatched &&&&&&&&&&&&&&&&:', res.data.data);
         setCasesDispatchedData(res?.data?.data)
         setAlertData({
           ...alertData,
@@ -248,16 +248,16 @@ const Dashboard = () => {
     }
   }
 
-   const getTopSellingProductsData = async () => {
+  const getTopSellingProductsData = async () => {
     try {
       const params = new URLSearchParams();
       console.log("PARAMS ;->", params);
-      
+
       let errorMessage = '';
       switch (timePeriod) {
         case 'yearly':
           params.append('selectOption', 'year');
-          console.log("params yearly :--<<",params);
+          console.log("params yearly :--<<", params);
           break;
 
         case 'monthly':
@@ -287,7 +287,7 @@ const Dashboard = () => {
       }
       else {
         const res = await api(`/dashboard/topSellingProducts?&${params.toString()}`, {}, 'get', true)
-        console.log('RES of TOP Selling Products:',  res.data);
+        console.log('RES of TOP Selling Products:', res.data);
         setTopSellingProductsData(res?.data?.data)
         setAlertData({
           ...alertData,
@@ -303,11 +303,11 @@ const Dashboard = () => {
     }
   }
 
-   const getTopPerformingLocationsData = async () => {
+  const getTopPerformingLocationsData = async () => {
     try {
       const params = new URLSearchParams();
       console.log("TopPerformingLocations PARAMS", params);
-      
+
       let errorMessage = '';
       switch (timePeriod) {
         case 'yearly':
@@ -340,7 +340,7 @@ const Dashboard = () => {
       }
       else {
         const res = await api(`/dashboard/topPerformingLocations?&${params.toString()}`, {}, 'get', true)
-        console.log('RES of TopPerformingLocations:',  res.data);
+        console.log('RES of TopPerformingLocations:', res.data);
         setTopPerformingLocationsData(res?.data?.data)
         setAlertData({
           ...alertData,
@@ -415,7 +415,7 @@ const Dashboard = () => {
     }
   }
 
-   const getCasesInwardedData = async () => {
+  const getCasesInwardedData = async () => {
     try {
       const params = new URLSearchParams();
       console.log("PARAMS getCasesInwardedData->", params);
@@ -843,7 +843,77 @@ const Dashboard = () => {
 
           <Widget data={data} />
 
-          <Grid2 sx={{ width: '100%' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: {
+                xs: 'column',   // Mobile
+                sm: 'column',   // Tablet (portrait)
+                md: 'row',      // Tablet (landscape) or small laptop
+                lg: 'row',      // Laptop
+                xl: 'row',      // Desktop
+              },
+              gap: {
+                xs: 3,         // Mobile
+                sm: 3,         // Tablet
+                md: 2,         // Medium devices
+                lg: 2,         // Laptop
+                xl: 2,         // Desktop
+              },
+              alignItems: 'stretch',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              mt: 4,
+              //backgroundColor:'red'
+            }}
+          >
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',
+                  sm: '100%',
+                  md: '300px',
+                },
+                p: 0,
+              }}
+            >
+              <Featured data={data} />
+
+            </CardContent>
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',
+                  sm: '100%',
+                  md: '300px',
+                },
+                p: 0,
+              }}
+            >
+
+             <TopUserShow data={topUsersData} />
+
+            </CardContent>
+            <CardContent
+              sx={{
+                flex: 1,
+                minWidth: {
+                  xs: '100%',
+                  sm: '100%',
+                  md: '300px',
+                },
+                p: 0,
+              }}
+            >
+              <TopLineShow data={topUsersData} />
+
+            </CardContent>
+          </Box>
+
+
+          <Grid2 sx={{ width: '100%' }} marginTop={1}>
             <ProductionDashboard data={data} />
           </Grid2>
 
@@ -955,7 +1025,7 @@ const Dashboard = () => {
               }}
             >
               {/* <Piechart data={batchData} /> */}
-              <TopPerformingLocationsData data={topPerformingLocations}/>
+              <TopPerformingLocationsData data={topPerformingLocations} />
             </CardContent>
 
             <CardContent
@@ -1035,7 +1105,7 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              <CasesInwarded data={casesInwardedData}/>
+              <CasesInwarded data={casesInwardedData} />
             </CardContent>
 
             <CardContent
@@ -1053,18 +1123,9 @@ const Dashboard = () => {
             </CardContent>
           </Box>
 
-          <Grid2 container spacing={2} marginTop={1}>
-            <Grid2 xs={12} md={6} lg={4}>
-              <Featured data={data} />
-            </Grid2>
-          </Grid2>
-
           {/* <PieChartWithYearValues Data={batchData} /> */}
 
         </Grid2>
-
-        <TopUserShow data={topUsersData} />
-        <TopLineShow data={topUsersData} />
 
         <AccessibilitySettings />
         <ChatbotComponent />

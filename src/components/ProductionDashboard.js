@@ -143,6 +143,7 @@ export default function ExcelLikeDashboard({ data }) {
           xs={12}
           md={5}
           mt={2}
+          pl={4}
           style={{
             marginRight:'80px'
           }}
@@ -160,9 +161,9 @@ export default function ExcelLikeDashboard({ data }) {
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' , mt:1}}>
             <img
-              src={lineOrders[0]?.profile_photo}
+              src={lineOrders[0]?.profile_photo || '/images/avatars/1.png'}
               crossOrigin="anonymous"
-              alt="Profile"
+              //alt="Profile"
               style={{
                 width: '110px',
                 height: '110px',
