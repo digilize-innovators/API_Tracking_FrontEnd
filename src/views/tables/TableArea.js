@@ -37,11 +37,11 @@ const Row = ({ row, index, openRows, handleRowToggle, page, rowsPerPage, history
           {row?.area_name}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.area_category.history[0]?.area_category_name}
+          {row.area_category.history[0].area_category_name}
           
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row?.location?.location_name}
+          {row.location.history[0].location_name}
         </TableCell>
 
         {config?.config?.esign_status === true && (
@@ -104,8 +104,8 @@ const Row = ({ row, index, openRows, handleRowToggle, page, rowsPerPage, history
                           </TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.area_id}</TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.area_name}</TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.area.area_category.history[0].area_category_name}</TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.location.location_name}</TableCell>
+                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.area_category?.history[0].area_category_name}</TableCell>
+                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.location.history[0].location_name}</TableCell>
 
                           {config?.config?.esign_status === true && (
                             <StatusChip
@@ -185,7 +185,7 @@ const TableArea = ({
       })
       const response = await api(`/area/?${params.toString()}`, {}, 'get', true)
       if (response.data.success) {
-        console.log("after add",response.data.data.areas)
+        console.log("Res of area ",response.data.data.areas)
         setAreaData({data:response.data.data.areas,total:response.data.data.total})
         setArea(response.data.data.areas)
       }

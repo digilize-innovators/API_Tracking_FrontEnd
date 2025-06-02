@@ -92,13 +92,13 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
             const getAllLocations = async () => {
                 try {
                     setIsLoading(true);
-                    const res = await api('/location?limit=-1', {}, 'get', true);
+                    const res = await api('/location?limit=-1&history_latest=true', {}, 'get', true);
                     setIsLoading(false);
                     console.log('All locations ', res.data);
                     if (res.data.success) {
                         const data = res.data.data.locations?.map((item) => ({
-                            id: item.id,
-                            value: item.id,
+                            id: item.location_uuid,
+                            value: item.location_uuid,
                             label: item.location_name,
                         }));
                         setAllLocationsData(data);

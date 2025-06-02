@@ -127,15 +127,16 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
         setIsLoading(true)
         const params = new URLSearchParams({
           page: 1,
-          limit: -1
+          limit: -1,
+          history_latest: true
         })
         const res = await api(`/designation/${departmentId}/?${params.toString()}`, {}, 'get', true)
         console.log('designation by department ', res.data)
         setIsLoading(false);
         if (res.data.success) {
           const data = res.data.data.designations.map((item) => ({
-            id: item.id,
-            value: item.id,
+            id: item.designation_uuid,
+            value: item.designation_uuid,
             label: item.designation_name,
           }))
           setAllDesignation(data)
@@ -164,8 +165,8 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
         console.log('All location ', res.data)
         if (res.data.success) {
           const data = res.data.data?.map((item) => ({
-            id: item.id,
-            value: item.id,
+            id: item.location_uuid,
+            value: item.location_uuid,
             label: item.location_name,
           }));
           setAllLocation(data)

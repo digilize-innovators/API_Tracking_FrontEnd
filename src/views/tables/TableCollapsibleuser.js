@@ -38,13 +38,13 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
           {row.user_name}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.department?.department_name}
+          {row.department.history[0].department_name}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.designation?.designation_name}
+          {row.designation.history[0].designation_name}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.location?.location_name}
+          {row.location.history[0].location_name}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {row.email}
@@ -115,9 +115,9 @@ const Row = ({ row, index, page, rowsPerPage, openRows, handleRowToggle, history
                           </TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.user_id}</TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.user_name}</TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.department.department_name}</TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.designation.designation_name}</TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.location.location_name}</TableCell>
+                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.department.history[0].department_name}</TableCell>
+                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.designation.history[0].designation_name}</TableCell>
+                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.location.history[0].location_name}</TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} >{historyRow.email}</TableCell>
                           <StatusChip
                             label={historyRow.is_active ? 'enabled' : 'disabled'}
