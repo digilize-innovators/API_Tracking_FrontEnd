@@ -22,7 +22,7 @@ import {
 
 import { AiOutlineProduct, AiOutlineAudit } from 'react-icons/ai'
 import { IoLocationOutline } from 'react-icons/io5'
-import { FaChartArea, } from 'react-icons/fa'
+import { FaChartArea } from 'react-icons/fa'
 import { TfiLayoutMediaRightAlt } from 'react-icons/tfi'
 import { SiStrapi } from 'react-icons/si'
 import { TbApiApp } from 'react-icons/tb'
@@ -32,7 +32,7 @@ import { HiDocumentReport } from 'react-icons/hi'
 import Cookies from 'js-cookie'
 import jwt from 'jsonwebtoken'
 
-import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
+import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl'
 const navigation = () => {
   let role = ''
   let screens = (Cookies.get('screens')?.length ? JSON.parse(Cookies.get('screens')) : []) || []
@@ -101,7 +101,6 @@ const navigation = () => {
   ]
 
   const productionScreens = [
-
     {
       title: 'Batch Master',
       icon: MdOutlineBatchPrediction,
@@ -119,7 +118,7 @@ const navigation = () => {
       icon: MdOutlineBatchPrediction,
       path: '/batch-printing',
       mainTitle: false
-    },
+    }
     // {
     //   title: 'Batch Cloud Upload',
     //   icon: MdCloudUpload,
@@ -129,7 +128,6 @@ const navigation = () => {
   ]
 
   const printerScreens = [
-
     {
       title: 'Printer Category',
       icon: AiOutlineProduct,
@@ -149,7 +147,7 @@ const navigation = () => {
       path: '/controlpanelmaster',
       mainTitle: false
     },
-    
+
     {
       title: 'Printer Line Configuration',
       icon: TfiLayoutMediaRightAlt,
@@ -212,37 +210,34 @@ const navigation = () => {
       icon: AiOutlineProduct,
       path: '/unit-of-measurement',
       mainTitle: false
-    },
+    }
   ]
-  const salesScreens=[{
-    title: 'Purchase Order',
-    icon: MdShoppingCart,
-    path: '/purchase-order',
-    mainTitle: false
-
-  },
-  {
-    title: 'Stock Transfer Order',
-    icon: MdInventory2,
-    path: '/stocktransfer-order',
-    mainTitle: false
-
-  },
-  {
-    title: 'Sales Order',
-    icon: MdReceiptLong,
-    path: '/sales-order',
-    mainTitle: false
-
-  },
-  {
-    title: 'Stock Reconciliation',
-    icon: MdSync,
-    path: '/stock-reconciliation',
-    mainTitle: false
-
-  },
-]
+  const salesScreens = [
+    {
+      title: 'Purchase Order',
+      icon: MdShoppingCart,
+      path: '/purchase-order',
+      mainTitle: false
+    },
+    {
+      title: 'Stock Transfer Order',
+      icon: MdInventory2,
+      path: '/stocktransfer-order',
+      mainTitle: false
+    },
+    {
+      title: 'Sales Order',
+      icon: MdReceiptLong,
+      path: '/sales-order',
+      mainTitle: false
+    },
+    {
+      title: 'Stock Reconciliation',
+      icon: MdSync,
+      path: '/stock-reconciliation',
+      mainTitle: false
+    }
+  ]
   const configurationScreen = [
     {
       title: 'SuperAdmin Configuration',
@@ -300,7 +295,7 @@ const navigation = () => {
 
   const filteredDashboardScreen = dashboardScreen.filter(item => screens.includes(item.title))
   const filteredPrinterScreen = printerScreens.filter(item => screens.includes(item.title))
-  const filterSalesScreen =salesScreens.filter(item => screens.includes(item.title))
+  const filterSalesScreen = salesScreens.filter(item => screens.includes(item.title))
   const drawerArray = [
     {
       title: 'Home Screen',
@@ -323,7 +318,6 @@ const navigation = () => {
       path: '/master',
       subPages: filteredMasterScreens
     },
-    
 
     {
       title: 'Printer Configurations',
@@ -352,8 +346,7 @@ const navigation = () => {
       mainTitle: true,
       path: '/master',
       subPages: filteredAuditScreens
-    },
-
+    }
   ].filter(item => item?.subPages?.length > 0 || item?.isolation)
 
   drawerArray.unshift(...filteredDashboardScreen)
