@@ -45,6 +45,7 @@ const Index = () => {
     searchVal: ''
   })
   const [pendingAction, setPendingAction] = useState(null)
+  const [authUser, setAuthUser] = useState({})
   const [formData, setFormData] = useState({})
   const searchBarRef = useRef(null)
   const apiAccess = useApiAccess('area-category-create', 'area-category-update', 'area-category-approve')
@@ -66,9 +67,9 @@ const Index = () => {
       if (formData && pendingAction) {
         const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
         if (pendingAction === 'edit') {
-          await editAreaCategory(esign_status)
+          await editAreaCategory(esign_status, null, authUser)
         } else if (pendingAction === 'add') {
-          await addAreaCategory(esign_status)
+          await addAreaCategory(esign_status, null, authUser)
         }
         setPendingAction(null)
       }
@@ -132,7 +133,7 @@ const Index = () => {
     }
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
-  const addAreaCategory = async (esign_status, remarks) => {
+  const addAreaCategory = async (esign_status, remarks, authUser) => {
     try {
       const data = { areaCategoryName: formData.areaCategoryName }
       const auditlogRemark = remarks
@@ -140,15 +141,16 @@ const Index = () => {
         ? {
             audit_log: true,
             performed_action: 'add',
-            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `area category added - ${formData.areaCategoryName}`
+            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `area category added - ${formData.areaCategoryName}`,
+            AuthUser: authUser
           }
         : {
             audit_log: false,
             performed_action: 'none',
-            remarks: `none`
+            remarks: `none`,
+            AuthUser: 'none'
           }
       data.audit_log = audit_log
-      console.log(data)
       data.esign_status = esign_status
       console.log('Add area category data ', data)
       setIsLoading(true)
@@ -189,13 +191,15 @@ const Index = () => {
         audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `area category edited - ${formData.areaCategoryName}`
+          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `area category edited - ${formData.areaCategoryName}`,
+          AuthUser: authUser
         }
       } else {
         audit_log = {
           audit_log: false,
           performed_action: 'none',
-          remarks: `none`
+          remarks: `none`,
+          AuthUser: 'none'
         }
       }
       data.audit_log = audit_log
@@ -243,6 +247,7 @@ const Index = () => {
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
+
     console.log('handleAuthResult 02', config?.userId, user.user_id)
     const resetState = () => {
       setApproveAPI({
@@ -250,6 +255,7 @@ const Index = () => {
         approveAPImethod: '',
         approveAPIEndPoint: ''
       })
+
       setEsignDownloadPdf(false)
       setAuthModalOpen(false)
     }
@@ -265,6 +271,7 @@ const Index = () => {
         audit_log: config?.config?.audit_logs
           ? {
               user_id: user.userId,
+              authUser: user.user_id,
               user_name: user.userName,
               performed_action: 'approved',
               remarks: remarks.length > 0 ? remarks : `area category approved - ${auditLogMark}`
@@ -279,6 +286,29 @@ const Index = () => {
         return
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+      if (res.data.code == 400) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: res.data.message
+        })
+      } else if (res.data.code == 200) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'success',
+          message: res.data.message
+        })
+      } else {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: res.data.message
+        })
+      }
+
       console.log('esign status update', esignStatus, res?.data)
       setPendingAction(true)
       if (res?.data.esign_status === 'rejected') {
@@ -311,6 +341,7 @@ const Index = () => {
           })
         } else {
           console.log('esign is approved for creator')
+          setAuthUser(user)
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
       }
