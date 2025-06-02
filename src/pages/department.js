@@ -14,9 +14,9 @@ import { useRouter } from 'next/router'
 import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
-import { validateToken } from 'src/utils/ValidateToken';
-import { getTokenValues } from 'src/utils/tokenUtils';
-import { useApiAccess } from 'src/@core/hooks/useApiAccess';
+import { validateToken } from 'src/utils/ValidateToken'
+import { getTokenValues } from 'src/utils/tokenUtils'
+import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import downloadPdf from 'src/utils/DownloadPdf'
@@ -33,90 +33,90 @@ const Index = () => {
   const { setIsLoading } = useLoading()
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData, removeAuthToken } = useAuth()
-  const [config, setConfig] = useState(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [config, setConfig] = useState(null)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-  const [eSignStatusId, setESignStatusId] = useState('');
-  const [auditLogMark, setAuditLogMark] = useState('');
-  const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
-  const [openModalApprove, setOpenModalApprove] = useState(false);
+  const [eSignStatusId, setESignStatusId] = useState('')
+  const [auditLogMark, setAuditLogMark] = useState('')
+  const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
+  const [openModalApprove, setOpenModalApprove] = useState(false)
   const [tableHeaderData, setTableHeaderData] = useState({
     esignStatus: '',
     searchVal: ''
-  });
-  const [pendingAction, setPendingAction] = useState(null);
-  const searchBarRef = useRef(null);
+  })
+  const [pendingAction, setPendingAction] = useState(null)
+  const searchBarRef = useRef(null)
   const [formData, setFormData] = useState({})
-  const apiAccess1 = useApiAccess(
-    "department-create",
-    "department-update",
-    "department-approve");
+  const apiAccess1 = useApiAccess('department-create', 'department-update', 'department-approve')
 
-  const apiAccess2 = useApiAccess(
-    "designation-create",
-    "designation-update",
-    "designation-approve");
+  const apiAccess2 = useApiAccess('designation-create', 'designation-update', 'designation-approve')
   const apiAccess = {
     ...apiAccess1,
     addDesignationApiAccess: apiAccess2.addApiAccess,
     editDesignationApiAccess: apiAccess2.editApiAccess
-  };
+  }
 
-  const tableBody = departmentData?.map((item, index) =>
-    [index + 1, item.department_id, item.department_name,
-    item.is_location_required, item.esign_status]);
+  const tableBody = departmentData?.map((item, index) => [
+    index + 1,
+    item.department_id,
+    item.department_name,
+    item.is_location_required,
+    item.esign_status
+  ])
 
-  const tableData = useMemo(() => ({
-    tableHeader: ['Sr.No.', 'Department Id', 'Department Name', 'Location Required', 'E-Sign'],
-    tableHeaderText: 'Department Report',
-    tableBodyText: 'Department Data',
-    filename: 'DepartmentMaster'
-  }), []);
+  const tableData = useMemo(
+    () => ({
+      tableHeader: ['Sr.No.', 'Department Id', 'Department Name', 'Location Required', 'E-Sign'],
+      tableHeaderText: 'Department Report',
+      tableBodyText: 'Department Data',
+      filename: 'DepartmentMaster'
+    }),
+    []
+  )
 
+  useEffect(() => {
+    const handleUserAction = async () => {
+      if (formData && pendingAction) {
+        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
+        if (pendingAction === 'edit') {
+          await editDepartment(esign_status) // Await editUser
+        } else if (pendingAction === 'add') {
+          await addDepartment(esign_status) // Await addUser
+        }
+        setPendingAction(null)
+      }
+    }
 
-    useEffect(() => {
-       const handleUserAction = async () => {
-         if (formData && pendingAction) {
-           const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
-           if (pendingAction === "edit") {
-             await editDepartment(esign_status)  // Await editUser
-           } else if (pendingAction === "add") {
-             await  addDepartment(esign_status)  // Await addUser
-           }
-           setPendingAction(null);
-         }
-       };
-     
-       handleUserAction();
-     }, [formData, pendingAction])
-   
+    handleUserAction()
+  }, [formData, pendingAction])
+
   useLayoutEffect(() => {
-    let data = getUserData();
-    const decodedToken = getTokenValues();
-    setConfig(decodedToken);
-    setUserDataPdf(data);
-    return () => { }
+    let data = getUserData()
+    const decodedToken = getTokenValues()
+    setConfig(decodedToken)
+    setUserDataPdf(data)
+    return () => {}
   }, [openModal])
 
   const resetFilter = () => {
     if (searchBarRef.current) {
-      searchBarRef.current.resetSearch();
+      searchBarRef.current.resetSearch()
     }
-    setTableHeaderData({ ...tableHeaderData, esignStatus: "", searchVal: "" })
+    setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '' })
   }
   const handleOpenModal = () => {
     setApproveAPI({
-      approveAPIName: "department-create",
-      approveAPImethod: "POST",
-      approveAPIEndPoint: "/api/v1/department"
+      approveAPIName: 'department-create',
+      approveAPImethod: 'POST',
+      approveAPIEndPoint: '/api/v1/department'
     })
-    resetForm();
-    setOpenModal(true);
+    resetForm()
+    setOpenModal(true)
   }
   const handleAuthModalClose = () => {
-    setAuthModalOpen(false);
-    setOpenModalApprove(false);
-  };
+    setAuthModalOpen(false)
+    setOpenModalApprove(false)
+  }
   const handleCloseModal = () => {
     resetForm()
     setOpenModal(false)
@@ -128,284 +128,283 @@ const Index = () => {
   const handleUpdate = item => {
     setOpenModal(true)
     setEditData(item)
-    if (config?.config?.esign_status && config?.role!=='admin') {
+    if (config?.config?.esign_status && config?.role !== 'admin') {
       setESignStatusId(item.id)
     }
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log("handleAuthResult 01", isAuthenticated, isApprover, esignStatus, user);
-    console.log("handleAuthResult 02", config?.userId, user.user_id);
+    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
+    console.log('handleAuthResult 02', config?.userId, user.user_id)
     const resetState = () => {
       setApproveAPI({
-        approveAPIName: "",
-        approveAPImethod: "",
-        approveAPIEndPoint: ""
+        approveAPIName: '',
+        approveAPImethod: '',
+        approveAPIEndPoint: ''
       })
       setEsignDownloadPdf(false)
-      setAuthModalOpen(false);
-    };
+      setAuthModalOpen(false)
+    }
     const handleApprovalActions = () => {
-      if (!isApprover && (approveAPI.approveAPIName === 'department-create' || approveAPI.approveAPIName === 'department-update')) {
-        console.log("esign is approved for creator");
-        setPendingAction(editData?.id ? "edit" : "add");
-
+      if (
+        !isApprover &&
+        (approveAPI.approveAPIName === 'department-create' || approveAPI.approveAPIName === 'department-update')
+      ) {
+        console.log('esign is approved for creator')
+        setPendingAction(editData?.id ? 'edit' : 'add')
+      } else if (!isApprover && approveAPI.approveAPIName === 'department-approve') {
+        setAlertData({ openSnackbar: true, type: 'error', message: 'same user cannot Approve' })
       }
       resetState()
-    };
+    }
     const handleUnauthenticated = () => {
-      setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' });
-      resetState();
-    };
+      setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' })
+      resetState()
+    }
 
     const handleApproverActions = async () => {
-      if (!esignDownloadPdf && isApprover && approveAPI.approveAPIName !== "department-approve") {
+      if (!esignDownloadPdf && isApprover && approveAPI.approveAPIName !== 'department-approve') {
         setAlertData({
           ...alertData,
           openSnackbar: true,
           type: 'error',
-          message: "Access denied for this user."
+          message: 'Access denied for this user.'
         })
         resetState()
         return
-      }
-      else {
+      } else {
         const data = {
-          modelName: "department",
+          modelName: 'department',
           esignStatus,
           id: eSignStatusId,
-          audit_log: config?.config?.audit_logs ? {
-            "user_id": user.userId,
-            "user_name": user.userName,
-            "performed_action": 'approved',
-            "remarks": remarks.length > 0 ? remarks : `department approved - ${auditLogMark}`,
-          } : {}
-        };
+          audit_log: config?.config?.audit_logs
+            ? {
+                user_id: user.userId,
+                user_name: user.userName,
+                performed_action: 'approved',
+                remarks: remarks.length > 0 ? remarks : `department approved - ${auditLogMark}`
+              }
+            : {}
+        }
 
         if (isApprover && esignDownloadPdf) {
-          if (esignStatus === "approved" && esignDownloadPdf) {
-            setOpenModalApprove(false);
-            console.log("esign is approved for approver");
-            downloadPdf(tableData, tableHeaderData, tableBody, departmentData, userDataPdf);
-            resetState();
-            return;
+          if (esignStatus === 'approved' && esignDownloadPdf) {
+            setOpenModalApprove(false)
+            console.log('esign is approved for approver')
+            downloadPdf(tableData, tableHeaderData, tableBody, departmentData, userDataPdf)
+            resetState()
+            return
           }
 
-          if (esignStatus === "rejected" && esignDownloadPdf) {
-            console.log("approver rejected");
-            setOpenModalApprove(false);
-            resetState();
+          if (esignStatus === 'rejected' && esignDownloadPdf) {
+            console.log('approver rejected')
+            setOpenModalApprove(false)
+            resetState()
           }
-        }
-        else if (isApprover && approveAPI.approveAPIName === 'department-approve') {
-          const res = await api('/esign-status/update-esign-status', data, 'patch', true);
-          console.log("esign status update", res?.data);
+        } else if (isApprover && approveAPI.approveAPIName === 'department-approve') {
+          console.log(isApprover)
+          const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+          console.log('esign status update', res?.data)
           setPendingAction(true)
-          if (esignStatus === "approved") {
-            setOpenModalApprove(false);
-            console.log("esign is approved for approver");
-            resetState();
-            return;
+          if (esignStatus === 'approved') {
+            setOpenModalApprove(false)
+            console.log('esign is approved for approver')
+            resetState()
+            return
           }
-          if (esignStatus === "rejected") {
-            console.log("approver rejected");
-            setOpenModalApprove(false);
-            resetState();
+          if (esignStatus === 'rejected') {
+            console.log('approver rejected')
+            setOpenModalApprove(false)
+            resetState()
           }
         }
       }
-
-    };
+    }
     const handleCreatorRejection = () => {
-      setAuthModalOpen(false);
-      setOpenModalApprove(false);
-    };
-    
+      setAuthModalOpen(false)
+      setOpenModalApprove(false)
+    }
+
     if (!isAuthenticated) {
-      handleUnauthenticated();
-      return;
+      handleUnauthenticated()
+      return
     }
     if (!isApprover && esignDownloadPdf) {
       setAlertData({
         ...alertData,
         openSnackbar: true,
         type: 'error',
-        message: "Access denied: Download pdf disabled for this user."
+        message: 'Access denied: Download pdf disabled for this user.'
       })
       resetState()
       return
     }
     if (isApprover) {
-      await handleApproverActions();
-    } else if (esignStatus === "rejected") {
-      handleCreatorRejection();
+      await handleApproverActions()
+    } else if (esignStatus === 'rejected') {
+      handleCreatorRejection()
     } else {
-
-      handleApprovalActions();
+      handleApprovalActions()
     }
-    resetState();
-  };
-  const handleAuthCheck = async (row) => {
-    console.log("handleAuthCheck", row)
+    resetState()
+  }
+  const handleAuthCheck = async row => {
+    console.log('handleAuthCheck', row)
     setApproveAPI({
-      approveAPIName: "department-approve",
-      approveAPImethod: "PATCH",
-      approveAPIEndPoint: "/api/v1/department"
+      approveAPIName: 'department-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/department'
     })
-    setAuthModalOpen(true);
-    setESignStatusId(row.id);
+    setAuthModalOpen(true)
+    setESignStatusId(row.id)
     setAuditLogMark(row.department_id)
-    console.log("row", row)
+    console.log('row', row)
   }
 
-  const handleSubmitForm = async (data) => {
-      
+  const handleSubmitForm = async data => {
     setFormData(data)
     if (editData?.id) {
       setApproveAPI({
-        approveAPIName: "department-update",
-        approveAPImethod: "PUT",
-        approveAPIEndPoint: "/api/v1/department"
+        approveAPIName: 'department-update',
+        approveAPImethod: 'PUT',
+        approveAPIEndPoint: '/api/v1/department'
       })
     } else {
       setApproveAPI({
-        approveAPIName: "department-create",
-        approveAPImethod: "POST",
-        approveAPIEndPoint: "/api/v1/department"
+        approveAPIName: 'department-create',
+        approveAPImethod: 'POST',
+        approveAPIEndPoint: '/api/v1/department'
       })
     }
 
-    if (config?.config?.esign_status && config?.role!=='admin') {
-      setAuthModalOpen(true);
-      return;
+    if (config?.config?.esign_status && config?.role !== 'admin') {
+      setAuthModalOpen(true)
+      return
     }
-    setPendingAction(editData?.id ? "edit" : "add");
+    setPendingAction(editData?.id ? 'edit' : 'add')
   }
   const addDepartment = async (esign_status, remarks) => {
     try {
-      console.log("formData", formData)
+      console.log('formData', formData)
       const data = { ...formData }
-      const auditlogRemark = remarks;
-      const audit_log = config?.config?.audit_logs ? {
-        "audit_log": true,
-        "performed_action": "add",
-        "remarks": auditlogRemark?.length > 0 ? auditlogRemark : `Department added - ${formData.departmentId}`,
-      } : {
-        "audit_log": false,
-        "performed_action": "none",
-        "remarks": `none`,
-      };
-      data.audit_log = audit_log;
-      data.esign_status = esign_status;
-      setIsLoading(true);
+      const auditlogRemark = remarks
+      const audit_log = config?.config?.audit_logs
+        ? {
+            audit_log: true,
+            performed_action: 'add',
+            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Department added - ${formData.departmentId}`
+          }
+        : {
+            audit_log: false,
+            performed_action: 'none',
+            remarks: `none`
+          }
+      data.audit_log = audit_log
+      data.esign_status = esign_status
+      setIsLoading(true)
       const res = await api('/department/', data, 'post', true)
       setIsLoading(false)
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Department added successfully' })
         resetForm()
-        setOpenModal(false);
-
+        setOpenModal(false)
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
         if (res.data.code === 401) {
-          removeAuthToken();
-          router.push('/401');
+          removeAuthToken()
+          router.push('/401')
         }
       }
     } catch (error) {
-      router.push('/500');
-      setOpenModal(false);
-
+      router.push('/500')
+      setOpenModal(false)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
       setApproveAPI({
-        approveAPIName: "",
-        approveAPImethod: "",
-        approveAPIEndPoint: ""
+        approveAPIName: '',
+        approveAPImethod: '',
+        approveAPIEndPoint: ''
       })
     }
   }
   const editDepartment = async (esign_status, remarks) => {
     try {
       console.log(formData)
-      const data = { ...formData };
-      delete data.departmentId;
-      const auditlogRemark = remarks;
-      let audit_log;
+      const data = { ...formData }
+      delete data.departmentId
+      const auditlogRemark = remarks
+      let audit_log
       if (config?.config?.audit_logs) {
         audit_log = {
-          "audit_log": true,
-          "performed_action": "edit",
-          "remarks": auditlogRemark > 0 ? auditlogRemark : `department edited - ${formData.departmentName}`,
-        };
+          audit_log: true,
+          performed_action: 'edit',
+          remarks: auditlogRemark > 0 ? auditlogRemark : `department edited - ${formData.departmentName}`
+        }
       } else {
         audit_log = {
-          "audit_log": false,
-          "performed_action": "none",
-          "remarks": `none`,
-        };
+          audit_log: false,
+          performed_action: 'none',
+          remarks: `none`
+        }
       }
-      data.audit_log = audit_log;
-      data.esign_status = esign_status;
+      data.audit_log = audit_log
+      data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/department/${editData.id}`, data, 'put', true)
       setIsLoading(false)
       if (res.data.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Department updated successfully' })
         resetForm()
-        setOpenModal(false);
-
+        setOpenModal(false)
       } else {
-        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message });
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
         if (res.data.code === 401) {
-          removeAuthToken();
-          router.push('/401');
+          removeAuthToken()
+          router.push('/401')
         }
       }
     } catch (error) {
-      console.log(error,'error while edit')
-      router.push('/500');
-      setOpenModal(false);
-
+      console.log(error, 'error while edit')
+      router.push('/500')
+      setOpenModal(false)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
       setApproveAPI({
-        approveAPIName: "",
-        approveAPImethod: "",
-        approveAPIEndPoint: ""
+        approveAPIName: '',
+        approveAPImethod: '',
+        approveAPIEndPoint: ''
       })
     }
   }
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
-  const handleSearch = (val) => {
-    setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() });
+  const handleSearch = val => {
+    setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
   }
 
-
   const handleAuthModalOpen = () => {
-    console.log("OPen auth model");
+    console.log('OPen auth model')
     setApproveAPI({
-      approveAPIName: "department-approve",
-      approveAPImethod: "PATCH",
-      approveAPIEndPoint: "/api/v1/department"
+      approveAPIName: 'department-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/department'
     })
-    setAuthModalOpen(true);
-  };
+    setAuthModalOpen(true)
+  }
   const handleDownloadPdf = () => {
     console.log(departmentData)
     setApproveAPI({
-      approveAPIName: "department-approve",
-      approveAPImethod: "PATCH",
-      approveAPIEndPoint: "/api/v1/department"
+      approveAPIName: 'department-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/department'
     })
-    if (config?.config?.esign_status && config?.role!=='admin') {
-      console.log("Esign enabled for download pdf");
-      setEsignDownloadPdf(true);
-      setAuthModalOpen(true);
-      return;
+    if (config?.config?.esign_status && config?.role !== 'admin') {
+      console.log('Esign enabled for download pdf')
+      setEsignDownloadPdf(true)
+      setAuthModalOpen(true)
+      return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, departmentData, userDataPdf);
+    downloadPdf(tableData, tableHeaderData, tableBody, departmentData, userDataPdf)
   }
   return (
     <Box padding={4}>
@@ -423,29 +422,25 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                {(config?.config?.esign_status) && config?.role!=='admin' &&
+                {config?.config?.esign_status && config?.role !== 'admin' && (
                   <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
-                }
-
+                )}
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
-
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
 
-                  {
-                    apiAccess.addApiAccess && (
-                      <Box className='mx-2'>
-                        <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
-                          <span>
-                            <IoMdAdd />
-                          </span>
-                          <span>Add</span>
-                        </Button>
-                      </Box>
-                    )
-                  }
+                  {apiAccess.addApiAccess && (
+                    <Box className='mx-2'>
+                      <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                        <span>
+                          <IoMdAdd />
+                        </span>
+                        <span>Add</span>
+                      </Button>
+                    </Box>
+                  )}
                 </Box>
               </Box>
             </Grid2>
@@ -471,10 +466,12 @@ const Index = () => {
         </Grid2>
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-      <DepartmentModel open={openModal}
+      <DepartmentModel
+        open={openModal}
         onClose={handleCloseModal}
         editData={editData}
-        handleSubmitForm={handleSubmitForm} />
+        handleSubmitForm={handleSubmitForm}
+      />
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}
@@ -488,12 +485,11 @@ const Index = () => {
       />
       <AccessibilitySettings />
       <ChatbotComponent />
-    </Box >
+    </Box>
   )
 }
 export async function getServerSideProps(context) {
   return validateToken(context, 'Department Master')
 }
-
 
 export default ProtectedRoute(Index)

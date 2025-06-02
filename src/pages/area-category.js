@@ -302,6 +302,13 @@ const Index = () => {
         if (esignDownloadPdf) {
           console.log('esign is approved for creator to download')
           setOpenModalApprove(true)
+        } else if (!isApprover && approveAPI.approveAPIName === 'area-category-approve') {
+          setAlertData({
+            ...alertData,
+            openSnackbar: true,
+            type: 'error',
+            message: 'Same user cannot Approve'
+          })
         } else {
           console.log('esign is approved for creator')
           setPendingAction(editData?.id ? 'edit' : 'add')
