@@ -1,8 +1,19 @@
 import React, { useState, Fragment, useEffect, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import {Box,Table,Collapse,TableBody,TableRow,TableHead,TableCell,Typography,IconButton,Tooltip} from '@mui/material'
+import {
+  Box,
+  Table,
+  Collapse,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  Typography,
+  IconButton,
+  Tooltip
+} from '@mui/material'
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md'
-import {ChevronUp,ChevronDown} from 'mdi-material-ui'
+import { ChevronUp, ChevronDown } from 'mdi-material-ui'
 import CustomTable from 'src/components/CustomTable'
 import { statusObj } from 'src/configs/statusConfig'
 import { getSortIcon } from 'src/utils/sortUtils'
@@ -49,7 +60,7 @@ const Row = ({
         </TableCell>
 
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.PrinterCategory.printer_category_name}
+          {row.PrinterCategory.PrinterCategoryHistory[0].printer_category_name}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {row.printer_id}
@@ -147,7 +158,7 @@ const Row = ({
                             align='center'
                             sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                           >
-                            {historyRow?.PrinterCategory?.printer_category_name}
+                            {historyRow?.PrinterCategory?.PrinterCategoryHistory[0].printer_category_name}
                           </TableCell>
                           <TableCell
                             component='th'
@@ -210,30 +221,29 @@ Row.propTypes = {
   apiAccess: PropTypes.any
 }
 const TablePrinterMaster = ({
-    setAllPrinterMaster,
-    pendingAction,
-    handleUpdate,
-    tableHeaderData,
-    apiAccess,
-    config,
-    handleAuthCheck
+  setAllPrinterMaster,
+  pendingAction,
+  handleUpdate,
+  tableHeaderData,
+  apiAccess,
+  config,
+  handleAuthCheck
 }) => {
-
   const [sortBy, setSortBy] = useState('')
   const [openRows, setOpenRows] = useState({})
   const [historyData, setHistoryData] = useState({})
   const [page, setPage] = useState(0)
   const { settings } = useSettings()
   const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
-  const [allPrinterMasterData,setAllPrinterMasterData] = useState({data:[],total:0})
-  const [sortDirection,setSortDirection] = useState('asc')
-  const {removeAuthToken} = useAuth()
-  const {setIsLoading} = useLoading();
-  const router = useRouter();
+  const [allPrinterMasterData, setAllPrinterMasterData] = useState({ data: [], total: 0 })
+  const [sortDirection, setSortDirection] = useState('asc')
+  const { removeAuthToken } = useAuth()
+  const { setIsLoading } = useLoading()
+  const router = useRouter()
 
   useEffect(() => {
     getAllPrinterMasterData()
-  }, [tableHeaderData, rowsPerPage, page,pendingAction])
+  }, [tableHeaderData, rowsPerPage, page, pendingAction])
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
@@ -244,42 +254,41 @@ const TablePrinterMaster = ({
     setPage(0)
   }
 
-  useMemo(()=>{
+  useMemo(() => {
     setPage(0)
-  },[tableHeaderData,rowsPerPage])
-      
-  const handleSort = (key,child) => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    console.log("Code generation data :",allPrinterMasterData.data)
-    const data=allPrinterMasterData?.data
-    const sorted = [...data].sort((a, b) => {
-        if(!child){
-            if (a[key] > b[key]) {
-            return newSortDirection === 'asc' ? 1 : -1
-          }
+  }, [tableHeaderData, rowsPerPage])
 
-          if (a[key] < b[key]) {
-            return newSortDirection === 'asc' ? -1 : 1
-          }
-          return 0
+  const handleSort = (key, child) => {
+    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+    console.log('Code generation data :', allPrinterMasterData.data)
+    const data = allPrinterMasterData?.data
+    const sorted = [...data].sort((a, b) => {
+      if (!child) {
+        if (a[key] > b[key]) {
+          return newSortDirection === 'asc' ? 1 : -1
         }
-        else{
-            if (a[key][child] > b[key][child]) {
-                return newSortDirection === 'asc' ? 1 : -1
-              }
-    
-              if (a[key][child] < b[key][child]) {
-                return newSortDirection === 'asc' ? -1 : 1
-              }
-              return 0
+
+        if (a[key] < b[key]) {
+          return newSortDirection === 'asc' ? -1 : 1
         }
+        return 0
+      } else {
+        if (a[key][child] > b[key][child]) {
+          return newSortDirection === 'asc' ? 1 : -1
+        }
+
+        if (a[key][child] < b[key][child]) {
+          return newSortDirection === 'asc' ? -1 : 1
+        }
+        return 0
+      }
     })
-    setAllPrinterMasterData({...allPrinterMasterData,data:sorted})
+    setAllPrinterMasterData({ ...allPrinterMasterData, data: sorted })
 
     setSortDirection(newSortDirection)
     setSortBy(key)
   }
-  
+
   const getAllPrinterMasterData = async () => {
     try {
       setIsLoading(true)
@@ -292,7 +301,7 @@ const TablePrinterMaster = ({
       const res = await api(`/printermaster/?${params.toString()}`, {}, 'get', true)
       console.log('All printer master data', res.data)
       if (res.data.success) {
-        setAllPrinterMasterData({data: res.data.data.printerMasters,total:res.data.data.total})
+        setAllPrinterMasterData({ data: res.data.data.printerMasters, total: res.data.data.total })
         setAllPrinterMaster(res.data.data.printerMasters)
         console.log('All printer master data', res.data)
       } else {
@@ -415,13 +424,12 @@ const TablePrinterMaster = ({
   )
 }
 TablePrinterMaster.propTypes = {
-  setAllPrinterMaster:PropTypes.any,
-  pendingAction : PropTypes.any,
+  setAllPrinterMaster: PropTypes.any,
+  pendingAction: PropTypes.any,
   handleUpdate: PropTypes.any,
-  tableHeaderData : PropTypes.any,
+  tableHeaderData: PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
   handleAuthCheck: PropTypes.any
 }
 export default TablePrinterMaster
- 
