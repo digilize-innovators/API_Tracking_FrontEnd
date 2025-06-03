@@ -136,21 +136,15 @@ const Index = () => {
   const addAreaCategory = async (esign_status, remarks, authUser) => {
     try {
       const data = { areaCategoryName: formData.areaCategoryName }
-      const auditlogRemark = remarks
-      const audit_log = config?.config?.audit_logs
-        ? {
-            audit_log: true,
-            performed_action: 'add',
-            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `area category added - ${formData.areaCategoryName}`,
-            AuthUser: authUser
-          }
-        : {
-            audit_log: false,
-            performed_action: 'none',
-            remarks: `none`,
-            AuthUser: 'none'
-          }
-      data.audit_log = audit_log
+      const auditlogRemark = remarks;
+      if (config?.config?.audit_logs) {
+        data.audit_log = {
+              audit_log: true,
+              performed_action: 'add',
+              remarks: auditlogRemark?.length > 0 ? auditlogRemark : `area category added - ${formData.areaCategoryName}`,
+              authUser
+            }
+      }
       data.esign_status = esign_status
       console.log('Add area category data ', data)
       setIsLoading(true)
@@ -185,24 +179,15 @@ const Index = () => {
   const editAreaCategory = async (esign_status, remarks) => {
     try {
       const data = { areaCategoryName: formData.areaCategoryName }
-      const auditlogRemark = remarks
-      let audit_log
+      const auditlogRemark = remarks;
       if (config?.config?.audit_logs) {
-        audit_log = {
+        data.audit_log = {
           audit_log: true,
           performed_action: 'edit',
           remarks: auditlogRemark?.length > 0 ? auditlogRemark : `area category edited - ${formData.areaCategoryName}`,
-          AuthUser: authUser
-        }
-      } else {
-        audit_log = {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`,
-          AuthUser: 'none'
+          authUser
         }
       }
-      data.audit_log = audit_log
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/area-category/${editData.id}`, data, 'put', true)

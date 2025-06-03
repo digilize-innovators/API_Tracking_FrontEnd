@@ -44,8 +44,9 @@ const Index = () => {
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [formData, setFormData] = useState({})
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
-
   const apiAccess = useApiAccess('location-create', 'location-update', 'location-approve')
+  const [authUser, setAuthUser] = useState({})
+  const [esignRemark, setEsignRemark] = useState('')
 
   useLayoutEffect(() => {
     const data = getUserData()
@@ -60,9 +61,9 @@ const Index = () => {
       if (formData && pendingAction) {
         const esign_status = config?.config?.esign_status && config?.role != 'admin' ? 'pending' : 'approved'
         if (pendingAction === 'edit') {
-          await editLocation(esign_status)
+          await editLocation(esign_status, esignRemark, authUser)
         } else if (pendingAction === 'add') {
-          await addLocation(esign_status)
+          await addLocation(esign_status, esignRemark, authUser)
         }
         setPendingAction(null)
       }
@@ -165,7 +166,8 @@ const Index = () => {
               user_id: user.userId,
               user_name: user.userName,
               performed_action: 'approved',
-              remarks: remarks.length > 0 ? remarks : `location master approved - ${auditLogMark}`
+              remarks: remarks.length > 0 ? remarks : `location master approved - ${auditLogMark}`,
+              authUser: user.user_id,
             }
           : {}
       }
@@ -178,7 +180,14 @@ const Index = () => {
       }
 
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('esign status update', res?.data)
+      if (res.data) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: res.data.code === 200 ? 'success' : 'error',
+          message: res.data.message
+        })
+      }
       setPendingAction(true)
       if (esignStatus === 'rejected' && esignDownloadPdf) {
         console.log('approver rejected')
@@ -213,6 +222,8 @@ const Index = () => {
           setAuthModalOpen(true)
         } else {
           console.log('esign is approved for creator')
+          setAuthUser(user)
+          setEsignRemark(remarks)
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
       }
@@ -251,30 +262,21 @@ const Index = () => {
     try {
       console.log('formdata', formData)
       const data = { ...formData }
-      const audit_log = config?.config?.audit_logs
-        ? {
-            audit_log: true,
-            performed_action: 'add',
-            remarks: remarks?.length > 0 ? remarks : `location added - ${formData.locationName}`
-          }
-        : {
-            audit_log: false,
-            performed_action: 'none',
-            remarks: 'none'
-          }
-      data.audit_log = audit_log
-      data.esign_status = esign_status
-      console.log(data)
+      if (config?.config?.audit_logs) {
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'add',
+          remarks: remarks?.length > 0 ? remarks : `location added - ${formData.locationName}`,
+          authUser
+        }
+      }
+      data.esign_status = esign_status;
       setIsLoading(true)
-      const res = await api('/location/', data, 'post', true)
-      console.log('res Add location', res)
-
-      console.log(res, 'res')
+      const res = await api('/location/', data, 'post', true);
       setIsLoading(false)
 
       if (res?.data?.success) {
-        setOpenModal(false)
-        console.log('Add Location Response :-', res?.data)
+        setOpenModal(false);
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Location added successfully' })
         setEditData({})
       } else {
