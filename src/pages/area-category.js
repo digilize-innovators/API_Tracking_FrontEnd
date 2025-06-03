@@ -45,11 +45,11 @@ const Index = () => {
     searchVal: ''
   })
   const [pendingAction, setPendingAction] = useState(null)
-  const [authUser, setAuthUser] = useState({})
   const [formData, setFormData] = useState({})
   const searchBarRef = useRef(null)
   const apiAccess = useApiAccess('area-category-create', 'area-category-update', 'area-category-approve')
-
+  const [authUser, setAuthUser] = useState({})
+  const [esignRemark, setEsignRemark] = useState('')
   const tableBody = allAreaCategoryData.map((item, index) => [index + 1, item.area_category_name, item.esign_status])
 
   const tableData = useMemo(
@@ -67,9 +67,9 @@ const Index = () => {
       if (formData && pendingAction) {
         const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
         if (pendingAction === 'edit') {
-          await editAreaCategory(esign_status, null, authUser)
+          await editAreaCategory(esign_status)
         } else if (pendingAction === 'add') {
-          await addAreaCategory(esign_status, null, authUser)
+          await addAreaCategory(esign_status)
         }
         setPendingAction(null)
       }
@@ -133,15 +133,14 @@ const Index = () => {
     }
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
-  const addAreaCategory = async (esign_status, remarks, authUser) => {
+  const addAreaCategory = async (esign_status) => {
     try {
       const data = { areaCategoryName: formData.areaCategoryName }
-      const auditlogRemark = remarks;
       if (config?.config?.audit_logs) {
         data.audit_log = {
               audit_log: true,
               performed_action: 'add',
-              remarks: auditlogRemark?.length > 0 ? auditlogRemark : `area category added - ${formData.areaCategoryName}`,
+              remarks: esignRemark?.length > 0 ? esignRemark : `area category added - ${formData.areaCategoryName}`,
               authUser
             }
       }
@@ -176,15 +175,14 @@ const Index = () => {
       })
     }
   }
-  const editAreaCategory = async (esign_status, remarks) => {
+  const editAreaCategory = async (esign_status) => {
     try {
       const data = { areaCategoryName: formData.areaCategoryName }
-      const auditlogRemark = remarks;
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `area category edited - ${formData.areaCategoryName}`,
+          remarks: esignRemark?.length > 0 ? esignRemark : `area category edited - ${formData.areaCategoryName}`,
           authUser
         }
       }
@@ -271,25 +269,11 @@ const Index = () => {
         return
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      if (res.data.code == 400) {
+      if (res.data) {
         setAlertData({
           ...alertData,
           openSnackbar: true,
-          type: 'error',
-          message: res.data.message
-        })
-      } else if (res.data.code == 200) {
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: 'success',
-          message: res.data.message
-        })
-      } else {
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: 'error',
+          type: res.data.code === 200 ? 'success' : 'error',
           message: res.data.message
         })
       }
@@ -327,6 +311,7 @@ const Index = () => {
         } else {
           console.log('esign is approved for creator')
           setAuthUser(user)
+          setEsignRemark(remarks)
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
       }

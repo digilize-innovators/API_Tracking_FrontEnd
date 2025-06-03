@@ -52,7 +52,8 @@ const Index = () => {
   const [pendingAction, setPendingAction] = useState(null);
   const [userFormData, setUserFormData] = useState({})
   const searchBarRef = useRef(null);
-
+  const [authUser, setAuthUser] = useState({})
+  const [esignRemark, setEsignRemark] = useState('')
   const apiAccess = useApiAccess("user-create","user-update","user-approve");
 
   useLayoutEffect(() => {
@@ -171,13 +172,12 @@ const Index = () => {
     setPendingAction(editData?.id ? "edit" : "add");
   };
 
-  const addUser = async (esign_status, remarks) => {
+  const addUser = async (esign_status) => {
     const uploadRes = await uploadUserImage();
     if (!uploadRes?.success) {
       setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: uploadRes?.message });
       return;
     }
-    console.log('user profile url', uploadRes?.url)
     try {
       setIsLoading(true)
       const data = {
@@ -187,21 +187,16 @@ const Index = () => {
         role: 'user'
       }
       delete data.isEnabled;
-      const auditlogRemark = remarks;
-      const audit_log = config?.config?.audit_logs ? {
-        "audit_log": true,
-        "performed_action": "add",
-        "remarks": auditlogRemark?.length > 0 ? auditlogRemark : `user added - ${userFormData.userName}`,
-      } : {
-        "audit_log": false,
-        "performed_action": "none",
-        "remarks": `none`,
-      };
-      data.audit_log = audit_log;
+      if(config?.config?.audit_logs){
+        data.audit_log =  {
+          "audit_log": true,
+          "performed_action": "add",
+          "remarks": esignRemark?.length > 0 ? esignRemark : `user added - ${userFormData.userName}`,
+          authUser
+        }
+      }
       data.esign_status = esign_status;
-      console.log('Add User data ', data)
-      const res = await api('/user/', data, 'post', true)
-      console.log('Add user res ', res?.data)
+      const res = await api('/user/', data, 'post', true);
       setIsLoading(false)
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'User added successfully' });
@@ -230,10 +225,8 @@ const Index = () => {
     }
   }
 
-  const editUser = async (esign_status, remarks) => {
-    console.log("formData",userFormData)
-    let url = ''
-    console.log(profilePhoto !== editData.profile_photo, editData.profile_photo !== "")
+  const editUser = async (esign_status) => {
+    let url = '';
     if (profilePhoto !== editData.profile_photo || editData.profile_photo === "") {
       const uploadRes = await uploadUserImage();
       if (!uploadRes?.success) {
@@ -252,35 +245,22 @@ const Index = () => {
       delete data.userId
       delete data.password
       delete data.userName
-      const auditlogRemark = remarks;
-      let audit_log;
       if (config?.config?.audit_logs) {
-        audit_log = {
+        data.audit_log = {
           "audit_log": true,
           "performed_action": "edit",
-          "remarks": auditlogRemark > 0 ? auditlogRemark : `user edited - ${userFormData.userName}`,
-        };
-      } else {
-        audit_log = {
-          "audit_log": false,
-          "performed_action": "none",
-          "remarks": `none`,
+          "remarks": esignRemark > 0 ? esignRemark : `user edited - ${userFormData.userName}`,
+          authUser
         };
       }
-      data.audit_log = audit_log;
       data.esign_status = esign_status;
-      console.log('data', data)
       setIsLoading(true)
-      const res = await api(`/user/${editData.id}`, data, 'put', true)
-      console.log('res ', res.data)
+      const res = await api(`/user/${editData.id}`, data, 'put', true);
       setIsLoading(false)
       if (res.data.success) {
-        console.log('res ', res.data)
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'User updated successfully' })
         resetForm()
         setOpenModal(false)
-
-
       } else {
         console.log('error to edit User ', res.data)
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
@@ -337,6 +317,7 @@ const Index = () => {
           user_name: user.userName,
           performed_action: 'approved',
           remarks: remarks.length > 0 ? remarks : `user approved - ${auditLogMark}`,
+          authUser: user.user_id
         } : {},
       };
       return data;
@@ -354,7 +335,14 @@ const Index = () => {
     };
     const updateEsignStatus = async (data) => {
       const res = await api('/esign-status/update-esign-status', data, 'patch', true);
-      console.log("esign status update", res?.data);
+      if (res.data) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: res.data.code === 200 ? 'success' : 'error',
+          message: res.data.message
+        })
+      }
       setPendingAction(true)
     };
     const handleEsignUpdateError = () => {
@@ -377,6 +365,8 @@ const Index = () => {
         setOpenModalApprove(true);
       } else if (esignStatus === "approved") {
         console.log("esign is approved for creator");
+        setAuthUser(user)
+        setEsignRemark(remarks)
         setPendingAction(editData?.id ? "edit" : "add");
       }
     };

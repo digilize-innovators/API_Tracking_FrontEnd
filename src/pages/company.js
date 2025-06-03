@@ -48,6 +48,8 @@ const Index = () => {
   const [formData, setFormData] = useState({})
   const [pendingAction, setPendingAction] = useState(null)
   const searchRef = useRef();
+  const [authUser, setAuthUser] = useState({})
+  const [esignRemark, setEsignRemark] = useState('')
 
   useLayoutEffect(() => {
     let data = getUserData()
@@ -57,20 +59,15 @@ const Index = () => {
     return () => {}
   }, [])
 
-
-
-
-
-
   useEffect(() => {
     const handleUserAction = async () => {
       if (formData && pendingAction) {
         const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
         
         if (pendingAction === "edit") {
-          await editCompany(esign_status)  // Await editUser
+          await editCompany(esign_status);
         } else if (pendingAction === "add") {
-          await addCompany(esign_status)  // Await addUser
+          await addCompany(esign_status);
         }
         
         setPendingAction(null);
@@ -148,36 +145,23 @@ const Index = () => {
     setPendingAction(editData?.id ? 'edit' : 'add')
   } 
   
-  const addCompany = async (esign_status, remarks) => {
+  const addCompany = async (esign_status) => {
     try {
-      console.log('formData for add', formData)
-
       const data = { ...formData, contact: formData.contactNo }
-      delete data.contactNo
-      console.log('Add company data ', data)
-
-      const auditlogRemark = remarks
-      const audit_log = config?.config?.audit_logs
-        ? {
-            audit_log: true,
-            performed_action: 'add',
-            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `company added - ${formData.companyId}`
-          }
-        : {
-            audit_log: false,
-            performed_action: 'none',
-            remarks: `none`
-          }
-      data.audit_log = audit_log
-      data.esign_status = esign_status
-      console.log('Add Company data ', data)
+      delete data.contactNo;
+      if(config?.config?.audit_logs){
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'add',
+          remarks: esignRemark?.length > 0 ? esignRemark : `company added - ${formData.companyId}`,
+          authUser
+        }
+      }
+      data.esign_status = esign_status;
       setIsLoading(true)
-
-      const res = await api('/company/', data, 'post', true)
-      console.log(res, 'res')
+      const res = await api('/company/', data, 'post', true);
       setIsLoading(false)
       if (res?.data?.success) {
-        console.log('res ', res?.data)
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Company added successfully' })
         setOpenModal(false)
         resetForm()
@@ -198,35 +182,24 @@ const Index = () => {
     }
   }
 
-  const editCompany = async (esign_status, remarks) => {
+  const editCompany = async (esign_status) => {
     try {
       const data = { ...formData, contact: formData.contactNo }
-      delete data.companyId
-      delete data.contactNo
-      console.log('data', data)
-
-      const auditlogRemark = remarks
-      let audit_log
+      delete data.companyId;
+      delete data.contactNo;
       if (config?.config?.audit_logs) {
-        audit_log = {
+        data.audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark > 0 ? auditlogRemark : `company edited - ${formData.companyId}`
-        }
-      } else {
-        audit_log = {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`
+          remarks: esignRemark > 0 ? esignRemark : `company edited - ${formData.companyId}`,
+          authUser
         }
       }
-      data.audit_log = audit_log
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/company/${editData.id}`, data, 'put', true)
       setIsLoading(false)
       if (res.data.success) {
-        console.log('res ', res.data)
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Company updated successfully' })
         setOpenModal(false)
         resetForm()
@@ -273,7 +246,8 @@ const Index = () => {
               user_id: user.userId,
               user_name: user.userName,
               performed_action: 'approved',
-              remarks: remarks.length > 0 ? remarks : `company approved - ${auditLogMark}`
+              remarks: remarks.length > 0 ? remarks : `company approved - ${auditLogMark}`,
+              authUser: user.user_id
             }
           : {}
       }
@@ -285,8 +259,15 @@ const Index = () => {
         return
       }
 
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('esign status update', res?.data)
+      const res = await api('/esign-status/update-esign-status', data, 'patch', true);
+      if (res.data) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: res.data.code === 200 ? 'success' : 'error',
+          message: res.data.message
+        })
+      }
       setPendingAction(true)
       if (esignStatus === 'rejected' && esignDownloadPdf ) {
         console.log('approver rejected')
@@ -326,6 +307,8 @@ const Index = () => {
         }
         else{
           console.log('esign is approved for creator')
+          setAuthUser(user)
+          setEsignRemark(remarks)
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
       }    

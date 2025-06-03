@@ -287,7 +287,6 @@ const TableCompany = ({
           limit: rowsPerPage === -1 ? -1 : rowsPerPage,
           search: tableHeaderData.searchVal,
           esign_status: tableHeaderData.esignStatus,
-  
         });
         console.log('params', params.toString());
         const res = await api(`/company/?${params.toString()}`, {}, 'get', true)

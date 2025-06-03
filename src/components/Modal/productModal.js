@@ -378,7 +378,7 @@ function ProductModal({
 
   const getPrefixData = () => {
     if (companyUuid) {
-      const prefix_data = companies.find(company => company.id === companyUuid)
+      const prefix_data = companies.find(company => company.company_uuid === companyUuid)
       console.log(prefix_data)
       if (prefix_data) {
         let prefixs = [prefix_data.gs1_prefix].filter(Boolean) // Ensure no undefined values
@@ -459,7 +459,7 @@ function ProductModal({
   const getCompanies = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/company?limit=-1', {}, 'get', true)
+      const res = await api('/company?limit=-1&history_latest=true', {}, 'get', true)
       setIsLoading(false)
       console.log('All companies ', res?.data?.data)
       if (res.data.success) {
@@ -471,7 +471,6 @@ function ProductModal({
           router.push('/401')
         }
       }
-      console.log('All companies ', companies)
     } catch (error) {
       console.log('Error in get companies ', error)
       setIsLoading(false)
@@ -608,8 +607,8 @@ function ProductModal({
   }))
 
   const CompanyData = companies?.map(item => ({
-    id: item.id,
-    value: item.id,
+    id: item.company_uuid,
+    value: item.company_uuid,
     label: item.company_name
   }))
 

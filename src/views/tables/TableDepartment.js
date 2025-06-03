@@ -74,6 +74,8 @@ const Row = ({
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [pendingAction, setPendingAction] = useState(null)
   const [formData, setFormData] = useState({})
+  const [authUser, setAuthUser] = useState({})
+  const [esignRemark, setEsignRemark] = useState('')
 
   useLayoutEffect(() => {
     let data = getUserData()
@@ -88,9 +90,9 @@ const Row = ({
       if (formData && pendingAction) {
         const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
         if (pendingAction === 'edit') {
-          await editDesignation(esign_status) // Await editUser
+          await editDesignation(esign_status);
         } else if (pendingAction === 'add') {
-          await addDesignation(esign_status) // Await addUser
+          await addDesignation(esign_status);
         }
         setPendingAction(null)
       }
@@ -139,21 +141,21 @@ const Row = ({
       setEsignDownloadPdf(false)
       setAuthModalOpen(false)
     }
-    const createAuditLog = action =>
-      config?.config?.audit_logs
-        ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            performed_action: action,
-            remarks: remarks.length > 0 ? remarks : `designation ${action} - ${auditLogMark}`
-          }
-        : {}
+      
     const handleApproverActions = async () => {
       const data = {
         modelName: 'designation',
         esignStatus,
         id: eSignStatusId,
-        audit_log: createAuditLog('approved')
+        audit_log: config?.config?.audit_logs
+        ? {
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: "approved",
+            remarks: remarks.length > 0 ? remarks : `designation approved - ${auditLogMark}`,
+            authUser: user.user_id
+          }
+        : {}
       }
 
       if (!esignDownloadPdf && isApprover && approveAPI.approveAPIName !== 'designation-approve') {
@@ -166,7 +168,15 @@ const Row = ({
         resetState()
         return
       } else {
-        const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+        const res = await api('/esign-status/update-esign-status', data, 'patch', true);
+        if (res.data) {
+            setAlertData({
+              ...alertData,
+              openSnackbar: true,
+              type: res.data.code === 200 ? 'success' : 'error',
+              message: res.data.message
+            })
+          }
         setPendingAction(true)
 
         if (esignDownloadPdf) {
@@ -200,7 +210,7 @@ const Row = ({
         }
       }
     }
-    const handleNonApproverActions = async () => {
+    const handleCreatorActions = async () => {
       if (esignStatus === 'rejected') {
         setAuthModalOpen(false)
         setOpenModalApprove(false)
@@ -212,6 +222,8 @@ const Row = ({
         })
       } else {
         console.log('esign is approved for creator')
+        setAuthUser(user)
+        setEsignRemark(remarks)
         setPendingAction(editData?.id ? 'edit' : 'add')
       }
     }
@@ -224,7 +236,7 @@ const Row = ({
     } else if (isApprover) {
       await handleApproverActions()
     } else {
-      await handleNonApproverActions()
+      await handleCreatorActions()
     }
     resetState()
   }
@@ -286,29 +298,23 @@ const Row = ({
     }
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
-  const addDesignation = async (esign_status, remarks) => {
+  const addDesignation = async (esign_status) => {
     try {
-      const data = { ...formData }
-      console.log('Add designation data ', data)
-      const auditlogRemark = remarks
-      const audit_log = config?.config?.audit_logs
-        ? {
-            audit_log: true,
-            performed_action: 'add',
-            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Designation added - ${formData.designationId}`
-          }
-        : {
-            audit_log: false,
-            performed_action: 'none',
-            remarks: `none`
-          }
-      data.audit_log = audit_log
+      const data = { ...formData };
+      if(config?.config?.audit_logs){
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'add',
+          remarks: esignRemark?.length > 0 ? esignRemark : `Designation added - ${formData.designationId}`,
+          authUser
+        }
+      }
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api('/designation/', data, 'post', true)
+      console.log('res data of add designation', res.data)
       setIsLoading(false)
       if (res?.data?.success) {
-        console.log('res data of add designation', res?.data)
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Designation added successfully' })
         resetFormDes()
         setOpenModalDes(false)
@@ -330,32 +336,24 @@ const Row = ({
       })
     }
   }
-  const editDesignation = async (esign_status, remarks) => {
+  const editDesignation = async (esign_status) => {
     try {
       const data = { ...formData }
-      delete data.designationId
-      const auditlogRemark = remarks
-      let audit_log
+      delete data.designationId;
       if (config?.config?.audit_logs) {
-        audit_log = {
+        data.audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark > 0 ? auditlogRemark : `Designation edited - ${formData.designationName}`
-        }
-      } else {
-        audit_log = {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`
+          remarks: esignRemark > 0 ? esignRemark : `Designation edited - ${formData.designationName}`,
+          authUser
         }
       }
-      data.audit_log = audit_log
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/designation/${editData.id}`, data, 'put', true)
+      console.log('res of edit designation ', res.data)
       setIsLoading(false)
       if (res.data.success) {
-        console.log('res of edit designation ', res.data)
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Designation updated successfully' })
         resetFormDes()
         setOpenModalDes(false)
@@ -672,6 +670,7 @@ const TableDepartment = ({
   const router = useRouter()
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
+
   const handleRowToggle = async rowId => {
     await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/department/history')
   }

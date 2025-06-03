@@ -45,18 +45,18 @@ const Index = () => {
   const searchBarRef = useRef(null)
   const [areaData, setArea] = useState([])
   const [formData, setFormData] = useState({})
+  const [authUser, setAuthUser] = useState({})
+  const [esignRemark, setEsignRemark] = useState('')
 
   useEffect(() => {
     const handleUserAction = async () => {
       if (formData && pendingAction) {
         const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
-
         if (pendingAction === 'edit') {
           await editArea(esign_status)
         } else if (pendingAction === 'add') {
           await addArea(esign_status)
         }
-
         setPendingAction(null)
       }
     }
@@ -127,23 +127,17 @@ const Index = () => {
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
 
-  const addArea = async (esign_status, remarks) => {
-    console.log('add form ', formData)
+  const addArea = async (esign_status) => {
     try {
-      const data = { ...formData }
-      const auditlogRemark = remarks
-      const audit_log = config?.config?.audit_logs
-        ? {
-            audit_log: true,
-            performed_action: 'add',
-            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `area added - ${formData.areaName}`
-          }
-        : {
-            audit_log: false,
-            performed_action: 'none',
-            remarks: `none`
-          }
-      data.audit_log = audit_log
+      const data = { ...formData };
+      if(config?.config?.audit_logs){
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'add',
+          remarks: esignRemark?.length > 0 ? esignRemark : `area added - ${formData.areaName}`,
+          authUser
+        }
+      }
       data.esign_status = esign_status
       setIsLoading(true)
       console.log('add area', data)
@@ -172,27 +166,18 @@ const Index = () => {
     try {
       console.log(formData, 'formdata')
       const data = { ...formData }
-      delete data.areaId
-      const auditlogRemark = remarks
-      let audit_log
+      delete data.areaId;
       if (config?.config?.audit_logs) {
-        audit_log = {
+        data.audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark > 0 ? auditlogRemark : `area edited - ${formData?.areaName}`
-        }
-      } else {
-        audit_log = {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`
+          remarks: esignRemark > 0 ? esignRemark : `area edited - ${formData?.areaName}`,
+          authUser
         }
       }
-      data.audit_log = audit_log
       data.esign_status = esign_status
       setIsLoading(true)
-      const res = await api(`/area/${editData.id}`, data, 'put', true)
-      console.log('Response of update Area ', res.data)
+      const res = await api(`/area/${editData.id}`, data, 'put', true);
       setIsLoading(false)
       if (res.data.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Area updated successfully' })
@@ -236,25 +221,33 @@ const Index = () => {
         downloadPdf(tableData, tableHeaderData, tableBody, areaData, userDataPdf)
       }
     }
-
-    const createAuditLog = action =>
-      config?.config?.audit_logs
-        ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            performed_action: action,
-            remarks: remarks?.length > 0 ? remarks : `area approved - ${auditLogMark}`
-          }
-        : {}
+      
     const handleUpdateStatus = async () => {
       const data = {
         modelName: 'area',
         esignStatus,
         id: eSignStatusId,
-        audit_log: createAuditLog(esignStatus)
+        audit_log: config?.config?.audit_logs
+        ? {
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: "approved",
+            remarks: remarks?.length > 0 ? remarks : `area approved - ${auditLogMark}`,
+            authUser: user.user_id
+          }
+        : {}
       }
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('esign status update', res?.data)
+      const res = await api('/esign-status/update-esign-status', data, 'patch', true);
+      console.log('esign status update', res.data);
+      if (res.data) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: res.data.code === 200 ? 'success' : 'error',
+          message: res.data.message
+        })
+      }
+
       setPendingAction(true)
     }
 
@@ -295,6 +288,8 @@ const Index = () => {
           })
         } else {
           console.log('esign is approved for creator')
+          setAuthUser(user)
+          setEsignRemark(remarks)
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
       }
