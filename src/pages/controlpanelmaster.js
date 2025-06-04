@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
-import { Button, TableContainer, Paper,Typography,Grid2,Box } from '@mui/material'
+import { Button, TableContainer, Paper, Typography, Grid2, Box } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -44,32 +44,32 @@ const Index = () => {
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const searchBarRef = useRef(null)
   const [controlPanelData, setControlPanel] = useState([])
+  const [authUser, setAuthUser] = useState({})
+  const [esignRemark, setEsignRemark] = useState('')
   const [formData, setFormData] = useState()
 
   useLayoutEffect(() => {
     let data = getUserData()
     setUserDataPdf(data)
     const decodedToken = getTokenValues()
-        setConfig(decodedToken)
-    return () => { }
+    setConfig(decodedToken)
+    return () => {}
   }, [])
-
 
   useEffect(() => {
     const handleUserAction = async () => {
       if (formData && pendingAction) {
-        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
-        if (pendingAction === "edit") {
-          await editControlPanelMaster(esign_status); 
-        } else if (pendingAction === "add") {
-          await addControlPanelMaster(esign_status);  
+        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
+        if (pendingAction === 'edit') {
+          await editControlPanelMaster(esign_status)
+        } else if (pendingAction === 'add') {
+          await addControlPanelMaster(esign_status)
         }
-        setPendingAction(null);
+        setPendingAction(null)
       }
-    };
-    handleUserAction();
-  }, [formData, pendingAction]);
-
+    }
+    handleUserAction()
+  }, [formData, pendingAction])
 
   const tableBody = controlPanelData?.map((item, index) => [
     index + 1,
@@ -98,7 +98,11 @@ const Index = () => {
   }
 
   const handleOpenModal = () => {
-    setApproveAPI({ approveAPIName: 'controlpanelmaster-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/controlpanelmaster' })
+    setApproveAPI({
+      approveAPIName: 'controlpanelmaster-create',
+      approveAPImethod: 'POST',
+      approveAPIEndPoint: '/api/v1/controlpanelmaster'
+    })
     setEditData({})
     setOpenModal(true)
   }
@@ -121,9 +125,17 @@ const Index = () => {
     setFormData(data)
     console.log('Data :', data)
     if (editData?.id) {
-      setApproveAPI({ approveAPIName: 'controlpanelmaster-update', approveAPImethod: 'PUT', approveAPIEndPoint: '/api/v1/controlpanelmaster' })
+      setApproveAPI({
+        approveAPIName: 'controlpanelmaster-update',
+        approveAPImethod: 'PUT',
+        approveAPIEndPoint: '/api/v1/controlpanelmaster'
+      })
     } else {
-      setApproveAPI({ approveAPIName: 'controlpanelmaster-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/controlpanelmaster' })
+      setApproveAPI({
+        approveAPIName: 'controlpanelmaster-create',
+        approveAPImethod: 'POST',
+        approveAPIEndPoint: '/api/v1/controlpanelmaster'
+      })
     }
     if (config?.config?.esign_status) {
       setAuthModalOpen(true)
@@ -132,23 +144,18 @@ const Index = () => {
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
 
-  const addControlPanelMaster = async (esign_status, remarks) => {
+  const addControlPanelMaster = async esign_status => {
     try {
       const data = { ...formData }
-      console.log("Add data ", data);
-      const auditlogRemark = remarks
-      const audit_log = config?.config?.audit_logs
-        ? {
+      console.log('Add data ', data)
+      if (config?.config?.audit_logs) {
+        data.audit_log = {
           audit_log: true,
           performed_action: 'add',
-          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `control panel master added - ${formData?.name}`
+          remarks: esignRemark?.length > 0 ? esignRemark : `control panel master added - ${formData?.name}`,
+          authUser
         }
-        : {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`
-        }
-      data.audit_log = audit_log
+      }
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api('/controlpanelmaster/', data, 'post', true)
@@ -186,25 +193,17 @@ const Index = () => {
     }
   }
 
-  const editControlPanelMaster = async (esign_status, remarks) => {
+  const editControlPanelMaster = async esign_status => {
     try {
       const data = { ...formData }
-      const auditlogRemark = remarks
-      let audit_log
       if (config?.config?.audit_logs) {
-        audit_log = {
+        data.audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `control panel master edited - ${formData?.name}`
-        }
-      } else {
-        audit_log = {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`
+          remarks: esignRemark?.length > 0 ? esignRemark : `control panel master edited - ${formData?.name}`,
+          authUser
         }
       }
-      data.audit_log = audit_log
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/controlpanelmaster/${editData.id}`, data, 'put', true)
@@ -239,7 +238,7 @@ const Index = () => {
   }
 
   const handleUpdate = item => {
-    console.log("item", item);
+    console.log('item', item)
     resetForm()
     setEditData(item)
     console.log('edit controlpanel master', item)
@@ -276,13 +275,14 @@ const Index = () => {
     const createAuditLog = action =>
       config?.config?.audit_logs
         ? {
-          user_id: user.userId,
-          user_name: user.userName,
-          performed_action: action,
-          remarks: remarks?.length > 0 ? remarks : `control panel master ${action} - ${auditLogMark}`
-        }
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: action,
+            remarks: remarks?.length > 0 ? remarks : `control panel master ${action} - ${auditLogMark}`,
+            authUser: user.user_id
+          }
         : {}
-        
+
     const handleUpdateStatus = async () => {
       const data = {
         modelName: 'controlpanelmaster',
@@ -291,6 +291,15 @@ const Index = () => {
         audit_log: createAuditLog(esignStatus)
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+      if (res.data) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: res.data.code === 200 ? 'success' : 'error',
+          message: res.data.message
+        })
+      }
+
       console.log('esign status update', res?.data)
       setPendingAction(true)
     }
@@ -325,6 +334,8 @@ const Index = () => {
           setOpenModalApprove(true)
         } else {
           console.log('esign is approved for creator')
+          setAuthUser(user)
+          setEsignRemark(remarks)
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
       }
@@ -339,7 +350,7 @@ const Index = () => {
         ...alertData,
         openSnackbar: true,
         type: 'error',
-        message: "Access denied: Download pdf disabled for this user."
+        message: 'Access denied: Download pdf disabled for this user.'
       })
       resetState()
       return
@@ -367,7 +378,7 @@ const Index = () => {
   const resetFilter = () => {
     setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '' })
     if (searchBarRef.current) {
-      searchBarRef.current.resetSearch();
+      searchBarRef.current.resetSearch()
     }
   }
 
