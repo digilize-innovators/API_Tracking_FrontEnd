@@ -77,9 +77,7 @@ const BatchReport = () => {
   const getAllBatches = async () => {
     try {
       setIsLoading(true)
-      const res = await api(`/batch/${selectedProduct}`, {}, 'get', true)
-
-      console.log('All batches ', res.data)
+      const res = await api(`/batch/${selectedProduct}`, {}, 'get', true);
       if (res.data.success) {
         setBatches(res.data.data.batches)
         setIsLoading(false)
@@ -988,7 +986,7 @@ const BatchReport = () => {
           <InputLabel id='batch-label'>Batch</InputLabel>
           <Select labelId='batch-label' value={selectedBatch} label='Batch' onChange={handleBatchChange}>
             {batches.map(batch => (
-              <MenuItem key={batch.id} value={batch.id}>
+              <MenuItem key={batch.batch_uuid} value={batch.batch_uuid}>
                 {batch.batch_no}
               </MenuItem>
             ))}

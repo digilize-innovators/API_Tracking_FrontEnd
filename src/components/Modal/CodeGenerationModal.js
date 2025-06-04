@@ -61,12 +61,11 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
         try {
           setIsLoading(true)
           const res = await api(`/batch/${productId}`, {}, 'get', true)
-          setIsLoading(false)
-          console.log('All batches... ', res?.data)
+          setIsLoading(false);
           if (res.data.success) {
             const data = res.data.data.batches?.map(item => ({
-              id: item.id,
-              value: item.id,
+              id: item.batch_uuid,
+              value: item.batch_uuid,
               label: item.batch_no
             }))
             setBatches(data)
