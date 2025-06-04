@@ -196,13 +196,13 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
         const getAllProducts = async () => {
             try {
                 setIsLoading(true);
-                const res = await api('/product?limit=-1', {}, 'get', true)
+                const res = await api('/product?limit=-1&history_latest=true', {}, 'get', true)
                 setIsLoading(false);
                 if (res.data.success) {
                     // setAllProductData(res.data.data.products)
                     const data = res.data.data.products?.map((item) => ({
-                        id: item.id,
-                        value: item.id,
+                        id: item.product_uuid,
+                        value: item.product_uuid,
                         label: item.product_name,
                     }))
                     setProductData(data)

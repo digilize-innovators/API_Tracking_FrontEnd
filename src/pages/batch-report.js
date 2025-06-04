@@ -56,7 +56,7 @@ const BatchReport = () => {
   const fetchProducts = async () => {
     try {
       setIsLoading(true)
-      const response = await api('/product/', {}, 'get', true)
+      const response = await api('/product/?limit=-1&history_latest=true', {}, 'get', true)
       console.log('All products ', response.data)
       if (response.data.success) {
         setProducts(response.data.data.products)
@@ -976,7 +976,7 @@ const BatchReport = () => {
           <InputLabel id='product-label'>Product</InputLabel>
           <Select labelId='product-label' value={selectedProduct} label='Product' onChange={handleProductChange}>
             {products.map(product => (
-              <MenuItem key={product.id} value={product.id}>
+              <MenuItem key={product.product_uuid} value={product.product_uuid}>
                 {product.product_name}
               </MenuItem>
             ))}

@@ -408,8 +408,6 @@ const Index = () => {
     }
   }
   const handleUpdate = item => {
-    console.log("fgufg",item);
-    
     resetForm()
     setOpenModal(true)
     setEditData(item)
@@ -420,7 +418,6 @@ const Index = () => {
 
     const img =item.product_image.split(BaseUrl)
     const defaultImage = '/images/avatars/p.png'
-    console.log("Image Name is ",img)
     if (img[img?.length-1]!=='/' &&img[img?.length-1] !== defaultImage) {
       convertImageToBase64(item.product_image, setProductImage)
     } else {
