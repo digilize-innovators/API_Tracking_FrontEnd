@@ -406,10 +406,8 @@ function ProductModal({
   }, [tableHeaderData.esignStatus])
   const getUomData = async () => {
     try {
-      const res = await api(`/uom`, {}, 'get', true)
+      const res = await api(`/uom?limit=-1&history_latest=true`, {}, 'get', true)
       if (res?.data?.success) {
-        console.log(res?.data?.data, 'check208')
-
         setUoms(res.data.data.uoms)
       } else if (res?.data?.code === 401) {
         removeAuthToken()
@@ -601,8 +599,8 @@ function ProductModal({
   }))
 
   const UOMSData = uoms?.map(item => ({
-    id: item.id,
-    value: item.id,
+    id: item.uom_uuid,
+    value: item.uom_uuid,
     label: item.uom_name
   }))
 

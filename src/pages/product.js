@@ -34,10 +34,8 @@ const Index = () => {
   const [editData, setEditData] = useState({})
   const [productData, setProduct] = useState([])
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-
   const [productImage, setProductImage] = useState('/images/avatars/p.png')
   const [file, setFile] = useState('')
-
   const { setIsLoading } = useLoading()
   const { getUserData, removeAuthToken } = useAuth()
   const [userDataPdf, setUserDataPdf] = useState()
@@ -56,6 +54,8 @@ const Index = () => {
   const [formData, setFormData] = useState()
   const [pendingAction, setPendingAction] = useState(null)
   const searchBarRef = useRef(null)
+  const [authUser, setAuthUser] = useState({})
+  const [esignRemark, setEsignRemark] = useState('')
 
   useLayoutEffect(() => {
     let data = getUserData()
@@ -231,7 +231,8 @@ const Index = () => {
               user_id: user.userId,
               user_name: user.userName,
               performed_action: 'approved',
-              remarks: remarks.length > 0 ? remarks : `product master approved - ${auditLogMark}`
+              remarks: remarks.length > 0 ? remarks : `product master approved - ${auditLogMark}`,
+              authUser: user.user_id
             }
           : {}
       }
@@ -244,7 +245,14 @@ const Index = () => {
       }
 
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('esign status update', res?.data)
+      if (res.data) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: res.data.code === 200 ? 'success' : 'error',
+          message: res.data.message
+        })
+      }
       setPendingAction(true)
       if (esignStatus === 'rejected' && esignDownloadPdf) {
         console.log('approver rejected')
@@ -271,6 +279,8 @@ const Index = () => {
           setOpenModalApprove(true)
         } else {
           console.log('esign is approved for creator')
+          setAuthUser(user)
+          setEsignRemark(remarks)
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
       }
@@ -304,14 +314,12 @@ const Index = () => {
     setAuditLogMark(row.product_id)
     console.log('row', row)
   }
-  const addProduct = async (esign_status, aduitRemarks) => {
-    console.log('formData', formData)
+  const addProduct = async (esign_status) => {
     const uploadRes = await uploadFile(formData.file, '/upload/productImage')
     if (!uploadRes?.success) {
       setAlertData({ ...alertData, type: 'error', message: 'File upload failed', openSnackbar: true })
       return
     }
-
     try {
       delete formData['file']
       const data = {
@@ -320,25 +328,19 @@ const Index = () => {
         pallet_size: formData?.pallet_size?.toString(),
         productImage: uploadRes?.url.split('/').pop()
       }
-      const auditlogRemark = aduitRemarks
-      const audit_log = config?.config?.audit_logs
-        ? {
-            audit_log: true,
-            performed_action: 'add',
-            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `product added - ${formData.productId}`
-          }
-        : {
-            audit_log: false,
-            performed_action: 'none',
-            remarks: `none`
-          }
-      data.audit_log = audit_log
+      if(config?.config?.audit_logs){
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'add',
+          remarks: esignRemark?.length > 0 ? esignRemark : `product added - ${formData.productId}`,
+          authUser
+        }
+      }
       data.esign_status = esign_status;
       setIsLoading(true)
       const res = await api('/product/', data, 'post', true)
       setIsLoading(false);
       if (res?.data?.success) {
-        console.log('res data of add product', res?.data)
         setAlertData({ ...alertData, type: 'success', message: 'Product added successfully', openSnackbar: true })
         resetForm()
         setOpenModal(false)
@@ -357,13 +359,12 @@ const Index = () => {
       setIsLoading(false)
     }
   }
-  const editProduct = async (esign_status, aduitRemarks) => {
+  const editProduct = async (esign_status) => {
     console.log('Check Image is new pic is upload ')
     let productImageUrl =
       productImage !== editData.product_image
         ? (await uploadFile(formData.file, '/upload/productImage'))?.url
-        : editData.product_image
-    console.log(productImageUrl)
+        : editData.product_image;
     try {
       delete formData['productId']
       delete formData['file']
@@ -373,23 +374,14 @@ const Index = () => {
         pallet_size: formData?.pallet_size?.toString(),
         productImage: productImage !== editData.product_image ? productImageUrl?.split('/').pop() : productImageUrl
       }
-
-      const auditlogRemark = aduitRemarks
-      let audit_log
       if (config?.config?.audit_logs) {
-        audit_log = {
+        data.audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark > 0 ? auditlogRemark : `product edited - ${formData.productName}`
-        }
-      } else {
-        audit_log = {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`
+          remarks: esignRemark > 0 ? esignRemark : `product edited - ${formData.productName}`,
+          authUser
         }
       }
-      data.audit_log = audit_log;
       data.esign_status = esign_status;
       setIsLoading(true)
       const res = await api(`/product/${editData.id}`, data, 'put', true)
