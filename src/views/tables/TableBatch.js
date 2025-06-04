@@ -54,10 +54,10 @@ const Row = ({
           {row.batch_no}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.productHistory.product_name}
+          {row.product.product_history[0].product_name}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.location.location_name}
+          {row.location.history[0].location_name}
         </TableCell>
 
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
@@ -182,10 +182,10 @@ const Row = ({
                             {historyRow.batch_no}
                           </TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {historyRow.productHistory.product_name}
+                            {historyRow.product.product_history[0].product_name}
                           </TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {historyRow.location.location_name}
+                            {historyRow.location.history[0].location_name}
                           </TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             {moment(historyRow.manufacturing_date).format('DD/MM/YYYY')}

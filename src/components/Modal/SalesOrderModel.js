@@ -146,8 +146,8 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                     console.log('batches', res.data.data)
                     if (res.data.success) {
                         const options = res.data.data.batches?.map(batch => ({
-                            id: batch.id,
-                            value: batch.id,
+                            id: batch.batch_uuid,
+                            value: batch.batch_uuid,
                             label: batch.batch_no,
                         }));
                         setBatchOptionsMap(prev => ({

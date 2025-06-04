@@ -74,10 +74,12 @@ function BatchModal({ openModal, handleCloseModal, editData, allProductData, all
             return ''; 
         };
         if (editData) {
+            console.log("Editd data ", editData);
+            
             reset({
                 batchNo: editData?.batch_no || '',
-                productId: editData?.productHistory?.product_uuid || '',
-                locationId: editData?.location?.id || '',
+                productId: editData?.product?.product_history[0]?.product_uuid || '',
+                locationId: editData?.location?.history[0].location_uuid || '',
                 manufacturingDate: formatDate(editData?.manufacturing_date) || '',
                 expiryDate: formatDate(editData?.expiry_date) || '',
                 qty: editData?.qty || ''
