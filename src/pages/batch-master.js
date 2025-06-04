@@ -50,6 +50,8 @@ const Index = () => {
   const [filterLocationVal, setFilterLocationVal] = useState('')
   const [filterProductVal, setFilterProductVal] = useState('')
   const [batchData, setBatch] = useState([])
+  const [authUser, setAuthUser] = useState({})
+  const [esignRemark, setEsignRemark] = useState('')
 
   useLayoutEffect(() => {
     getAllProducts()
@@ -150,29 +152,22 @@ const Index = () => {
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
 
-  const addBatch = async (esign_status, remarks) => {
+  const addBatch = async (esign_status) => {
     try {
       const data = { ...formData }
-      const auditlogRemark = remarks
-      const audit_log = config?.config?.audit_logs
-        ? {
-            audit_log: true,
-            performed_action: 'add',
-            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Batch added - ${formData.batchNo}`
-          }
-        : {
-            audit_log: false,
-            performed_action: 'none',
-            remarks: `none`
-          }
-      data.audit_log = audit_log
-      data.esign_status = esign_status
-      console.log('Add batch data ', data)
+      if(config?.config?.audit_logs){
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'add',
+          remarks: esignRemark?.length > 0 ? esignRemark : `Batch added - ${formData.batchNo}`,
+          authUser
+        }
+      }
+      data.esign_status = esign_status;
       setIsLoading(true)
       const res = await api('/batch/', data, 'post', true)
       setIsLoading(false)
       if (res?.data?.success) {
-        console.log('res ', res?.data)
         setAlertData({ ...alertData, type: 'success', message: 'Batch added successfully', openSnackbar: true })
         resetForm()
         setOpenModal(false)
@@ -196,25 +191,17 @@ const Index = () => {
     }
   }
 
-  const editBatch = async (esign_status, remarks) => {
+  const editBatch = async (esign_status) => {
     try {
-      const data = { ...formData }
-      const auditlogRemark = remarks
-      let audit_log
+      const data = { ...formData };
       if (config?.config?.audit_logs) {
-        audit_log = {
+        data.audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Batch editted - ${formData.batchNo}`
-        }
-      } else {
-        audit_log = {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`
+          remarks: esignRemark?.length > 0 ? esignRemark : `Batch editted - ${formData.batchNo}`,
+          authUser
         }
       }
-      data.audit_log = audit_log
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/batch/${editData.id}`, data, 'put', true)
@@ -275,25 +262,30 @@ const Index = () => {
       }
     }
 
-    const createAuditLog = action =>
-      config?.config?.audit_logs
-        ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            performed_action: action,
-            remarks: remarks?.length > 0 ? remarks : `batch approved  ${action} - ${auditLogMark}`
-          }
-        : {}
-
     const handleUpdateStatus = async () => {
       const data = {
         modelName: 'batch',
         esignStatus,
         id: eSignStatusId,
-        audit_log: createAuditLog(esignStatus)
+        audit_log: config?.config?.audit_logs
+        ? {
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: "approved",
+            remarks: remarks?.length > 0 ? remarks : `batch approved - ${auditLogMark}`,
+            authUser: user.user_id
+          }
+        : {}
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('esign status update', res?.data)
+      if (res.data) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: res.data.code === 200 ? 'success' : 'error',
+          message: res.data.message
+        })
+      }
       setPendingAction(true)
     }
 
@@ -327,6 +319,8 @@ const Index = () => {
           setOpenModalApprove(true)
         } else {
           console.log('esign is approved for creator')
+          setAuthUser(user)
+          setEsignRemark(remarks)
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
       }
@@ -403,7 +397,7 @@ const Index = () => {
   const getAllProducts = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/product?limit=-1', {}, 'get', true)
+      const res = await api('/product?limit=-1&history_latest=true', {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllProductData(res.data.data.products)
@@ -424,7 +418,7 @@ const Index = () => {
   const getAllLocations = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/location?limit=-1', {}, 'get', true)
+      const res = await api('/location?limit=-1&history_latest=true', {}, 'get', true)
       setIsLoading(false)
       console.log('All locations ', res.data)
       if (res.data.success) {
@@ -472,7 +466,7 @@ const Index = () => {
                   >
                     {allLocationData?.map(item => {
                       return (
-                        <MenuItem key={item?.id} value={item?.location_name}>
+                        <MenuItem key={item?.location_uuid} value={item?.location_name}>
                           {item?.location_name}
                         </MenuItem>
                       )
@@ -491,7 +485,7 @@ const Index = () => {
                   >
                     {allProductData?.map(item => {
                       return (
-                        <MenuItem key={item?.id} value={item?.product_name}>
+                        <MenuItem key={item?.product_uuid} value={item?.product_name}>
                           {item?.product_name}
                         </MenuItem>
                       )

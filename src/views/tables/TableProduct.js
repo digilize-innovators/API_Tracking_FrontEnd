@@ -79,7 +79,7 @@ const Row = ({
           {row.packaging_size}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.company.company_name}
+          {row.company.CompanyHistory[0].company_name}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {row.countryMaster.country}
@@ -207,7 +207,7 @@ const Row = ({
                             {historyRow.packaging_size}
                           </TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {historyRow?.company?.company_name}
+                            {historyRow?.company?.CompanyHistory[0].company_name}
                           </TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             {historyRow?.countryMaster?.country || 'NA'}
