@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
-import { Button, TableContainer, Paper,Typography,Grid2,Box } from '@mui/material'
+import { Button, TableContainer, Paper, Typography, Grid2, Box } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -43,37 +43,37 @@ const Index = () => {
   const apiAccess = useApiAccess('cameramaster-create', 'cameramaster-update', 'cameramaster-approve')
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const searchBarRef = useRef(null)
-  const [cameraData, setCamera] = useState({data:[],index:0})
+  const [cameraData, setCamera] = useState({ data: [], index: 0 })
   const [formData, setFormData] = useState()
-
+  const [authUser, setAuthUser] = useState({})
+  const [esignRemark, setEsignRemark] = useState('')
 
   useLayoutEffect(() => {
     let data = getUserData()
     setUserDataPdf(data)
     const decodedToken = getTokenValues()
-        setConfig(decodedToken)
-    return () => { }
+    setConfig(decodedToken)
+    return () => {}
   }, [])
-
 
   useEffect(() => {
     const handleUserAction = async () => {
       if (formData && pendingAction) {
-        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
-        if (pendingAction === "edit") {
-          await editCamera(esign_status); 
-        } else if (pendingAction === "add") {
-          await addCamera(esign_status);  
+        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
+        console.log(authUser)
+        if (pendingAction === 'edit') {
+          await editCamera(esign_status)
+        } else if (pendingAction === 'add') {
+          await addCamera(esign_status)
         }
-        setPendingAction(null);
+        setPendingAction(null)
       }
-    };
-    handleUserAction();
-  }, [formData, pendingAction]);
-
+    }
+    handleUserAction()
+  }, [formData, pendingAction])
 
   const tableBody = cameraData?.data?.map((item, index) => [
-    index+cameraData.index,
+    index + cameraData.index,
     item?.name,
     item?.ip,
     item?.port,
@@ -99,7 +99,11 @@ const Index = () => {
   }
 
   const handleOpenModal = () => {
-    setApproveAPI({ approveAPIName: 'cameramaster-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/cameramaster' })
+    setApproveAPI({
+      approveAPIName: 'cameramaster-create',
+      approveAPImethod: 'POST',
+      approveAPIEndPoint: '/api/v1/cameramaster'
+    })
     setEditData({})
     setOpenModal(true)
   }
@@ -122,9 +126,17 @@ const Index = () => {
     setFormData(data)
     console.log('Data :', data)
     if (editData?.id) {
-      setApproveAPI({ approveAPIName: 'cameramaster-update', approveAPImethod: 'PUT', approveAPIEndPoint: '/api/v1/cameramaster' })
+      setApproveAPI({
+        approveAPIName: 'cameramaster-update',
+        approveAPImethod: 'PUT',
+        approveAPIEndPoint: '/api/v1/cameramaster'
+      })
     } else {
-      setApproveAPI({ approveAPIName: 'cameramaster-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/cameramaster' })
+      setApproveAPI({
+        approveAPIName: 'cameramaster-create',
+        approveAPImethod: 'POST',
+        approveAPIEndPoint: '/api/v1/cameramaster'
+      })
     }
     if (config?.config?.esign_status) {
       setAuthModalOpen(true)
@@ -133,23 +145,19 @@ const Index = () => {
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
 
-  const addCamera = async (esign_status, remarks) => {
+  const addCamera = async esign_status => {
     try {
       const data = { ...formData }
-      console.log("Add data ", data);
-      const auditlogRemark = remarks
-      const audit_log = config?.config?.audit_logs
-        ? {
+      console.log('Add data ', data)
+      if (config?.config?.audit_logs) {
+        data.audit_log = {
           audit_log: true,
           performed_action: 'add',
-          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Camera master added - ${formData?.name}`
+          remarks: esignRemark?.length > 0 ? esignRemark : `Camera master added - ${formData?.name}`,
+          authUser
         }
-        : {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`
-        }
-      data.audit_log = audit_log
+      }
+
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api('/cameramaster/', data, 'post', true)
@@ -187,25 +195,16 @@ const Index = () => {
     }
   }
 
-  const editCamera = async (esign_status, remarks) => {
+  const editCamera = async esign_status => {
     try {
       const data = { ...formData }
-      const auditlogRemark = remarks
-      let audit_log
       if (config?.config?.audit_logs) {
-        audit_log = {
+        data.audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Camera master edited - ${formData?.name}`
-        }
-      } else {
-        audit_log = {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`
+          remarks: esignRemark?.length > 0 ? esignRemark : `Camera master edited - ${formData?.name}`
         }
       }
-      data.audit_log = audit_log
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/cameramaster/${editData.id}`, data, 'put', true)
@@ -240,7 +239,7 @@ const Index = () => {
   }
 
   const handleUpdate = item => {
-    console.log("item", item);
+    console.log('item', item)
     resetForm()
     setEditData(item)
     console.log('edit camera master', item)
@@ -277,13 +276,14 @@ const Index = () => {
     const createAuditLog = action =>
       config?.config?.audit_logs
         ? {
-          user_id: user.userId,
-          user_name: user.userName,
-          performed_action: action,
-          remarks: remarks?.length > 0 ? remarks : `Camera master ${action} - ${auditLogMark}`
-        }
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: action,
+            remarks: remarks?.length > 0 ? remarks : `Camera master ${action} - ${auditLogMark}`,
+            authUser: user.user_id
+          }
         : {}
-        
+
     const handleUpdateStatus = async () => {
       const data = {
         modelName: 'cameramaster',
@@ -292,6 +292,15 @@ const Index = () => {
         audit_log: createAuditLog(esignStatus)
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+      if (res.data) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: res.data.code === 200 ? 'success' : 'error',
+          message: res.data.message
+        })
+      }
+
       console.log('esign status update', res?.data)
       setPendingAction(true)
     }
@@ -316,7 +325,8 @@ const Index = () => {
       if (esignStatus === 'approved') {
         handleModalActions(true)
         if (!esignDownloadPdf) {
-          console.log('esign is approved for creator')
+          console.log('esign is approved for creator', user)
+
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
       }
@@ -340,6 +350,8 @@ const Index = () => {
           setOpenModalApprove(true)
         } else {
           console.log('esign is approved for creator')
+          setAuthUser(user)
+          setEsignRemark(remarks)
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
       }
@@ -354,13 +366,13 @@ const Index = () => {
         ...alertData,
         openSnackbar: true,
         type: 'error',
-        message: "Access denied: Download pdf disabled for this user."
+        message: 'Access denied: Download pdf disabled for this user.'
       })
       resetState()
       return
     }
     if (isApprover) {
-      await processApproverActions();
+      await processApproverActions()
     } else {
       handleCreatorActions()
     }
@@ -382,7 +394,7 @@ const Index = () => {
   const resetFilter = () => {
     setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '' })
     if (searchBarRef.current) {
-      searchBarRef.current.resetSearch();
+      searchBarRef.current.resetSearch()
     }
   }
 
@@ -409,7 +421,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    console.log("data",cameraData.data)
+    console.log('data', cameraData.data)
     downloadPdf(tableData, tableHeaderData, tableBody, cameraData.data, userDataPdf)
   }
 
@@ -473,11 +485,13 @@ const Index = () => {
         </Grid2>
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-     
-      <CameraModal  openModal={openModal}
+
+      <CameraModal
+        openModal={openModal}
         handleClose={handleCloseModal}
         editData={editData}
-        handleSubmitForm={handleSubmitForm}/>
+        handleSubmitForm={handleSubmitForm}
+      />
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}
