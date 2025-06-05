@@ -202,7 +202,8 @@ const Index = () => {
         data.audit_log = {
           audit_log: true,
           performed_action: 'edit',
-          remarks: esignRemark?.length > 0 ? esignRemark : `Camera master edited - ${formData?.name}`
+          remarks: esignRemark?.length > 0 ? esignRemark : `Camera master edited - ${formData?.name}`,
+          authUser
         }
       }
       data.esign_status = esign_status

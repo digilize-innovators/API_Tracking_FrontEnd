@@ -32,49 +32,55 @@ const Index = () => {
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [editData, setEditData] = useState({})
   const { setIsLoading } = useLoading()
-  const [pendingAction,setPendingAction]=useState(null)
+  const [pendingAction, setPendingAction] = useState(null)
   const { removeAuthToken } = useAuth()
   const [userDataPdf, setUserDataPdf] = useState()
   const router = useRouter()
   const [config, setConfig] = useState(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [approveAPI, setApproveAPI] = useState({approveAPIName: '',approveAPImethod: '',approveAPIEndPoint: ''})
-  const {getUserData}=useAuth()
+  const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
+  const { getUserData } = useAuth()
   const [eSignStatusId, setESignStatusId] = useState('')
   const [auditLogMark, setAuditLogMark] = useState('')
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
-  const apiAccess = useApiAccess('printerlineconfiguration-create','printerlineconfiguration-update','printerlineconfiguration-approve')
-  const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''})
-  const searchBarRef=useRef()
+  const apiAccess = useApiAccess(
+    'printerlineconfiguration-create',
+    'printerlineconfiguration-update',
+    'printerlineconfiguration-approve'
+  )
+  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
+  const searchBarRef = useRef()
   const [allPrinterLineConfigurationData, setAllPrinterLineConfiguration] = useState([])
   const [formData, setFormData] = useState()
+  const [authUser, setAuthUser] = useState({})
+  const [esignRemark, setEsignRemark] = useState('')
 
   useLayoutEffect(() => {
-      let data = getUserData()
-      setUserDataPdf(data)
-      const decodedToken = getTokenValues()
-          setConfig(decodedToken)
-      return () => {}
-    }, [])
+    let data = getUserData()
+    setUserDataPdf(data)
+    const decodedToken = getTokenValues()
+    setConfig(decodedToken)
+    return () => {}
+  }, [])
 
   useEffect(() => {
     const handleUserAction = async () => {
       if (formData && pendingAction) {
-        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
-        
-        if (pendingAction === "edit") {
-          await editPrinterLineConfiguration(esign_status);  
-        } else if (pendingAction === "add") {
-          await AddPrinterLineConfiguration(esign_status); 
+        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
+
+        if (pendingAction === 'edit') {
+          await editPrinterLineConfiguration(esign_status)
+        } else if (pendingAction === 'add') {
+          await AddPrinterLineConfiguration(esign_status)
         }
-        
-        setPendingAction(null);
+
+        setPendingAction(null)
       }
-    };
-  
-    handleUserAction();
-  }, [formData, pendingAction]);
+    }
+
+    handleUserAction()
+  }, [formData, pendingAction])
 
   const tableBody = allPrinterLineConfigurationData?.map((item, index) => [
     index + 1,
@@ -87,7 +93,7 @@ const Index = () => {
 
   const tableData = useMemo(
     () => ({
-      tableHeader: ['Sr.No.', 'Printer Line Name', 'Printer','Camera Enable','Camera Name','E-Sign'],
+      tableHeader: ['Sr.No.', 'Printer Line Name', 'Printer', 'Camera Enable', 'Camera Name', 'E-Sign'],
       tableHeaderText: 'Printer Line Configuration Report',
       tableBodyText: 'Printer Line Configuration Data',
       filename: 'PrinterLineConfiguration'
@@ -100,7 +106,11 @@ const Index = () => {
   }
 
   const handleOpenModal = () => {
-    setApproveAPI({approveAPIName: 'printerlineconfiguration-create',approveAPImethod: 'POST',approveAPIEndPoint: '/api/v1/printerlineconfiguration'})
+    setApproveAPI({
+      approveAPIName: 'printerlineconfiguration-create',
+      approveAPImethod: 'POST',
+      approveAPIEndPoint: '/api/v1/printerlineconfiguration'
+    })
     setEditData({})
     setOpenModal(true)
   }
@@ -123,34 +133,38 @@ const Index = () => {
     setFormData(data)
 
     if (editData?.id) {
-      setApproveAPI({approveAPIName: 'printerlineconfiguration-update',approveAPImethod: 'PUT',approveAPIEndPoint: '/api/v1/printerlineconfiguration'})
+      setApproveAPI({
+        approveAPIName: 'printerlineconfiguration-update',
+        approveAPImethod: 'PUT',
+        approveAPIEndPoint: '/api/v1/printerlineconfiguration'
+      })
     } else {
-      setApproveAPI({approveAPIName: 'printerlineconfiguration-create',approveAPImethod: 'POST',approveAPIEndPoint: '/api/v1/printerlineconfiguration'})
+      setApproveAPI({
+        approveAPIName: 'printerlineconfiguration-create',
+        approveAPImethod: 'POST',
+        approveAPIEndPoint: '/api/v1/printerlineconfiguration'
+      })
     }
     if (config?.config?.esign_status) {
       setAuthModalOpen(true)
       return
     }
-    setPendingAction(editData?.id? "edit":"add")
+    setPendingAction(editData?.id ? 'edit' : 'add')
   }
-  
-  const AddPrinterLineConfiguration = async (esign_status, remarks) => {
+
+  const AddPrinterLineConfiguration = async esign_status => {
     try {
       const data = { ...formData }
-      const auditlogRemark = remarks
-      const audit_log = config?.config?.audit_logs
-        ? {
-            audit_log: true,
-            performed_action: 'add',
-            remarks:
-              auditlogRemark?.length > 0 ? auditlogRemark : `Printer Line Configuration added - ${formData.printerLineName}`
-          }
-        : {
-            audit_log: false,
-            performed_action: 'none',
-            remarks: `none`
-          }
-      data.audit_log = audit_log
+      if (config?.config?.audit_logs) {
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'add',
+          remarks:
+            esignRemark?.length > 0 ? esignRemark : `Printer Line Configuration added - ${formData.printerLineName}`,
+          authUser
+        }
+      }
+
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api('/printerlineconfiguration/', data, 'post', true)
@@ -175,7 +189,6 @@ const Index = () => {
     } catch (error) {
       console.log('Error to add printer line configuration', error)
       router.push('/500')
-
     } finally {
       setApproveAPI({
         approveAPIName: '',
@@ -185,28 +198,21 @@ const Index = () => {
     }
   }
 
-  const editPrinterLineConfiguration = async (esign_status, remarks) => {
+  const editPrinterLineConfiguration = async esign_status => {
     try {
-      console.log("formData",formData);
-      
-      const data = { ...formData}
-      const auditlogRemark = remarks
-      let audit_log
+      console.log('formData', formData)
+
+      const data = { ...formData }
+
       if (config?.config?.audit_logs) {
-        audit_log = {
+        data.audit_log = {
           audit_log: true,
           performed_action: 'edit',
           remarks:
-            auditlogRemark?.length > 0 ? auditlogRemark : `Printer Line Configuration edited - ${formData?.printerLineName}`
-        }
-      } else {
-        audit_log = {
-          audit_log: false,
-          performed_action: 'none',
-          remarks: `none`
+            esignRemark?.length > 0 ? esignRemark : `Printer Line Configuration edited - ${formData?.printerLineName}`,
+          authUser
         }
       }
-      data.audit_log = audit_log
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/printerlineconfiguration/${editData.id}`, data, 'put', true)
@@ -253,7 +259,7 @@ const Index = () => {
     console.log('handleAuthResult 02', config?.userId, user.user_id)
 
     const resetState = () => {
-      setApproveAPI({approveAPIName: '',approveAPImethod: '',approveAPIEndPoint: ''})
+      setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
       setAuthModalOpen(false)
       setEsignDownloadPdf(false)
     }
@@ -268,87 +274,98 @@ const Index = () => {
       if (isApproved && esignDownloadPdf) {
         console.log('esign is approved for download')
         downloadPdf(tableData, tableHeaderData, tableBody, allPrinterLineConfigurationData, userDataPdf)
-       }
-     }
+      }
+    }
 
-     const createAuditLog = action =>
+    const createAuditLog = action =>
       config?.config?.audit_logs
         ? {
-          user_id: user.userId,
-          user_name: user.userName,
-          performed_action: action,
-          remarks: remarks?.length > 0 ? remarks : `printer line configuration approved - ${auditLogMark}`
-        }
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: action,
+            remarks: remarks?.length > 0 ? remarks : `printer line configuration approved - ${auditLogMark}`,
+            authUser: user.user_id
+          }
         : {}
 
-      const handleUpdateStatus = async () => {
-          const data = {
-            modelName: 'printerlineconfiguration',
-            esignStatus,
-            id: eSignStatusId,
-            audit_log: createAuditLog(esignStatus)
-          }
-            const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-            console.log('esign status update', res?.data)
-            setPendingAction(true)
+    const handleUpdateStatus = async () => {
+      const data = {
+        modelName: 'printerlineconfiguration',
+        esignStatus,
+        id: eSignStatusId,
+        audit_log: createAuditLog(esignStatus)
       }
-
-      const processApproverActions = async () => {
-        if (esignStatus === 'approved' || esignStatus === 'rejected') {
-          handleModalActions(esignStatus === 'approved')
-          if (esignStatus === 'approved' && esignDownloadPdf) {
-            resetState()
-            return
-          }
-        }
-        await handleUpdateStatus()
-        resetState()
+      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+      if (res.data) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: res.data.code === 200 ? 'success' : 'error',
+          message: res.data.message
+        })
       }
+      console.log('esign status update', res?.data)
+      setPendingAction(true)
+    }
 
-      const handleCreatorActions = () => {
-        if (esignStatus === 'rejected') {
-          setAuthModalOpen(false)
-          setOpenModalApprove(false)
-          setAlertData({
-            ...alertData,
-            openSnackbar: true,
-            type: 'error',
-            message: 'Access denied for this user.'
-          })
-        }
-
-        if (esignStatus === 'approved') {
-          if (esignDownloadPdf) {
-            console.log('esign is approved for creator to download')
-            setOpenModalApprove(true)
-          } else {
-            console.log('esign is approved for creator')
-            setPendingAction(editData?.id ? 'edit' : 'add')
-          }
+    const processApproverActions = async () => {
+      if (esignStatus === 'approved' || esignStatus === 'rejected') {
+        handleModalActions(esignStatus === 'approved')
+        if (esignStatus === 'approved' && esignDownloadPdf) {
+          resetState()
+          return
         }
       }
-  
-      if (!isAuthenticated) {
-        handleUnauthenticated()
-        return
-      }
-      if (!isApprover && esignDownloadPdf) {
+      await handleUpdateStatus()
+      resetState()
+    }
+
+    const handleCreatorActions = () => {
+      if (esignStatus === 'rejected') {
+        setAuthModalOpen(false)
+        setOpenModalApprove(false)
         setAlertData({
           ...alertData,
           openSnackbar: true,
           type: 'error',
-          message: "Access denied: Download pdf disabled for this user."
+          message: 'Access denied for this user.'
         })
-        resetState()
-        return
       }
 
-      if (isApprover) {
-        await processApproverActions();
-      } else {
-        handleCreatorActions()
+      if (esignStatus === 'approved') {
+        if (esignDownloadPdf) {
+          console.log('esign is approved for creator to download')
+          setOpenModalApprove(true)
+        } else {
+          console.log('esign is approved for creator')
+          setAuthUser(user)
+          setEsignRemark(remarks)
+          setPendingAction(editData?.id ? 'edit' : 'add')
+        }
       }
+    }
+
+    if (!isAuthenticated) {
+      handleUnauthenticated()
+      return
+    }
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied: Download pdf disabled for this user.'
+      })
       resetState()
+      return
+    }
+
+    if (isApprover) {
+      await processApproverActions()
+    } else {
+      handleCreatorActions()
+    }
+    resetState()
   }
 
   const handleAuthCheck = async row => {
@@ -367,7 +384,7 @@ const Index = () => {
   const resetFilter = () => {
     setTableHeaderData({ esignStatus: '', searchVal: '' })
     if (searchBarRef.current) {
-      searchBarRef.current.resetSearch();
+      searchBarRef.current.resetSearch()
     }
   }
 
@@ -376,110 +393,110 @@ const Index = () => {
   }
 
   const handleAuthModalOpen = () => {
-      console.log('OPen auth model')
-      setApproveAPI({
-        approveAPIName: 'printerlineconfiguration-approve',
-        approveAPImethod: 'PATCH',
-        approveAPIEndPoint: '/api/v1/printerlineconfiguration'
-      })
-      setAuthModalOpen(true)
+    console.log('OPen auth model')
+    setApproveAPI({
+      approveAPIName: 'printerlineconfiguration-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/printerlineconfiguration'
+    })
+    setAuthModalOpen(true)
   }
 
-    const handleDownloadPdf = () => {
-      setApproveAPI({
-        approveAPIName: 'printerlineconfiguration-approve',
-        approveAPImethod: 'PATCH',
-        approveAPIEndPoint: '/api/v1/printerlineconfiguration'
-      })
-      if (config?.config?.esign_status) {
-        console.log('Esign enabled for download pdf')
-        setEsignDownloadPdf(true)
-        setAuthModalOpen(true)
-        return
-      }
-      downloadPdf(tableData, tableHeaderData, tableBody, allPrinterLineConfigurationData, userDataPdf)
+  const handleDownloadPdf = () => {
+    setApproveAPI({
+      approveAPIName: 'printerlineconfiguration-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/printerlineconfiguration'
+    })
+    if (config?.config?.esign_status) {
+      console.log('Esign enabled for download pdf')
+      setEsignDownloadPdf(true)
+      setAuthModalOpen(true)
+      return
     }
-    
-    return (
-      <Box padding={4}>
-        <Head>
-          <title>Printer Line Configuration</title>
-        </Head>
+    downloadPdf(tableData, tableHeaderData, tableBody, allPrinterLineConfigurationData, userDataPdf)
+  }
+
+  return (
+    <Box padding={4}>
+      <Head>
+        <title>Printer Line Configuration</title>
+      </Head>
+      <Grid2 item xs={12}>
+        <Typography variant='h2'>Printer Line Configuration</Typography>
+      </Grid2>
+      <Grid2 item xs={12}>
         <Grid2 item xs={12}>
-          <Typography variant='h2'>Printer Line Configuration</Typography>
-        </Grid2>
-        <Grid2 item xs={12}>
-          <Grid2 item xs={12}>
-            <Box sx={{ backgroundColor: settings.mode === 'dark' ? '#212121' : 'white', borderRadius: 1 }}>
-              <Typography variant='h4' className='mx-4 my-2 mx-2' sx={{ paddingTop: '1%' }}>
-                Filter
-              </Typography>
-              <Grid2 item xs={12}>
-                <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
+          <Box sx={{ backgroundColor: settings.mode === 'dark' ? '#212121' : 'white', borderRadius: 1 }}>
+            <Typography variant='h4' className='mx-4 my-2 mx-2' sx={{ paddingTop: '1%' }}>
+              Filter
+            </Typography>
+            <Grid2 item xs={12}>
+              <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
                 {config?.config?.esign_status && (
                   <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
                 )}
+              </Box>
+              <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
+                <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
+                <Box className='d-flex justify-content-between align-items-center '>
+                  <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
+                  {apiAccess.addApiAccess && (
+                    <Box className='mx-2'>
+                      <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                        <span>
+                          <IoMdAdd />
+                        </span>
+                        <span>Add</span>
+                      </Button>
+                    </Box>
+                  )}
                 </Box>
-                <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
-                  <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
-                  <Box className='d-flex justify-content-between align-items-center '>
-                    <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
-                    {apiAccess.addApiAccess && (
-                      <Box className='mx-2'>
-                        <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
-                          <span>
-                            <IoMdAdd />
-                          </span>
-                          <span>Add</span>
-                        </Button>
-                      </Box>
-                    )}
-                  </Box>
-                </Box>
-              </Grid2>
-              <Grid2 item xs={12}>
-                <Typography variant='h4' className='mx-4 my-2 mt-3'>
-                  Printer Line Configuration Data
-                </Typography>
-                <TableContainer component={Paper}>
-                  <TablePrinterLineConfiguration
-                    handleUpdate={handleUpdate}
-                    tableHeaderData={tableHeaderData}
-                    pendingAction={pendingAction}
-                    editable={apiAccess.editApiAccess}
-                    setAllPrinterLineConfiguration={setAllPrinterLineConfiguration}
-                    handleAuthCheck={handleAuthCheck}
-                    apiAccess={apiAccess}
-                    config={config}
-                  />
-                </TableContainer>
-              </Grid2>
-            </Box>
-          </Grid2>
+              </Box>
+            </Grid2>
+            <Grid2 item xs={12}>
+              <Typography variant='h4' className='mx-4 my-2 mt-3'>
+                Printer Line Configuration Data
+              </Typography>
+              <TableContainer component={Paper}>
+                <TablePrinterLineConfiguration
+                  handleUpdate={handleUpdate}
+                  tableHeaderData={tableHeaderData}
+                  pendingAction={pendingAction}
+                  editable={apiAccess.editApiAccess}
+                  setAllPrinterLineConfiguration={setAllPrinterLineConfiguration}
+                  handleAuthCheck={handleAuthCheck}
+                  apiAccess={apiAccess}
+                  config={config}
+                />
+              </TableContainer>
+            </Grid2>
+          </Box>
         </Grid2>
-        <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-        <PrinterLineConfigurationModal
-          open={openModal}
-          handleClose={handleCloseModal}
-          editData={editData}
-          handleSubmitForm={handleSubmitForm}
-        />
-        <AuthModal
-          open={authModalOpen}
-          handleClose={handleAuthModalClose}
-          approveAPIName={approveAPI.approveAPIName}
-          approveAPImethod={approveAPI.approveAPImethod}
-          approveAPIEndPoint={approveAPI.approveAPIEndPoint}
-          handleAuthResult={handleAuthResult}
-          config={config}
-          handleAuthModalOpen={handleAuthModalOpen}
-          openModalApprove={openModalApprove}
-        />
-        <AccessibilitySettings />
-        <ChatbotComponent />
-      </Box>
-    )
-  }
+      </Grid2>
+      <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+      <PrinterLineConfigurationModal
+        open={openModal}
+        handleClose={handleCloseModal}
+        editData={editData}
+        handleSubmitForm={handleSubmitForm}
+      />
+      <AuthModal
+        open={authModalOpen}
+        handleClose={handleAuthModalClose}
+        approveAPIName={approveAPI.approveAPIName}
+        approveAPImethod={approveAPI.approveAPImethod}
+        approveAPIEndPoint={approveAPI.approveAPIEndPoint}
+        handleAuthResult={handleAuthResult}
+        config={config}
+        handleAuthModalOpen={handleAuthModalOpen}
+        openModalApprove={openModalApprove}
+      />
+      <AccessibilitySettings />
+      <ChatbotComponent />
+    </Box>
+  )
+}
 
 export async function getServerSideProps(context) {
   return validateToken(context, 'Printer Line Configuration')

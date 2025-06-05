@@ -82,7 +82,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
       areaId: '',
       printerCategoryId: '',
       printer: '',
-      controlpanelId:  '',
+      controlpanelId: '',
       lineNo: '',
       cameraEnable: false,
       cameraId: '',
@@ -90,7 +90,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
       printerEnabled: false
     }
   })
-  
+
   const [allAreaCategory, setAllAreaCategory] = useState([])
   const [allArea, setAllArea] = useState([])
   const [allLocation, setAllLocation] = useState([])
@@ -105,9 +105,9 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
 
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
-  const camera_enable=watch('cameraEnable');
+  const camera_enable = watch('cameraEnable')
   console.log(camera_enable)
-  
+
   useEffect(() => {
     if (editData) {
       reset({
@@ -120,7 +120,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
         controlpanelId: editData?.control_panel_id || '',
         lineNo: editData?.line_no || '',
         cameraEnable: editData?.camera_enable || false,
-        cameraId: editData?.cameraId||'' ,
+        cameraId: editData?.cameraId || '',
         linePcAddress: editData?.line_pc_ip || '',
         printerEnabled: editData?.enabled || false
       })
@@ -135,16 +135,15 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     return () => {}
   }, [])
 
-  useEffect(()=>{
-    console.log("camera is ",camera_enable?"no":"off")
-    if(camera_enable){
+  useEffect(() => {
+    console.log('camera is ', camera_enable ? 'no' : 'off')
+    if (camera_enable) {
       getAllCameraMaster()
+    } else if (allCameraMasterData.length && !camera_enable) {
+      // setAllCameraMasterData([])
+      setValue('cameraId', '')
     }
-    else if(allCameraMasterData.length && !camera_enable){
-    // setAllCameraMasterData([])
-    setValue('cameraId','')
-    }
-  },[camera_enable])
+  }, [camera_enable])
 
   useEffect(() => {
     if (areaCategoryId !== '') {
@@ -162,7 +161,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   const getAllAreaCategory = async () => {
     try {
       setIsLoading(true)
-      const res = await api(`/area-category?limit=-1`, {}, 'get', true)
+      const res = await api(`/area-category?limit=-1&history_latest=true`, {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllAreaCategory(res.data.data.areaCategories)
@@ -180,6 +179,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   }
   const getAllArea = async () => {
     if (areaCategoryId) {
+      console.log('areaCategoryId', areaCategoryId)
       try {
         setIsLoading(true)
         const res = await api(`/area/byAreaCategory/${areaCategoryId}?limit=-1`, {}, 'get', true)
@@ -202,7 +202,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   const getAllLocation = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/location?limit=-1', {}, 'get', true)
+      const res = await api('/location?limit=-1&history_latest=true', {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllLocation(res.data.data.locations)
@@ -222,7 +222,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     try {
       setIsLoading(true)
       const res = await api(
-        `/printermaster/printerByCategory/?printerCategoryID=${printerCategoryID}&&limit=-1`,
+        `/printermaster/printerByCategory/?printerCategoryID=${printerCategoryID}&limit=-1`,
         {},
         'get',
         true
@@ -246,7 +246,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   const getAllPrinterCategories = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/printercategory?limit=-1', {}, 'get', true)
+      const res = await api('/printercategory?limit=-1&history_latest=true', {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllPrinterCatergory(res.data.data.printerCategories)
@@ -266,7 +266,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   const getAllControlPanels = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/controlpanelmaster?limit=-1', {}, 'get', true)
+      const res = await api('/controlpanelmaster?limit=-1&history_latest=true ', {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllControlPanelData(res.data.data.controlPanelMasters)
@@ -285,7 +285,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   const getAllCameraMaster = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/cameramaster?limit=-1', {}, 'get', true)
+      const res = await api('/cameramaster?limit=-1&history_latest=true', {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllCameraMasterData(res.data.data.cameraMasters)
@@ -302,13 +302,13 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     }
   }
   const locationId = allLocation?.map(item => ({
-    id: item.id,
-    value: item.id,
+    id: item.location_uuid,
+    value: item.location_uuid,
     label: item.location_name
   }))
   const AreaCategory = allAreaCategory?.map(item => ({
-    id: item.id,
-    value: item.id,
+    id: item.areacategory_uuid,
+    value: item.areacategory_uuid,
     label: item.area_category_name
   }))
 
@@ -324,27 +324,29 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     value: item.id,
     label: item.area_name
   }))
+  console.log('areaName', areaName)
   const printerCategories = allPrinterCategory?.map(item => ({
-    id: item.id,
-    value: item.id,
+    id: item.printer_category_uuid,
+    value: item.printer_category_uuid,
     label: item.printer_category_name
   }))
 
   const printers = allPrinter?.map(item => ({
-    id: item.id,
-    value: item.id,
+    id: item.printermaster_uuid,
+    value: item.printermaster_uuid,
     label: item.printer_id
   }))
+  console.log('allPrinter', allPrinter)
 
   const controlPanelData = allControlPanelData?.map(item => ({
-    id: item.id,
-    value: item.id,
+    id: item.controlpanelmaster_uuid,
+    value: item.controlpanelmaster_uuid,
     label: item.name
   }))
 
   const cameraData = allCameraMasterData?.map(item => ({
-    id: item.id,
-    value: item.id,
+    id: item.cameramaster_uuid,
+    value: item.cameramaster_uuid,
     label: item.name
   }))
 
@@ -431,9 +433,11 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
               </Typography>
               {/* <CustomTextField name='cameraIp' label='Camera Ip' control={control} /> */}
             </Grid2>
-            {camera_enable && (<Grid2 size={6}>
-              <CustomDropdown name='cameraId' label='Camera Name' control={control} options={cameraData} />
-            </Grid2>)}
+            {camera_enable && (
+              <Grid2 size={6}>
+                <CustomDropdown name='cameraId' label='Camera Name' control={control} options={cameraData} />
+              </Grid2>
+            )}
           </Grid2>
           <Grid2 item xs={12} className='mt-3'>
             <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'>
