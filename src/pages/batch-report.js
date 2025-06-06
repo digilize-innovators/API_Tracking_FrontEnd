@@ -56,7 +56,7 @@ const BatchReport = () => {
   const fetchProducts = async () => {
     try {
       setIsLoading(true)
-      const response = await api('/product/', {}, 'get', true)
+      const response = await api('/product?limit=-1&history_latest=true', {}, 'get', true)
       console.log('All products ', response.data)
       if (response.data.success) {
         setProducts(response.data.data.products)
@@ -77,7 +77,7 @@ const BatchReport = () => {
   const getAllBatches = async () => {
     try {
       setIsLoading(true)
-      const res = await api(`/batch/${selectedProduct}`, {}, 'get', true);
+      const res = await api(`/batch/${selectedProduct}`, {}, 'get', true)
       if (res.data.success) {
         setBatches(res.data.data.batches)
         setIsLoading(false)

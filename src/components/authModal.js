@@ -133,7 +133,10 @@ const AuthModal = ({
         handleClose()
         return
       } else {
-        setError('Authentication failed. Please try again.')
+        res.data.message === 'Invalid username or password'
+          ? setError('Authentication failed. Please try again.')
+          : setError(res.data.message)
+
         return
       }
     } catch (error) {
