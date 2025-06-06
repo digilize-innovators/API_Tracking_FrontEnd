@@ -187,7 +187,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
       return;
     }
     console.log('on submit ', data)
-    handleGenerateCode(false, data,"approved")
+    handleGenerateCode(false, data, "approved")
   }
 
   const resetAll = () => {
