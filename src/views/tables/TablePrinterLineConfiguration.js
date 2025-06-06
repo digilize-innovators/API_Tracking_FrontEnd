@@ -64,19 +64,19 @@ const Row = ({
           {row.printer_line_name}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row?.area_category.history[0].area_category_name}
+          {row?.area_category.history[0]?.area_category_name}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row?.area?.history[0].area_name}
+          {row?.area?.history[0]?.area_name}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row?.PrinterCategory?.PrinterCategoryHistory[0].printer_category_name}
+          {row?.PrinterCategory?.PrinterCategoryHistory[0]?.printer_category_name}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.PrinterMaster.PrinterMasterHistory[0].printer_id}
+          {row?.PrinterMaster.PrinterMasterHistory[0]?.printer_id}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row?.locations?.history[0].location_name}
+          {row?.locations?.history[0]?.location_name}
         </TableCell>
         <StatusChip
           label={row.camera_enable ? 'enabled' : 'disabled'}
@@ -84,7 +84,7 @@ const Row = ({
         />
 
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row?.ControlPanel?.ControlPanelMasterHistory[0].name}
+          {row?.ControlPanel?.ControlPanelMasterHistory[0]?.name}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {row?.line_no}
@@ -197,7 +197,7 @@ const Row = ({
                             align='center'
                             sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                           >
-                            {historyRow.PrinterMaster.PrinterMasterHistory[0].printer_id}
+                            {historyRow.PrinterMaster.PrinterMasterHistory[0]?.printer_id}
                           </TableCell>
                           <TableCell
                             component='th'
@@ -205,7 +205,7 @@ const Row = ({
                             align='center'
                             sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                           >
-                            {historyRow.area_category.history[0].area_category_name}
+                            {historyRow.area_category.history[0]?.area_category_name}
                           </TableCell>
                           <TableCell
                             component='th'
@@ -213,7 +213,7 @@ const Row = ({
                             align='center'
                             sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                           >
-                            {historyRow.area.history[0].area_name}
+                            {historyRow.area.history[0]?.area_name}
                           </TableCell>
                           <TableCell
                             component='th'
@@ -221,7 +221,7 @@ const Row = ({
                             align='center'
                             sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                           >
-                            {historyRow.PrinterCategory.PrinterCategoryHistory[0].printer_category_name}
+                            {historyRow.PrinterCategory.PrinterCategoryHistory[0]?.printer_category_name}
                           </TableCell>
                           <TableCell
                             component='th'
@@ -229,7 +229,7 @@ const Row = ({
                             align='center'
                             sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                           >
-                            {historyRow.locations.history[0].location_name}
+                            {historyRow.locations.history[0]?.location_name}
                           </TableCell>
 
                           <TableCell
@@ -238,7 +238,7 @@ const Row = ({
                             align='center'
                             sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                           >
-                            {historyRow.ControlPanelMaster.ControlPanelMasterHistory[0].name}
+                            {historyRow?.ControlPanelMaster.ControlPanelMasterHistory[0]?.name}
                           </TableCell>
                           <TableCell
                             component='th'

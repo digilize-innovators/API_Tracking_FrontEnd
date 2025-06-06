@@ -75,7 +75,7 @@ const Index = () => {
     index + 1,
     item.area_id,
     item.area_name,
-    item.area_category?.area_category_name,
+    item.area_category?.history[0]?.area_category_name,
     item.esign_status
   ])
 
@@ -127,10 +127,10 @@ const Index = () => {
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
 
-  const addArea = async (esign_status) => {
+  const addArea = async esign_status => {
     try {
-      const data = { ...formData };
-      if(config?.config?.audit_logs){
+      const data = { ...formData }
+      if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
           performed_action: 'add',
@@ -166,7 +166,7 @@ const Index = () => {
     try {
       console.log(formData, 'formdata')
       const data = { ...formData }
-      delete data.areaId;
+      delete data.areaId
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
@@ -177,7 +177,7 @@ const Index = () => {
       }
       data.esign_status = esign_status
       setIsLoading(true)
-      const res = await api(`/area/${editData.id}`, data, 'put', true);
+      const res = await api(`/area/${editData.id}`, data, 'put', true)
       setIsLoading(false)
       if (res.data.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Area updated successfully' })
@@ -221,24 +221,24 @@ const Index = () => {
         downloadPdf(tableData, tableHeaderData, tableBody, areaData, userDataPdf)
       }
     }
-      
+
     const handleUpdateStatus = async () => {
       const data = {
         modelName: 'area',
         esignStatus,
         id: eSignStatusId,
         audit_log: config?.config?.audit_logs
-        ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            performed_action: "approved",
-            remarks: remarks?.length > 0 ? remarks : `area approved - ${auditLogMark}`,
-            authUser: user.user_id
-          }
-        : {}
+          ? {
+              user_id: user.userId,
+              user_name: user.userName,
+              performed_action: 'approved',
+              remarks: remarks?.length > 0 ? remarks : `area approved - ${auditLogMark}`,
+              authUser: user.user_id
+            }
+          : {}
       }
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true);
-      console.log('esign status update', res.data);
+      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+      console.log('esign status update', res.data)
       if (res.data) {
         setAlertData({
           ...alertData,

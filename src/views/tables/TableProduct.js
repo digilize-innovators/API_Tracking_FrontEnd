@@ -79,7 +79,7 @@ const Row = ({
           {row.packaging_size}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.company.CompanyHistory[0].company_name}
+          {row.company?.CompanyHistory[0]?.company_name}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {row.countryMaster.country}
@@ -275,7 +275,7 @@ const TableProduct = ({
 
   useMemo(() => {
     setPage(0)
-  }, [tableHeaderData,rowsPerPage])
+  }, [tableHeaderData, rowsPerPage])
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
@@ -328,7 +328,7 @@ const TableProduct = ({
       setIsLoading(false)
       if (res.data.success) {
         setProductData({ data: res.data.data.products, total: res.data.data.total })
-        setProduct(res.data.data.products);
+        setProduct(res.data.data.products)
       } else {
         console.log('Error to get all products ', res.data)
         console.log('Error to get all products ', res.data)
@@ -346,7 +346,6 @@ const TableProduct = ({
   useEffect(() => {
     getProducts()
   }, [page, rowsPerPage, tableHeaderData, pendingAction])
-  
 
   return (
     <CustomTable
@@ -357,7 +356,7 @@ const TableProduct = ({
       handleChangePage={handleChangePage}
       handleChangeRowsPerPage={handleChangeRowsPerPage}
     >
-      <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', }}>
+      <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)' }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
@@ -467,7 +466,7 @@ const TableProduct = ({
               <TableCell
                 align='center'
                 sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                onClick={() => handleSort('company','company_name')}
+                onClick={() => handleSort('company', 'company_name')}
               >
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   Company Name
@@ -479,7 +478,7 @@ const TableProduct = ({
               <TableCell
                 align='center'
                 sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                onClick={() => handleSort('countryMaster','country')}
+                onClick={() => handleSort('countryMaster', 'country')}
               >
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   Country
