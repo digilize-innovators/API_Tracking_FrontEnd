@@ -74,12 +74,12 @@ const Index = () => {
     }
     setPendingAction(null)
   }, [formData, pendingAction])
-
+  console.log('batchData', batchData)
   const tableBody = batchData?.map((item, index) => [
     index + 1,
     item.batch_no,
-    item?.productHistory?.product_name,
-    item?.location?.location_name,
+    item?.product?.product_history[0]?.product_name,
+    item?.location?.history[0]?.location_name,
     item?.manufacturing_date ? moment(item.manufacturing_date).format('DD-MM-YYYY') : 'N/A',
     item?.expiry_date ? moment(item.expiry_date).format('DD-MM-YYYY') : 'N/A',
     item?.qty,
@@ -152,10 +152,10 @@ const Index = () => {
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
 
-  const addBatch = async (esign_status) => {
+  const addBatch = async esign_status => {
     try {
       const data = { ...formData }
-      if(config?.config?.audit_logs){
+      if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
           performed_action: 'add',
@@ -163,7 +163,7 @@ const Index = () => {
           authUser
         }
       }
-      data.esign_status = esign_status;
+      data.esign_status = esign_status
       setIsLoading(true)
       const res = await api('/batch/', data, 'post', true)
       setIsLoading(false)
@@ -191,9 +191,9 @@ const Index = () => {
     }
   }
 
-  const editBatch = async (esign_status) => {
+  const editBatch = async esign_status => {
     try {
-      const data = { ...formData };
+      const data = { ...formData }
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
@@ -268,14 +268,14 @@ const Index = () => {
         esignStatus,
         id: eSignStatusId,
         audit_log: config?.config?.audit_logs
-        ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            performed_action: "approved",
-            remarks: remarks?.length > 0 ? remarks : `batch approved - ${auditLogMark}`,
-            authUser: user.user_id
-          }
-        : {}
+          ? {
+              user_id: user.userId,
+              user_name: user.userName,
+              performed_action: 'approved',
+              remarks: remarks?.length > 0 ? remarks : `batch approved - ${auditLogMark}`,
+              authUser: user.user_id
+            }
+          : {}
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)
       if (res.data) {

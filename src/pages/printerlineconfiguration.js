@@ -81,13 +81,12 @@ const Index = () => {
 
     handleUserAction()
   }, [formData, pendingAction])
-
   const tableBody = allPrinterLineConfigurationData?.map((item, index) => [
     index + 1,
     item?.printer_line_name,
-    item?.PrinterMaster.printer_id,
+    item?.PrinterMaster.PrinterMasterHistory[0]?.printer_id,
     item?.camera_enable,
-    item?.cameraMaster?.name,
+    item?.cameraMaster?.CameraMasterHistory[0]?.name,
     item?.esign_status || 'N/A'
   ])
 

@@ -1,7 +1,18 @@
 'use-client'
 import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react'
 import TableCollapsibleuser from 'src/views/tables/TableCollapsibleuser.js'
-import {InputLabel ,FormControl,Typography,Select,Button, Box, MenuItem, TableContainer, Paper, Grid2 } from '@mui/material'
+import {
+  InputLabel,
+  FormControl,
+  Typography,
+  Select,
+  Button,
+  Box,
+  MenuItem,
+  TableContainer,
+  Paper,
+  Grid2
+} from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import { api } from 'src/utils/Rest-API'
@@ -16,9 +27,9 @@ import { useRouter } from 'next/router'
 import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
-import { validateToken } from 'src/utils/ValidateToken';
+import { validateToken } from 'src/utils/ValidateToken'
 import { getTokenValues } from 'src/utils/tokenUtils'
-import { useApiAccess } from 'src/@core/hooks/useApiAccess';
+import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import CustomSearchBar from 'src/components/CustomSearchBar'
@@ -41,86 +52,99 @@ const Index = () => {
   const { setIsLoading } = useLoading()
   const { getUserData, removeAuthToken } = useAuth()
   const [userDataPdf, setUserDataPdf] = useState()
-  const [config, setConfig] = useState(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [config, setConfig] = useState(null)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '',searchVal: ''});
-  const [eSignStatusId, setESignStatusId] = useState('');
-  const [auditLogMark, setAuditLogMark] = useState('');
-  const [esignDownloadPdf, setEsignDownloadPdf] = useState(false);
-  const [openModalApprove, setOpenModalApprove] = useState(false);
-  const [pendingAction, setPendingAction] = useState(null);
+  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
+  const [eSignStatusId, setESignStatusId] = useState('')
+  const [auditLogMark, setAuditLogMark] = useState('')
+  const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
+  const [openModalApprove, setOpenModalApprove] = useState(false)
+  const [pendingAction, setPendingAction] = useState(null)
   const [userFormData, setUserFormData] = useState({})
-  const searchBarRef = useRef(null);
+  const searchBarRef = useRef(null)
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
-  const apiAccess = useApiAccess("user-create","user-update","user-approve");
+  const apiAccess = useApiAccess('user-create', 'user-update', 'user-approve')
 
   useLayoutEffect(() => {
-    let data = getUserData();
-    const decodedToken = getTokenValues();
-    setConfig(decodedToken);
-    setUserDataPdf(data);
-    return () => { }
+    let data = getUserData()
+    const decodedToken = getTokenValues()
+    setConfig(decodedToken)
+    setUserDataPdf(data)
+    return () => {}
   }, [])
 
   useEffect(() => {
     const handleUserAction = async () => {
       if (userFormData && pendingAction) {
-        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
-        if (pendingAction === "edit") {
-          await editUser(esign_status);  
-        } else if (pendingAction === "add") {
-          await addUser(esign_status);  
+        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
+        if (pendingAction === 'edit') {
+          await editUser(esign_status)
+        } else if (pendingAction === 'add') {
+          await addUser(esign_status)
         }
-        setPendingAction(null);
+        setPendingAction(null)
       }
     }
-    handleUserAction();
-  }, [userFormData, pendingAction]);
+    handleUserAction()
+  }, [userFormData, pendingAction])
 
   useEffect(() => {
     getDepartments()
   }, [departmentFilter, tableHeaderData, statusFilter])
 
-  
-  const tableBody = userData.map((item, index) =>
-    [index + 1, item.user_id,
+  const tableBody = userData.map((item, index) => [
+    index + 1,
+    item.user_id,
     item.user_name,
-    item.department?.department_name,
-    item.designation?.designation_name,
+    item.department?.history[0]?.department_name,
+    item.designation?.history[0]?.designation_name,
     item.email,
     item.is_active ? 'enabled' : 'disabled',
-    item.esign_status]);
+    item.esign_status
+  ])
 
-  const tableData = useMemo(() => ({
-    tableHeader: ['Sr.No.', 'User Id', 'User Name', 'Department Name', 'Designation Name', 'Email', 'Status', 'E-Sign'],
-    tableHeaderText: 'User Master Report',
-    tableBodyText: 'User Data',
-    Filter: ['department', departmentFilter],
-    statusFilter:statusFilter==null?'':statusFilter==true?"enable":"disable",
-    filename: "UserMaster"
-  }), [departmentFilter,statusFilter]);
+  const tableData = useMemo(
+    () => ({
+      tableHeader: [
+        'Sr.No.',
+        'User Id',
+        'User Name',
+        'Department Name',
+        'Designation Name',
+        'Email',
+        'Status',
+        'E-Sign'
+      ],
+      tableHeaderText: 'User Master Report',
+      tableBodyText: 'User Data',
+      Filter: ['department', departmentFilter],
+      statusFilter: statusFilter == null ? '' : statusFilter == true ? 'enable' : 'disable',
+      filename: 'UserMaster'
+    }),
+    [departmentFilter, statusFilter]
+  )
 
-  console.log('tableData is index',tableData)
+  console.log('tableData is index', tableData)
 
   const getDepartments = async () => {
     try {
-      setIsLoading(true);
-      const res = await api(`/department?limit=-1`, {}, 'get', true);
-      console.log('All department ', res.data);
+      setIsLoading(true)
+      const res = await api(`/department?limit=-1`, {}, 'get', true)
+      console.log('All department ', res.data)
       if (res.data.success) {
-        setAllDepartment(res.data.data.departments);
+        setAllDepartment(res.data.data.departments)
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       }
     } catch (error) {
-      console.log('Error in get department ', error);
+      console.log('Error in get department ', error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
@@ -128,18 +152,18 @@ const Index = () => {
 
   const handleOpenModal = () => {
     setApproveAPI({
-      approveAPIName: "user-create",
-      approveAPImethod: "POST",
-      approveAPIEndPoint: "/api/v1/user"
+      approveAPIName: 'user-create',
+      approveAPImethod: 'POST',
+      approveAPIEndPoint: '/api/v1/user'
     })
-    resetForm();
-    setOpenModal(true);
+    resetForm()
+    setOpenModal(true)
   }
 
   const handleAuthModalClose = () => {
-    setAuthModalOpen(false);
-    setOpenModalApprove(false);
-  };
+    setAuthModalOpen(false)
+    setOpenModalApprove(false)
+  }
 
   const handleCloseModal = () => {
     resetForm()
@@ -152,93 +176,94 @@ const Index = () => {
     setProfilePhoto('/images/avatars/1.png')
   }
 
-  const handleSubmitForm = async (data) => {
+  const handleSubmitForm = async data => {
     setUserFormData(data)
-    const isEdit = !!editData?.id;
-    isEdit ? setApproveAPI({
-      approveAPIName: "user-update",
-      approveAPImethod: "PUT",
-      approveAPIEndPoint: "/api/v1/user"
-    }) : setApproveAPI({
-      approveAPIName: "user-create",
-      approveAPImethod: "POST",
-      approveAPIEndPoint: "/api/v1/user"
-    })
+    const isEdit = !!editData?.id
+    isEdit
+      ? setApproveAPI({
+          approveAPIName: 'user-update',
+          approveAPImethod: 'PUT',
+          approveAPIEndPoint: '/api/v1/user'
+        })
+      : setApproveAPI({
+          approveAPIName: 'user-create',
+          approveAPImethod: 'POST',
+          approveAPIEndPoint: '/api/v1/user'
+        })
 
-    if (config?.config?.esign_status && config?.role!='admin') {
-      setAuthModalOpen(true);
-      return;
+    if (config?.config?.esign_status && config?.role != 'admin') {
+      setAuthModalOpen(true)
+      return
     }
-    setPendingAction(editData?.id ? "edit" : "add");
-  };
+    setPendingAction(editData?.id ? 'edit' : 'add')
+  }
 
-  const addUser = async (esign_status) => {
-    const uploadRes = await uploadUserImage();
+  const addUser = async esign_status => {
+    const uploadRes = await uploadUserImage()
     if (!uploadRes?.success) {
-      setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: uploadRes?.message });
-      return;
+      setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: uploadRes?.message })
+      return
     }
     try {
       setIsLoading(true)
       const data = {
         ...userFormData,
-        profilePhoto: uploadRes?.url || "",
+        profilePhoto: uploadRes?.url || '',
         is_active: true,
         role: 'user'
       }
-      delete data.isEnabled;
-      if(config?.config?.audit_logs){
-        data.audit_log =  {
-          "audit_log": true,
-          "performed_action": "add",
-          "remarks": esignRemark?.length > 0 ? esignRemark : `user added - ${userFormData.userName}`,
+      delete data.isEnabled
+      if (config?.config?.audit_logs) {
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'add',
+          remarks: esignRemark?.length > 0 ? esignRemark : `user added - ${userFormData.userName}`,
           authUser
         }
       }
-      data.esign_status = esign_status;
-      const res = await api('/user/', data, 'post', true);
+      data.esign_status = esign_status
+      const res = await api('/user/', data, 'post', true)
       setIsLoading(false)
       if (res?.data?.success) {
-        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'User added successfully' });
-        resetForm();
-        setOpenModal(false);
-
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'User added successfully' })
+        resetForm()
+        setOpenModal(false)
       } else {
         console.log('error to add User ', res.data)
-        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message });
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
         if (res.data.code === 401) {
-          removeAuthToken();
-          router.push('/401');
+          removeAuthToken()
+          router.push('/401')
         }
       }
     } catch (error) {
-      setOpenModal(false);
-      console.log('Erorr to add User ', error);
-      router.push('/500');
+      setOpenModal(false)
+      console.log('Erorr to add User ', error)
+      router.push('/500')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
       setApproveAPI({
-        approveAPIName: "",
-        approveAPImethod: "",
-        approveAPIEndPoint: ""
+        approveAPIName: '',
+        approveAPImethod: '',
+        approveAPIEndPoint: ''
       })
     }
   }
 
-  const editUser = async (esign_status) => {
-    let url = '';
-    if (profilePhoto !== editData.profile_photo || editData.profile_photo === "") {
-      const uploadRes = await uploadUserImage();
+  const editUser = async esign_status => {
+    let url = ''
+    if (profilePhoto !== editData.profile_photo || editData.profile_photo === '') {
+      const uploadRes = await uploadUserImage()
       if (!uploadRes?.success) {
-        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: uploadRes?.message });
-        return;
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: uploadRes?.message })
+        return
       }
-      url = uploadRes?.url;
+      url = uploadRes?.url
     }
     try {
       const data = {
         ...userFormData,
-        profilePhoto: url ,
+        profilePhoto: url,
         is_active: userFormData.isEnabled
       }
       delete data.isEnabled
@@ -247,15 +272,15 @@ const Index = () => {
       delete data.userName
       if (config?.config?.audit_logs) {
         data.audit_log = {
-          "audit_log": true,
-          "performed_action": "edit",
-          "remarks": esignRemark > 0 ? esignRemark : `user edited - ${userFormData.userName}`,
+          audit_log: true,
+          performed_action: 'edit',
+          remarks: esignRemark > 0 ? esignRemark : `user edited - ${userFormData.userName}`,
           authUser
-        };
+        }
       }
-      data.esign_status = esign_status;
+      data.esign_status = esign_status
       setIsLoading(true)
-      const res = await api(`/user/${editData.id}`, data, 'put', true);
+      const res = await api(`/user/${editData.id}`, data, 'put', true)
       setIsLoading(false)
       if (res.data.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'User updated successfully' })
@@ -266,75 +291,75 @@ const Index = () => {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
         if (res.data.code === 401) {
           removeAuthToken()
-          router.push('/401');
+          router.push('/401')
         }
       }
     } catch (error) {
       console.log('Erorr to edit User ', error)
-      router.push('/500');
+      router.push('/500')
       setOpenModal(false)
-
     } finally {
       setIsLoading(false)
       setApproveAPI({
-        approveAPIName: "",
-        approveAPImethod: "",
-        approveAPIEndPoint: ""
+        approveAPIName: '',
+        approveAPImethod: '',
+        approveAPIEndPoint: ''
       })
     }
-
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log("handleAuthResult 01", isAuthenticated, isApprover, esignStatus, user);
-    console.log("handleAuthResult 02", config.userId, user.user_id);
+    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
+    console.log('handleAuthResult 02', config.userId, user.user_id)
     const handleAuthenticationError = () => {
-      setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' });
-    };
+      setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' })
+    }
     const handleApproverActions = async (user, esignStatus, remarks) => {
-      const data = prepareApproverData(user, esignStatus, remarks);
-      if (esignStatus === "approved" && esignDownloadPdf) {
-        handleApproveDownload();
-        return;
+      const data = prepareApproverData(user, esignStatus, remarks)
+      if (esignStatus === 'approved' && esignDownloadPdf) {
+        handleApproveDownload()
+        return
       }
       try {
-        await updateEsignStatus(data);
+        await updateEsignStatus(data)
       } catch (error) {
-        handleEsignUpdateError();
-        return;
+        handleEsignUpdateError()
+        return
       }
-      if (esignStatus === "rejected" && esignDownloadPdf) {
-        handleRejectDownload();
+      if (esignStatus === 'rejected' && esignDownloadPdf) {
+        handleRejectDownload()
       }
-    };
+    }
     const prepareApproverData = (user, esignStatus, remarks) => {
       const data = {
-        modelName: "user",
+        modelName: 'user',
         esignStatus,
         id: eSignStatusId,
-        audit_log: config?.config?.audit_logs ? {
-          user_id: user.user_id,
-          user_name: user.userName,
-          performed_action: 'approved',
-          remarks: remarks.length > 0 ? remarks : `user approved - ${auditLogMark}`,
-          authUser: user.user_id
-        } : {},
-      };
-      return data;
-    };
+        audit_log: config?.config?.audit_logs
+          ? {
+              user_id: user.user_id,
+              user_name: user.userName,
+              performed_action: 'approved',
+              remarks: remarks.length > 0 ? remarks : `user approved - ${auditLogMark}`,
+              authUser: user.user_id
+            }
+          : {}
+      }
+      return data
+    }
     const handleApproveDownload = () => {
-      console.log("esign is approved for approver");
-      setOpenModalApprove(false);
-      downloadPdf(tableData, tableHeaderData, tableBody, userData, userDataPdf);
-      resetApprovalState();
-    };
+      console.log('esign is approved for approver')
+      setOpenModalApprove(false)
+      downloadPdf(tableData, tableHeaderData, tableBody, userData, userDataPdf)
+      resetApprovalState()
+    }
     const handleRejectDownload = () => {
-      console.log("approver rejected");
-      setOpenModalApprove(false);
-      resetApprovalState();
-    };
-    const updateEsignStatus = async (data) => {
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true);
+      console.log('approver rejected')
+      setOpenModalApprove(false)
+      resetApprovalState()
+    }
+    const updateEsignStatus = async data => {
+      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
       if (res.data) {
         setAlertData({
           ...alertData,
@@ -344,94 +369,92 @@ const Index = () => {
         })
       }
       setPendingAction(true)
-    };
+    }
     const handleEsignUpdateError = () => {
-      console.error("Error updating esign status:");
-      setAlertData({ openSnackbar: true, type: 'error', message: 'Failed to update e-sign status.' });
-      resetApprovalState();
-    };
-    const handleCreatorActions = (esignStatus) => {
-      if (esignStatus === "rejected") {
-        setAuthModalOpen(false);
-        setOpenModalApprove(false);
+      console.error('Error updating esign status:')
+      setAlertData({ openSnackbar: true, type: 'error', message: 'Failed to update e-sign status.' })
+      resetApprovalState()
+    }
+    const handleCreatorActions = esignStatus => {
+      if (esignStatus === 'rejected') {
+        setAuthModalOpen(false)
+        setOpenModalApprove(false)
         setAlertData({
           ...alertData,
           openSnackbar: true,
           type: 'error',
           message: 'Access denied for this user.'
         })
-      } else if (esignStatus === "approved" && esignDownloadPdf) {
-        console.log("esign is approved for creator to download");
-        setOpenModalApprove(true);
-      } else if (esignStatus === "approved") {
-        console.log("esign is approved for creator");
+      } else if (esignStatus === 'approved' && esignDownloadPdf) {
+        console.log('esign is approved for creator to download')
+        setOpenModalApprove(true)
+      } else if (esignStatus === 'approved') {
+        console.log('esign is approved for creator')
         setAuthUser(user)
         setEsignRemark(remarks)
-        setPendingAction(editData?.id ? "edit" : "add");
+        setPendingAction(editData?.id ? 'edit' : 'add')
       }
-    };
+    }
     const resetApprovalState = () => {
       setApproveAPI({
-        approveAPIName: "",
-        approveAPImethod: "",
-        approveAPIEndPoint: ""
+        approveAPIName: '',
+        approveAPImethod: '',
+        approveAPIEndPoint: ''
       })
       setEsignDownloadPdf(false)
-      setAuthModalOpen(false);
-    };
+      setAuthModalOpen(false)
+    }
     if (!isAuthenticated) {
-      handleAuthenticationError();
-      return;
+      handleAuthenticationError()
+      return
     }
     if (!isApprover && esignDownloadPdf) {
       setAlertData({
         ...alertData,
         openSnackbar: true,
         type: 'error',
-        message: "Access denied: Download pdf disabled for this user."
+        message: 'Access denied: Download pdf disabled for this user.'
       })
       resetApprovalState()
       return
     }
     if (isApprover) {
-      await handleApproverActions(user, esignStatus, remarks);
+      await handleApproverActions(user, esignStatus, remarks)
     } else {
-      handleCreatorActions(esignStatus, remarks);
+      handleCreatorActions(esignStatus, remarks)
     }
-    resetApprovalState();
-  };
-
-  const handleAuthCheck = async (row) => {
-    console.log("handleAuthCheck", row)
-    setApproveAPI({
-      approveAPIName: "user-approve",
-      approveAPImethod: "PATCH",
-      approveAPIEndPoint: "/api/v1/user"
-    })
-    setAuthModalOpen(true);
-    setESignStatusId(row.id);
-    setAuditLogMark(row.user_id)
-    console.log("row", row)
+    resetApprovalState()
   }
 
-  const handleUpdate = (item) => {
-    console.log('edit user', item);
-    resetForm();
-    setOpenModal(true);
-    setEditData(item);
-    const {
-      profile_photo,
-    } = item;
+  const handleAuthCheck = async row => {
+    console.log('handleAuthCheck', row)
+    setApproveAPI({
+      approveAPIName: 'user-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/user'
+    })
+    setAuthModalOpen(true)
+    setESignStatusId(row.id)
+    setAuditLogMark(row.user_id)
+    console.log('row', row)
+  }
 
-    if (profile_photo.trim()!=='' && profile_photo !== '/images/avatars/1.png') {
-      convertImageToBase64(profile_photo);
+  const handleUpdate = item => {
+    console.log('edit user', item)
+    resetForm()
+    setOpenModal(true)
+    setEditData(item)
+    const { profile_photo } = item
+
+    if (profile_photo.trim() !== '' && profile_photo !== '/images/avatars/1.png') {
+      convertImageToBase64(profile_photo)
     } else {
-      setProfilePhoto('/images/avatars/1.png');
+      setProfilePhoto('/images/avatars/1.png')
     }
-  };
+  }
 
-  const handleSearch = (val) => {
-    setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() });
+  const handleSearch = val => {
+    setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
     if (val === '') {
       setDepartmentFilter('')
       setStatusFilter(null)
@@ -440,9 +463,9 @@ const Index = () => {
 
   const resetFilter = () => {
     if (searchBarRef.current) {
-      searchBarRef.current.resetSearch();
+      searchBarRef.current.resetSearch()
     }
-    setTableHeaderData({ ...tableHeaderData, searchVal: "" ,esignStatus:''})
+    setTableHeaderData({ ...tableHeaderData, searchVal: '', esignStatus: '' })
     setDepartmentFilter('')
     setStatusFilter(null)
   }
@@ -466,75 +489,73 @@ const Index = () => {
   }
 
   const onChange = event => {
-    setIsLoading(true);
-    const reader = new FileReader();
-    const { files } = event.target;
+    setIsLoading(true)
+    const reader = new FileReader()
+    const { files } = event.target
     if (files && files.length !== 0) {
       reader.onload = () => {
-        setProfilePhoto(reader.result);
-        setIsLoading(false);
-
+        setProfilePhoto(reader.result)
+        setIsLoading(false)
       }
-      reader.readAsDataURL(files[0]);
-      setFile(event.target.files[0]);
-      event.target.value = "";
+      reader.readAsDataURL(files[0])
+      setFile(event.target.files[0])
+      event.target.value = ''
+    } else {
+      setIsLoading(false)
     }
-    else {
-      setIsLoading(false);
-    }
-    console.log("profilePhoto", profilePhoto)
-    setIsLoading(false);
+    console.log('profilePhoto', profilePhoto)
+    setIsLoading(false)
   }
 
   const uploadUserImage = async () => {
     try {
       if (!file) {
-        return { success: true, url: '' };
+        return { success: true, url: '' }
       }
-      let url = '';
+      let url = ''
       const formData = new FormData()
       formData.append('photo', file)
-      const res = await api('/upload/userProfile', formData, 'upload', true);
-      console.log("Response of upload user profile ", res?.data);
+      const res = await api('/upload/userProfile', formData, 'upload', true)
+      console.log('Response of upload user profile ', res?.data)
       if (res?.data.success) {
         console.log('Encryp data path ', res?.data.data.path)
         const decryptUrl = await decrypt(res?.data.data.path)
-        url = `${mainUrl}/${decryptUrl}`;
-        return { url, success: true };
+        url = `${mainUrl}/${decryptUrl}`
+        return { url, success: true }
       } else if (res?.data.code === 401) {
         removeAuthToken()
-        router.push('/401');
+        router.push('/401')
       } else {
         return { code: res?.data.code, message: res?.data.message, success: false }
       }
     } catch (error) {
-      console.log('Error in upload user image ', error);
+      console.log('Error in upload user image ', error)
     }
   }
 
   const handleAuthModalOpen = () => {
-    console.log("OPen auth model");
+    console.log('OPen auth model')
     setApproveAPI({
-      approveAPIName: "user-approve",
-      approveAPImethod: "PATCH",
-      approveAPIEndPoint: "/api/v1/user"
+      approveAPIName: 'user-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/user'
     })
-    setAuthModalOpen(true);
-  };
+    setAuthModalOpen(true)
+  }
 
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: "user-approve",
-      approveAPImethod: "PATCH",
-      approveAPIEndPoint: "/api/v1/user"
+      approveAPIName: 'user-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/user'
     })
-    if (config?.config?.esign_status && config?.role!=='admin') {
-      console.log("Esign enabled for download pdf");
-      setEsignDownloadPdf(true);
-      setAuthModalOpen(true);
-      return;
+    if (config?.config?.esign_status && config?.role !== 'admin') {
+      console.log('Esign enabled for download pdf')
+      setEsignDownloadPdf(true)
+      setAuthModalOpen(true)
+      return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, userData, userDataPdf);
+    downloadPdf(tableData, tableHeaderData, tableBody, userData, userDataPdf)
   }
 
   return (
@@ -553,9 +574,9 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex-row justify-content-start align-items-center mx-4 my-3 '>
-                {(config?.config?.esign_status && config?.role!=='admin') &&
+                {config?.config?.esign_status && config?.role !== 'admin' && (
                   <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
-                }
+                )}
                 <FormControl className='w-25 mx-2'>
                   <InputLabel id='department-label'>Department</InputLabel>
                   <Select
@@ -592,16 +613,14 @@ const Index = () => {
                 <Box className='d-flex justify-content-between align-items-center '>
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
 
-                  {
-                    apiAccess.addApiAccess && (
-                      <Button variant='contained' className='mx-2' onClick={handleOpenModal} role='button'>
-                        <span>
-                          <IoMdAdd />
-                        </span>
-                        <span>Add</span>
-                      </Button>
-                    )
-                  }
+                  {apiAccess.addApiAccess && (
+                    <Button variant='contained' className='mx-2' onClick={handleOpenModal} role='button'>
+                      <span>
+                        <IoMdAdd />
+                      </span>
+                      <span>Add</span>
+                    </Button>
+                  )}
                 </Box>
               </Box>
             </Grid2>
@@ -619,7 +638,8 @@ const Index = () => {
                   config={config}
                   tableHeaderData={tableHeaderData}
                   departmentFilter={departmentFilter}
-                  statusFilter={statusFilter} />
+                  statusFilter={statusFilter}
+                />
               </TableContainer>
             </Grid2>
           </Box>
@@ -653,6 +673,6 @@ const Index = () => {
   )
 }
 export async function getServerSideProps(context) {
-  return validateToken(context, "User Master")
+  return validateToken(context, 'User Master')
 }
 export default ProtectedRoute(Index)

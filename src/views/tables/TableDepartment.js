@@ -90,9 +90,9 @@ const Row = ({
       if (formData && pendingAction) {
         const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
         if (pendingAction === 'edit') {
-          await editDesignation(esign_status);
+          await editDesignation(esign_status)
         } else if (pendingAction === 'add') {
-          await addDesignation(esign_status);
+          await addDesignation(esign_status)
         }
         setPendingAction(null)
       }
@@ -141,21 +141,21 @@ const Row = ({
       setEsignDownloadPdf(false)
       setAuthModalOpen(false)
     }
-      
+
     const handleApproverActions = async () => {
       const data = {
         modelName: 'designation',
         esignStatus,
         id: eSignStatusId,
         audit_log: config?.config?.audit_logs
-        ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            performed_action: "approved",
-            remarks: remarks.length > 0 ? remarks : `designation approved - ${auditLogMark}`,
-            authUser: user.user_id
-          }
-        : {}
+          ? {
+              user_id: user.userId,
+              user_name: user.userName,
+              performed_action: 'approved',
+              remarks: remarks.length > 0 ? remarks : `designation approved - ${auditLogMark}`,
+              authUser: user.user_id
+            }
+          : {}
       }
 
       if (!esignDownloadPdf && isApprover && approveAPI.approveAPIName !== 'designation-approve') {
@@ -168,8 +168,9 @@ const Row = ({
         resetState()
         return
       } else {
-        const res = await api('/esign-status/update-esign-status', data, 'patch', true);
-        if (res.data) {
+        if (!esignDownloadPdf) {
+          const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+          if (res.data) {
             setAlertData({
               ...alertData,
               openSnackbar: true,
@@ -177,7 +178,8 @@ const Row = ({
               message: res.data.message
             })
           }
-        setPendingAction(true)
+          setPendingAction(true)
+        }
 
         if (esignDownloadPdf) {
           if (esignStatus === 'approved' && esignDownloadPdf) {
@@ -298,10 +300,10 @@ const Row = ({
     }
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
-  const addDesignation = async (esign_status) => {
+  const addDesignation = async esign_status => {
     try {
-      const data = { ...formData };
-      if(config?.config?.audit_logs){
+      const data = { ...formData }
+      if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
           performed_action: 'add',
@@ -336,10 +338,10 @@ const Row = ({
       })
     }
   }
-  const editDesignation = async (esign_status) => {
+  const editDesignation = async esign_status => {
     try {
       const data = { ...formData }
-      delete data.designationId;
+      delete data.designationId
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,

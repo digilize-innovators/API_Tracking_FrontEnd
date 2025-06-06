@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react'
-import { Button, TableContainer, Paper,Box,Grid2,Typography} from '@mui/material'
+import { Button, TableContainer, Paper, Box, Grid2, Typography } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import TableProduct from 'src/views/tables/TableProduct'
 import { api } from 'src/utils/Rest-API'
@@ -64,7 +64,7 @@ const Index = () => {
     setConfig(decodedToken)
     return () => {}
   }, [])
-
+  console.log('productData', productData)
   const tableBody = productData?.map((item, index) => [
     index + 1,
     item.product_id,
@@ -72,8 +72,8 @@ const Index = () => {
     item?.gtin,
     item?.ndc,
     item?.generic_name,
-    item?.packaging_hierarchy,
-    item?.company.company_name,
+    item?.packaging_size,
+    item?.company.CompanyHistory[0]?.company_name,
     item.countryMaster.country,
     item?.esign_status
   ])
@@ -314,7 +314,7 @@ const Index = () => {
     setAuditLogMark(row.product_id)
     console.log('row', row)
   }
-  const addProduct = async (esign_status) => {
+  const addProduct = async esign_status => {
     const uploadRes = await uploadFile(formData.file, '/upload/productImage')
     if (!uploadRes?.success) {
       setAlertData({ ...alertData, type: 'error', message: 'File upload failed', openSnackbar: true })
@@ -328,7 +328,7 @@ const Index = () => {
         pallet_size: formData?.pallet_size?.toString(),
         productImage: uploadRes?.url.split('/').pop()
       }
-      if(config?.config?.audit_logs){
+      if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
           performed_action: 'add',
@@ -336,10 +336,10 @@ const Index = () => {
           authUser
         }
       }
-      data.esign_status = esign_status;
+      data.esign_status = esign_status
       setIsLoading(true)
       const res = await api('/product/', data, 'post', true)
-      setIsLoading(false);
+      setIsLoading(false)
       if (res?.data?.success) {
         setAlertData({ ...alertData, type: 'success', message: 'Product added successfully', openSnackbar: true })
         resetForm()
@@ -359,12 +359,12 @@ const Index = () => {
       setIsLoading(false)
     }
   }
-  const editProduct = async (esign_status) => {
+  const editProduct = async esign_status => {
     console.log('Check Image is new pic is upload ')
     let productImageUrl =
       productImage !== editData.product_image
         ? (await uploadFile(formData.file, '/upload/productImage'))?.url
-        : editData.product_image;
+        : editData.product_image
     try {
       delete formData['productId']
       delete formData['file']
@@ -382,7 +382,7 @@ const Index = () => {
           authUser
         }
       }
-      data.esign_status = esign_status;
+      data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/product/${editData.id}`, data, 'put', true)
       setIsLoading(false)
@@ -416,9 +416,9 @@ const Index = () => {
       setESignStatusId(item.id)
     }
 
-    const img =item.product_image.split(BaseUrl)
+    const img = item.product_image.split(BaseUrl)
     const defaultImage = '/images/avatars/p.png'
-    if (img[img?.length-1]!=='/' &&img[img?.length-1] !== defaultImage) {
+    if (img[img?.length - 1] !== '/' && img[img?.length - 1] !== defaultImage) {
       convertImageToBase64(item.product_image, setProductImage)
     } else {
       setProductImage(defaultImage)
@@ -466,7 +466,7 @@ const Index = () => {
     }
     console.log(productData)
     downloadPdf(tableData, tableHeaderData, tableBody, productData, userDataPdf)
-  };
+  }
 
   const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
