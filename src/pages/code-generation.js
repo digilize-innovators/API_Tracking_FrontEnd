@@ -67,10 +67,10 @@ const Index = () => {
 
   const tableBody = codeRequestData.map((item, index) => [
     index + 1,
-    item.batch.history[0].productHistory.product_name,
-    item.batch.history[0].batch_no,
+    item.batch.productHistory.product_name,
+    item.batch.batch_no,
     item.locations.location_name,
-    item.batch.history[0].qty,
+    item.batch.qty,
     item.no_of_codes,
     item.status
   ])
@@ -328,14 +328,14 @@ const Index = () => {
   const handleOpenModal2 = async row => {
     console.log('clicked on handleOpenModal2', row)
     const levelWiseData = await getAvailableData(row.product_id, row.batch_id)
-    const packagingHierarchyLevel = row.batch.history[0].productHistory.packagingHierarchy
-    const batchSize = row.batch.history[0].qty
+    const packagingHierarchyLevel = row.batch.productHistory.packagingHierarchy
+    const batchSize = row.batch.qty
     const packagingHierarchyData = []
     const baseLevel = {
-      0: row.batch.history[0].productHistory.productNumber,
-      1: row.batch.history[0].productHistory.firstLayer,
-      2: row.batch.history[0].productHistory.secondLayer,
-      3: row.batch.history[0].productHistory.thirdLayer
+      0: row.batch.productHistory.productNumber,
+      1: row.batch.productHistory.firstLayer,
+      2: row.batch.productHistory.secondLayer,
+      3: row.batch.productHistory.thirdLayer
     }
 
     for (let i = 0; i < packagingHierarchyLevel; i++) {
