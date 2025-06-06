@@ -28,12 +28,12 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
     const getProducts = async () => {
       try {
         setIsLoading(true)
-        const res = await api(`/product?limit=-1`, {}, 'get', true)
+        const res = await api(`/product?limit=-1&history_latest=true`, {}, 'get', true)
         setIsLoading(false)
         if (res.data.success) {
           const data = res.data.data.products?.map(item => ({
-            id: item.id,
-            value: item.id,
+            id: item.product_uuid,
+            value: item.product_uuid,
             label: item.product_name
           }))
           setProductData(data)
@@ -187,7 +187,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
       return;
     }
     console.log('on submit ', data)
-    handleGenerateCode(false, data,"approved")
+    handleGenerateCode(false, data, "approved")
   }
 
   const resetAll = () => {

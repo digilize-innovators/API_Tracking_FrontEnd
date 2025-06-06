@@ -464,7 +464,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
 
 const Index = ({ userId, ip }) => {
   const { settings } = useSettings();
-  const [alertData, setAlertData] = useState({ openSnackbar: true, type: '', message: '', variant: 'filled' })
+  const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [openProjectModal, setOpenProjectModal] = useState(false)
   const [printerLines, setPrinterLines] = useState([])
   const { setIsLoading } = useLoading()
@@ -709,8 +709,10 @@ const Index = ({ userId, ip }) => {
     setIsLoading(true)
     try {
       const res = await api(`/batchprinting/getLinesByPcIp/${ip}`, {}, 'get', true, true, ip)
-      console.log('Get Printer line name and control panel for Batch printing', res.data)
-      if (res.data.success) {
+      if (!res) {
+        setAlertData({ openSnackbar: true, type: 'error', message: "Error to connect with printing backend", variant: 'filled' })
+      }
+      if (res?.data?.success) {
         const groupedPanels = []
         Object.keys(res.data.data.groupedPanels).map(key => {
           const values = res.data.data.groupedPanels[key].map(line => ({
@@ -747,14 +749,14 @@ const Index = ({ userId, ip }) => {
         setPrinterLines(groupedPanels);
         await getPrintingStatus(groupedPanels);
       } else {
-        console.log('Error fetching lines', res.data)
-        if (res.data.code === 401) {
+        console.log('Error fetching lines', res?.data)
+        if (res?.data?.code === 401) {
           removeAuthToken()
           router.push('/401')
         }
       }
     } catch (error) {
-      console.log('Error fetching lines', error)
+      console.log('Error to connect with printing backend ', error)
     } finally {
       setIsLoading(false)
     }
@@ -1307,7 +1309,7 @@ const Index = ({ userId, ip }) => {
                         onOpen={() => getProducts(panelIndex, lineIndex)}
                       >
                         {line?.products?.map(product => (
-                          <MenuItem key={product.id} value={product.id}>
+                          <MenuItem key={product.product_uuid} value={product.product_uuid}>
                             {product?.product_name}
                           </MenuItem>
                         ))}

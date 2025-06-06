@@ -976,7 +976,7 @@ const BatchReport = () => {
           <InputLabel id='product-label'>Product</InputLabel>
           <Select labelId='product-label' value={selectedProduct} label='Product' onChange={handleProductChange}>
             {products.map(product => (
-              <MenuItem key={product.id} value={product.id}>
+              <MenuItem key={product.product_uuid} value={product.product_uuid}>
                 {product.product_name}
               </MenuItem>
             ))}

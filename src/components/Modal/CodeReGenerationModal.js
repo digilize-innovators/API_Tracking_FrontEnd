@@ -56,7 +56,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
                 id='productId'
                 label='Product'
                 placeholder='Product'
-                value={availableCodeData?.batch?.productHistory?.product_name}
+                value={availableCodeData?.batch?.history[0].productHistory?.product_name}
                 disabled={true}
               />
             </Box>
@@ -66,7 +66,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
                 id='batchId'
                 label='Batch No.'
                 placeholder='Batch No.'
-                value={availableCodeData?.batch?.batch_no}
+                value={availableCodeData?.batch?.history[0].batch_no}
                 disabled={true}
               />
             </Box>
@@ -76,7 +76,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
                 id='location'
                 label='Location'
                 placeholder='Location'
-                value={availableCodeData?.locations?.location_name}
+                value={availableCodeData?.locations?.history[0].location_name}
                 disabled={true}
               />
             </Box>
@@ -88,7 +88,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
                 id='manufacturingDate'
                 label='Mfg. Date'
                 placeholder='Mfg. Date'
-                value={moment(availableCodeData?.batch?.manufacturing_date).format('DD-MM-YYYY')}
+                value={moment(availableCodeData?.batch?.history[0].manufacturing_date).format('DD-MM-YYYY')}
                 disabled={true}
               />
             </Box>
@@ -98,7 +98,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
                 id='expiryDate'
                 label='Expiry Date'
                 placeholder='Expiry Date'
-                value={moment(availableCodeData?.batch?.expiry_date).format('DD-MM-YYYY')}
+                value={moment(availableCodeData?.batch?.history[0].expiry_date).format('DD-MM-YYYY')}
                 disabled={true}
               />
             </Box>
@@ -108,7 +108,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
                 id='batchQuantity'
                 label='Batch Quantity'
                 placeholder='Batch Quantity'
-                value={availableCodeData?.batch?.qty}
+                value={availableCodeData?.batch?.history[0].qty}
                 disabled={true}
               />
             </Box>
@@ -172,7 +172,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
                 id='packagingHierarchy'
                 label='Packaging Hierarchy'
                 placeholder='Packaging Hierarchy'
-                value={availableCodeData?.batch?.productHistory?.packagingHierarchy}
+                value={availableCodeData?.batch?.history[0].productHistory?.packagingHierarchy}
                 disabled={true}
               />
             </Box>

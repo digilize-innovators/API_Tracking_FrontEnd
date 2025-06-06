@@ -29,7 +29,7 @@ const Index = () => {
   const [openModal, setOpenModal] = useState(false)
   const [openModal2, setOpenModal2] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '' })
+  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '', esignStatus: '' })
   const { setIsLoading } = useLoading()
   const { getUserData } = useAuth()
   const [userDataPdf, setUserDataPdf] = useState()
@@ -45,7 +45,7 @@ const Index = () => {
   const [formData, setFormData] = useState({})
   const [isCodeReGeneration, setIsCodeReGeneration] = useState(false)
   const apiAccess = useApiAccess('codegeneration-create', 'codegeneration-update', 'codegeneration-approve')
-  const searchRef = useRef()
+  const searchRef = useRef();
 
   useLayoutEffect(() => {
     let data = getUserData()
@@ -67,10 +67,10 @@ const Index = () => {
 
   const tableBody = codeRequestData.map((item, index) => [
     index + 1,
-    item.batch.productHistory.product_name,
-    item.batch.batch_no,
+    item.batch.history[0].productHistory.product_name,
+    item.batch.history[0].batch_no,
     item.locations.location_name,
-    item.batch.qty,
+    item.batch.history[0].qty,
     item.no_of_codes,
     item.status
   ])
@@ -104,7 +104,7 @@ const Index = () => {
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log('handleAuthResult', { isAuthenticated, isApprover, esignStatus, user })
-    const closeApprovalModal = () => setOpenModalApprove(false)
+    
     const resetState = () => {
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
       setAuthModalOpen(false)
@@ -127,7 +127,8 @@ const Index = () => {
               user_id: user.userId,
               user_name: user.userName,
               performed_action: 'approved',
-              remarks: remarks || `code generation approved - ${auditLogMark}`
+              remarks: remarks || `code generation approved - ${auditLogMark}`,
+              authUser: user.user_id
             }
           : {}
       }
@@ -139,12 +140,20 @@ const Index = () => {
         return
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('esign status update', esignStatus, res?.data);
+      if (res.data) {
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: res.data.code === 200 ? 'success' : 'error',
+          message: res.data.message
+        })
+      }
       if (res?.data.esign_status === 'rejected') {
         console.log('approver rejected')
         setOpenModalApprove(false)
         resetState()
       }
+      setTableHeaderData({ ...tableHeaderData, searchVal: "", esignStatus: ""})
     }
 
     const handleCreatorActions = () => {
@@ -163,10 +172,10 @@ const Index = () => {
           console.log('esign is approved for creator to download')
           setOpenModalApprove(true)
         } else {
-          console.log('esign is approved for creator')
+          console.log('esign is approved for creator ', user);
           isCodeReGeneration
-            ? handleGenerateCode(true, null, 'pending')
-            : handleGenerateCode(false, formData, 'pending')
+            ? handleGenerateCode(true, null, user, remarks)
+            : handleGenerateCode(false, formData, user, remarks)
         }
       }
     }
@@ -242,8 +251,9 @@ const Index = () => {
     return parseInt(value || 0)
   }
 
-  const handleGenerateCode = async (regenerate, payload, esign_status) => {
+  const handleGenerateCode = async (regenerate, payload, user, remarks) => {
     try {
+      console.log("Handle code generation ", regenerate, user, remarks);
       let data = {}
       if (regenerate) {
         data = {
@@ -258,32 +268,22 @@ const Index = () => {
           },
           batch_id: availableCodeData?.batch_id
         }
-        const audit_log = config?.config?.audit_logs
-          ? {
-              audit_log: true,
-              performed_action: 'codeGenerated',
-              remarks: `code Generated  - ${data.batch?.batch_no}`
-            }
-          : {}
-        data.audit_log = audit_log
-        data.esign_status = esign_status
       } else {
         data = {
           product_id: payload.productId,
           packaging_hierarchy_data: payload.packagingHierarchyData,
           batch_id: payload.batchId
         }
-        const audit_log = config?.config?.audit_logs
-          ? {
-              audit_log: true,
-              performed_action: 'codeReGenrated',
-              remarks: `code Generated  - ${payload.batch}`
-            }
-          : {}
-        data.audit_log = audit_log
-        data.esign_status = esign_status
       }
-      console.log('data on handleGenerateCode', data)
+      if(config?.config?.audit_logs){
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'Code generation',
+          remarks: remarks?.length > 0 ? remarks : `Code generation added batchId = ${availableCodeData.batch_id}`,
+          authUser: user
+        }
+      }
+      data.esign_status = "pending";
       setIsLoading(true)
       const response = await api('/codegeneration', data, 'post', true)
       if (response.data.success) {
@@ -298,6 +298,7 @@ const Index = () => {
         handleCloseModal()
         handleCloseModal2()
         setIsLoading(false)
+        setTableHeaderData({ ...tableHeaderData, searchVal: "", esignStatus: "" })
       } else {
         setAlertData({ type: 'error', message: response.data.message, variant: 'filled' })
         setIsLoading(false)
@@ -327,14 +328,14 @@ const Index = () => {
   const handleOpenModal2 = async row => {
     console.log('clicked on handleOpenModal2', row)
     const levelWiseData = await getAvailableData(row.product_id, row.batch_id)
-    const packagingHierarchyLevel = row.batch.productHistory.packagingHierarchy
-    const batchSize = row.batch.qty
+    const packagingHierarchyLevel = row.batch.history[0].productHistory.packagingHierarchy
+    const batchSize = row.batch.history[0].qty
     const packagingHierarchyData = []
     const baseLevel = {
-      0: row.batch.productHistory.productNumber,
-      1: row.batch.productHistory.firstLayer,
-      2: row.batch.productHistory.secondLayer,
-      3: row.batch.productHistory.thirdLayer
+      0: row.batch.history[0].productHistory.productNumber,
+      1: row.batch.history[0].productHistory.firstLayer,
+      2: row.batch.history[0].productHistory.secondLayer,
+      3: row.batch.history[0].productHistory.thirdLayer
     }
 
     for (let i = 0; i < packagingHierarchyLevel; i++) {
