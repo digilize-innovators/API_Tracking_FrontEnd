@@ -80,9 +80,9 @@ const Index = () => {
       if (formData && pendingAction) {
         const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
         if (pendingAction === 'edit') {
-          await editDepartment(esign_status);
+          await editDepartment(esign_status)
         } else if (pendingAction === 'add') {
-          await addDepartment(esign_status);
+          await addDepartment(esign_status)
         }
         setPendingAction(null)
       }
@@ -150,8 +150,8 @@ const Index = () => {
         !isApprover &&
         (approveAPI.approveAPIName === 'department-create' || approveAPI.approveAPIName === 'department-update')
       ) {
-         setAuthUser(user)
-         setEsignRemark(remarks)
+        setAuthUser(user)
+        setEsignRemark(remarks)
         console.log('esign is approved for creator')
         setPendingAction(editData?.id ? 'edit' : 'add')
       } else if (!isApprover && approveAPI.approveAPIName === 'department-approve') {
@@ -183,7 +183,6 @@ const Index = () => {
             ? {
                 user_id: user.userId,
                 user_name: user.userName,
-                performed_action: 'approved',
                 remarks: remarks.length > 0 ? remarks : `department approved - ${auditLogMark}`,
                 authUser: user.user_id
               }
@@ -293,21 +292,20 @@ const Index = () => {
     }
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
-  const addDepartment = async (esign_status) => {
+  const addDepartment = async esign_status => {
     try {
-      const data = { ...formData };
-      if(config?.config?.audit_logs){
+      const data = { ...formData }
+      if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'add',
           remarks: esignRemark?.length > 0 ? esignRemark : `Department added - ${formData.departmentId}`,
           authUser
         }
       }
       data.esign_status = esign_status
-      setIsLoading(true);
-      const res = await api('/department/', data, 'post', true);
-      console.log("Add department res ", res.data);
+      setIsLoading(true)
+      const res = await api('/department/', data, 'post', true)
+      console.log('Add department res ', res.data)
       setIsLoading(false)
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Department added successfully' })
@@ -332,14 +330,13 @@ const Index = () => {
       })
     }
   }
-  const editDepartment = async (esign_status) => {
+  const editDepartment = async esign_status => {
     try {
       const data = { ...formData }
-      delete data.departmentId;
+      delete data.departmentId
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'edit',
           remarks: esignRemark > 0 ? esignRemark : `department edited - ${formData.departmentName}`,
           authUser
         }

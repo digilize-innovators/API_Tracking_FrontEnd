@@ -148,7 +148,6 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'add',
           remarks: esignRemark?.length > 0 ? esignRemark : `Printer Master added - ${data.printerId}`,
           authUser
         }
@@ -190,7 +189,6 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'edit',
           remarks: esignRemark?.length > 0 ? esignRemark : `Printer Master edited - ${formData.printerId}`,
           authUser
         }
@@ -272,7 +270,6 @@ const Index = () => {
             ? {
                 user_id: user.userId,
                 user_name: user.userName,
-                performed_action: 'approved',
                 authUser: user.user_id,
                 remarks: remarks.length > 0 ? remarks : `printer master approved - ${auditLogMark}`
               }

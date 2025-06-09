@@ -230,7 +230,6 @@ const Index = () => {
           ? {
               user_id: user.userId,
               user_name: user.userName,
-              performed_action: 'approved',
               remarks: remarks.length > 0 ? remarks : `product master approved - ${auditLogMark}`,
               authUser: user.user_id
             }
@@ -331,7 +330,6 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'add',
           remarks: esignRemark?.length > 0 ? esignRemark : `product added - ${formData.productId}`,
           authUser
         }
@@ -377,7 +375,6 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'edit',
           remarks: esignRemark > 0 ? esignRemark : `product edited - ${formData.productName}`,
           authUser
         }

@@ -119,7 +119,6 @@ const Row = ({
   )
 
   const toggleDrawer = (anchor, open) => event => {
-    console.log('open drawer', open)
     if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return
     }
@@ -151,7 +150,6 @@ const Row = ({
           ? {
               user_id: user.userId,
               user_name: user.userName,
-              performed_action: 'approved',
               remarks: remarks.length > 0 ? remarks : `designation approved - ${auditLogMark}`,
               authUser: user.user_id
             }
@@ -183,15 +181,12 @@ const Row = ({
 
         if (esignDownloadPdf) {
           if (esignStatus === 'approved' && esignDownloadPdf) {
-            console.log('esign is approved for approver')
             setOpenModalApprove(false)
             resetState()
             downloadPdf(tableData, null, tableBody, arrayDesignation, userDataPdf)
             return
           }
-          console.log('esign status update', res?.data)
           if (esignStatus === 'rejected' && esignDownloadPdf) {
-            console.log('approver rejected')
             setOpenModalApprove(false)
             resetState()
             return 0
@@ -199,13 +194,11 @@ const Row = ({
         } else if (approveAPI.approveAPIName === 'department-approve') {
           if (esignStatus === 'approved') {
             setOpenModalApprove(false)
-            console.log('esign is approved for approver')
             setPendingAction(true)
             resetState()
             return
           }
           if (esignStatus === 'rejected') {
-            console.log('approver rejected')
             setOpenModalApprove(false)
             resetState()
           }
@@ -223,7 +216,6 @@ const Row = ({
           message: 'Access denied for this user.'
         })
       } else {
-        console.log('esign is approved for creator')
         setAuthUser(user)
         setEsignRemark(remarks)
         setPendingAction(editData?.id ? 'edit' : 'add')
@@ -243,8 +235,6 @@ const Row = ({
     resetState()
   }
   const handleDesigAuthCheck = async row => {
-    console.log('handleDesigAuthCheck', row)
-
     setApproveAPI({
       approveAPIName: 'designation-approve',
       approveAPImethod: 'PATCH',
@@ -253,10 +243,8 @@ const Row = ({
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.designation_id)
-    console.log('row', row)
   }
   const handleDesignationDrawerOpen = row => {
-    console.log('data', row)
     setDepData(row)
   }
   const resetFormDes = () => {
@@ -278,7 +266,6 @@ const Row = ({
   }
 
   const handleSubmitFormDes = async data => {
-    console.log('data', data)
     setFormData(data)
     if (editData?.id) {
       setApproveAPI({
@@ -306,7 +293,6 @@ const Row = ({
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'add',
           remarks: esignRemark?.length > 0 ? esignRemark : `Designation added - ${formData.designationId}`,
           authUser
         }
@@ -314,7 +300,6 @@ const Row = ({
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api('/designation/', data, 'post', true)
-      console.log('res data of add designation', res.data)
       setIsLoading(false)
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Designation added successfully' })
@@ -345,7 +330,6 @@ const Row = ({
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'edit',
           remarks: esignRemark > 0 ? esignRemark : `Designation edited - ${formData.designationName}`,
           authUser
         }
@@ -353,7 +337,6 @@ const Row = ({
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/designation/${editData.id}`, data, 'put', true)
-      console.log('res of edit designation ', res.data)
       setIsLoading(false)
       if (res.data.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Designation updated successfully' })
@@ -383,8 +366,6 @@ const Row = ({
   }
 
   const handleAuthModalOpen = () => {
-    console.log('OPen auth model')
-
     setApproveAPI({
       approveAPIName: 'designation-approve',
       approveAPImethod: 'PATCH',
@@ -399,7 +380,6 @@ const Row = ({
       approveAPIEndPoint: '/api/v1/designation'
     })
     if (config?.config?.esign_status && config?.role !== 'admin') {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return
@@ -524,7 +504,6 @@ const Row = ({
               <IoIosAdd
                 fontSize={30}
                 onClick={() => {
-                  console.log('Add button clicked')
                   handleDesignationDrawerOpen(row)
                 }}
                 style={{ cursor: 'pointer' }}
@@ -693,7 +672,6 @@ const TableDepartment = ({
         search: tableHeaderData.searchVal,
         esign_status: tableHeaderData.esignStatus
       })
-      console.log(params.toString())
       const res = await api(`/department/?${params.toString()}`, {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {

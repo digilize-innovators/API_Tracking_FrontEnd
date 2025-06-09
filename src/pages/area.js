@@ -133,14 +133,12 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'add',
           remarks: esignRemark?.length > 0 ? esignRemark : `area added - ${formData.areaName}`,
           authUser
         }
       }
       data.esign_status = esign_status
       setIsLoading(true)
-      console.log('add area', data)
       const res = await api('/area/', data, 'post', true)
       setIsLoading(false)
       if (res?.data?.success) {
@@ -162,15 +160,13 @@ const Index = () => {
     }
   }
 
-  const editArea = async (esign_status, remarks) => {
+  const editArea = async esign_status => {
     try {
-      console.log(formData, 'formdata')
       const data = { ...formData }
       delete data.areaId
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'edit',
           remarks: esignRemark > 0 ? esignRemark : `area edited - ${formData?.areaName}`,
           authUser
         }
@@ -217,7 +213,6 @@ const Index = () => {
     const handleModalActions = isApproved => {
       setOpenModalApprove(!isApproved)
       if (isApproved && esignDownloadPdf) {
-        console.log('esign is approved for download')
         downloadPdf(tableData, tableHeaderData, tableBody, areaData, userDataPdf)
       }
     }
@@ -231,14 +226,12 @@ const Index = () => {
           ? {
               user_id: user.userId,
               user_name: user.userName,
-              performed_action: 'approved',
               remarks: remarks?.length > 0 ? remarks : `area approved - ${auditLogMark}`,
               authUser: user.user_id
             }
           : {}
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('esign status update', res.data)
       if (res.data) {
         setAlertData({
           ...alertData,
@@ -277,7 +270,6 @@ const Index = () => {
 
       if (esignStatus === 'approved') {
         if (esignDownloadPdf) {
-          console.log('esign is approved for creator to download')
           setOpenModalApprove(true)
         } else if (!isApprover && approveAPI.approveAPIName === 'area-approve') {
           setAlertData({
@@ -287,7 +279,6 @@ const Index = () => {
             message: 'same user cannot approve'
           })
         } else {
-          console.log('esign is approved for creator')
           setAuthUser(user)
           setEsignRemark(remarks)
           setPendingAction(editData?.id ? 'edit' : 'add')
@@ -320,19 +311,16 @@ const Index = () => {
   }
 
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
     setApproveAPI({ approveAPIName: 'area-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/area' })
 
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.area_name)
-    console.log('row', row)
   }
 
   const handleUpdate = item => {
     resetForm()
     setEditData(item)
-    console.log('edit Printer Line Configuration', item)
     setOpenModal(true)
   }
 
@@ -348,7 +336,6 @@ const Index = () => {
   }
 
   const handleAuthModalOpen = () => {
-    console.log('OPen auth model')
     setApproveAPI({ approveAPIName: 'area-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/area' })
     setAuthModalOpen(true)
   }
@@ -356,7 +343,6 @@ const Index = () => {
   const handleDownloadPdf = () => {
     setApproveAPI({ approveAPIName: 'area-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/area' })
     if (config?.config?.esign_status) {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return

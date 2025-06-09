@@ -158,7 +158,6 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'add',
           remarks: esignRemark?.length > 0 ? esignRemark : `Batch added - ${formData.batchNo}`,
           authUser
         }
@@ -197,7 +196,6 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'edit',
           remarks: esignRemark?.length > 0 ? esignRemark : `Batch editted - ${formData.batchNo}`,
           authUser
         }
@@ -271,7 +269,6 @@ const Index = () => {
           ? {
               user_id: user.userId,
               user_name: user.userName,
-              performed_action: 'approved',
               remarks: remarks?.length > 0 ? remarks : `batch approved - ${auditLogMark}`,
               authUser: user.user_id
             }

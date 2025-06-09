@@ -29,7 +29,7 @@ import CompanyModal from 'src/components/Modal/CompanyModal'
 const Index = () => {
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [companyData, setCompany] = useState();
+  const [companyData, setCompany] = useState()
   const [editData, setEditData] = useState({})
   const { setIsLoading } = useLoading()
   const { settings } = useSettings()
@@ -47,7 +47,7 @@ const Index = () => {
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const [formData, setFormData] = useState({})
   const [pendingAction, setPendingAction] = useState(null)
-  const searchRef = useRef();
+  const searchRef = useRef()
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
 
@@ -62,19 +62,19 @@ const Index = () => {
   useEffect(() => {
     const handleUserAction = async () => {
       if (formData && pendingAction) {
-        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? "pending" : "approved";
-        
-        if (pendingAction === "edit") {
-          await editCompany(esign_status);
-        } else if (pendingAction === "add") {
-          await addCompany(esign_status);
+        const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
+
+        if (pendingAction === 'edit') {
+          await editCompany(esign_status)
+        } else if (pendingAction === 'add') {
+          await addCompany(esign_status)
         }
-        
-        setPendingAction(null);
+
+        setPendingAction(null)
       }
-    };
-  
-    handleUserAction();
+    }
+
+    handleUserAction()
   }, [formData, pendingAction])
 
   const tableBody = companyData?.map((item, index) => [
@@ -97,7 +97,7 @@ const Index = () => {
     }),
     []
   )
-  
+
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
@@ -143,23 +143,22 @@ const Index = () => {
       return
     }
     setPendingAction(editData?.id ? 'edit' : 'add')
-  } 
-  
-  const addCompany = async (esign_status) => {
+  }
+
+  const addCompany = async esign_status => {
     try {
       const data = { ...formData, contact: formData.contactNo }
-      delete data.contactNo;
-      if(config?.config?.audit_logs){
+      delete data.contactNo
+      if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'add',
           remarks: esignRemark?.length > 0 ? esignRemark : `company added - ${formData.companyId}`,
           authUser
         }
       }
-      data.esign_status = esign_status;
+      data.esign_status = esign_status
       setIsLoading(true)
-      const res = await api('/company/', data, 'post', true);
+      const res = await api('/company/', data, 'post', true)
       setIsLoading(false)
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Company added successfully' })
@@ -182,15 +181,14 @@ const Index = () => {
     }
   }
 
-  const editCompany = async (esign_status) => {
+  const editCompany = async esign_status => {
     try {
       const data = { ...formData, contact: formData.contactNo }
-      delete data.companyId;
-      delete data.contactNo;
+      delete data.companyId
+      delete data.contactNo
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'edit',
           remarks: esignRemark > 0 ? esignRemark : `company edited - ${formData.companyId}`,
           authUser
         }
@@ -235,7 +233,7 @@ const Index = () => {
       resetState()
       return
     }
-    
+
     const handleApproverActions = async () => {
       const data = {
         modelName: 'company',
@@ -245,13 +243,12 @@ const Index = () => {
           ? {
               user_id: user.userId,
               user_name: user.userName,
-              performed_action: 'approved',
               remarks: remarks.length > 0 ? remarks : `company approved - ${auditLogMark}`,
               authUser: user.user_id
             }
           : {}
       }
-      if (esignStatus === 'approved' && esignDownloadPdf ) {
+      if (esignStatus === 'approved' && esignDownloadPdf) {
         console.log('esign is approved for approver')
         setOpenModalApprove(false)
         resetState()
@@ -259,7 +256,7 @@ const Index = () => {
         return
       }
 
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true);
+      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
       if (res.data) {
         setAlertData({
           ...alertData,
@@ -269,49 +266,48 @@ const Index = () => {
         })
       }
       setPendingAction(true)
-      if (esignStatus === 'rejected' && esignDownloadPdf ) {
+      if (esignStatus === 'rejected' && esignDownloadPdf) {
         console.log('approver rejected')
         setOpenModalApprove(false)
         resetState()
       }
     }
-    
+
     const handleCreatorActions = () => {
       if (esignStatus === 'rejected') {
-        setAuthModalOpen(false);
-        setOpenModalApprove(false);
-         setAlertData({
+        setAuthModalOpen(false)
+        setOpenModalApprove(false)
+        setAlertData({
           ...alertData,
           openSnackbar: true,
           type: 'error',
           message: 'Access denied for this user.'
-        });
-      } 
-      if(!isApprover && esignDownloadPdf) {
+        })
+      }
+      if (!isApprover && esignDownloadPdf) {
         setAlertData({
-        ...alertData,
-        openSnackbar: true,
-        type: 'error',
-        message: "Access denied: Download pdf disabled for this user."
+          ...alertData,
+          openSnackbar: true,
+          type: 'error',
+          message: 'Access denied: Download pdf disabled for this user.'
         })
         resetState()
         return
-        }
-      if(esignStatus === 'approved'){
-        console.log("Esign Download pdf ",esignDownloadPdf)
-        if(esignDownloadPdf){
+      }
+      if (esignStatus === 'approved') {
+        console.log('Esign Download pdf ', esignDownloadPdf)
+        if (esignDownloadPdf) {
           console.log('esign is approved for creator to download')
           setEsignDownloadPdf(false)
           setOpenModalApprove(true)
           resetState()
-        }
-        else{
+        } else {
           console.log('esign is approved for creator')
           setAuthUser(user)
           setEsignRemark(remarks)
           setPendingAction(editData?.id ? 'edit' : 'add')
         }
-      }    
+      }
     }
 
     if (isApprover) {
@@ -344,23 +340,31 @@ const Index = () => {
 
   const resetFilter = () => {
     if (searchRef.current) {
-      searchRef.current.resetSearch();
-  }
+      searchRef.current.resetSearch()
+    }
     setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '' })
   }
 
   const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
   }
-  
+
   const handleAuthModalOpen = () => {
     console.log('open auth model')
-    setApproveAPI({ approveAPIName: 'company-approve', approveAPIEndPoint: '/api/v1/company', approveAPImethod: 'PATCH' })
+    setApproveAPI({
+      approveAPIName: 'company-approve',
+      approveAPIEndPoint: '/api/v1/company',
+      approveAPImethod: 'PATCH'
+    })
     setAuthModalOpen(true)
   }
 
   const handleDownloadPdf = () => {
-    setApproveAPI({ approveAPIName: 'company-approve', approveAPIEndPoint: '/api/v1/company', approveAPImethod: 'PATCH' })
+    setApproveAPI({
+      approveAPIName: 'company-approve',
+      approveAPIEndPoint: '/api/v1/company',
+      approveAPImethod: 'PATCH'
+    })
     if (config?.config?.esign_status) {
       console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
@@ -369,7 +373,7 @@ const Index = () => {
     }
     downloadPdf(tableData, tableHeaderData, tableBody, companyData, userDataPdf)
   }
-  
+
   return (
     <Box padding={4}>
       <Head>
@@ -427,12 +431,13 @@ const Index = () => {
         </Grid2>
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-     
+
       <CompanyModal
-      open={openModal}
-      onClose={handleCloseModal}
-      editData={editData}
-      handleSubmitForm={handleSubmitForm}/>
+        open={openModal}
+        onClose={handleCloseModal}
+        editData={editData}
+        handleSubmitForm={handleSubmitForm}
+      />
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}

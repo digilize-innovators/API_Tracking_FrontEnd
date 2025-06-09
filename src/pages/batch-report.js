@@ -57,7 +57,6 @@ const BatchReport = () => {
     try {
       setIsLoading(true)
       const response = await api('/product?limit=-1&history_latest=true', {}, 'get', true)
-      console.log('All products ', response.data)
       if (response.data.success) {
         setProducts(response.data.data.products)
         setIsLoading(false)
@@ -140,10 +139,8 @@ const BatchReport = () => {
         'post',
         true
       )
-      console.log('BAtch report res ', response.data.data.batch)
       if (response.data.success) {
         setReport(response.data.data)
-        console.log(response.data.data.AggregationXml)
         setIsReportGenerated(true)
         setAlertData({
           openSnackbar: true,
@@ -289,8 +286,6 @@ const BatchReport = () => {
       'post',
       true
     )
-    console.log(response)
-
     downloadXML(xmlData, `${AggregationFile}.xml`)
   }
 
@@ -308,7 +303,6 @@ const BatchReport = () => {
         BatchFileName = `${BatchXml.product.company.mfg_licence_no}BAT${formattedDate}001`
       } else {
         const preFileDate = moment(report.ManageSequence[0].createdAt).format('DDMMYYYY')
-        console.log(preFileDate)
         if (preFileDate !== formattedDate) {
           BatchFileName = `${BatchXml.product.company.mfg_licence_no}BAT${formattedDate}001`
         } else {
@@ -346,7 +340,6 @@ const BatchReport = () => {
       }
 
       const xmlData = buildXMLData(jsonData)
-      console.log(jsonData)
 
       const response = await api(
         '/batch/reportFormat',
@@ -361,7 +354,6 @@ const BatchReport = () => {
         'post',
         true
       )
-      console.log(response)
       downloadXML(xmlData, `${BatchFileName}.xml`)
     } catch (error) {
       console.error('Error generating batch XML:', error.message)
@@ -381,17 +373,12 @@ const BatchReport = () => {
       let ProductFile
 
       if (report.ManageSequence.length == 0) {
-        console.log(1)
         ProductFile = `${product.company.mfg_licence_no}PRO${formattedDate}001`
-        console.log(ProductFile)
       } else {
-        console.log(2)
         const preFileDate = moment(report.ManageSequence[0].createdAt).format('DDMMYYYY')
         if (preFileDate !== formattedDate) {
-          console.log(3)
           ProductFile = `${product.company.mfg_licence_no}PRO${formattedDate}001`
         } else {
-          console.log(4)
           const seq = report.ManageSequence[0].serial_no + 1
           const threeDigit = seq.toString().padStart(3, '0')
           ProductFile = `${product.company.mfg_licence_no}PRO${formattedDate}${threeDigit}`
@@ -669,7 +656,6 @@ const BatchReport = () => {
       BatchRecordFile = `${manufacture}_PDF_Batch_Record_${formattedDate}001`
     } else {
       const preFileDate = moment(report.ManageSequence[0].createdAt).format('DDMMYYYY')
-      console.log(preFileDate)
       if (preFileDate !== formattedDate) {
         BatchRecordFile = `${manufacture}_PDF_Batch_Record_${formattedDate}001`
       } else {
@@ -697,7 +683,6 @@ const BatchReport = () => {
       'post',
       true
     )
-    console.log(response)
 
     doc.save(`${BatchRecordFile}.pdf`)
   }
@@ -828,7 +813,6 @@ const BatchReport = () => {
       BatchSummaryFile = `${manufacture}_PDF_Batch_Summary_${formattedDate}001`
     } else {
       const preFileDate = moment(report.ManageSequence[0].createdAt).format('DDMMYYYY')
-      console.log(preFileDate)
       if (preFileDate !== formattedDate) {
         BatchSummaryFile = `${manufacture}_PDF_Batch_Summary_${formattedDate}001`
       } else {
@@ -856,7 +840,6 @@ const BatchReport = () => {
       'post',
       true
     )
-    console.log(response)
 
     doc.save(`${BatchSummaryFile}.pdf`)
   }
@@ -896,7 +879,6 @@ const BatchReport = () => {
     }
     if (isApprover) {
       if (esignStatus === 'approved') {
-        console.log('esign is approved for approver', user.userName)
         setApprovedBy({ userId: user.user_id, userName: user.userName, timeStamp: new Date() })
         setOpenModalApprove(false)
         resetState()

@@ -165,9 +165,8 @@ const Index = () => {
           ? {
               user_id: user.userId,
               user_name: user.userName,
-              performed_action: 'approved',
               remarks: remarks.length > 0 ? remarks : `location master approved - ${auditLogMark}`,
-              authUser: user.user_id,
+              authUser: user.user_id
             }
           : {}
       }
@@ -258,25 +257,24 @@ const Index = () => {
     setAuditLogMark(row.location_id)
     console.log('row', row)
   }
-  const addLocation = async (esign_status) => {
+  const addLocation = async esign_status => {
     try {
       console.log('formdata', formData)
       const data = { ...formData }
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'add',
           remarks: esignRemark?.length > 0 ? esignRemark : `location added - ${formData.locationName}`,
           authUser
         }
       }
-      data.esign_status = esign_status;
+      data.esign_status = esign_status
       setIsLoading(true)
-      const res = await api('/location/', data, 'post', true);
+      const res = await api('/location/', data, 'post', true)
       setIsLoading(false)
 
       if (res?.data?.success) {
-        setOpenModal(false);
+        setOpenModal(false)
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Location added successfully' })
         setEditData({})
       } else {
@@ -305,15 +303,14 @@ const Index = () => {
       setIsLoading(false)
     }
   }
-  const editLocation = async (esign_status) => {
+  const editLocation = async esign_status => {
     try {
       const data = { ...formData }
       console.log('EDIT FORM DATA :->', data)
-      delete data.locationId;
+      delete data.locationId
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'edit',
           remarks: esignRemark?.length > 0 ? esignRemark : `location edited - ${formData.locationName}`,
           authUser
         }

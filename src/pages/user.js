@@ -126,13 +126,10 @@ const Index = () => {
     [departmentFilter, statusFilter]
   )
 
-  console.log('tableData is index', tableData)
-
   const getDepartments = async () => {
     try {
       setIsLoading(true)
       const res = await api(`/department?limit=-1`, {}, 'get', true)
-      console.log('All department ', res.data)
       if (res.data.success) {
         setAllDepartment(res.data.data.departments)
       } else if (res.data.code === 401) {
@@ -216,7 +213,6 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'add',
           remarks: esignRemark?.length > 0 ? esignRemark : `user added - ${userFormData.userName}`,
           authUser
         }
@@ -273,7 +269,6 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'edit',
           remarks: esignRemark > 0 ? esignRemark : `user edited - ${userFormData.userName}`,
           authUser
         }
@@ -339,7 +334,6 @@ const Index = () => {
           ? {
               user_id: user.user_id,
               user_name: user.userName,
-              performed_action: 'approved',
               remarks: remarks.length > 0 ? remarks : `user approved - ${auditLogMark}`,
               authUser: user.user_id
             }
@@ -348,13 +342,11 @@ const Index = () => {
       return data
     }
     const handleApproveDownload = () => {
-      console.log('esign is approved for approver')
       setOpenModalApprove(false)
       downloadPdf(tableData, tableHeaderData, tableBody, userData, userDataPdf)
       resetApprovalState()
     }
     const handleRejectDownload = () => {
-      console.log('approver rejected')
       setOpenModalApprove(false)
       resetApprovalState()
     }
@@ -386,10 +378,8 @@ const Index = () => {
           message: 'Access denied for this user.'
         })
       } else if (esignStatus === 'approved' && esignDownloadPdf) {
-        console.log('esign is approved for creator to download')
         setOpenModalApprove(true)
       } else if (esignStatus === 'approved') {
-        console.log('esign is approved for creator')
         setAuthUser(user)
         setEsignRemark(remarks)
         setPendingAction(editData?.id ? 'edit' : 'add')
@@ -427,7 +417,6 @@ const Index = () => {
   }
 
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
     setApproveAPI({
       approveAPIName: 'user-approve',
       approveAPImethod: 'PATCH',
@@ -436,11 +425,9 @@ const Index = () => {
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.user_id)
-    console.log('row', row)
   }
 
   const handleUpdate = item => {
-    console.log('edit user', item)
     resetForm()
     setOpenModal(true)
     setEditData(item)
@@ -471,7 +458,6 @@ const Index = () => {
   }
 
   const convertImageToBase64 = async imageUrl => {
-    console.log('converting to base64')
     try {
       const response = await fetch(imageUrl)
       const blob = await response.blob()
@@ -503,7 +489,6 @@ const Index = () => {
     } else {
       setIsLoading(false)
     }
-    console.log('profilePhoto', profilePhoto)
     setIsLoading(false)
   }
 
@@ -516,9 +501,7 @@ const Index = () => {
       const formData = new FormData()
       formData.append('photo', file)
       const res = await api('/upload/userProfile', formData, 'upload', true)
-      console.log('Response of upload user profile ', res?.data)
       if (res?.data.success) {
-        console.log('Encryp data path ', res?.data.data.path)
         const decryptUrl = await decrypt(res?.data.data.path)
         url = `${mainUrl}/${decryptUrl}`
         return { url, success: true }
@@ -534,7 +517,6 @@ const Index = () => {
   }
 
   const handleAuthModalOpen = () => {
-    console.log('OPen auth model')
     setApproveAPI({
       approveAPIName: 'user-approve',
       approveAPImethod: 'PATCH',
@@ -550,7 +532,6 @@ const Index = () => {
       approveAPIEndPoint: '/api/v1/user'
     })
     if (config?.config?.esign_status && config?.role !== 'admin') {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return

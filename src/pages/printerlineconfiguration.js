@@ -157,7 +157,6 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'add',
           remarks:
             esignRemark?.length > 0 ? esignRemark : `Printer Line Configuration added - ${formData.printerLineName}`,
           authUser
@@ -206,7 +205,6 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          performed_action: 'edit',
           remarks:
             esignRemark?.length > 0 ? esignRemark : `Printer Line Configuration edited - ${formData?.printerLineName}`,
           authUser
@@ -281,7 +279,6 @@ const Index = () => {
         ? {
             user_id: user.userId,
             user_name: user.userName,
-            performed_action: action,
             remarks: remarks?.length > 0 ? remarks : `printer line configuration approved - ${auditLogMark}`,
             authUser: user.user_id
           }
