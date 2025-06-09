@@ -39,7 +39,6 @@ const Index = () => {
   const [tableHeaderData, setTableHeaderData] = useState({searchVal: ''})
   const [purchaseDetail,setPurchaseDetail]=useState([])
   const apiAccess = useApiAccess('purchase-order-create', 'purchase-order-update','purchase-order-approve')
-  console.log("apiAccess",apiAccess)
 
   useLayoutEffect(() => {
     const data = getUserData()

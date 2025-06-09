@@ -47,7 +47,6 @@ const Index = () => {
   const [stocktransferDetail,setStocktranferDetail]=useState([])
 
   const apiAccess = useApiAccess('stocktransfer-order-create', 'stocktransfer-order-update','stocktransfer-order-approve')
-  console.log("apiAccess",apiAccess)
 
   useLayoutEffect(() => {
     const data = getUserData()

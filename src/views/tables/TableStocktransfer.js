@@ -161,13 +161,13 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,updateView
                    </TableCell>
                    <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
                    
-                       <Tooltip title={!apiAccess.editApiAccess || row.status === "SCANNING_IN_PROGRESS" ? 'No edit access' : ''}>
+                       <Tooltip title={!apiAccess.editApiAccess || row.status === "CREATED" && 'No edit access'}>
                          <span>
                            <MdModeEdit
                              fontSize={20}
                              data-testid={`edit-icon-${index + 1}`}
-                             onClick={apiAccess.editApiAccess && row.status !== 'SCANNING_IN_PROGRESS' ? () => handleUpdate(row) : null}
-                             style={{ cursor: apiAccess.editApiAccess && row.status !== 'SCANNING_IN_PROGRESS' ? 'pointer' : 'not-allowed', opacity: apiAccess.editApiAccess ? 1 : 0.5 }}
+                             onClick={apiAccess.editApiAccess && row.status === 'CREATED' ? () => handleUpdate(row) : null}
+                             style={{ cursor: apiAccess.editApiAccess && row.status === 'CREATED' ? 'pointer' : 'not-allowed', opacity: apiAccess.editApiAccess ? 1 : 0.5 }}
                            />
                          </span>
                        </Tooltip>
@@ -225,8 +225,6 @@ const TableStocktransfer = ({
     const [sortDirection, setSortDirection] = useState('asc')
     const { setIsLoading } = useLoading()
 
-
-   console.log("apiAccess",apiAccess)
    useMemo(()=>{
       setPage(0);    
     },[tableHeaderData,rowsPerPage]);

@@ -24,6 +24,7 @@ const validationSchema = yup.object().shape({
         .required('Quantity can not be empty')
         .positive('Quantity should be greater than 0')
         .integer('Quantity should be a whole number')
+        .min(1000)
         .typeError("Quantity Number must be a valid number"),
 
     manufacturingDate: yup.string()

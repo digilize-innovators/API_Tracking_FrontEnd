@@ -16,10 +16,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useSettings } from 'src/@core/hooks/useSettings';
 
-
-
 const purchaseSchema = yup.object().shape({
-    orderNo: yup.string().required('Order No is required'),
+    orderNo: yup.string().required('Order No is required').trim().min(3).max(50),
     orderDate: yup.string().required('Select orders date'),
     from: yup.string().required('From location is required'),
     to: yup.string().required('To location is required'),
@@ -41,30 +39,25 @@ const purchaseSchema = yup.object().shape({
             if (!orders) return true;
             const seen = new Set();
             for (let i = 0; i < orders.length; i++) {
-                const key = `${orders[i]?.productId}-${orders[i]?.batchId}`;
+                const key = orders[i]?.batchId;
                 if (seen.has(key)) {
                     return false;
                 }
-                seen.add(key);
+                key && seen.add(key);
             }
             return true;
         }),
 });
 
 const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handleSubmitForm }) => {
-    console.log("purchaseDetail", purchaseDetail)
     const [locationFrom, setLocationFrom] = useState([])
     const [locationTo, setLocationTo] = useState({})
     const [productData, setProductData] = useState([])
     const [batchOptionsMap, setBatchOptionsMap] = useState({});
     const [editableIndex, setEditableIndex] = useState(null);
     const [openConfirm, setOpenConfirm] = useState(false);
-    const [deleteIndex, setDeleteIndex] = useState(null); // index of row to delete
+    const [deleteIndex, setDeleteIndex] = useState(null);
     const { settings } = useSettings();
-
-
-
-
     const { setIsLoading } = useLoading();
     const { removeAuthToken } = useAuth()
     const router = useRouter();
@@ -73,7 +66,6 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         handleSubmit,
         control,
         reset,
-        trigger,
         formState: { errors },
         setValue,
         getValues
@@ -104,9 +96,6 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         return '';
     };
 
-
-
-
     useEffect(() => {
         if (editData?.id) {
             reset({
@@ -136,7 +125,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         control,
         name: 'orders'
     });
-    console.log("watchedProducts", watchedProducts)
+
     useEffect(() => {
         watchedProducts?.forEach((purchase, index) => {
             const productId = purchase?.productId;
@@ -174,7 +163,6 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         });
     }, [watchedProducts]);
 
-
     useEffect(() => {
         const getLocation = async () => {
             try {
@@ -184,12 +172,10 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                 console.log('All locations vendors', res.data)
                 if (res.data.success) {
                     const data = res.data.data?.map((item) => ({
-                        id: item.id,
-                        value: item.id,
+                        id: item.location_uuid,
+                        value: item.location_uuid,
                         label: item.location_name,
                     }));
-                    console.log("Area category in dropdown ", data);
-
                     setLocationFrom(data);
                 } else {
                     console.log('Error to get all designation ', res.data)
@@ -207,8 +193,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
             try {
                 setIsLoading(true)
                 const res = await api(`/user/info`, {}, 'get', true)
-                setIsLoading(false)
-                console.log('All locations ', res.data)
+                setIsLoading(false);
                 if (res.data.success) {
                     const location = res.data.data.location;
                     const mapped = {
@@ -279,8 +264,6 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
 
 
     const handleDeleteOrder = async (orderId, index) => {
-
-        console.log('hello')
         try {
             setIsLoading(true);
             const res = await api(`/purchase-order/details/${orderId}`, {"orderId":editData.id}, 'delete', true);
@@ -299,11 +282,10 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         }
 
     };
+
     const handleEditOrSave = async (index) => {
         const isEditing = editableIndex?.[index];
-
         if (isEditing) {
-            // Save mode
             const updatedItem = getValues(`orders.${index}`);
             updatedItem.orderId=editData.id
             const itemId = purchaseDetail?.[index]?.id;
@@ -335,7 +317,10 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         }
     };
 
-
+    const handleReset = () => {
+        reset();  // Resets the form values
+        setBatchOptionsMap({}); // Also clear the batch dropdown options
+    };
 
     return (
         <>
@@ -536,7 +521,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                             <Button type='submit' variant='contained' sx={{ marginRight: 3.5 }}>
                                 Save Changes
                             </Button>
-                            <Button type='button' variant='outlined' onClick={() => reset()} color='primary'>
+                            <Button type='button' variant='outlined' onClick={handleReset} color='primary'>
                                 Reset
                             </Button>
                             <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={handleClose}>
