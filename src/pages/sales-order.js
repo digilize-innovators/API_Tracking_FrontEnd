@@ -40,7 +40,6 @@ const Index = () => {
   const [saleDetail,setSaleDetail]=useState([])
 
   const apiAccess = useApiAccess('sales-order-create', 'sales-order-update','sales-order-approve')
-  console.log("apiAccess",apiAccess)
 
   useLayoutEffect(() => {
     const data = getUserData()

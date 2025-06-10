@@ -72,8 +72,6 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
                             value: item.areacategory_uuid,
                             label: item.area_category_name,
                         }));
-                        console.log("Area category in dropdown ", data);
-
                         setAllAreaCategory(data);
                     } else if (res.data.code === 401) {
                         removeAuthToken();

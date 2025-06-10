@@ -16,7 +16,7 @@ import { useSettings } from 'src/@core/hooks/useSettings';
 
 
 const StockTrasferSchema = yup.object().shape({
-    orderNo: yup.string().required('Order No is required'),
+    orderNo: yup.string().required('Order No is required').trim().min(3).max(50),
     orderDate: yup.string().required('Select orders date'),
     from: yup.string().required('From location is required'),
     to: yup.string().required('To location is required'),
@@ -38,11 +38,11 @@ const StockTrasferSchema = yup.object().shape({
             if (!orders) return true;
             const seen = new Set();
             for (let i = 0; i < orders.length; i++) {
-                const key = `${orders[i]?.productId}-${orders[i]?.batchId}`;
+                const key = orders[i]?.batchId;
                 if (seen.has(key)) {
                     return false;
                 }
-                seen.add(key);
+                key && seen.add(key);
             }
             return true;
         }),
@@ -57,7 +57,6 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
     const [openConfirm, setOpenConfirm] = useState(false);
     const [deleteIndex, setDeleteIndex] = useState(null);
     const { settings } = useSettings();
-
 
     const {
         handleSubmit,
@@ -94,9 +93,6 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
         return '';
     };
 
-
-
-
     useEffect(() => {
         if (editData?.id) {
             reset({
@@ -123,12 +119,11 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
         }
     }, [editData]);
 
-
     const watchedProducts = useWatch({
         control,
         name: 'orders'
     });
-    console.log("watchedProducts", watchedProducts)
+
     useEffect(() => {
         watchedProducts?.forEach((purchase, index) => {
             const productId = purchase?.productId;
@@ -136,7 +131,6 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
             if (!productId) return;
             const existing = batchOptionsMap[index];
             if (existing && existing.productId === productId) return;
-
 
             const fetchBatches = async () => {
                 try {
@@ -170,16 +164,13 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
             try {
                 setIsLoading(true)
                 const res = await api(`/location/type-so-sto `, {}, 'get', true)
-                setIsLoading(false)
-                console.log('All locations ', res.data)
+                setIsLoading(false);
                 if (res.data.success) {
                     const data = res.data.data?.map((item) => ({
-                        id: item.id,
-                        value: item.id,
+                        id: item.location_uuid,
+                        value: item.location_uuid,
                         label: item.location_name,
                     }));
-                    console.log("Area category in dropdown ", data);
-
                     setLocation(data);
                 } else {
                     console.log('Error to get all designation ', res.data)
@@ -222,7 +213,8 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
         getAllProducts()
         getLocation()
 
-    }, [])
+    }, []);
+
     useEffect(() => {
         if (open) {
             const initialEditable = {};
@@ -235,8 +227,6 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
     }, [open, editData]);
 
     const handleDeleteOrder = async (orderId, index) => {
-
-        console.log('hello')
         try {
             setIsLoading(true);
             const res = await api(`/stocktransfer-order/details/${orderId}`, {"orderId":editData.id}, 'delete', true);
@@ -255,9 +245,9 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
         }
 
     };
+
     const handleEditOrSave = async (index) => {
         const isEditing = editableIndex?.[index];
-
         if (isEditing) {
             // Save mode
             const updatedItem = getValues(`orders.${index}`);
@@ -291,6 +281,10 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
         }
     };
 
+     const handleReset = () => {
+        reset();            // Resets the form values
+        setBatchOptionsMap({}); // Also clear the batch dropdown options
+    };
 
     return (
         <>
@@ -475,7 +469,7 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
                             <Button type='submit' variant='contained' sx={{ marginRight: 3.5 }}>
                                 Save Changes
                             </Button>
-                            <Button type='button' variant='outlined' onClick={() => reset()} color='primary'>
+                            <Button type='button' variant='outlined' onClick={handleReset} color='primary'>
                                 Reset
                             </Button>
                             <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={handleClose}>

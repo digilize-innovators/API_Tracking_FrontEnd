@@ -40,10 +40,10 @@ const Row = ({
                 <TableCell align='center' component='th' scope='row' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                     {serialNumber}
                 </TableCell>
-                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.batch.history[0].productHistory.product_name}</TableCell>
-                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.batch.history[0].batch_no}</TableCell>
+                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.batch.productHistory.product_name}</TableCell>
+                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.batch.batch_no}</TableCell>
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.locations.history[0].location_name}</TableCell>
-                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.batch.history[0].qty}</TableCell>
+                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.batch.qty}</TableCell>
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.no_of_codes}</TableCell>
                  {config?.config?.esign_status === true && (
                           <StatusChip
@@ -107,9 +107,9 @@ const Row = ({
                                                         {idx + 1}
                                                     </TableCell>
                                                     <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.product.product_name}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.batch.history[0].batch_no}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.locations.history[0].location_name}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.batch.history[0].qty}</TableCell>
+                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.batch.batch_no}</TableCell>
+                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.locations.location_name}</TableCell>
+                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.batch.qty}</TableCell>
                                                     <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.no_of_codes}</TableCell>
                                                     <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                                                         {moment(historyRow?.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}

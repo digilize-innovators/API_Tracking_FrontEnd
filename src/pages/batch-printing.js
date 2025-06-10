@@ -39,7 +39,6 @@ import { getTokenValues } from 'src/utils/tokenUtils'
 import AuthModal from 'src/components/authModal'
 
 const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAccess, ip }) => {
-  console.log('Project setting data ', projectSettingData)
   const { setIsLoading } = useLoading()
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [editId, setEditId] = useState(null)
@@ -111,7 +110,8 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     approveAPIName: '',
     approveAPImethod: '',
     approveAPIEndPoint: '',
-    session: ''
+    session: '',
+    authUser: {}
   })
   const [config, setConfig] = useState(null)
 
@@ -226,7 +226,8 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         approveAPIName: 'batch-printing-create',
         approveAPImethod: 'POST',
         approveAPIEndPoint: '/api/v1/batch-printing',
-        session: 'start'
+        session: 'start',
+        authUser: {}
       })
       setAuthModalOpen(true)
     } else {
@@ -280,20 +281,21 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     setOpenModalApprove(false)
   }
 
-  const handleAuthModalOpen = () => {
+  const handleAuthModalOpen = user => {
     console.log('Open auth model again')
     setApproveData({
       ...approveData,
       approveAPIName: 'batch-printing-approve',
       approveAPImethod: 'PATCH',
-      approveAPIEndPoint: '/api/v1/batch-printing'
+      approveAPIEndPoint: '/api/v1/batch-printing',
+      authUser: user
     })
     setAuthModalOpen(true)
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     const resetState = () => {
-      setApproveData({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '' })
+      setApproveData({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '', authUser: {} })
       setAuthModalOpen(false)
     }
     if (!isAuthenticated) {
@@ -325,7 +327,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
           : {}
       }
       await api('/esign-status/double-esign', data, 'patch', true)
-      handleAuthModalOpen()
+      handleAuthModalOpen(user)
     }
     const handleApproverActions = async () => {
       console.log('esign approve by approver.')
@@ -334,6 +336,10 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     }
     if (isApprover && esignStatus === 'approved') {
       await handleApproverActions()
+      if (approveData.authUser.userId === user.userId) {
+        setAlertData({ ...alertData, openSnackbar: true, message: 'Same user cannot Approved', type: 'error' })
+        return
+      }
       editId ? await editSetting() : await addSetting()
     } else {
       if (esignStatus === 'rejected') {
@@ -547,7 +553,8 @@ const Index = ({ userId, ip }) => {
     approveAPIName: '',
     approveAPImethod: '',
     approveAPIEndPoint: '',
-    session: ''
+    session: '',
+    authUser: {}
   })
   const [config, setConfig] = useState(null)
 
@@ -1248,7 +1255,8 @@ const Index = ({ userId, ip }) => {
         approveAPIName: 'batch-printing-create',
         approveAPImethod: 'POST',
         approveAPIEndPoint: '/api/v1/batch-printing',
-        session: 'start'
+        session: 'start',
+        authUser: {}
       })
       setAuthModalOpen(true)
     } else {
@@ -1262,7 +1270,8 @@ const Index = ({ userId, ip }) => {
         approveAPIName: 'batch-printing-create',
         approveAPImethod: 'POST',
         approveAPIEndPoint: '/api/v1/batch-printing',
-        session: 'stop'
+        session: 'stop',
+        authUser: {}
       })
       setAuthModalOpen(true)
     } else {
@@ -1275,20 +1284,22 @@ const Index = ({ userId, ip }) => {
     setOpenModalApprove(false)
   }
 
-  const handleAuthModalOpen = () => {
+  const handleAuthModalOpen = user => {
     console.log('Open auth model again')
     setApproveData({
       ...approveData,
       approveAPIName: 'batch-printing-approve',
       approveAPImethod: 'PATCH',
-      approveAPIEndPoint: '/api/v1/batch-printing'
+      approveAPIEndPoint: '/api/v1/batch-printing',
+      authUser: user
     })
     setAuthModalOpen(true)
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     const resetState = () => {
-      setApproveData({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '' })
+      console.log('RESETING>>...')
+      setApproveData({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '', authUser: {} })
       setAuthModalOpen(false)
     }
     if (!isAuthenticated) {
@@ -1320,7 +1331,7 @@ const Index = ({ userId, ip }) => {
           : {}
       }
       await api('/esign-status/double-esign', data, 'patch', true)
-      handleAuthModalOpen()
+      handleAuthModalOpen(user)
     }
     const handleApproverActions = async () => {
       console.log('esign approve by approver.')
@@ -1329,21 +1340,26 @@ const Index = ({ userId, ip }) => {
     }
     if (isApprover && esignStatus === 'approved') {
       await handleApproverActions()
+      if (approveData.authUser.userId === user.userId) {
+        setAlertData({ ...alertData, openSnackbar: true, message: 'Same user cannot Approved', type: 'error' })
+        return
+      }
       if (approveData.session === 'start') {
         handleAfterStartSession()
       } else {
         handleAfterStopSession()
       }
+      resetState()
     } else {
       if (esignStatus === 'rejected') {
         console.log('esign is rejected.')
         setAuthModalOpen(false)
         setOpenModalApprove(false)
+        resetState()
       } else if (esignStatus === 'approved') {
         handleEsignApproved()
       }
     }
-    resetState()
   }
 
   return (

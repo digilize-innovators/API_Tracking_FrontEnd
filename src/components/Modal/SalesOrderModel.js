@@ -17,7 +17,7 @@ import { useSettings } from 'src/@core/hooks/useSettings';
 
 const SalesOrderSchema = yup.object().shape({
     type: yup.string().required('Select OrderType'),
-    orderNo: yup.string().required('Order No is required'),
+    orderNo: yup.string().required('Order No is required').trim().min(3).max(50),
     orderDate:yup.string().required('Select order date'),
     from: yup.string().required('From location is required'),
     to: yup.string().required('To location is required'),
@@ -39,11 +39,11 @@ const SalesOrderSchema = yup.object().shape({
             if (!orders) return true;
             const seen = new Set();
             for (let i = 0; i < orders.length; i++) {
-                const key = `${orders[i]?.productId}-${orders[i]?.batchId}`;
+                const key = orders[i]?.batchId;
                 if (seen.has(key)) {
                     return false;
                 }
-                seen.add(key);
+                key && seen.add(key);
             }
             return true;
         }),
@@ -51,8 +51,8 @@ const SalesOrderSchema = yup.object().shape({
 
 const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitForm }) => {
     const { setIsLoading } = useLoading();
-    const [locationPW, setlocationPW] = useState([])
-    const [locationOth, setlocationOth] = useState([])
+    const [locationSoSto, setLocationSoSto] = useState([])
+    const [locationSr, setLocationSr] = useState([])
     const [productData, setProductData] = useState([])
     const [batchOptionsMap, setBatchOptionsMap] = useState({});
     const [editableIndex, setEditableIndex] = useState(null);
@@ -65,6 +65,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
         reset,
         formState: { errors },
         getValues,
+        setValue,
         watch
     } = useForm({
         resolver: yupResolver(SalesOrderSchema),
@@ -93,7 +94,8 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
     });
     const orderType = [
         { id: 'SALES_ORDER', value: 'SALES_ORDER', label: 'SO' },
-        { id: 'SALES_RETURN', value: 'SALES_RETURN', label: 'SR' }]
+        { id: 'SALES_RETURN', value: 'SALES_RETURN', label: 'SR' }
+    ]
 
         const formatDate = (date) => {
             const d = new Date(date);
@@ -122,6 +124,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                 });
             } else {
                 reset({
+                    type: '',  
                     orderNo: '',
                     orderDate: '',
                     from: '',
@@ -168,12 +171,13 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
     }, [watchedProducts]);
 
     const orderTypeValue = watch('type');
-
+    console.log("ORDER TYPE CHANGE ", orderTypeValue);
+    
     const getLocationOptions = () => {
         if (orderTypeValue === 'SALES_RETURN') {
-            return { from: locationOth, to: locationPW };
+            return { from: locationSr, to: locationSoSto };
         } else if (orderTypeValue === 'SALES_ORDER') {
-            return { from: locationPW, to: locationOth };
+            return { from: locationSoSto, to: locationSr };
         } else {
             return { from: [], to: [] };
         }
@@ -182,23 +186,19 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
     const locationOptions = getLocationOptions();
 
     useEffect(() => {
-        const getLocationPW = async () => {
+        const getLocationSoSto = async () => {
             try {
                 setIsLoading(true)
-                const res = await api(`/location/type-so-sto `, {}, 'get', true)
+                const res = await api(`/location/type-so-sto`, {}, 'get', true)
                 setIsLoading(false)
                 console.log('All locations ', res.data)
                 if (res.data.success) {
-                    console.log(res.data.data)
-
                     const data = res.data.data?.map((item) => ({
-                        id: item.id,
-                        value: item.id,
+                        id: item.location_uuid,
+                        value: item.location_uuid,
                         label: item.location_name,
                     }));
-                    console.log("Area category in dropdown ", data);
-
-                    setlocationPW(data);
+                    setLocationSoSto(data);
                 } else {
                     console.log('Error to get all designation ', res.data)
                     if (res.data.code === 401) {
@@ -211,7 +211,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                 setIsLoading(false)
             }
         }
-        const getlocationOth = async () => {
+        const getLocationSR = async () => {
             try {
                 setIsLoading(true)
                 const res = await api(`/location/type-sr`, {}, 'get', true)
@@ -219,12 +219,12 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                 console.log('All locations ', res.data)
                 if (res.data.success) {
                     const data = res.data.data?.map((item) => ({
-                        id: item.id,
-                        value: item.id,
+                        id: item.location_uuid,
+                        value: item.location_uuid,
                         label: item.location_name,
                     }));
 
-                    setlocationOth(data);
+                    setLocationSr(data);
                 } else {
                     console.log('Error to get all designation ', res.data)
                     if (res.data.code === 401) {
@@ -263,10 +263,11 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
             }
         }
         getAllProducts()
-        getLocationPW()
-        getlocationOth()
+        getLocationSoSto()
+        getLocationSR()
 
-    }, [])
+    }, []);
+
     useEffect(() => {
         if (open) {
             const initialEditable = {};
@@ -279,8 +280,6 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
     }, [open, editData]);
 
     const handleDeleteOrder = async (orderId, index) => {
-
-        console.log('hello')
         try {
             setIsLoading(true);
             const res = await api(`/sales-order/details/${orderId}`, {"orderId":editData.id}, 'delete', true);
@@ -299,9 +298,9 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
         }
 
     };
+
     const handleEditOrSave = async (index) => {
         const isEditing = editableIndex?.[index];
-
         if (isEditing) {
             // Save mode
             const updatedItem = getValues(`orders.${index}`);
@@ -335,7 +334,10 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
         }
     };
 
-    console.log(editData,saleDetail)
+     const handleReset = () => {
+        reset();  // Resets the form values
+        setBatchOptionsMap({}); // Also clear the batch dropdown options
+    };
 
     return (
         <>
@@ -528,7 +530,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                         <Button type='submit' variant='contained' sx={{ marginRight: 3.5 }}>
                             Save Changes
                         </Button>
-                        <Button type='button' variant='outlined' onClick={() => reset()} color='primary'>
+                        <Button type='button' variant='outlined' onClick={handleReset} color='primary'>
                             Reset
                         </Button>
                         <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={handleClose}>
