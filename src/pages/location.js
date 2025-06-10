@@ -161,6 +161,7 @@ const Index = () => {
         modelName: 'location',
         esignStatus,
         id: eSignStatusId,
+        name: auditLogMark,
         audit_log: config?.config?.audit_logs
           ? {
               user_id: user.userId,

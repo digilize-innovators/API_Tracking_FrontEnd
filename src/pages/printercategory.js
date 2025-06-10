@@ -250,6 +250,7 @@ const Index = () => {
         modelName: 'printercategory',
         esignStatus,
         id: eSignStatusId,
+        name: auditLogMark,
         audit_log: config?.config?.audit_logs
           ? {
               user_id: user.userId,
@@ -354,7 +355,7 @@ const Index = () => {
     })
     setAuthModalOpen(true)
     setESignStatusId(row.id)
-    setAuditLogMark(row.printer_category_name)
+    setAuditLogMark(row.printer_category_id)
   }
 
   const resetFilter = () => {

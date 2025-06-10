@@ -285,6 +285,7 @@ const Index = () => {
         modelName: 'controlpanelmaster',
         esignStatus,
         id: eSignStatusId,
+        name: auditLogMark,
         audit_log: createAuditLog(esignStatus)
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)

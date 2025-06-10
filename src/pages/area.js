@@ -222,6 +222,7 @@ const Index = () => {
         modelName: 'area',
         esignStatus,
         id: eSignStatusId,
+        name: auditLogMark,
         audit_log: config?.config?.audit_logs
           ? {
               user_id: user.userId,
@@ -315,7 +316,7 @@ const Index = () => {
 
     setAuthModalOpen(true)
     setESignStatusId(row.id)
-    setAuditLogMark(row.area_name)
+    setAuditLogMark(row.area_id)
   }
 
   const handleUpdate = item => {

@@ -45,7 +45,7 @@ const Index = () => {
   const [formData, setFormData] = useState({})
   const [isCodeReGeneration, setIsCodeReGeneration] = useState(false)
   const apiAccess = useApiAccess('codegeneration-create', 'codegeneration-update', 'codegeneration-approve')
-  const searchRef = useRef();
+  const searchRef = useRef()
 
   useLayoutEffect(() => {
     let data = getUserData()
@@ -104,7 +104,7 @@ const Index = () => {
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log('handleAuthResult', { isAuthenticated, isApprover, esignStatus, user })
-    
+
     const resetState = () => {
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
       setAuthModalOpen(false)
@@ -122,11 +122,11 @@ const Index = () => {
         modelName: 'codeGenerationRequest',
         esignStatus,
         id: eSignStatusId,
+        name: `Code Generation Approved of batch_no=${auditLogMark}`,
         audit_log: config?.config?.audit_logs
           ? {
               user_id: user.userId,
               user_name: user.userName,
-              performed_action: 'approved',
               remarks: remarks || `code generation approved - ${auditLogMark}`,
               authUser: user.user_id
             }
@@ -153,7 +153,7 @@ const Index = () => {
         setOpenModalApprove(false)
         resetState()
       }
-      setTableHeaderData({ ...tableHeaderData, searchVal: "", esignStatus: ""})
+      setTableHeaderData({ ...tableHeaderData, searchVal: '', esignStatus: '' })
     }
 
     const handleCreatorActions = () => {
@@ -172,7 +172,7 @@ const Index = () => {
           console.log('esign is approved for creator to download')
           setOpenModalApprove(true)
         } else {
-          console.log('esign is approved for creator ', user);
+          console.log('esign is approved for creator ', user)
           isCodeReGeneration
             ? handleGenerateCode(true, null, user, remarks)
             : handleGenerateCode(false, formData, user, remarks)
@@ -208,7 +208,7 @@ const Index = () => {
     })
     setAuthModalOpen(true)
     setESignStatusId(row.batch_id)
-    setAuditLogMark(row.product_id)
+    setAuditLogMark(row.batch.history[0].batch_no)
   }
 
   const resetFilter = () => {
@@ -253,7 +253,7 @@ const Index = () => {
 
   const handleGenerateCode = async (regenerate, payload, user, remarks) => {
     try {
-      console.log("Handle code generation ", regenerate, user, remarks);
+      console.log('Handle code generation ', regenerate, user, remarks)
       let data = {}
       if (regenerate) {
         data = {
@@ -275,15 +275,15 @@ const Index = () => {
           batch_id: payload.batchId
         }
       }
-      if(config?.config?.audit_logs){
+      if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
           performed_action: 'Code generation',
-          remarks: remarks?.length > 0 ? remarks : `Code generation added batchId = ${availableCodeData.batch_id}`,
+          remarks: remarks?.length > 0 ? remarks : `Code generation added`,
           authUser: user
         }
       }
-      data.esign_status = "pending";
+      data.esign_status = 'pending'
       setIsLoading(true)
       const response = await api('/codegeneration', data, 'post', true)
       if (response.data.success) {
@@ -298,7 +298,7 @@ const Index = () => {
         handleCloseModal()
         handleCloseModal2()
         setIsLoading(false)
-        setTableHeaderData({ ...tableHeaderData, searchVal: "", esignStatus: "" })
+        setTableHeaderData({ ...tableHeaderData, searchVal: '', esignStatus: '' })
       } else {
         setAlertData({ type: 'error', message: response.data.message, variant: 'filled' })
         setIsLoading(false)

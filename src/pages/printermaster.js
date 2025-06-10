@@ -264,8 +264,8 @@ const Index = () => {
         const data = {
           modelName: 'printermaster',
           esignStatus,
-
           id: eSignStatusId,
+          name: auditLogMark,
           audit_log: config?.config?.audit_logs
             ? {
                 user_id: user.userId,

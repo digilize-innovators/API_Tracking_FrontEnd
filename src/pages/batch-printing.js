@@ -34,18 +34,18 @@ import { io } from 'socket.io-client'
 import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
 import { style } from 'src/configs/generalConfig'
-import { useApiAccess } from 'src/@core/hooks/useApiAccess';
+import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import { getTokenValues } from 'src/utils/tokenUtils'
 import AuthModal from 'src/components/authModal'
 
 const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAccess, ip }) => {
-  console.log('Project setting data ', projectSettingData);
-  const { setIsLoading } = useLoading();
+  console.log('Project setting data ', projectSettingData)
+  const { setIsLoading } = useLoading()
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [editId, setEditId] = useState(null);
-  const { removeAuthToken } = useAuth();
-  const router = useRouter();
-  const [labels, setLabels] = useState([]);
+  const [editId, setEditId] = useState(null)
+  const { removeAuthToken } = useAuth()
+  const router = useRouter()
+  const [labels, setLabels] = useState([])
   const [settingData, setSettingData] = useState({
     label: '',
     dateFormat: '',
@@ -104,34 +104,38 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         checked: false
       }
     ]
-  });
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [openModalApprove, setOpenModalApprove] = useState(false);
-  const [approveData, setApproveData] = useState({ approveAPIName: "", approveAPImethod: "", approveAPIEndPoint: "", session: "" });
-  const [config, setConfig] = useState(null);
+  })
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [openModalApprove, setOpenModalApprove] = useState(false)
+  const [approveData, setApproveData] = useState({
+    approveAPIName: '',
+    approveAPImethod: '',
+    approveAPIEndPoint: '',
+    session: ''
+  })
+  const [config, setConfig] = useState(null)
 
   useEffect(() => {
-    getPrintlineSetting();
-    const decodedToken = getTokenValues();
-    setConfig(decodedToken);
-    return () => {
-    }
-  }, []);
+    getPrintlineSetting()
+    const decodedToken = getTokenValues()
+    setConfig(decodedToken)
+    return () => {}
+  }, [])
 
   const getPrintlineSetting = async () => {
     try {
-      setIsLoading(true);
-      const res = await api(`/printLineSetting/${projectSettingData.lineId}`, {}, 'get', true, true, ip);
-      console.log("GET printline setting data ", res.data);
+      setIsLoading(true)
+      const res = await api(`/printLineSetting/${projectSettingData.lineId}`, {}, 'get', true, true, ip)
+      console.log('GET printline setting data ', res.data)
       if (res.data.success && res.data.data) {
-        setEditId(res.data.data.id);
+        setEditId(res.data.data.id)
         setSettingData({
           label: res.data.data.label,
           dateFormat: res.data.data.date_format,
           noOfGroups: res.data.data.no_of_groups,
           printPerGroup: res.data.data.print_per_group,
           selectedVariables: res.data.data.variables,
-          variables: settingData.variables?.map((item) => {
+          variables: settingData.variables?.map(item => {
             return {
               ...item,
               checked: res.data.data.variables?.includes(item.value)
@@ -140,13 +144,13 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         })
       } else {
         setSettingData({
-          ...settingData,
+          ...settingData
         })
       }
-      setIsLoading(false);
+      setIsLoading(false)
     } catch (error) {
-      console.log('Error to get printline setting ', error);
-      setIsLoading(false);
+      console.log('Error to get printline setting ', error)
+      setIsLoading(false)
     }
   }
 
@@ -158,26 +162,31 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       noOfGroups: settingData.noOfGroups.toString(),
       printPerGroup: settingData.printPerGroup.toString(),
       variables: settingData.selectedVariables
-    };
+    }
 
     console.log('add setting data ', data)
 
     try {
-      setIsLoading(true);
+      setIsLoading(true)
       const res = await api('/printLineSetting/', data, 'post', true, true, ip)
-      console.log('Response add printLineSetting:', res.data);
+      console.log('Response add printLineSetting:', res.data)
       if (res.data.success) {
-        setAlertData({ openSnackbar: true, type: 'success', message: 'Printline setting added successfully', variant: 'filled' });
+        setAlertData({
+          openSnackbar: true,
+          type: 'success',
+          message: 'Printline setting added successfully',
+          variant: 'filled'
+        })
       } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+        removeAuthToken()
+        router.push('/401')
       } else {
-        setAlertData({ openSnackbar: true, type: 'error', message: res.data.error.details.message, variant: 'filled' });
+        setAlertData({ openSnackbar: true, type: 'error', message: res.data.error.details.message, variant: 'filled' })
       }
     } catch (error) {
       console.error('Error applying settings:', error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
@@ -189,27 +198,37 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       noOfGroups: settingData.noOfGroups.toString(),
       printPerGroup: settingData.printPerGroup.toString(),
       variables: settingData.selectedVariables
-    };
+    }
     console.log('edit setting data', data)
 
     try {
-      setIsLoading(true);
+      setIsLoading(true)
       const res = await api('/printLineSetting/', data, 'put', true, true, ip)
-      console.log('Response update printLineSetting:', res.data);
+      console.log('Response update printLineSetting:', res.data)
       if (res.data.success) {
-        setAlertData({ openSnackbar: true, type: 'success', message: 'Printline setting updated successfully', variant: 'filled' });
+        setAlertData({
+          openSnackbar: true,
+          type: 'success',
+          message: 'Printline setting updated successfully',
+          variant: 'filled'
+        })
       }
     } catch (error) {
       console.error('Error applying settings:', error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
   const applySettings = async () => {
     if (config?.config?.esign_status) {
-      setApproveData({ approveAPIName: "batch-printing-create", approveAPImethod: "POST", approveAPIEndPoint: "/api/v1/batch-printing", session: "start" });
-      setAuthModalOpen(true);
+      setApproveData({
+        approveAPIName: 'batch-printing-create',
+        approveAPImethod: 'POST',
+        approveAPIEndPoint: '/api/v1/batch-printing',
+        session: 'start'
+      })
+      setAuthModalOpen(true)
     } else {
       editId ? await editSetting() : await addSetting()
     }
@@ -217,98 +236,116 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
 
   const closeModal = () => {
     setOpenModal(false)
-  };
+  }
 
-  const handleInput = (e) => {
+  const handleInput = e => {
     setSettingData(prevSetting => ({
       ...prevSetting,
       [e.target.name]: e.target.value
     }))
-  };
+  }
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
 
   const getLabels = async () => {
-    console.log("getting lables");
+    console.log('getting lables')
     try {
-      setIsLoading(true);
-      setTimeout(() => { setIsLoading(false) }, 5000);
-      const res = await api(`/batchprinting/getPrinterLabels/${projectSettingData.printerId}`, {}, 'get', true, true, ip);
+      setIsLoading(true)
+      setTimeout(() => {
+        setIsLoading(false)
+      }, 5000)
+      const res = await api(
+        `/batchprinting/getPrinterLabels/${projectSettingData.printerId}`,
+        {},
+        'get',
+        true,
+        true,
+        ip
+      )
       console.log('Get labels ', res?.data?.data)
-      setIsLoading(false);
+      setIsLoading(false)
       if (res?.data.success) {
-        setLabels(res.data?.data?.projectNames);
+        setLabels(res.data?.data?.projectNames)
       }
     } catch (error) {
-      console.error("Error to get print line setting")
+      console.error('Error to get print line setting')
       setIsLoading(false)
     }
   }
 
   const handleAuthModalClose = () => {
-    setAuthModalOpen(false);
-    setOpenModalApprove(false);
-  };
+    setAuthModalOpen(false)
+    setOpenModalApprove(false)
+  }
 
   const handleAuthModalOpen = () => {
-    console.log("Open auth model again");
-    setApproveData({ ...approveData, approveAPIName: "batch-printing-approve", approveAPImethod: "PATCH", approveAPIEndPoint: "/api/v1/batch-printing" });
-    setAuthModalOpen(true);
-  };
+    console.log('Open auth model again')
+    setApproveData({
+      ...approveData,
+      approveAPIName: 'batch-printing-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/batch-printing'
+    })
+    setAuthModalOpen(true)
+  }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     const resetState = () => {
-      setApproveData({ approveAPIName: "", approveAPImethod: "", approveAPIEndPoint: "", session: "" });
-      setAuthModalOpen(false);
-    };
+      setApproveData({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '' })
+      setAuthModalOpen(false)
+    }
     if (!isAuthenticated) {
-      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true });
-      return;
+      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
+      return
     }
     const prepareData = () => ({
       esignStatus: esignStatus,
-      audit_log: config?.config?.audit_logs ? {
-        "user_id": user.userId,
-        "user_name": user.userName,
-        "performed_action": 'approved',
-        "remarks": remarks.length > 0 ? remarks : `Batch printing session start approved`,
-      } : {}
-    });
+      audit_log: config?.config?.audit_logs
+        ? {
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: 'approved',
+            remarks: remarks.length > 0 ? remarks : `Batch printing session start approved`
+          }
+        : {}
+    })
     const handleEsignApproved = async () => {
-      console.log("esign is approved for creator.");
+      console.log('esign is approved for creator.')
       const data = {
-        esignStatus: "approved",
-        audit_log: config?.config?.audit_logs ? {
-          "user_id": user.userId,
-          "user_name": user.userName,
-          "performed_action": 'approved',
-          "remarks": remarks.length > 0 ? remarks : `Batch printing session start requested`,
-        } : {}
+        esignStatus: 'approved',
+        audit_log: config?.config?.audit_logs
+          ? {
+              user_id: user.userId,
+              user_name: user.userName,
+              performed_action: 'approved',
+              remarks: remarks.length > 0 ? remarks : `Batch printing session start requested`
+            }
+          : {}
       }
-      await api('/esign-status/double-esign', data, 'patch', true);
-      handleAuthModalOpen();
-    };
+      await api('/esign-status/double-esign', data, 'patch', true)
+      handleAuthModalOpen()
+    }
     const handleApproverActions = async () => {
-      console.log("esign approve by approver.");
-      const data = prepareData();
-      await api('/esign-status/double-esign', data, 'patch', true);
-    };
-    if (isApprover && esignStatus === "approved") {
-      await handleApproverActions();
-      editId ? await editSetting() : await addSetting();
+      console.log('esign approve by approver.')
+      const data = prepareData()
+      await api('/esign-status/double-esign', data, 'patch', true)
+    }
+    if (isApprover && esignStatus === 'approved') {
+      await handleApproverActions()
+      editId ? await editSetting() : await addSetting()
     } else {
-      if (esignStatus === "rejected") {
-        console.log("esign is rejected.");
-        setAuthModalOpen(false);
-        setOpenModalApprove(false);
-      } else if (esignStatus === "approved") {
-        handleEsignApproved();
+      if (esignStatus === 'rejected') {
+        console.log('esign is rejected.')
+        setAuthModalOpen(false)
+        setOpenModalApprove(false)
+      } else if (esignStatus === 'approved') {
+        handleEsignApproved()
       }
     }
-    resetState();
-  };
+    resetState()
+  }
 
   return (
     <>
@@ -322,7 +359,16 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
             <Grid2 size={6}>
               <FormControl fullWidth>
                 <InputLabel id='label'>Label</InputLabel>
-                <Select labelId='label' id='label' label='Label' fullWidth onChange={handleInput} name='label' value={settingData.label} onOpen={getLabels}>
+                <Select
+                  labelId='label'
+                  id='label'
+                  label='Label'
+                  fullWidth
+                  onChange={handleInput}
+                  name='label'
+                  value={settingData.label}
+                  onOpen={getLabels}
+                >
                   {labels?.map((item, index) => (
                     <MenuItem key={index} value={item}>
                       {item}
@@ -335,7 +381,15 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
             <Grid2 size={6}>
               <FormControl fullWidth>
                 <InputLabel id='date'>Date Format</InputLabel>
-                <Select labelId='date' id='date' label='DateFormat' fullWidth onChange={handleInput} name='dateFormat' value={settingData.dateFormat}>
+                <Select
+                  labelId='date'
+                  id='date'
+                  label='DateFormat'
+                  fullWidth
+                  onChange={handleInput}
+                  name='dateFormat'
+                  value={settingData.dateFormat}
+                >
                   <MenuItem value='DD/MM/YYYY'>DD/MM/YYYY</MenuItem>
                   <MenuItem value='MM-DD-YY'>MM-DD-YY</MenuItem>
                   <MenuItem value='DD-MM-YY'>DD-MM-YY</MenuItem>
@@ -352,7 +406,15 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
             <Grid2 size={6}>
               <FormControl fullWidth>
                 <InputLabel id='no_of_groups_lbl'>No. of Groups</InputLabel>
-                <Select labelId='no_of_groups_lbl' id='no_of_groups' label='No. of Groups' fullWidth onChange={handleInput} name='noOfGroups' value={settingData.noOfGroups}>
+                <Select
+                  labelId='no_of_groups_lbl'
+                  id='no_of_groups'
+                  label='No. of Groups'
+                  fullWidth
+                  onChange={handleInput}
+                  name='noOfGroups'
+                  value={settingData.noOfGroups}
+                >
                   <MenuItem value='1'>1</MenuItem>
                   <MenuItem value='2'>2</MenuItem>
                   <MenuItem value='3'>3</MenuItem>
@@ -363,7 +425,15 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
             <Grid2 size={6}>
               <FormControl fullWidth>
                 <InputLabel id='group_prnt_lbl'>Print per group</InputLabel>
-                <Select labelId='group_prnt_lbl' id='group_prnt' label='Print per group' fullWidth onChange={handleInput} name='printPerGroup' value={settingData.printPerGroup}>
+                <Select
+                  labelId='group_prnt_lbl'
+                  id='group_prnt'
+                  label='Print per group'
+                  fullWidth
+                  onChange={handleInput}
+                  name='printPerGroup'
+                  value={settingData.printPerGroup}
+                >
                   <MenuItem value='1'>1</MenuItem>
                   <MenuItem value='2'>2</MenuItem>
                   <MenuItem value='3'>3</MenuItem>
@@ -396,7 +466,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                   renderValue={selected => selected.join(', ')}
                   onChange={e => {
                     // const value = ...e.target.value;
-                    console.log("Event value ", e.target.value)
+                    console.log('Event value ', e.target.value)
                     setSettingData(prevData => {
                       const data = { ...prevData }
                       data.variables.map(i => {
@@ -407,14 +477,14 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                         }
                         return i
                       })
-                      data.selectedVariables = e.target.value;
-                      return data;
+                      data.selectedVariables = e.target.value
+                      return data
                     })
                   }}
                   input={<OutlinedInput label='None' />}
                 >
                   {settingData.variables?.map((item, index) => (
-                    <MenuItem key={index} value={item.value} >
+                    <MenuItem key={index} value={item.value}>
                       <Checkbox checked={item.checked} />
                       <ListItemText primary={item.label} />
                     </MenuItem>
@@ -424,15 +494,12 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
             </Grid2>
           </Grid2>
 
-
           <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            {
-              apiAccess.addApiAccess && (
-                <Button variant='contained' onClick={applySettings} sx={{ minWidth: 100 }}>
-                  Apply
-                </Button>
-              )
-            }
+            {apiAccess.addApiAccess && (
+              <Button variant='contained' onClick={applySettings} sx={{ minWidth: 100 }}>
+                Apply
+              </Button>
+            )}
             <Button
               variant='outlined'
               color='error'
@@ -463,7 +530,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
 }
 
 const Index = ({ userId, ip }) => {
-  const { settings } = useSettings();
+  const { settings } = useSettings()
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [openProjectModal, setOpenProjectModal] = useState(false)
   const [printerLines, setPrinterLines] = useState([])
@@ -473,22 +540,27 @@ const Index = ({ userId, ip }) => {
   const { removeAuthToken } = useAuth()
   const router = useRouter()
   const [projectSettingData, setProjectSettingData] = useState({ lineId: '', printerId: '' })
-  const apiAccess = useApiAccess("batch-printing-create", "batch-printing-update", "batch-printing-approve");
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [openModalApprove, setOpenModalApprove] = useState(false);
-  const [approveData, setApproveData] = useState({ approveAPIName: "", approveAPImethod: "", approveAPIEndPoint: "", session: "" });
-  const [config, setConfig] = useState(null);
+  const apiAccess = useApiAccess('batch-printing-create', 'batch-printing-update', 'batch-printing-approve')
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [openModalApprove, setOpenModalApprove] = useState(false)
+  const [approveData, setApproveData] = useState({
+    approveAPIName: '',
+    approveAPImethod: '',
+    approveAPIEndPoint: '',
+    session: ''
+  })
+  const [config, setConfig] = useState(null)
 
   useEffect(() => {
-    (async () => {
-      await getLinesByPcIp();
-      const decodedToken = getTokenValues();
-      setConfig(decodedToken);
+    ;(async () => {
+      await getLinesByPcIp()
+      const decodedToken = getTokenValues()
+      setConfig(decodedToken)
     })()
 
     if (!socket.current) {
       // Connect to the backend server
-      socket.current = io(`http://${ip}:4000`, { query: { userId } });
+      socket.current = io(`http://${ip}:4000`, { query: { userId } })
       // console.log("User id ", userId);
     }
 
@@ -498,7 +570,7 @@ const Index = ({ userId, ip }) => {
     })
 
     socket.current.on('dataPrinted', data => {
-      const { lineId, printCount, panelName } = data;
+      const { lineId, printCount, panelName } = data
       setPrinterLines(prevLines => {
         const panels = [...prevLines]
         const panel = panels.find(i => i.panelName === panelName)
@@ -517,7 +589,7 @@ const Index = ({ userId, ip }) => {
         const panel = panels.find(i => i.panelName === panelName)
         const line = panel.lines.find(line => line.id === lineId)
         line.scanned = scanned
-        console.log("dataScanned panels ", panels)
+        console.log('dataScanned panels ', panels)
         return panels
       })
     })
@@ -535,7 +607,7 @@ const Index = ({ userId, ip }) => {
         line.disabledStopSession = true
         return panels
       })
-      setAlertData({ openSnackbar: true, type: 'success', message: 'Printer started', variant: 'filled' });
+      setAlertData({ openSnackbar: true, type: 'success', message: 'Printer started', variant: 'filled' })
     })
 
     socket.current.on('printStoped', data => {
@@ -556,7 +628,7 @@ const Index = ({ userId, ip }) => {
         line.scanned = data.scanCount
         return panels
       })
-      setAlertData({ openSnackbar: true, type: 'success', message: 'Printer stopped Successfully', variant: 'filled' });
+      setAlertData({ openSnackbar: true, type: 'success', message: 'Printer stopped Successfully', variant: 'filled' })
     })
 
     socket.current.on('panelPing', data => {
@@ -572,17 +644,24 @@ const Index = ({ userId, ip }) => {
 
     socket.current.on('printingCompleted', async data => {
       try {
-        await api("/batchprinting/panelStop", {
-          line: {
-            ControlPanel: { id: data.panelId },
-            id: data.lineId
+        await api(
+          '/batchprinting/panelStop',
+          {
+            line: {
+              ControlPanel: { id: data.panelId },
+              id: data.lineId
+            },
+            panelStopPing: true
           },
-          panelStopPing: true
-        }, 'post', true, true, ip);
+          'post',
+          true,
+          true,
+          ip
+        )
         setPrinterLines(prevLines => {
           const panels = [...prevLines]
           const panel = panels.find(i => i.panelName === data.panelName)
-          const line = panel.lines.find(i => (i.id === data.lineId))
+          const line = panel.lines.find(i => i.id === data.lineId)
           line.disabledStartPrint = true
           line.disabledStopPrint = true
           line.disabledCodeToPrint = false
@@ -592,125 +671,141 @@ const Index = ({ userId, ip }) => {
           line.scanned = data.scanCount
           line.disabledReset = true
           line.disabledStopSession = false
-          console.log("panel line competed ", panels)
+          console.log('panel line competed ', panels)
           return panels
-        });
+        })
         setAlertData({ openSnackbar: true, type: 'success', message: 'Printing completed', variant: 'filled' })
-
       } catch (error) {
-        console.log("Error to stop printing ", error)
+        console.log('Error to stop printing ', error)
       }
     })
 
-    socket.current.on("onMessage", data => {
-      console.log("onMessage ", data);
-      setAlertData({ openSnackbar: true, type: data.type, message: data.message, variant: 'filled' });
+    socket.current.on('onMessage', data => {
+      console.log('onMessage ', data)
+      setAlertData({ openSnackbar: true, type: data.type, message: data.message, variant: 'filled' })
     })
 
-    const handleBeforeUnload = (event) => {
-      const message = 'Are you sure you want to leave? Printing Data might be lost.';
-      event.preventDefault();
-      event.returnValue = message; // Shows the confirmation dialog.
-      return message; // Required for older browsers.
-    };
+    const handleBeforeUnload = event => {
+      const message = 'Are you sure you want to leave? Printing Data might be lost.'
+      event.preventDefault()
+      event.returnValue = message // Shows the confirmation dialog.
+      return message // Required for older browsers.
+    }
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('beforeunload', handleBeforeUnload)
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('beforeunload', handleBeforeUnload)
       if (socket.current) {
         socket.current.disconnect()
       }
     }
   }, [])
 
-
-  const getPrintingStatus = async (groupedPanels) => {
+  const getPrintingStatus = async groupedPanels => {
     try {
-      setIsLoading(true);
-      const panels = [...groupedPanels];
+      setIsLoading(true)
+      const panels = [...groupedPanels]
       const updatedPanels = await Promise.all(
-        panels.map(async (panel) => {
+        panels.map(async panel => {
           // Process all lines asynchronously
           panel.lines = await Promise.all(
-            panel.lines.map(async (line) => {
-              const res = await api(`/printLineSetting/restore/${line.id}`, {}, 'get', true, true, ip);
-              console.log("Response of restore ", res.data);
+            panel.lines.map(async line => {
+              const res = await api(`/printLineSetting/restore/${line.id}`, {}, 'get', true, true, ip)
+              console.log('Response of restore ', res.data)
 
               if (res?.data?.success && res?.data?.data) {
-                const data = res.data.data.result;
-                console.log("line is ", line);
+                const data = res.data.data.result
+                console.log('line is ', line)
 
-                line.product = data.product_id;
+                line.product = data.product_id
 
                 // Fetch additional data
                 const [productRes, batchRes, levelRes, availRes] = await Promise.all([
                   api('/batchprinting/getAllProducts', {}, 'get', true, true, ip),
                   api(`/batchprinting/getBatchesByProduct/${data.product_id}`, {}, 'get', true, true, ip),
-                  api(`/batchprinting/getPackagingHeirarchyFromProductAndBatch/${data.product_id}/${data.batch_id}`, {}, 'get', true, true, ip),
-                  api(`/batchprinting/getAvailableCodesFromProductAndBatch/${data.product_id}/${data.batch_id}/${data.packing_hierarchy}/${line.ControlPanel.id}/${line.id}`, {}, 'get', true, true, ip)
-                ]);
+                  api(
+                    `/batchprinting/getPackagingHeirarchyFromProductAndBatch/${data.product_id}/${data.batch_id}`,
+                    {},
+                    'get',
+                    true,
+                    true,
+                    ip
+                  ),
+                  api(
+                    `/batchprinting/getAvailableCodesFromProductAndBatch/${data.product_id}/${data.batch_id}/${data.packing_hierarchy}/${line.ControlPanel.id}/${line.id}`,
+                    {},
+                    'get',
+                    true,
+                    true,
+                    ip
+                  )
+                ])
 
                 // Update line properties
-                line.products = productRes.data.data.products;
-                line.batch = data.batch_id;
-                line.batches = batchRes.data.data.batches;
-                line.packagingHierarchy = data.packing_hierarchy;
-                line.packagingHierarchies = [levelRes.data.data.packagingheirarchy];
-                line.saveData = true;
-                line.availableToCode = availRes.data.data.availableCodes;
-                line.printCount = res.data.data.printCount;
-                line.scanned = res.data.data.scanCount;
-                line.pendingCount = res.data.data.pendingCount;
-                line.codeToPrint = String(res.data.data.codesLength);
-                line.disabledStartPrint = true;
-                line.disabledReset = true;
+                line.products = productRes.data.data.products
+                line.batch = data.batch_id
+                line.batches = batchRes.data.data.batches
+                line.packagingHierarchy = data.packing_hierarchy
+                line.packagingHierarchies = [levelRes.data.data.packagingheirarchy]
+                line.saveData = true
+                line.availableToCode = availRes.data.data.availableCodes
+                line.printCount = res.data.data.printCount
+                line.scanned = res.data.data.scanCount
+                line.pendingCount = res.data.data.pendingCount
+                line.codeToPrint = String(res.data.data.codesLength)
+                line.disabledStartPrint = true
+                line.disabledReset = true
                 line.sessionStarted = res.data.data.result.session === 'started'
-                line.disabledStartSession = true;
+                line.disabledStartSession = true
 
                 if (data.status === 'running') {
-                  line.disabledStopSession = true;
-                  line.disabledCodePrintSave = true;
-                  line.disabledStopPrint = false;
-                  line.disabledCodeToPrint = true;
+                  line.disabledStopSession = true
+                  line.disabledCodePrintSave = true
+                  line.disabledStopPrint = false
+                  line.disabledCodeToPrint = true
                 } else if (data.status === 'pending') {
-                  line.disabledStopSession = false;
-                  line.disabledCodePrintSave = false;
-                  line.disabledStopPrint = true;
-                  line.disabledCodeToPrint = true;
+                  line.disabledStopSession = false
+                  line.disabledCodePrintSave = false
+                  line.disabledStopPrint = true
+                  line.disabledCodeToPrint = true
                 } else if (data.status === 'stoped') {
-                  line.disabledStopSession = false;
-                  line.disabledCodePrintSave = false;
-                  line.disabledStopPrint = true;
-                  line.disabledCodeToPrint = false;
+                  line.disabledStopSession = false
+                  line.disabledCodePrintSave = false
+                  line.disabledStopPrint = true
+                  line.disabledCodeToPrint = false
                 } else {
-                  line.disabledStopSession = false;
-                  line.disabledCodePrintSave = false;
-                  line.disabledStopPrint = true;
-                  line.disabledCodeToPrint = false;
+                  line.disabledStopSession = false
+                  line.disabledCodePrintSave = false
+                  line.disabledStopPrint = true
+                  line.disabledCodeToPrint = false
                 }
               }
-              return line; // Return the modified line
+              return line // Return the modified line
             })
-          );
-          return panel; // Return updated panel
+          )
+          return panel // Return updated panel
         })
-      );
-      setPrinterLines(updatedPanels); // Now updatedPanels has all the async results
-      setIsLoading(false);
+      )
+      setPrinterLines(updatedPanels) // Now updatedPanels has all the async results
+      setIsLoading(false)
     } catch (error) {
-      setIsLoading(false);
-      console.log("Error to get Printing status");
+      setIsLoading(false)
+      console.log('Error to get Printing status')
     }
-  };
-
+  }
 
   const getLinesByPcIp = async () => {
     setIsLoading(true)
     try {
       const res = await api(`/batchprinting/getLinesByPcIp/${ip}`, {}, 'get', true, true, ip)
       if (!res) {
-        setAlertData({ openSnackbar: true, type: 'error', message: "Error to connect with printing backend", variant: 'filled' })
+        setAlertData({
+          openSnackbar: true,
+          type: 'error',
+          message: 'Error to connect with printing backend',
+          variant: 'filled'
+        })
       }
       if (res?.data?.success) {
         const groupedPanels = []
@@ -746,8 +841,8 @@ const Index = ({ userId, ip }) => {
           groupedPanels.push({ panelName: key, lines: values, connected: false })
         })
         console.log('GROUPED PANEL ', groupedPanels)
-        setPrinterLines(groupedPanels);
-        await getPrintingStatus(groupedPanels);
+        setPrinterLines(groupedPanels)
+        await getPrintingStatus(groupedPanels)
       } else {
         console.log('Error fetching lines', res?.data)
         if (res?.data?.code === 401) {
@@ -816,7 +911,14 @@ const Index = ({ userId, ip }) => {
     const productID = line.product
     try {
       setIsLoading(true)
-      const res = await api(`/batchprinting/getPackagingHeirarchyFromProductAndBatch/${productID}/${batchId}`, {}, 'get', true, true, ip)
+      const res = await api(
+        `/batchprinting/getPackagingHeirarchyFromProductAndBatch/${productID}/${batchId}`,
+        {},
+        'get',
+        true,
+        true,
+        ip
+      )
       if (res.data.success) {
         console.log('handleBatchChange', res.data.data)
         const packagingHierarchies = res.data.data.packagingheirarchy
@@ -893,7 +995,10 @@ const Index = ({ userId, ip }) => {
         line.packagingHierarchy === ''
           ? { isError: true, message: 'Packaging Hierarchy is required' }
           : { isError: false, message: '' }
-      line.errorCodeToPrint = parseInt(line.codeToPrint) <= 0 ? { isError: true, message: 'Code to print must be positive number' } : { isError: false, message: '' }
+      line.errorCodeToPrint =
+        parseInt(line.codeToPrint) <= 0
+          ? { isError: true, message: 'Code to print must be positive number' }
+          : { isError: false, message: '' }
       return newLines
     })
   }
@@ -918,10 +1023,17 @@ const Index = ({ userId, ip }) => {
     if (!checkValidate(panelIndex, lineIndex)) {
       return
     }
-    console.log("Panles group ", printerLines);
+    console.log('Panles group ', printerLines)
     try {
       setIsLoading(true)
-      const res = await api(`/batchprinting/getAvailableCodesFromProductAndBatch/${productID}/${batchId}/${packagingHierarchy}/${controlPanelId}/${line.id}`, {}, 'get', true, true, ip)
+      const res = await api(
+        `/batchprinting/getAvailableCodesFromProductAndBatch/${productID}/${batchId}/${packagingHierarchy}/${controlPanelId}/${line.id}`,
+        {},
+        'get',
+        true,
+        true,
+        ip
+      )
       console.log('Res of submit form ', res.data)
       if (res.data.success) {
         const { availableCodes, codeToPrint } = res.data.data
@@ -933,12 +1045,12 @@ const Index = ({ userId, ip }) => {
           line.availableToCode = availableCodes
           line.codeToPrint = codeToPrint
           line.scanned = 0
-          line.disabledCodeToPrint = false;
+          line.disabledCodeToPrint = false
           return panels
         })
       } else {
-        console.log('Error fetching codes', res.data);
-        setAlertData({ openSnackbar: true, variant: 'filled', type: 'error', message: res.data?.message });
+        console.log('Error fetching codes', res.data)
+        setAlertData({ openSnackbar: true, variant: 'filled', type: 'error', message: res.data?.message })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
@@ -958,7 +1070,7 @@ const Index = ({ userId, ip }) => {
     if (!checkValidateBeforeStart(panelIndex, lineIndex)) {
       return
     }
-    console.log("LIne send ", line)
+    console.log('LIne send ', line)
     try {
       const res = await api(`/batchprinting/sendCodesToPrinter`, { line, socketId }, 'post', true, true, ip)
       console.log('res of handlestart printing ', res.data)
@@ -984,7 +1096,7 @@ const Index = ({ userId, ip }) => {
           const panel = panels[panelIndex]
           panel.connected = false
           return panels
-        });
+        })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
@@ -1000,19 +1112,19 @@ const Index = ({ userId, ip }) => {
       const data = { line }
       socket.current.emit('startPrinting', data)
     } catch (error) {
-      console.log('Error handleStart Printing', error);
-      setAlertData({ ...alertData, type: 'error', message: error, openSnackbar: true });
+      console.log('Error handleStart Printing', error)
+      setAlertData({ ...alertData, type: 'error', message: error, openSnackbar: true })
     }
   }
 
   const handleStopPrinting = async (panelIndex, lineIndex, line) => {
-    console.log("STop printing clicked...")
+    console.log('STop printing clicked...')
     try {
       const data = { line }
       socket.current.emit('stopPrinting', data)
     } catch (error) {
-      console.log('Error handleStop Printing', error);
-      setAlertData({ ...alertData, type: 'error', message: error, openSnackbar: true });
+      console.log('Error handleStop Printing', error)
+      setAlertData({ ...alertData, type: 'error', message: error, openSnackbar: true })
     }
   }
 
@@ -1043,7 +1155,14 @@ const Index = ({ userId, ip }) => {
     try {
       setIsLoading(true)
       console.log('redis key ', redisKey)
-      const res = await api('/batchprinting/removeTableFromRedis', { redisKey, lineId: line.id }, 'delete', true, true, ip)
+      const res = await api(
+        '/batchprinting/removeTableFromRedis',
+        { redisKey, lineId: line.id },
+        'delete',
+        true,
+        true,
+        ip
+      )
       console.log('res of reset ', res.data)
       setIsLoading(false)
     } catch (error) {
@@ -1051,162 +1170,181 @@ const Index = ({ userId, ip }) => {
     }
   }
 
-  const handleOpenSetting = async (line) => {
+  const handleOpenSetting = async line => {
     console.log('setting of line ', line)
-    setProjectSettingData({ ...projectSettingData, lineId: line.id, printerId: line.printer_id });
-    setOpenProjectModal(!openProjectModal);
+    setProjectSettingData({ ...projectSettingData, lineId: line.id, printerId: line.printer_id })
+    setOpenProjectModal(!openProjectModal)
   }
 
   const handleAfterStartSession = async () => {
-    const panels = [...printerLines];
-    const data = { stop: false };
+    const panels = [...printerLines]
+    const data = { stop: false }
     await Promise.all(
-      panels.map(async (panel) => {
-        const lines = [...panel.lines];
+      panels.map(async panel => {
+        const lines = [...panel.lines]
         await Promise.all(
-          lines.map(async (line) => {
+          lines.map(async line => {
             if (line.line_pc_ip === ip) {
-              data.lineId = line.id;
-              line.disabledCodePrintSave = false;
-              line.disabledStartSession = true;
-              line.disabledCodeToPrint = true;
-              line.disabledStopSession = false;
-              line.disabledReset = true;
-              line.sessionStarted = true;
+              data.lineId = line.id
+              line.disabledCodePrintSave = false
+              line.disabledStartSession = true
+              line.disabledCodeToPrint = true
+              line.disabledStopSession = false
+              line.disabledReset = true
+              line.sessionStarted = true
             }
-            return line;
+            return line
           })
-        );
-        panel.lines = lines;
-        return panel;
+        )
+        panel.lines = lines
+        return panel
       })
-    );
-    setPrinterLines(panels);
+    )
+    setPrinterLines(panels)
     try {
-      socket.current.emit('stopPrintingSession', data);
+      socket.current.emit('stopPrintingSession', data)
     } catch (error) {
-      console.log('Error handle Stop Printing Session ', error);
-      setAlertData({ ...alertData, type: 'error', message: error, openSnackbar: true });
+      console.log('Error handle Stop Printing Session ', error)
+      setAlertData({ ...alertData, type: 'error', message: error, openSnackbar: true })
     }
   }
 
   const handleAfterStopSession = async () => {
-    const panels = [...printerLines];
-    const data = { stop: true };
+    const panels = [...printerLines]
+    const data = { stop: true }
     await Promise.all(
-      panels.map(async (panel) => {
-        const lines = [...panel.lines];
+      panels.map(async panel => {
+        const lines = [...panel.lines]
         await Promise.all(
-          lines.map(async (line) => {
-            data.lineId = line.id;
-            line.disabledCodePrintSave = true;
-            line.disabledStartSession = true;
-            line.disabledStopSession = true;
-            line.disabledCodeToPrint = true;
-            line.disabledStartPrint = true;
-            line.disabledStopPrint = true;
-            line.disabledReset = false;
-            line.sessionStarted = false;
-            return line;
+          lines.map(async line => {
+            data.lineId = line.id
+            line.disabledCodePrintSave = true
+            line.disabledStartSession = true
+            line.disabledStopSession = true
+            line.disabledCodeToPrint = true
+            line.disabledStartPrint = true
+            line.disabledStopPrint = true
+            line.disabledReset = false
+            line.sessionStarted = false
+            return line
           })
-        );
-        panel.lines = lines;
-        return panel;
+        )
+        panel.lines = lines
+        return panel
       })
-    );
-    setPrinterLines(panels);
+    )
+    setPrinterLines(panels)
     try {
-      socket.current.emit('stopPrintingSession', data);
+      socket.current.emit('stopPrintingSession', data)
     } catch (error) {
-      console.log('Error handle Stop Printing Session ', error);
-      setAlertData({ ...alertData, type: 'error', message: error, openSnackbar: true });
+      console.log('Error handle Stop Printing Session ', error)
+      setAlertData({ ...alertData, type: 'error', message: error, openSnackbar: true })
     }
   }
 
   const handleSessionStart = async () => {
-    if(config?.config?.esign_status){
-      setApproveData({ approveAPIName: "batch-printing-create", approveAPImethod: "POST", approveAPIEndPoint: "/api/v1/batch-printing", session: "start" });
-      setAuthModalOpen(true);
+    if (config?.config?.esign_status) {
+      setApproveData({
+        approveAPIName: 'batch-printing-create',
+        approveAPImethod: 'POST',
+        approveAPIEndPoint: '/api/v1/batch-printing',
+        session: 'start'
+      })
+      setAuthModalOpen(true)
     } else {
-      handleAfterStartSession();
+      handleAfterStartSession()
     }
   }
 
   const handleSessionStop = async () => {
-    if(config?.config?.esign_status){
-      setApproveData({ approveAPIName: "batch-printing-create", approveAPImethod: "POST", approveAPIEndPoint: "/api/v1/batch-printing", session: "stop" });
-      setAuthModalOpen(true);
+    if (config?.config?.esign_status) {
+      setApproveData({
+        approveAPIName: 'batch-printing-create',
+        approveAPImethod: 'POST',
+        approveAPIEndPoint: '/api/v1/batch-printing',
+        session: 'stop'
+      })
+      setAuthModalOpen(true)
     } else {
-      handleAfterStopSession();
+      handleAfterStopSession()
     }
   }
 
   const handleAuthModalClose = () => {
-    setAuthModalOpen(false);
-    setOpenModalApprove(false);
-  };
+    setAuthModalOpen(false)
+    setOpenModalApprove(false)
+  }
 
   const handleAuthModalOpen = () => {
-    console.log("Open auth model again");
-    setApproveData({ ...approveData, approveAPIName: "batch-printing-approve", approveAPImethod: "PATCH", approveAPIEndPoint: "/api/v1/batch-printing" });
-    setAuthModalOpen(true);
-  };
+    console.log('Open auth model again')
+    setApproveData({
+      ...approveData,
+      approveAPIName: 'batch-printing-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/batch-printing'
+    })
+    setAuthModalOpen(true)
+  }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     const resetState = () => {
-      setApproveData({ approveAPIName: "", approveAPImethod: "", approveAPIEndPoint: "", session: "" });
-      setAuthModalOpen(false);
-    };
+      setApproveData({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '' })
+      setAuthModalOpen(false)
+    }
     if (!isAuthenticated) {
-      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true });
-      return;
+      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
+      return
     }
     const prepareData = () => ({
       esignStatus: esignStatus,
-      audit_log: config?.config?.audit_logs ? {
-        "user_id": user.userId,
-        "user_name": user.userName,
-        "performed_action": 'approved',
-        "remarks": remarks.length > 0 ? remarks : `Batch printing session start approved`,
-      } : {}
-    });
+      audit_log: config?.config?.audit_logs
+        ? {
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: 'approved',
+            remarks: remarks.length > 0 ? remarks : `Batch printing session start approved`
+          }
+        : {}
+    })
     const handleEsignApproved = async () => {
-      console.log("esign is approved for creator.");
+      console.log('esign is approved for creator.')
       const data = {
-        esignStatus: "approved",
-        audit_log: config?.config?.audit_logs ? {
-          "user_id": user.userId,
-          "user_name": user.userName,
-          "performed_action": 'approved',
-          "remarks": remarks.length > 0 ? remarks : `Batch printing session start requested`,
-        } : {}
+        esignStatus: 'approved',
+        audit_log: config?.config?.audit_logs
+          ? {
+              user_id: user.userId,
+              user_name: user.userName,
+              performed_action: 'approved',
+              remarks: remarks.length > 0 ? remarks : `Batch printing session start requested`
+            }
+          : {}
       }
-      await api('/esign-status/double-esign', data, 'patch', true);
-      handleAuthModalOpen();
-    };
+      await api('/esign-status/double-esign', data, 'patch', true)
+      handleAuthModalOpen()
+    }
     const handleApproverActions = async () => {
-      console.log("esign approve by approver.");
-      const data = prepareData();
-      await api('/esign-status/double-esign', data, 'patch', true);
-    };
-    if (isApprover && esignStatus === "approved") {
-      await handleApproverActions();
-      if (approveData.session === "start") {
-        handleAfterStartSession();
+      console.log('esign approve by approver.')
+      const data = prepareData()
+      await api('/esign-status/double-esign', data, 'patch', true)
+    }
+    if (isApprover && esignStatus === 'approved') {
+      await handleApproverActions()
+      if (approveData.session === 'start') {
+        handleAfterStartSession()
       } else {
-        handleAfterStopSession();
+        handleAfterStopSession()
       }
     } else {
-      if (esignStatus === "rejected") {
-        console.log("esign is rejected.");
-        setAuthModalOpen(false);
-        setOpenModalApprove(false);
-      } else if (esignStatus === "approved") {
-        handleEsignApproved();
+      if (esignStatus === 'rejected') {
+        console.log('esign is rejected.')
+        setAuthModalOpen(false)
+        setOpenModalApprove(false)
+      } else if (esignStatus === 'approved') {
+        handleEsignApproved()
       }
     }
-    resetState();
-  };
+    resetState()
+  }
 
   return (
     <Box padding={4}>
@@ -1251,228 +1389,225 @@ const Index = ({ userId, ip }) => {
             </Grid2>
           </Grid2>
           {panel?.lines.map((line, lineIndex) => {
-            return line.line_pc_ip === ip && (
-              <Paper
-                key={line.id}
-                sx={{
-                  borderRadius: 2,
-                  padding: '10px 20px 20px 20px',
-                  marginBottom: 5,
-                  backgroundColor: settings.mode === 'dark' ? '#212121' : '#f9fbf9'
-                }}
-                elevation={3}
-              >
-                <Grid2 container spacing={2} sx={{ alignItems: 'center', marginBottom: '16px' }}>
-                  <Grid2 item size={6}>
-                    <Typography variant='h4' className='mx-1 my-2' sx={{ paddingTop: '1%' }}>
-                      Line Name: {line.printer_line_name}
-                    </Typography>
-                  </Grid2>
-                  <Grid2 item size={6} sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                    <Typography variant='h4' className='mx-3 my-2' sx={{ paddingTop: '1%' }}>
-                      Line No: {line.line_no}
-                    </Typography>
-                    <Box
-                      sx={{
-                        width: 30,
-                        height: 30,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: settings.themeColor,
-                        borderRadius: 2
-                      }}
-                    >
-                      <IconButton
-                        aria-label='settings'
-                        onClick={() => handleOpenSetting(line)}
-                        disabled={openProjectModal}
-                        sx={{ color: 'white', padding: 0 }}
-                      >
-                        <AiOutlineSetting size={20} />
-                      </IconButton>
-                    </Box>
-                  </Grid2>
-                </Grid2>
-                <Grid2 container spacing={3} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Grid2 item xs={12} sm={3} md={3} lg={3} sx={{ width: '24%' }}>
-                    <FormControl className='w-100'>
-                      <InputLabel id={`select-product-${panelIndex}-${lineIndex}`}>Select Product</InputLabel>
-                      <Select
-                        fullWidth
-                        disabled={line.saveData}
-                        labelId={`select-product-${panelIndex}-${lineIndex}`}
-                        id={`select-product-${panelIndex}-${lineIndex}`}
-                        label='Select Product'
-                        value={line.product}
-                        onChange={e => handleProductChange(panelIndex, lineIndex, e.target.value)}
-                        onOpen={() => getProducts(panelIndex, lineIndex)}
-                      >
-                        {line?.products?.map(product => (
-                          <MenuItem key={product.product_uuid} value={product.product_uuid}>
-                            {product?.product_name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid2>
-                  <Grid2 item xs={12} sm={3} md={3} lg={3} sx={{ width: '24%' }}>
-                    <FormControl className='w-100' sx={{ ml: 2 }}>
-                      <InputLabel id={`select-batch-${panelIndex}-${lineIndex}`}>Select Batch</InputLabel>
-                      <Select
-                        fullWidth
-                        disabled={line.saveData || !line.product}
-                        labelId={`select-batch-${panelIndex}-${lineIndex}`}
-                        id={`select-batch-${panelIndex}-${lineIndex}`}
-                        label='Select Batch'
-                        value={line.batch}
-                        onChange={e => handleBatchChange(panelIndex, lineIndex, e.target.value, line)}
-                      >
-                        {line?.batches?.map(batch => (
-                          <MenuItem key={batch.id} value={batch.id}>
-                            {batch?.batch_no}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid2>
-                  <Grid2 item xs={12} sm={3} md={3} lg={3} sx={{ width: '24%' }}>
-                    <FormControl className='w-100' sx={{ ml: 2 }}>
-                      <InputLabel id={`packaging-hierarchy-${panelIndex}-${lineIndex}`}>
-                        Select Packaging Hierarchy
-                      </InputLabel>
-                      <Select
-                        fullWidth
-                        disabled={line.saveData || !line.batch}
-                        labelId={`packaging-hierarchy-${panelIndex}-${lineIndex}`}
-                        id={`packaging-hierarchy-${panelIndex}-${lineIndex}`}
-                        label='Packaging Hierarchy'
-                        value={line.packagingHierarchy}
-                        onChange={e => handleInputChange(panelIndex, lineIndex, 'packagingHierarchy', e.target.value)}
-                      >
-                        {line.packagingHierarchies.map(ph =>
-                          getLayerOptions(ph).map((option, idx) => (
-                            <MenuItem key={`${ph.id}-${idx}`} value={option.value}>
-                              {option.label}
-                            </MenuItem>
-                          ))
-                        )}
-                      </Select>
-                    </FormControl>
-                  </Grid2>
-                  <Grid2 item xs={12} sm={3} md={3} lg={3} sx={{ width: '24%' }}>
-                    <Box
-                      fullWidth
-                      sx={{
-                        ml: 1,
-                        display: 'flex',
-                        gap: '2rem',
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <Button
-                        variant='contained'
-                        onClick={() => handleSubmitForm(panelIndex, lineIndex, line)}
-                        disabled={line.saveData}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        type='reset'
-                        variant='outlined'
-                        color='error'
-                        onClick={() => handleResetPanel(panelIndex, lineIndex)}
-                        disabled={line.disabledReset}
-                      >
-                        Reset
-                      </Button>
-                    </Box>
-                  </Grid2>
-                </Grid2>
-                {line.saveData && (
-                  <>
-                    <Grid2 container spacing={3} sx={{ marginTop: 2, alignItems: 'center' }}>
-                      <Grid2 size={3} item sx={{ width: '24%', marginRight: 1 }}>
-                        <TextField
-                          disabled={line.availableToCode}
-                          value={line.availableToCode}
-                          onChange={e => handleInputChange(panelIndex, lineIndex, 'availableToCode', e.target.value)}
-                          error={line.errorAvailableToCode.isError}
-                          helperText={line.errorAvailableToCode.isError ? line.errorAvailableToCode.message : ''}
-                          fullWidth
-                          aria-label='available-code'
-                          label='Available Code'
-                        />
-                      </Grid2>
-                      <Grid2 size={3} item sx={{ width: '24%' }}>
-                        <TextField
-                          id='code-to-print'
-                          disabled={line.disabledCodeToPrint}
-                          value={line.codeToPrint}
-                          onChange={e => {
-                            handleInputChange(panelIndex, lineIndex, 'codeToPrint', e.target.value);
-                            if (!line.sessionStarted && e.target.value !== '') handleInputChange(panelIndex, lineIndex, 'disabledStartSession', false)
-                            else handleInputChange(panelIndex, lineIndex, 'disabledStartSession', true)
-                          }}
-                          error={line.errorCodeToPrint.isError}
-                          helperText={line.errorCodeToPrint.isError ? line.errorCodeToPrint.message : ''}
-                          fullWidth
-                          type='number'
-                          aria-label='code-to-print'
-                          label='Code To Print'
-                        />
-                      </Grid2>
-                      <Grid2 size={3} item sx={{ width: '20%' }}>
-                        <Button
-                          variant='contained'
-                          className='py-2'
-                          onClick={() => handleSessionStart()}
-                          disabled={line.disabledStartSession}
-                        >
-                          Start Session
-                        </Button>
-                      </Grid2>
-                      <Grid2 size={3} item sx={{ width: '20%' }}>
-                        <Button
-                          variant='contained'
-                          className='py-2'
-                          onClick={() => handleSessionStop(panelIndex, lineIndex, line)}
-                          disabled={line.disabledStopSession}
-                        >
-                          Stop Session
-                        </Button>
-                      </Grid2>
+            return (
+              line.line_pc_ip === ip && (
+                <Paper
+                  key={line.id}
+                  sx={{
+                    borderRadius: 2,
+                    padding: '10px 20px 20px 20px',
+                    marginBottom: 5,
+                    backgroundColor: settings.mode === 'dark' ? '#212121' : '#f9fbf9'
+                  }}
+                  elevation={3}
+                >
+                  <Grid2 container spacing={2} sx={{ alignItems: 'center', marginBottom: '16px' }}>
+                    <Grid2 item size={6}>
+                      <Typography variant='h4' className='mx-1 my-2' sx={{ paddingTop: '1%' }}>
+                        Line Name: {line.printer_line_name}
+                      </Typography>
                     </Grid2>
-                    <Divider />
-                    <Grid2 container className='d-flex justify-content-end align-items-center mb-2'>
-                      <Grid2 size={3} item sx={{ paddingLeft: 2 }}>
-                        <Typography variant='h4'>
-                          {`Pending: ${line.pendingCount || 0}`}
-                        </Typography>
-                      </Grid2>
-                      <Grid2 size={3} item>
-                        <Typography variant='h4'>{`Printed: ${line.printCount || 0}`}</Typography>
-                      </Grid2>
-                      {
-                        line.camera_enable && (
-                          <Grid2 size={3} item>
-                            <Typography variant='h4'>{`Scanned: ${line.scanned || 0}`}</Typography>
-                          </Grid2>
-                        )
-                      }
-                      <Grid2 size={3} item>
-                        <Box className='w-100' sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Grid2 item size={6} sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                      <Typography variant='h4' className='mx-3 my-2' sx={{ paddingTop: '1%' }}>
+                        Line No: {line.line_no}
+                      </Typography>
+                      <Box
+                        sx={{
+                          width: 30,
+                          height: 30,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          bgcolor: settings.themeColor,
+                          borderRadius: 2
+                        }}
+                      >
+                        <IconButton
+                          aria-label='settings'
+                          onClick={() => handleOpenSetting(line)}
+                          disabled={openProjectModal}
+                          sx={{ color: 'white', padding: 0 }}
+                        >
+                          <AiOutlineSetting size={20} />
+                        </IconButton>
+                      </Box>
+                    </Grid2>
+                  </Grid2>
+                  <Grid2 container spacing={3} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Grid2 item xs={12} sm={3} md={3} lg={3} sx={{ width: '24%' }}>
+                      <FormControl className='w-100'>
+                        <InputLabel id={`select-product-${panelIndex}-${lineIndex}`}>Select Product</InputLabel>
+                        <Select
+                          fullWidth
+                          disabled={line.saveData}
+                          labelId={`select-product-${panelIndex}-${lineIndex}`}
+                          id={`select-product-${panelIndex}-${lineIndex}`}
+                          label='Select Product'
+                          value={line.product}
+                          onChange={e => handleProductChange(panelIndex, lineIndex, e.target.value)}
+                          onOpen={() => getProducts(panelIndex, lineIndex)}
+                        >
+                          {line?.products?.map(product => (
+                            <MenuItem key={product.product_uuid} value={product.product_uuid}>
+                              {product?.product_name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid2>
+                    <Grid2 item xs={12} sm={3} md={3} lg={3} sx={{ width: '24%' }}>
+                      <FormControl className='w-100' sx={{ ml: 2 }}>
+                        <InputLabel id={`select-batch-${panelIndex}-${lineIndex}`}>Select Batch</InputLabel>
+                        <Select
+                          fullWidth
+                          disabled={line.saveData || !line.product}
+                          labelId={`select-batch-${panelIndex}-${lineIndex}`}
+                          id={`select-batch-${panelIndex}-${lineIndex}`}
+                          label='Select Batch'
+                          value={line.batch}
+                          onChange={e => handleBatchChange(panelIndex, lineIndex, e.target.value, line)}
+                        >
+                          {line?.batches?.map(batch => (
+                            <MenuItem key={batch.id} value={batch.id}>
+                              {batch?.batch_no}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid2>
+                    <Grid2 item xs={12} sm={3} md={3} lg={3} sx={{ width: '24%' }}>
+                      <FormControl className='w-100' sx={{ ml: 2 }}>
+                        <InputLabel id={`packaging-hierarchy-${panelIndex}-${lineIndex}`}>
+                          Select Packaging Hierarchy
+                        </InputLabel>
+                        <Select
+                          fullWidth
+                          disabled={line.saveData || !line.batch}
+                          labelId={`packaging-hierarchy-${panelIndex}-${lineIndex}`}
+                          id={`packaging-hierarchy-${panelIndex}-${lineIndex}`}
+                          label='Packaging Hierarchy'
+                          value={line.packagingHierarchy}
+                          onChange={e => handleInputChange(panelIndex, lineIndex, 'packagingHierarchy', e.target.value)}
+                        >
+                          {line.packagingHierarchies.map(ph =>
+                            getLayerOptions(ph).map((option, idx) => (
+                              <MenuItem key={`${ph.id}-${idx}`} value={option.value}>
+                                {option.label}
+                              </MenuItem>
+                            ))
+                          )}
+                        </Select>
+                      </FormControl>
+                    </Grid2>
+                    <Grid2 item xs={12} sm={3} md={3} lg={3} sx={{ width: '24%' }}>
+                      <Box
+                        fullWidth
+                        sx={{
+                          ml: 1,
+                          display: 'flex',
+                          gap: '2rem',
+                          justifyContent: 'center',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <Button
+                          variant='contained'
+                          onClick={() => handleSubmitForm(panelIndex, lineIndex, line)}
+                          disabled={line.saveData}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          type='reset'
+                          variant='outlined'
+                          color='error'
+                          onClick={() => handleResetPanel(panelIndex, lineIndex)}
+                          disabled={line.disabledReset}
+                        >
+                          Reset
+                        </Button>
+                      </Box>
+                    </Grid2>
+                  </Grid2>
+                  {line.saveData && (
+                    <>
+                      <Grid2 container spacing={3} sx={{ marginTop: 2, alignItems: 'center' }}>
+                        <Grid2 size={3} item sx={{ width: '24%', marginRight: 1 }}>
+                          <TextField
+                            disabled={line.availableToCode}
+                            value={line.availableToCode}
+                            onChange={e => handleInputChange(panelIndex, lineIndex, 'availableToCode', e.target.value)}
+                            error={line.errorAvailableToCode.isError}
+                            helperText={line.errorAvailableToCode.isError ? line.errorAvailableToCode.message : ''}
+                            fullWidth
+                            aria-label='available-code'
+                            label='Available Code'
+                          />
+                        </Grid2>
+                        <Grid2 size={3} item sx={{ width: '24%' }}>
+                          <TextField
+                            id='code-to-print'
+                            disabled={line.disabledCodeToPrint}
+                            value={line.codeToPrint}
+                            onChange={e => {
+                              handleInputChange(panelIndex, lineIndex, 'codeToPrint', e.target.value)
+                              if (!line.sessionStarted && e.target.value !== '')
+                                handleInputChange(panelIndex, lineIndex, 'disabledStartSession', false)
+                              else handleInputChange(panelIndex, lineIndex, 'disabledStartSession', true)
+                            }}
+                            error={line.errorCodeToPrint.isError}
+                            helperText={line.errorCodeToPrint.isError ? line.errorCodeToPrint.message : ''}
+                            fullWidth
+                            type='number'
+                            aria-label='code-to-print'
+                            label='Code To Print'
+                          />
+                        </Grid2>
+                        <Grid2 size={3} item sx={{ width: '20%' }}>
                           <Button
                             variant='contained'
                             className='py-2'
-                            onClick={() => handleCodeToPrint(panelIndex, lineIndex, line)}
-                            disabled={line.disabledCodePrintSave}
+                            onClick={() => handleSessionStart()}
+                            disabled={line.disabledStartSession}
                           >
-                            Save
+                            Start Session
                           </Button>
-                          {
-                            apiAccess.addApiAccess && (
+                        </Grid2>
+                        <Grid2 size={3} item sx={{ width: '20%' }}>
+                          <Button
+                            variant='contained'
+                            className='py-2'
+                            onClick={() => handleSessionStop(panelIndex, lineIndex, line)}
+                            disabled={line.disabledStopSession}
+                          >
+                            Stop Session
+                          </Button>
+                        </Grid2>
+                      </Grid2>
+                      <Divider />
+                      <Grid2 container className='d-flex justify-content-end align-items-center mb-2'>
+                        <Grid2 size={3} item sx={{ paddingLeft: 2 }}>
+                          <Typography variant='h4'>{`Pending: ${line.pendingCount || 0}`}</Typography>
+                        </Grid2>
+                        <Grid2 size={3} item>
+                          <Typography variant='h4'>{`Printed: ${line.printCount || 0}`}</Typography>
+                        </Grid2>
+                        {line.camera_enable && (
+                          <Grid2 size={3} item>
+                            <Typography variant='h4'>{`Scanned: ${line.scanned || 0}`}</Typography>
+                          </Grid2>
+                        )}
+                        <Grid2 size={3} item>
+                          <Box className='w-100' sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <Button
+                              variant='contained'
+                              className='py-2'
+                              onClick={() => handleCodeToPrint(panelIndex, lineIndex, line)}
+                              disabled={line.disabledCodePrintSave}
+                            >
+                              Save
+                            </Button>
+                            {apiAccess.addApiAccess && (
                               <>
                                 <Button
                                   variant='contained'
@@ -1492,14 +1627,14 @@ const Index = ({ userId, ip }) => {
                                   Stop
                                 </Button>
                               </>
-                            )
-                          }
-                        </Box>
+                            )}
+                          </Box>
+                        </Grid2>
                       </Grid2>
-                    </Grid2>
-                  </>
-                )}
-              </Paper>
+                    </>
+                  )}
+                </Paper>
+              )
             )
           })}
         </Paper>
