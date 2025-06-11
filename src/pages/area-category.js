@@ -251,7 +251,7 @@ const Index = () => {
               user_id: user.userId,
               authUser: user.user_id,
               user_name: user.userName,
-              remarks: remarks.length > 0 ? remarks : `area category approved - ${auditLogMark}`
+              remarks: remarks.length > 0 ? remarks : `area category ${esignStatus} - ${auditLogMark}`
             }
           : {}
       }

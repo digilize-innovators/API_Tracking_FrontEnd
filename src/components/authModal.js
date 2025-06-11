@@ -126,6 +126,7 @@ const AuthModal = ({
         const user = { userId, userName, user_id }
         const isAuthenticated = true
         const isApprover = approveAPIName.includes('approve')
+        console.log(approveAPIName)
         //  && config.userId !== user.user_id;
 
         handleAuthResult(isAuthenticated, user, isApprover, esignStatus, remarks)

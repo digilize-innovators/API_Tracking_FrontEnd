@@ -122,12 +122,12 @@ const Index = () => {
         modelName: 'codeGenerationRequest',
         esignStatus,
         id: eSignStatusId,
-        name: `Code Generation Approved of batch_no=${auditLogMark}`,
+        name: `Code Generation ${esignStatus} of batch_no=${auditLogMark}`,
         audit_log: config?.config?.audit_logs
           ? {
               user_id: user.userId,
               user_name: user.userName,
-              remarks: remarks || `code generation approved - ${auditLogMark}`,
+              remarks: remarks || `code generation ${esignStatus} - ${auditLogMark}`,
               authUser: user.user_id
             }
           : {}

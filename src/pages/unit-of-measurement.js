@@ -190,7 +190,7 @@ const Index = () => {
           ? {
               user_id: user.userId,
               user_name: user.userName,
-              remarks: remarks.length > 0 ? remarks : `uom approved - ${auditLogMark}`,
+              remarks: remarks.length > 0 ? remarks : `uom ${esignStatus} - ${auditLogMark}`,
               authUser: user.user_id
             }
           : {}
@@ -261,7 +261,7 @@ const Index = () => {
     setESignStatusId(row.id)
     setAuditLogMark(row.uom_name)
   }
-  const addUOM = async (esign_status, remarks) => {
+  const addUOM = async esign_status => {
     try {
       const data = { UOMName: formData.unitName }
       if (config?.config?.audit_logs) {
@@ -299,7 +299,7 @@ const Index = () => {
       })
     }
   }
-  const editUOM = async (esign_status, remarks) => {
+  const editUOM = async esign_status => {
     try {
       console.log(formData, 'edit')
       const data = { UOMName: formData.unitName }

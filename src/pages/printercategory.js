@@ -186,7 +186,7 @@ const Index = () => {
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
     }
   }
-  const editPrinterCategory = async (esign_status, remarks) => {
+  const editPrinterCategory = async esign_status => {
     try {
       const printerType = formData.printerType
       const data = {
@@ -236,8 +236,6 @@ const Index = () => {
     resetForm()
     setOpenModal(true)
     setEditData(item)
-
-    console.log('edi t printer category ', item)
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     const resetState = () => {
@@ -255,7 +253,7 @@ const Index = () => {
           ? {
               user_id: user.userId,
               user_name: user.userName,
-              remarks: remarks.length > 0 ? remarks : `printer category approved - ${auditLogMark}`,
+              remarks: remarks.length > 0 ? remarks : `printer category ${esignStatus} - ${auditLogMark}`,
               authUser: user.user_id
             }
           : {}

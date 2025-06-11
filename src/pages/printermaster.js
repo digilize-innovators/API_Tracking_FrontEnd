@@ -271,7 +271,7 @@ const Index = () => {
                 user_id: user.userId,
                 user_name: user.userName,
                 authUser: user.user_id,
-                remarks: remarks.length > 0 ? remarks : `printer master approved - ${auditLogMark}`
+                remarks: remarks.length > 0 ? remarks : `printer master ${esignStatus} - ${auditLogMark}`
               }
             : {}
         }

@@ -184,7 +184,7 @@ const Index = () => {
             ? {
                 user_id: user.userId,
                 user_name: user.userName,
-                remarks: remarks.length > 0 ? remarks : `department approved - ${auditLogMark}`,
+                remarks: remarks.length > 0 ? remarks : `department ${esignStatus} - ${auditLogMark}`,
                 authUser: user.user_id
               }
             : {}

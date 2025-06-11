@@ -151,7 +151,7 @@ const Row = ({
           ? {
               user_id: user.userId,
               user_name: user.userName,
-              remarks: remarks.length > 0 ? remarks : `designation approved - ${auditLogMark}`,
+              remarks: remarks.length > 0 ? remarks : `designation ${esignStatus} - ${auditLogMark}`,
               authUser: user.user_id
             }
           : {}
