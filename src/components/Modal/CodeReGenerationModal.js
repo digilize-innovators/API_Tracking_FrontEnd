@@ -56,7 +56,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
                 id='productId'
                 label='Product'
                 placeholder='Product'
-                value={availableCodeData?.batch?.productHistory?.product_name}
+                value={availableCodeData?.product?.product_history[0]?.product_name}
                 disabled={true}
               />
             </Box>
@@ -172,7 +172,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
                 id='packagingHierarchy'
                 label='Packaging Hierarchy'
                 placeholder='Packaging Hierarchy'
-                value={availableCodeData?.batch?.productHistory?.packagingHierarchy}
+                value={availableCodeData?.product?.product_history[0]?.packagingHierarchy}
                 disabled={true}
               />
             </Box>

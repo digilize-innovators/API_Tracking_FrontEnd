@@ -67,7 +67,7 @@ const Index = () => {
 
   const tableBody = codeRequestData.map((item, index) => [
     index + 1,
-    item.batch.productHistory.product_name,
+    item.product.product_history[0].product_name,
     item.batch.batch_no,
     item.locations.location_name,
     item.batch.qty,
@@ -208,7 +208,7 @@ const Index = () => {
     })
     setAuthModalOpen(true)
     setESignStatusId(row.batch_id)
-    setAuditLogMark(row.batch.history[0].batch_no)
+    setAuditLogMark(row.batch.batch_no)
   }
 
   const resetFilter = () => {
@@ -259,12 +259,12 @@ const Index = () => {
         data = {
           product_id: availableCodeData?.product_id,
           packaging_hierarchy_data: {
-            packagingHierarchy: availableCodeData?.batch?.productHistory?.packagingHierarchy,
+            packagingHierarchy: availableCodeData?.product?.product_history[0]?.packagingHierarchy,
             productNumber: getWantToGenerate(0),
             firstLayer: getWantToGenerate(1),
             secondLayer: getWantToGenerate(2),
             thirdLayer: getWantToGenerate(3),
-            outerLayer: getWantToGenerate('Outer')
+            outerLayer: getWantToGenerate(5)
           },
           batch_id: availableCodeData?.batch_id
         }
@@ -328,14 +328,14 @@ const Index = () => {
   const handleOpenModal2 = async row => {
     console.log('clicked on handleOpenModal2', row)
     const levelWiseData = await getAvailableData(row.product_id, row.batch_id)
-    const packagingHierarchyLevel = row.batch.productHistory.packagingHierarchy
+    const packagingHierarchyLevel = row.product.product_history[0].packagingHierarchy
     const batchSize = row.batch.qty
     const packagingHierarchyData = []
     const baseLevel = {
-      0: row.batch.productHistory.productNumber,
-      1: row.batch.productHistory.firstLayer,
-      2: row.batch.productHistory.secondLayer,
-      3: row.batch.productHistory.thirdLayer
+      0: row.product.product_history[0].productNumber,
+      1: row.product.product_history[0].firstLayer,
+      2: row.product.product_history[0].secondLayer,
+      3: row.product.product_history[0].thirdLayer
     }
 
     for (let i = 0; i < packagingHierarchyLevel; i++) {
@@ -355,7 +355,7 @@ const Index = () => {
 
     packagingHierarchyData.push({
       id: packagingHierarchyData.length,
-      level: 'Outer',
+      level: 5,
       batchQty: outerBatchQty,
       generatedCodes: generatedOuter,
       availableCodes: outerBatchQty - generatedOuter,
