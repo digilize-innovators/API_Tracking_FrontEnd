@@ -33,14 +33,14 @@ const Row = ({
         <Fragment>
             <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
                 <TableCell className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                    <IconButton align='center' aria-label='expand row' size='small' onClick={() => handleRowToggle(row.id)}>
+                    <IconButton align='center' aria-label='expand row' size='small' onClick={() => handleRowToggle(row.batch.id)}>
                         {isOpen ? <ChevronUp /> : <ChevronDown />}
                     </IconButton>
                 </TableCell>
                 <TableCell align='center' component='th' scope='row' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                     {serialNumber}
                 </TableCell>
-                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.batch.productHistory.product_name}</TableCell>
+                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.product.product_history[0].product_name}</TableCell>
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.batch.batch_no}</TableCell>
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.locations.history[0].location_name}</TableCell>
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.batch.qty}</TableCell>
@@ -51,7 +51,13 @@ const Row = ({
                             color={statusObj[row?.esign_status]?.color || 'default'}
                           />
                         )}
-                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.status}</TableCell>
+                <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
+                
+                <StatusChip
+                            label={row.status}
+                            color={statusObj[row.status]?.color || 'default'}
+                          />
+                </TableCell>
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                     {moment(row?.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
                 </TableCell>
@@ -101,15 +107,15 @@ const Row = ({
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {historyData[row.id]?.map((historyRow, idx) => (
+                                            {historyData[row.batch.id]?.map((historyRow, idx) => (
                                                 <TableRow key={historyRow.created_at} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                                                     <TableCell component='th' scope='row' align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                                                         {idx + 1}
                                                     </TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.product.product_name}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.batch.batch_no}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.locations.location_name}</TableCell>
-                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.batch.qty}</TableCell>
+                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.product.product_history[0].product_name}</TableCell>
+                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.batch.history[0].batch_no}</TableCell>
+                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.locations.history[0].location_name}</TableCell>
+                                                    <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.batch.history[0].qty}</TableCell>
                                                     <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{historyRow.no_of_codes}</TableCell>
                                                     <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                                                         {moment(historyRow?.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
@@ -179,13 +185,13 @@ const TableCodeGeneration = ({
   }
       const getCodeRequestData = async (pageNumber, rowsNumber, status, search) => {
         const paramsPage = pageNumber || page
-       const paramsRows = rowsNumber || rowsPerPage
-       const paramsEsignStatus = status === '' ? status : tableHeaderData.esignStatus
-      const paramsSearchVal = search === '' ? search : tableHeaderData.searchVal
+        const paramsRows = rowsNumber || rowsPerPage
+        const paramsEsignStatus = status === '' ? status : tableHeaderData.esignStatus
+        const paramsSearchVal = search === '' ? search : tableHeaderData.searchVal
         let query = `/codegeneration?page=${paramsPage+1}&limit=${paramsRows}`
         if (paramsSearchVal) query += `&search=${paramsSearchVal}`
         if (paramsEsignStatus) query += `&esign_status=${paramsEsignStatus}`
-        console.log('query ', query)
+       
         try {
           setIsLoading(true)
           const res = await api(query, {}, 'get', true)
@@ -311,7 +317,7 @@ const TableCodeGeneration = ({
                                 key={item.id}
                                 row={item}
                                 index={index}
-                                isOpen={openRows[item.id]}
+                                isOpen={openRows[item.batch.id]}
                                 handleRowToggle={handleRowToggle}
                                 page={page}
                                 rowsPerPage={rowsPerPage}

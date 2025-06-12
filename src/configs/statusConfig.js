@@ -6,4 +6,6 @@ export const statusObj = {
     enabled: { color: 'success' },
     disabled: { color: 'error' },
     default: { color: 'default' },
+    completed: { color: 'success' },
+    requested: { color: 'warning' },
 };
