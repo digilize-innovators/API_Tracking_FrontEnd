@@ -1,15 +1,61 @@
-import {Checkbox,Divider,Grid2,Paper,TableBody,TableCell,TableContainer,TableHead,TextField,Typography,Button,Modal,Box,Table,TableRow} from '@mui/material'
+import {
+  Checkbox,
+  Divider,
+  Grid2,
+  Paper,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TextField,
+  Typography,
+  Button,
+  Modal,
+  Box,
+  Table,
+  TableRow,
+  FormHelperText
+} from '@mui/material'
 import moment from 'moment'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { style } from 'src/configs/generalConfig'
 
-const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCodeData, setAvailableCodeData,setAuthModalOpen,config}) => {
+const CodeReGenerationModal = ({
+  open,
+  onClose,
+  handleGenerateCode,
+  availableCodeData,
+  setAvailableCodeData,
+  setAuthModalOpen,
+  config
+}) => {
   const [selected, setSelected] = useState([])
+  const [errorData, setErrorData] = useState({ error: false, message: '' })
+  const [isCodeGenerate, setIsCodeReGeneration] = useState(false)
+  useEffect(() => {
+    setSelected([])
+    setErrorData({ error: false, message: '' })
+  }, [open])
 
-  const handleCheckboxChange = id => {
-    setSelected(prevSelected =>
-      prevSelected.includes(id) ? prevSelected.filter(item => item !== id) : [...prevSelected, id]
-    )
+  // const handleCheckboxChange = id => {
+  //   setSelected(prevSelected =>
+  //     prevSelected.includes(id) ? prevSelected.filter(item => item !== id) : [...prevSelected, id]
+  //   )
+  // }
+  const handleCheckboxChange = rowId => {
+    if (selected.includes(rowId)) {
+      // Unchecking: remove from selected and clear its generate value
+      setSelected(prev => prev.filter(id => id !== rowId))
+      setAvailableCodeData(prev => ({
+        ...prev,
+        packagingHierarchyData: prev.packagingHierarchyData.map(row =>
+          row.id === rowId ? { ...row, generate: '' } : row
+        )
+      }))
+    } else {
+      // Checking: add to selected
+      setSelected(prev => [...prev, rowId])
+    }
   }
 
   const changeGenereateCode = (id, value, availableValue) => {
@@ -25,14 +71,23 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
       setAvailableCodeData({ ...availableCodeData, packagingHierarchyData: updatedData })
     }
   }
- const  handleSubmit =()=>{
-  if (config?.config?.esign_status) {
-    setAuthModalOpen(true);
-    return;
+  const handleSubmit = () => {
+    availableCodeData.packagingHierarchyData.map(item => {
+      if (item.generate) {
+        setIsCodeReGeneration(true)
+        return
+      }
+    })
+    if (config?.config?.esign_status && selected.length > 0 && isCodeGenerate) {
+      setAuthModalOpen(true)
+
+      return
+    } else {
+      setErrorData({ error: true, message: 'Atleast Select of field' })
+      return
+    }
+    // handleGenerateCode(true, {}, 'approved')
   }
-  handleGenerateCode(true,{},"approved")
- }
-  
 
   return (
     <>
@@ -44,7 +99,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
         aria-labelledby='modal-modal-title'
         aria-describedby='modal-modal-description'
       >
-        <Box sx={{ ...style, width: '70%' }}>
+        <Box sx={{ ...style, width: '70%', maxHeight: '700px', overflowY: 'auto' }}>
           <Typography variant='h3' className='my-2'>
             Re-Generate Codes
           </Typography>
@@ -142,6 +197,7 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
                         <TableCell>
                           <TextField
                             value={row.generate}
+                            disabled={!selected.includes(row.id)}
                             onChange={e => changeGenereateCode(row.id, e.target.value, row.availableCodes)}
                             size='medium'
                           />
@@ -177,9 +233,15 @@ const CodeReGenerationModal = ({ open, onClose, handleGenerateCode, availableCod
               />
             </Box>
           </Grid2>
+          <FormHelperText>{errorData.error ? errorData.message : ''}</FormHelperText>
 
           <Grid2 item xs={12} className='my-3 '>
-            <Button variant='contained' sx={{ marginRight: 3.5 }} disabled={availableCodeData?.batch?.isBatchEnd} onClick={() => handleSubmit()}>
+            <Button
+              variant='contained'
+              sx={{ marginRight: 3.5 }}
+              disabled={availableCodeData?.batch?.isBatchEnd}
+              onClick={() => handleSubmit()}
+            >
               Generate
             </Button>
             <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={onClose}>

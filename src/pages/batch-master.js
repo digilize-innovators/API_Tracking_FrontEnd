@@ -197,7 +197,8 @@ const Index = () => {
         data.audit_log = {
           audit_log: true,
           remarks: esignRemark?.length > 0 ? esignRemark : `Batch editted - ${formData.batchNo}`,
-          authUser
+          authUser,
+          product: editData.product.product_history[0]?.product_name
         }
       }
       data.esign_status = esign_status
@@ -264,14 +265,15 @@ const Index = () => {
       const data = {
         modelName: 'batch',
         esignStatus,
-        id: eSignStatusId,
+        id: eSignStatusId.id,
         name: auditLogMark,
         audit_log: config?.config?.audit_logs
           ? {
               user_id: user.userId,
               user_name: user.userName,
               remarks: remarks?.length > 0 ? remarks : `batch ${esignStatus} - ${auditLogMark}`,
-              authUser: user.user_id
+              authUser: user.user_id,
+              product: eSignStatusId.product.product_history[0]?.product_name
             }
           : {}
       }
@@ -354,7 +356,7 @@ const Index = () => {
       approveAPIEndPoint: '/api/v1/batch'
     })
     setAuthModalOpen(true)
-    setESignStatusId(row.id)
+    setESignStatusId(row)
     setAuditLogMark(row.batch_no)
   }
 
@@ -409,7 +411,6 @@ const Index = () => {
     } catch (error) {
       console.log('Error in get products ', error)
       setIsLoading(true)
-      ;``
     }
   }
 

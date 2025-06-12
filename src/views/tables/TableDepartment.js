@@ -152,7 +152,8 @@ const Row = ({
               user_id: user.userId,
               user_name: user.userName,
               remarks: remarks.length > 0 ? remarks : `designation ${esignStatus} - ${auditLogMark}`,
-              authUser: user.user_id
+              authUser: user.user_id,
+              department: depData?.department_name
             }
           : {}
       }
@@ -295,7 +296,8 @@ const Row = ({
         data.audit_log = {
           audit_log: true,
           remarks: esignRemark?.length > 0 ? esignRemark : `Designation added - ${formData.designationId}`,
-          authUser
+          authUser,
+          department: depData?.department_name
         }
       }
       data.esign_status = esign_status
@@ -332,7 +334,8 @@ const Row = ({
         data.audit_log = {
           audit_log: true,
           remarks: esignRemark > 0 ? esignRemark : `Designation edited - ${formData.designationName}`,
-          authUser
+          authUser,
+          department: depData?.department_name
         }
       }
       data.esign_status = esign_status

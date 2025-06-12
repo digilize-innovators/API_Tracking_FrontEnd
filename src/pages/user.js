@@ -330,11 +330,12 @@ const Index = () => {
         modelName: 'user',
         esignStatus,
         id: eSignStatusId,
+        name: auditLogMark,
         audit_log: config?.config?.audit_logs
           ? {
               user_id: user.user_id,
               user_name: user.userName,
-              remarks: remarks.length > 0 ? remarks : `user approved - ${auditLogMark}`,
+              remarks: remarks.length > 0 ? remarks : `user ${esignStatus} - ${auditLogMark}`,
               authUser: user.user_id
             }
           : {}
