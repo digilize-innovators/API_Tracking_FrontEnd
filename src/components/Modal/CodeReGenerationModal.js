@@ -14,7 +14,8 @@ import {
   Box,
   Table,
   TableRow,
-  FormHelperText
+  FormHelperText,
+  Tooltip
 } from '@mui/material'
 import moment from 'moment'
 import React, { useEffect, useState } from 'react'
@@ -32,9 +33,12 @@ const CodeReGenerationModal = ({
   const [selected, setSelected] = useState([])
   const [errorData, setErrorData] = useState({ error: false, message: '' })
   const [isCodeGenerate, setIsCodeReGeneration] = useState(false)
+  const [clickedRowId, setClickedRowId] = useState(null)
+
   useEffect(() => {
     setSelected([])
     setErrorData({ error: false, message: '' })
+    setClickedRowId(null)
   }, [open])
 
   // const handleCheckboxChange = id => {
@@ -54,6 +58,8 @@ const CodeReGenerationModal = ({
       }))
     } else {
       // Checking: add to selected
+
+      setClickedRowId(null)
       setSelected(prev => [...prev, rowId])
     }
   }
@@ -72,18 +78,14 @@ const CodeReGenerationModal = ({
     }
   }
   const handleSubmit = () => {
-    availableCodeData.packagingHierarchyData.map(item => {
-      if (item.generate) {
-        setIsCodeReGeneration(true)
-        return
-      }
-    })
-    if (config?.config?.esign_status && selected.length > 0 && isCodeGenerate) {
+    const hasGeneratedCodes = availableCodeData.packagingHierarchyData.some(item => item.generate.length > 0)
+    setIsCodeReGeneration(hasGeneratedCodes)
+    if (config?.config?.esign_status && selected.length > 0 && hasGeneratedCodes) {
+      setErrorData({ error: false, message: '' })
       setAuthModalOpen(true)
-
       return
     } else {
-      setErrorData({ error: true, message: 'Atleast Select of field' })
+      setErrorData({ error: true, message: 'Enter number code to generate ' })
       return
     }
     // handleGenerateCode(true, {}, 'approved')
@@ -178,7 +180,7 @@ const CodeReGenerationModal = ({
                     <TableRow>
                       <TableCell></TableCell>
                       <TableCell>Packing Level</TableCell>
-                      <TableCell>Batch Qty</TableCell>
+                      <TableCell>Total no. Codes</TableCell>
                       <TableCell>Generated Codes</TableCell>
                       <TableCell>Available Codes</TableCell>
                       <TableCell>Generate</TableCell>
@@ -187,20 +189,47 @@ const CodeReGenerationModal = ({
                   <TableBody>
                     {availableCodeData?.packagingHierarchyData?.map(row => (
                       <TableRow key={row.id}>
-                        <TableCell padding='checkbox'>
-                          <Checkbox checked={selected.includes(row.id)} onChange={() => handleCheckboxChange(row.id)} />
-                        </TableCell>
+                        <Tooltip
+                          title={
+                            selected.includes(row.id)
+                              ? 'Unselect to disable input'
+                              : `Select to enable code generation on level ${parseInt(row.level)} `
+                          }
+                          placement='right'
+                          arrow
+                        >
+                          <TableCell padding='checkbox'>
+                            <Checkbox
+                              checked={selected.includes(row.id)}
+                              onChange={() => handleCheckboxChange(row.id)}
+                            />
+                          </TableCell>
+                        </Tooltip>
                         <TableCell>{parseInt(row.level)}</TableCell>
                         <TableCell>{parseInt(row.batchQty)}</TableCell>
                         <TableCell>{parseInt(row.generatedCodes)}</TableCell>
                         <TableCell>{parseInt(row.availableCodes)}</TableCell>
-                        <TableCell>
-                          <TextField
-                            value={row.generate}
-                            disabled={!selected.includes(row.id)}
-                            onChange={e => changeGenereateCode(row.id, e.target.value, row.availableCodes)}
-                            size='medium'
-                          />
+                        <TableCell onClick={e => e.stopPropagation()}>
+                          <div>
+                            <TextField
+                              value={row.generate}
+                              InputProps={{
+                                readOnly: !selected.includes(row.id)
+                              }}
+                              onClick={() => {
+                                if (!selected.includes(row.id)) {
+                                  setClickedRowId(row.id)
+                                } else {
+                                  setClickedRowId(null)
+                                }
+                              }}
+                              onChange={e => changeGenereateCode(row.id, e.target.value, row.availableCodes)}
+                              size='medium'
+                            />
+                            {!selected.includes(row.id) && clickedRowId === row.id && (
+                              <FormHelperText error>First select the checkbox</FormHelperText>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -233,7 +262,7 @@ const CodeReGenerationModal = ({
               />
             </Box>
           </Grid2>
-          <FormHelperText>{errorData.error ? errorData.message : ''}</FormHelperText>
+          <FormHelperText error>{errorData.error ? errorData.message : ''}</FormHelperText>
 
           <Grid2 item xs={12} className='my-3 '>
             <Button
