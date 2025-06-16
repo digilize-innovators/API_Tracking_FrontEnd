@@ -220,8 +220,7 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
         search: tableHeaderData.searchVal,
         esign_status: tableHeaderData.esignStatus,
 
-      })
-      console.log(params.toString())
+      });
       const response = await api(`/controlpanelmaster/?${params.toString()}`, {}, 'get', true)
       console.log('controlpanelmaster data res ', response.data)
       if (response.data.success) {

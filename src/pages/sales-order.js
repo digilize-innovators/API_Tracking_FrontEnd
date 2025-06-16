@@ -132,19 +132,14 @@ const Index = () => {
   }
   const addSaleOrder = async () => {
     try {
-      console.log('formdata', formData)
       const data = { ...formData }
       setIsLoading(true)
       const res = await api('/sales-order/', data, 'post', true)
-      console.log('res Add purchase order ', res)
-
-      console.log(res, 'res')
       setIsLoading(false)
-
       if (res?.data?.success) {
         setOpenModal(false)
         console.log('Add purchase order :-', res?.data)
-        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: ' added successfully' })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Added successfully' })
         setEditData({})
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
@@ -182,7 +177,7 @@ const Index = () => {
       setIsLoading(false)
       if (res.data.success) {
         setOpenModal(false)
-        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'updated successfully' })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Updated successfully' })
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
         if (res.data.code === 401) {

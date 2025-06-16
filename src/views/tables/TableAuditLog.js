@@ -40,8 +40,7 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
         search: tableHeaderData.searchVal,
         startDate: startDate ? startDate.toISOString() : '',
         endDate: endDate ? endDate.toISOString() : ''
-      })
-      console.log(params.toString())
+      });
       const response = await api(`/auditlog/?${params.toString()}`, {}, 'get', true)
       if (response.data.success) {
         setAuditLogData({ data: response.data.data.auditlogs, total: response.data.data.total })

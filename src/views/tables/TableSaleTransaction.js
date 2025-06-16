@@ -58,38 +58,7 @@ const Row = ({
          
           {moment(row?.order.created_at).format('DD/MM/YYYY')}
         </TableCell>
-
-        {/* <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.designation_id}</TableCell>
-        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.designation_name}</TableCell>
-        {config_dept?.config?.esign_status === true && config_dept?.role!=='admin' && (
-          <StatusChip
-            label={row.esign_status}
-            color={statusObj[row.esign_status]?.color || 'default'} />
-        )}
-        <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
-          {row.esign_status === 'pending' && config_dept?.config?.esign_status === true && config_dept?.role!=='admin' ? (
-            <span>
-              <MdOutlineDomainVerification
-                fontSize={20}
-                data-testid={`auth-check-icon-${row.id}`}
-                onClick={() => handleAuthCheck(row)}
-              />
-            </span>
-          ) : (
-            <Tooltip title={!apiAccess.editDesignationApiAccess ? 'No edit access' : ''}>
-              <span>
-                <MdModeEdit
-                  fontSize={20}
-                  data-testid={`edit-designation-${row.id}`}
-                  onClick={apiAccess.editDesignationApiAccess ? () => handleUpdateDes(row) : null}
-                  style={{ cursor: apiAccess.editDesignationApiAccess ? 'pointer' : 'not-allowed', opacity: apiAccess.editDesignationApiAccess ? 1 : 0.5 }}
-                />
-              </span>
-            </Tooltip>
-          )}
-        </TableCell> */}
       </TableRow>
-     
     </Fragment>
   );
 };

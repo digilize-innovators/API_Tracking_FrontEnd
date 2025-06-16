@@ -31,7 +31,9 @@ const purchaseSchema = yup.object().shape({
                     .number()
                     .required('Quantity is required')
                     .typeError('Quantity must be a number')
-                    .positive('Quantity must be greater than zero'),
+                    .positive('Quantity must be greater than zero')
+                    .min(1)
+                    .max(10000)
             })
         )
         .min(1, 'At least one purchase item is required')
@@ -121,24 +123,23 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
     }, [editData]);
 
 
-    const watchedProducts = useWatch({
+    const watchOrders = useWatch({
         control,
         name: 'orders'
     });
 
     useEffect(() => {
-        watchedProducts?.forEach((purchase, index) => {
-            const productId = purchase?.productId;
-            console.log(productId)
+        watchOrders?.forEach((order, index) => {
+            const productId = order?.productId;
             if (!productId) return;
+            
             const existing = batchOptionsMap[index];
             if (existing && existing.productId === productId) return;
 
 
             const fetchBatches = async () => {
                 try {
-                    const res = await api(`/batch/${productId}`, {}, 'get', true);
-                    console.log('batches', res.data.data)
+                    const res = await api(`/batch/${productId}?onlyended=true`, {}, 'get', true);                    
                     if (res.data.success) {
                         const options = res.data.data.batches?.map(batch => ({
                             id: batch.batch_uuid,
@@ -158,10 +159,10 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                     console.error(`Error fetching batches for product ${productId}`, error);
                 }
             };
-
             fetchBatches();
         });
-    }, [watchedProducts]);
+    }, [watchOrders]);
+    
 
     useEffect(() => {
         const getLocation = async () => {
@@ -185,7 +186,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                     }
                 }
             } catch (error) {
-                console.log('Error in get designation ', error)
+                console.log('Error in get location type-purchase ', error)
                 setIsLoading(false)
             }
         }
@@ -217,7 +218,6 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                 setIsLoading(false)
             }
         }
-
         const getAllProducts = async () => {
             try {
                 setIsLoading(true);
@@ -247,8 +247,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         getuserLocation()
         getLocation()
 
-    }, [])
-    console.log(errors.orders?.root?.message)
+    }, []);
 
     useEffect(() => {
         if (open) {
@@ -401,7 +400,6 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
 
                             </Grid2>
                         </Grid2>
-
                         <Grid2 container spacing={2} direction="column">
                             <Grid2 container justifyContent="flex-end" >
                                 <Button type='button' variant='contained' sx={{ marginRight: 3.5 }} onClick={() =>
@@ -412,99 +410,101 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
 
                             </Grid2>
 
-                            {fields.map((field, index) => (
-                                <Grid2 container spacing={2} key={field.id}>
-                                    <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                        <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>
-                                            {index + 1}
-                                        </Typography>    </Grid2>
-                                    <Grid2 size={3.5}>
-                                        <CustomDropdown
-                                            name={`orders.${index}.productId`}
-                                            label="Product"
-                                            control={control}
-                                            options={productData}
-                                            disabled={!!editData.id && !!purchaseDetail?.[index]?.id && !editableIndex?.[index]}
+                            <Grid2 style={{  maxHeight: '300px',  overflowY: 'auto', paddingRight: 1 }}>
+                                {fields.map((field, index) => (
+                                    <Grid2 container spacing={2} key={field.id}>
+                                        <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                            <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                                {index + 1}
+                                            </Typography>    </Grid2>
+                                        <Grid2 size={3.5}>
+                                            <CustomDropdown
+                                                name={`orders.${index}.productId`}
+                                                label="Product"
+                                                control={control}
+                                                options={productData}
+                                                disabled={!!editData.id && !!purchaseDetail?.[index]?.id && !editableIndex?.[index]}
 
-                                        />
-                                    </Grid2>
-                                    <Grid2 size={3}>
-                                        <CustomDropdown
-                                            name={`orders.${index}.batchId`}
-                                            label="Batch"
-                                            control={control}
-                                            options={batchOptionsMap[index]?.options || []}
-                                            disabled={!!editData.id && !!purchaseDetail?.[index]?.id && !editableIndex?.[index]}
+                                            />
+                                        </Grid2>
+                                        <Grid2 size={3}>
+                                            <CustomDropdown
+                                                name={`orders.${index}.batchId`}
+                                                label="Batch"
+                                                control={control}
+                                                options={batchOptionsMap[index]?.options || []}
+                                                disabled={!!editData.id && !!purchaseDetail?.[index]?.id && !editableIndex?.[index]}
 
-                                        />
-                                    </Grid2>
-                                    <Grid2 size={3.5}>
-                                        <CustomTextField
-                                            type='Number'
-                                            name={`orders.${index}.qty`}
-                                            label="Quantity"
-                                            control={control}
-                                            disabled={!!editData.id && !!purchaseDetail?.[index]?.id && !editableIndex?.[index]}
+                                            />
+                                        </Grid2>
+                                        <Grid2 size={3.5}>
+                                            <CustomTextField
+                                                type='Number'
+                                                name={`orders.${index}.qty`}
+                                                label="Quantity"
+                                                control={control}
+                                                disabled={!!editData.id && !!purchaseDetail?.[index]?.id && !editableIndex?.[index]}
 
-                                        />
-                                    </Grid2>
-                                    <Grid2
-                                        size={0.5}
-                                        sx={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                        }}
-                                    >
-                                        <Box sx={{ marginTop: 2 }}>
-                                            <IconButton
-                                                onClick={() => {
-                                                    setDeleteIndex(index);
-                                                    setOpenConfirm(true);
-                                                }}
-                                                disabled={fields.length === 1}
-                                                sx={{
-                                                    color: '#e53935',
-                                                    '&:hover': {
-                                                        color: '#c62828',
-                                                    },
-                                                    
-                                                }}
-                                            >
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </Box>
-                                    </Grid2>
-                                    <Grid2
-                                        size={0.5}
-                                        sx={{
-                                            ml: 6,
-                                            display: 'flex',
-                                            alignItems: 'flex-start', // Align to the top
-                                            justifyContent: 'center',
-                                            // Move slightly upward
-
-                                        }}
-                                    >
-                                        {purchaseDetail?.[index]?.id && (
-                                            <Tooltip title={editableIndex?.[index] ? 'Save' : 'Edit'}>
+                                            />
+                                        </Grid2>
+                                        <Grid2
+                                            size={0.5}
+                                            sx={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                            }}
+                                        >
+                                            <Box sx={{ marginTop: 2 }}>
                                                 <IconButton
-                                                    onClick={() => handleEditOrSave(index)}
+                                                    onClick={() => {
+                                                        setDeleteIndex(index);
+                                                        setOpenConfirm(true);
+                                                    }}
+                                                    disabled={fields.length === 1}
                                                     sx={{
-                                                        color: settings.themeColor,
-
-                                                        mt:1
-                                                    
+                                                        color: '#e53935',
+                                                        '&:hover': {
+                                                            color: '#c62828',
+                                                        },
+                                                        
                                                     }}
                                                 >
-                                                    {editableIndex?.[index] ? <SaveIcon /> : <EditIcon />}
+                                                    <DeleteIcon />
                                                 </IconButton>
-                                            </Tooltip>
-                                        )}
+                                            </Box>
+                                        </Grid2>
+                                        <Grid2
+                                            size={0.5}
+                                            sx={{
+                                                ml: 6,
+                                                display: 'flex',
+                                                alignItems: 'flex-start', // Align to the top
+                                                justifyContent: 'center',
+                                                // Move slightly upward
+
+                                            }}
+                                        >
+                                            {purchaseDetail?.[index]?.id && (
+                                                <Tooltip title={editableIndex?.[index] ? 'Save' : 'Edit'}>
+                                                    <IconButton
+                                                        onClick={() => handleEditOrSave(index)}
+                                                        sx={{
+                                                            color: settings.themeColor,
+
+                                                            mt:1
+                                                        
+                                                        }}
+                                                    >
+                                                        {editableIndex?.[index] ? <SaveIcon /> : <EditIcon />}
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
+                                        </Grid2>
+
                                     </Grid2>
 
-                                </Grid2>
-
-                            ))}
+                                 ))}
+                            </Grid2>
                             {errors.orders?.root?.message && (
                                 <Grid2>
                                     <Typography color="error" sx={{ mt: 2, fontSize: 14 }}>
@@ -514,9 +514,6 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                             )}
 
                         </Grid2>
-
-
-
                         <Grid2 container spacing={2} className='my-3'>
                             <Button type='submit' variant='contained' sx={{ marginRight: 3.5 }}>
                                 Save Changes

@@ -62,7 +62,7 @@ const AccessibilitySettings = () => {
         } catch (error) {
             console.error("Error applying settings:", error);
         } finally {
-            console.log("updated successfully")
+            console.log("Updated successfully")
         }
     };
 

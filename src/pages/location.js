@@ -260,7 +260,6 @@ const Index = () => {
   }
   const addLocation = async esign_status => {
     try {
-      console.log('formdata', formData)
       const data = { ...formData }
       if (config?.config?.audit_logs) {
         data.audit_log = {

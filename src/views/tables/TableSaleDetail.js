@@ -158,7 +158,6 @@ Row.propTypes = {
   rowsPerPage: PropTypes.any
 }
 const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf, setAlertData }) => {
-  console.log('saleDetail', saleDetail)
   const [sortBy, setSortBy] = useState('')
   const [page, setPage] = useState(0)
   const { settings } = useSettings()
