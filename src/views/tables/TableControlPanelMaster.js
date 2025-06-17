@@ -1,5 +1,16 @@
 import React, { useState, Fragment, useEffect, useMemo } from 'react'
-import {Box ,Table,Collapse,TableRow,TableHead,TableBody,TableCell,Typography,IconButton,Tooltip } from '@mui/material'
+import {
+  Box,
+  Table,
+  Collapse,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+  Typography,
+  IconButton,
+  Tooltip
+} from '@mui/material'
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md'
 import ChevronUp from 'mdi-material-ui/ChevronUp'
 import ChevronDown from 'mdi-material-ui/ChevronDown'
@@ -61,7 +72,7 @@ const Row = ({
           <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
         )}
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {moment(row?.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
+          {moment(row?.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
         </TableCell>
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
           {row.esign_status === 'pending' && config?.config?.esign_status === true ? (
@@ -119,7 +130,7 @@ const Row = ({
                           </TableCell>
                         )}
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Action
+                          Created At
                         </TableCell>
                       </TableRow>
                     </TableHead>
@@ -183,8 +194,15 @@ Row.propTypes = {
   apiAccess: PropTypes.any
 }
 
-const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tableHeaderData,config, handleAuthCheck, pendingAction }) => {
-
+const TableControlPanelMaster = ({
+  setControlPanel,
+  handleUpdate,
+  apiAccess,
+  tableHeaderData,
+  config,
+  handleAuthCheck,
+  pendingAction
+}) => {
   const [sortBy, setSortBy] = useState('')
   const [openRows, setOpenRows] = useState({})
   const [historyData, setHistoryData] = useState({})
@@ -195,7 +213,7 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
   const router = useRouter()
-  const [controlPanelData,setControlPanelData]=useState({data:[],total:0})
+  const [controlPanelData, setControlPanelData] = useState({ data: [], total: 0 })
 
   const handleRowToggle = async rowId => {
     await handleRowToggleHelper(rowId, openRows, setOpenRows, setHistoryData, '/controlpanelmaster/history')
@@ -218,16 +236,14 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
         page: page + 1,
         limit: rowsPerPage === -1 ? -1 : rowsPerPage,
         search: tableHeaderData.searchVal,
-        esign_status: tableHeaderData.esignStatus,
-
+        esign_status: tableHeaderData.esignStatus
       })
       console.log(params.toString())
       const response = await api(`/controlpanelmaster/?${params.toString()}`, {}, 'get', true)
       console.log('controlpanelmaster data res ', response.data)
       if (response.data.success) {
-        setControlPanelData({data:response.data.data.controlPanelMasters,total:response.data.data.total})
-        setControlPanel(response.data.data.controlPanelMasters)
-        
+        setControlPanelData({ data: response.data.data.controlPanelMasters, total: response.data.data.total })
+        setControlPanel({ data: response.data.data.controlPanelMasters, index: response.data.data.offset })
       } else {
         console.log('Error to get all controlpanelmasters ', response.data)
         if (response.data.code === 401) {
@@ -243,40 +259,45 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
     }
   }
 
-  useMemo(()=>{
+  useMemo(() => {
     setPage(0)
-  },[tableHeaderData,rowsPerPage])
+  }, [tableHeaderData, rowsPerPage])
 
   useEffect(() => {
     getData()
-  }, [tableHeaderData, page, rowsPerPage,pendingAction])
+  }, [tableHeaderData, page, rowsPerPage, pendingAction])
 
-  const handleSort =(key,child) => {
+  const handleSort = (key, child) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data=controlPanelData?.data ||[]
+    const data = controlPanelData?.data || []
     const sorted = [...data].sort((a, b) => {
-      if(!child){
-        if (a[key] > b[key]) {
-        return newSortDirection === 'asc' ? 1 : -1
+      if (key == 'updated_at') {
+        const dateA = new Date(a.updated_at)
+        const dateB = new Date(b.updated_at)
+        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
       }
 
-      if (a[key] < b[key]) {
-        return newSortDirection === 'asc' ? -1 : 1
-      }
-      return 0
-    }
-    else{
+      if (!child) {
+        if (a[key].toLowerCase() > b[key].toLowerCase()) {
+          return newSortDirection === 'asc' ? 1 : -1
+        }
+
+        if (a[key].toLowerCase() < b[key].toLowerCase()) {
+          return newSortDirection === 'asc' ? -1 : 1
+        }
+        return 0
+      } else {
         if (a[key][child] > b[key][child]) {
-            return newSortDirection === 'asc' ? 1 : -1
-          }
+          return newSortDirection === 'asc' ? 1 : -1
+        }
 
-          if (a[key][child] < b[key][child]) {
-            return newSortDirection === 'asc' ? -1 : 1
-          }
-          return 0
-    }
+        if (a[key][child] < b[key][child]) {
+          return newSortDirection === 'asc' ? -1 : 1
+        }
+        return 0
+      }
     })
-    setControlPanelData({...controlPanelData,data:sorted})
+    setControlPanelData({ ...controlPanelData, data: sorted })
     setSortDirection(newSortDirection)
     setSortBy(key)
   }
@@ -315,16 +336,8 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 IP Address
               </TableCell>
-              <TableCell
-                align='center'
-                sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('port')}
-              >
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 Port No.
-                <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'port', sortDirection)}
-                </IconButton>
               </TableCell>
 
               {config?.config?.esign_status === true && (
@@ -332,8 +345,16 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
                   E-Sign
                 </TableCell>
               )}
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                Created At
+              <TableCell
+                align='center'
+                sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSort('updated_at')}
+              >
+                Updated At
+                <IconButton align='center' aria-label='expand row' size='small'>
+                  {getSortIcon(sortBy, 'updated_at', sortDirection)}
+                </IconButton>
               </TableCell>
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 Action
@@ -373,7 +394,7 @@ const TableControlPanelMaster = ({ setControlPanel ,handleUpdate, apiAccess,tabl
 
 TableControlPanelMaster.propTypes = {
   controlPanelData: PropTypes.any,
-  setControlPanel:PropTypes.any,
+  setControlPanel: PropTypes.any,
   handleUpdate: PropTypes.any,
   tableHeaderData: PropTypes.any,
   apiAccess: PropTypes.any,

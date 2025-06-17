@@ -49,7 +49,7 @@ const Index = () => {
   const [formData, setFormData] = useState({})
   const [filterLocationVal, setFilterLocationVal] = useState('')
   const [filterProductVal, setFilterProductVal] = useState('')
-  const [batchData, setBatch] = useState([])
+  const [batchData, setBatch] = useState({ data: [], index: 0 })
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
 
@@ -74,10 +74,9 @@ const Index = () => {
     }
     setPendingAction(null)
   }, [formData, pendingAction])
-  console.log('batchData', batchData)
-  const tableBody = batchData?.map((item, index) => [
-    index + 1,
-    item.batch_no,
+  const tableBody = batchData?.data?.map((item, index) => [
+    index + batchData.index,
+    item?.batch_no,
     item?.product?.product_history[0]?.product_name,
     item?.location?.history[0]?.location_name,
     item?.manufacturing_date ? moment(item.manufacturing_date).format('DD-MM-YYYY') : 'N/A',
@@ -257,7 +256,7 @@ const Index = () => {
       setOpenModalApprove(!isApproved)
       if (isApproved && esignDownloadPdf) {
         console.log('esign is approved for download')
-        downloadPdf(tableData, tableHeaderData, tableBody, batchData, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, batchData.data, userDataPdf)
       }
     }
 
@@ -391,7 +390,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, batchData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, batchData.data, userDataPdf)
   }
 
   const getAllProducts = async () => {

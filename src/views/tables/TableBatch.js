@@ -1,5 +1,16 @@
 import React, { useState, Fragment, useEffect, useMemo } from 'react'
-import { Tooltip,Typography,IconButton,TableCell,TableBody,TableHead,TableRow,Collapse,Table,Box } from '@mui/material'
+import {
+  Tooltip,
+  Typography,
+  IconButton,
+  TableCell,
+  TableBody,
+  TableHead,
+  TableRow,
+  Collapse,
+  Table,
+  Box
+} from '@mui/material'
 import { MdModeEdit, MdOutlineDomainVerification, MdOutlineCloudUpload } from 'react-icons/md'
 import ChevronUp from 'mdi-material-ui/ChevronUp'
 import ChevronDown from 'mdi-material-ui/ChevronDown'
@@ -74,7 +85,7 @@ const Row = ({
           <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
         )}
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {moment(row?.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
+          {moment(row?.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
         </TableCell>
         {isBatchCloud && (
           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
@@ -103,7 +114,13 @@ const Row = ({
                 </span>
               </Tooltip>
             ) : (
-              <Tooltip title={!apiAccess.editApiAccess || row.isBatchEnd  ? `${row.isBatchEnd ? 'Can not edit batch due to mark end-batch' : 'No edit access'}` : ''}>
+              <Tooltip
+                title={
+                  !apiAccess.editApiAccess || row.isBatchEnd
+                    ? `${row.isBatchEnd ? 'Can not edit batch due to mark end-batch' : 'No edit access'}`
+                    : ''
+                }
+              >
                 <span>
                   <MdModeEdit
                     fontSize={20}
@@ -159,7 +176,7 @@ const Row = ({
                           </TableCell>
                         )}
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Updated At
+                          Created At
                         </TableCell>
                       </TableRow>
                     </TableHead>
@@ -247,7 +264,7 @@ const TableBatch = ({
   const router = useRouter()
   const [openRows, setOpenRows] = useState({})
   const [historyData, setHistoryData] = useState({})
-  const [batchData, setBatchData] = useState({data:[],total:0})
+  const [batchData, setBatchData] = useState({ data: [], total: 0 })
   const [page, setPage] = useState(1)
   const { settings } = useSettings()
   const { setIsLoading } = useLoading()
@@ -267,34 +284,38 @@ const TableBatch = ({
     setPage(newPage)
   }
 
-  const handleSort =(key,child) => {
+  const getValueByPath = (obj, path) => {
+    return path.split('.').reduce((acc, part) => {
+      const match = part.match(/^(\w+)\[(\d+)\]$/)
+      if (match) {
+        const [, arrayKey, index] = match
+        return acc?.[arrayKey]?.[parseInt(index, 10)]
+      }
+      return acc?.[part]
+    }, obj)
+  }
+
+  const handleSort = path => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data=batchData?.data
+    const data = batchData?.data || []
+
     const sorted = [...data].sort((a, b) => {
-      if(!child){
-        if (a[key] > b[key]) {
-        return newSortDirection === 'asc' ? 1 : -1
+      if (path == 'updated_at') {
+        const dateA = new Date(a.updated_at)
+        const dateB = new Date(b.updated_at)
+        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
       }
+      const aValue = getValueByPath(a, path)
+      const bValue = getValueByPath(b, path)
 
-      if (a[key] < b[key]) {
-        return newSortDirection === 'asc' ? -1 : 1
-      }
+      if (aValue.toLowerCase() > bValue.toLowerCase()) return newSortDirection === 'asc' ? 1 : -1
+      if (aValue.toLowerCase() < bValue.toLowerCase()) return newSortDirection === 'asc' ? -1 : 1
       return 0
-    }
-    else{
-        if (a[key][child] > b[key][child]) {
-            return newSortDirection === 'asc' ? 1 : -1
-          }
-
-          if (a[key][child] < b[key][child]) {
-            return newSortDirection === 'asc' ? -1 : 1
-          }
-          return 0
-    }
     })
-    setBatchData({...batchData,data:sorted})
+
+    setBatchData({ ...batchData, data: sorted })
     setSortDirection(newSortDirection)
-    setSortBy(key)
+    setSortBy(path)
   }
   const getBatches = async (pageNumber, rowsNumber, status, search, filterLocation) => {
     const paramsPage = pageNumber || page
@@ -305,19 +326,19 @@ const TableBatch = ({
     const paramsFilterProductVal = filterProductVal === '' ? filterProductVal : filterProductVal
     try {
       const params = new URLSearchParams({
-          page: paramsPage + 1,
-          limit: paramsRows,
-          search: paramsSearchVal,
-          esign_status: paramsEsignStatus,
-          locationName: paramsFilterLocationVal,
-          productName: paramsFilterProductVal
+        page: paramsPage + 1,
+        limit: paramsRows,
+        search: paramsSearchVal,
+        esign_status: paramsEsignStatus,
+        locationName: paramsFilterLocationVal,
+        productName: paramsFilterProductVal
       })
       setIsLoading(true)
-      const res = await api(`/batch/?${params.toString()}`, {}, 'get', true);
+      const res = await api(`/batch/?${params.toString()}`, {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
-        setBatchData({data:res.data.data.batches,total:res.data.data.totalRecords})
-        setBatch(res.data.data.batches)
+        setBatchData({ data: res.data.data.batches, total: res.data.data.totalRecords })
+        setBatch({ data: res.data.data.batches, index: res.data.data.offset })
       } else {
         console.log('Error to get all batches ', res.data)
         if (res.data.code === 401) {
@@ -331,14 +352,14 @@ const TableBatch = ({
     }
   }
 
-  useMemo(()=>{
+  useMemo(() => {
     setPage(0)
-  },[tableHeaderData,rowsPerPage])
+  }, [tableHeaderData, rowsPerPage])
 
   useEffect(() => {
     getBatches()
     return () => {}
-  }, [tableHeaderData,page,rowsPerPage, filterLocationVal, filterProductVal, setBatch,pendingAction])
+  }, [tableHeaderData, page, rowsPerPage, filterLocationVal, filterProductVal, setBatch, pendingAction])
 
   return (
     <CustomTable
@@ -365,29 +386,29 @@ const TableBatch = ({
           >
             Batch No.
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'batchNo', sortDirection)}
+              {getSortIcon(sortBy, 'batch_no', sortDirection)}
             </IconButton>
           </TableCell>
           <TableCell
             align='center'
             sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
             style={{ cursor: 'pointer' }}
-            onClick={() => handleSort('productHistory','product_name')}
+            onClick={() => handleSort('product.product_history[0].product_name')}
           >
             Product Name
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'ID', sortDirection)}
+              {getSortIcon(sortBy, 'product.product_history[0].product_name', sortDirection)}
             </IconButton>
           </TableCell>
           <TableCell
             align='center'
             sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
             style={{ cursor: 'pointer' }}
-            onClick={() => handleSort('location','location_name')}
+            onClick={() => handleSort('location.history[0].location_name')}
           >
             Location Name
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'location', sortDirection)}
+              {getSortIcon(sortBy, 'location.history[0].location_name', sortDirection)}
             </IconButton>
           </TableCell>
           <TableCell
@@ -398,7 +419,7 @@ const TableBatch = ({
           >
             Manufacturing Date
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'manufacturingDate', sortDirection)}
+              {getSortIcon(sortBy, 'manufacturing_date', sortDirection)}
             </IconButton>
           </TableCell>
           <TableCell
@@ -409,7 +430,7 @@ const TableBatch = ({
           >
             Expiry Date
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'expiryDate', sortDirection)}
+              {getSortIcon(sortBy, 'expiry_date', sortDirection)}
             </IconButton>
           </TableCell>
           <TableCell
@@ -420,12 +441,20 @@ const TableBatch = ({
           >
             Quantity
             <IconButton align='center' aria-label='expand row' size='small'>
-              {getSortIcon(sortBy, 'Qty', sortDirection)}
+              {getSortIcon(sortBy, 'qty', sortDirection)}
             </IconButton>
           </TableCell>
           {config?.config?.esign_status === true && <TableCell align='center'>E-Sign</TableCell>}
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-            Created At
+          <TableCell
+            align='center'
+            sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+            style={{ cursor: 'pointer' }}
+            onClick={() => handleSort('updated_at')}
+          >
+            Updated At
+            <IconButton align='center' aria-label='expand row' size='small'>
+              {getSortIcon(sortBy, 'updated_at', sortDirection)}
+            </IconButton>
           </TableCell>
           {isBatchCloud && (
             <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>

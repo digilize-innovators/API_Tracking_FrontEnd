@@ -43,7 +43,7 @@ const Index = () => {
   const apiAccess = useApiAccess('controlpanelmaster-create', 'controlpanelmaster-update', 'controlpanelmaster-approve')
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const searchBarRef = useRef(null)
-  const [controlPanelData, setControlPanel] = useState([])
+  const [controlPanelData, setControlPanel] = useState({ data: [], index: 0 })
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
   const [formData, setFormData] = useState()
@@ -71,8 +71,8 @@ const Index = () => {
     handleUserAction()
   }, [formData, pendingAction])
 
-  const tableBody = controlPanelData?.map((item, index) => [
-    index + 1,
+  const tableBody = controlPanelData?.data?.map((item, index) => [
+    index + controlPanelData.index,
     item?.name,
     item?.ip,
     item?.port,
@@ -266,7 +266,7 @@ const Index = () => {
       setOpenModalApprove(!isApproved)
       if (isApproved && esignDownloadPdf) {
         console.log('esign is approved for download')
-        downloadPdf(tableData, tableHeaderData, tableBody, controlPanelData, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, controlPanelData.data, userDataPdf)
       }
     }
 
@@ -403,7 +403,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, controlPanelData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, controlPanelData.data, userDataPdf)
   }
 
   return (

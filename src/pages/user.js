@@ -40,7 +40,7 @@ const mainUrl = BaseUrl
 const Index = () => {
   const router = useRouter()
   const { settings } = useSettings()
-  const [userData, setUser] = useState([])
+  const [userData, setUser] = useState({ data: [], index: 0 })
   const [allDepartment, setAllDepartment] = useState([])
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [departmentFilter, setDepartmentFilter] = useState('')
@@ -94,15 +94,15 @@ const Index = () => {
     getDepartments()
   }, [departmentFilter, tableHeaderData, statusFilter])
 
-  const tableBody = userData.map((item, index) => [
-    index + 1,
-    item.user_id,
-    item.user_name,
-    item.department?.history[0]?.department_name,
-    item.designation?.history[0]?.designation_name,
-    item.email,
-    item.is_active ? 'enabled' : 'disabled',
-    item.esign_status
+  const tableBody = userData?.data?.map((item, index) => [
+    index + userData.index,
+    item?.user_id,
+    item?.user_name,
+    item?.department?.history[0]?.department_name,
+    item?.designation?.history[0]?.designation_name,
+    item?.email,
+    item?.is_active ? 'enabled' : 'disabled',
+    item?.esign_status
   ])
 
   const tableData = useMemo(
@@ -333,7 +333,7 @@ const Index = () => {
         name: auditLogMark,
         audit_log: config?.config?.audit_logs
           ? {
-              user_id: user.user_id,
+              user_id: user.userId,
               user_name: user.userName,
               remarks: remarks.length > 0 ? remarks : `user ${esignStatus} - ${auditLogMark}`,
               authUser: user.user_id
@@ -344,7 +344,7 @@ const Index = () => {
     }
     const handleApproveDownload = () => {
       setOpenModalApprove(false)
-      downloadPdf(tableData, tableHeaderData, tableBody, userData, userDataPdf)
+      downloadPdf(tableData, tableHeaderData, tableBody, userData.data, userDataPdf)
       resetApprovalState()
     }
     const handleRejectDownload = () => {
@@ -537,7 +537,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, userData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, userData.data, userDataPdf)
   }
 
   return (

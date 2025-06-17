@@ -27,7 +27,7 @@ const Index = () => {
   const { settings } = useSettings()
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [allAreaCategoryData, setAreaCat] = useState([])
+  const [allAreaCategoryData, setAreaCat] = useState({ data: [], index: 0 })
   const [editData, setEditData] = useState({})
   const { setIsLoading } = useLoading()
   const { getUserData, removeAuthToken } = useAuth()
@@ -50,7 +50,11 @@ const Index = () => {
   const apiAccess = useApiAccess('area-category-create', 'area-category-update', 'area-category-approve')
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
-  const tableBody = allAreaCategoryData.map((item, index) => [index + 1, item.area_category_name, item.esign_status])
+  const tableBody = allAreaCategoryData?.data?.map((item, index) => [
+    index + allAreaCategoryData.index,
+    item?.area_category_name,
+    item?.esign_status
+  ])
 
   const tableData = useMemo(
     () => ({
@@ -257,7 +261,7 @@ const Index = () => {
       }
       if (esignStatus === 'approved' && esignDownloadPdf) {
         setOpenModalApprove(false)
-        downloadPdf(tableData, tableHeaderData, tableBody, allAreaCategoryData, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, allAreaCategoryData.data, userDataPdf)
         resetState()
         return
       }
@@ -362,7 +366,7 @@ const Index = () => {
       return
     }
 
-    downloadPdf(tableData, tableHeaderData, tableBody, allAreaCategoryData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, allAreaCategoryData.data, userDataPdf)
   }
   return (
     <Box padding={4}>

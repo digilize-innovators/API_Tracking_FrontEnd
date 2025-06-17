@@ -28,7 +28,7 @@ const Index = () => {
   const { settings } = useSettings()
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [departmentData, setDepartment] = useState([])
+  const [departmentData, setDepartment] = useState({ data: [], index: 0 })
   const [editData, setEditData] = useState({})
   const { setIsLoading } = useLoading()
   const [userDataPdf, setUserDataPdf] = useState()
@@ -57,12 +57,12 @@ const Index = () => {
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
 
-  const tableBody = departmentData?.map((item, index) => [
-    index + 1,
-    item.department_id,
-    item.department_name,
-    item.is_location_required,
-    item.esign_status
+  const tableBody = departmentData?.data?.map((item, index) => [
+    index + departmentData.index,
+    item?.department_id,
+    item?.department_name,
+    item?.is_location_required,
+    item?.esign_status
   ])
 
   const tableData = useMemo(
@@ -194,7 +194,7 @@ const Index = () => {
           if (esignStatus === 'approved' && esignDownloadPdf) {
             setOpenModalApprove(false)
             console.log('esign is approved for approver')
-            downloadPdf(tableData, tableHeaderData, tableBody, departmentData, userDataPdf)
+            downloadPdf(tableData, tableHeaderData, tableBody, departmentData.data, userDataPdf)
             resetState()
             return
           }
@@ -387,7 +387,6 @@ const Index = () => {
     setAuthModalOpen(true)
   }
   const handleDownloadPdf = () => {
-    console.log(departmentData)
     setApproveAPI({
       approveAPIName: 'department-approve',
       approveAPImethod: 'PATCH',
@@ -399,7 +398,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, departmentData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, departmentData.data, userDataPdf)
   }
   return (
     <Box padding={4}>

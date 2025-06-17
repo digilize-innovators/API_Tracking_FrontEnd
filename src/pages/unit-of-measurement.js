@@ -30,7 +30,7 @@ const Index = () => {
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [editData, setEditData] = useState({})
-  const [allUOMData, setAllUOM] = useState([])
+  const [allUOMData, setAllUOM] = useState({ data: [], index: 0 })
   const { setIsLoading } = useLoading()
   const { getUserData, removeAuthToken } = useAuth()
   const [userDataPdf, setUserDataPdf] = useState()
@@ -77,7 +77,11 @@ const Index = () => {
     handleUserAction()
   }, [formData, pendingAction])
 
-  const tableBody = allUOMData.map((item, index) => [index + 1, item.uom_name, item.esign_status || 'N/A'])
+  const tableBody = allUOMData?.data?.map((item, index) => [
+    index + allUOMData.index,
+    item?.uom_name,
+    item?.esign_status || 'N/A'
+  ])
   const tableData = useMemo(
     () => ({
       tableHeader: ['Sr.No.', 'UOM Name', 'E-Sign'],
@@ -200,7 +204,7 @@ const Index = () => {
       setOpenModalApprove(false)
       console.log('esign is approved for approver')
       resetApprovalState()
-      downloadPdf(tableData, tableHeaderData, tableBody, allUOMData, userDataPdf)
+      downloadPdf(tableData, tableHeaderData, tableBody, allUOMData.data, userDataPdf)
     }
     const handleRejectDownload = () => {
       console.log('approver rejected')
@@ -370,7 +374,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, allUOMData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, allUOMData.data, userDataPdf)
   }
   return (
     <Box padding={4}>

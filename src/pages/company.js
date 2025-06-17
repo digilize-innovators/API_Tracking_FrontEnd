@@ -29,7 +29,7 @@ import CompanyModal from 'src/components/Modal/CompanyModal'
 const Index = () => {
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [companyData, setCompany] = useState()
+  const [companyData, setCompany] = useState({ data: [], index: 0 })
   const [editData, setEditData] = useState({})
   const { setIsLoading } = useLoading()
   const { settings } = useSettings()
@@ -77,15 +77,15 @@ const Index = () => {
     handleUserAction()
   }, [formData, pendingAction])
 
-  const tableBody = companyData?.map((item, index) => [
-    index + 1,
-    item.company_id,
-    item.company_name,
-    item.mfg_licence_no,
-    item.email,
-    item.contact,
-    item.address,
-    item.esign_status
+  const tableBody = companyData?.data?.map((item, index) => [
+    index + companyData.index,
+    item?.company_id,
+    item?.company_name,
+    item?.mfg_licence_no,
+    item?.email,
+    item?.contact,
+    item?.address,
+    item?.esign_status
   ])
 
   const tableData = useMemo(
@@ -253,7 +253,7 @@ const Index = () => {
         console.log('esign is approved for approver')
         setOpenModalApprove(false)
         resetState()
-        downloadPdf(tableData, tableHeaderData, tableBody, companyData, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, companyData.data, userDataPdf)
         return
       }
 
@@ -372,7 +372,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, companyData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, companyData.data, userDataPdf)
   }
 
   return (

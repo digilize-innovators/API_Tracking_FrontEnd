@@ -43,7 +43,7 @@ const Index = () => {
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const apiAccess = useApiAccess('area-create', 'area-update', 'area-approve')
   const searchBarRef = useRef(null)
-  const [areaData, setArea] = useState([])
+  const [areaData, setArea] = useState({ data: [], index: 0 })
   const [formData, setFormData] = useState({})
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
@@ -71,12 +71,12 @@ const Index = () => {
     return () => {}
   }, [])
 
-  const tableBody = areaData?.map((item, index) => [
-    index + 1,
-    item.area_id,
-    item.area_name,
-    item.area_category?.history[0]?.area_category_name,
-    item.esign_status
+  const tableBody = areaData?.data?.map((item, index) => [
+    index + areaData.index,
+    item?.area_id,
+    item?.area_name,
+    item?.area_category?.history[0]?.area_category_name,
+    item?.esign_status
   ])
 
   const tableData = {
@@ -213,7 +213,7 @@ const Index = () => {
     const handleModalActions = isApproved => {
       setOpenModalApprove(!isApproved)
       if (isApproved && esignDownloadPdf) {
-        downloadPdf(tableData, tableHeaderData, tableBody, areaData, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, areaData.data, userDataPdf)
       }
     }
 
@@ -348,7 +348,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, areaData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, areaData.data, userDataPdf)
   }
 
   return (

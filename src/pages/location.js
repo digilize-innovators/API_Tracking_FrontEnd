@@ -30,7 +30,7 @@ const Index = () => {
   const [pendingAction, setPendingAction] = useState(null)
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [locationData, setLocation] = useState([])
+  const [locationData, setLocation] = useState({ data: [], index: 0 })
   const { setIsLoading } = useLoading()
   const [editData, setEditData] = useState({})
   const [userDataPdf, setUserDataPdf] = useState()
@@ -71,14 +71,14 @@ const Index = () => {
     handleUserAction()
   }, [formData, pendingAction])
 
-  const tableBody = locationData.map((item, index) => [
-    index + 1,
-    item.location_id,
-    item.location_name,
-    item.mfg_licence_no,
-    item.mfg_name,
-    item.location_type,
-    item.esign_status || 'N/A'
+  const tableBody = locationData?.data?.map((item, index) => [
+    index + locationData.index,
+    item?.location_id,
+    item?.location_name,
+    item?.mfg_licence_no,
+    item?.mfg_name,
+    item?.location_type,
+    item?.esign_status || 'N/A'
   ])
 
   const tableData = useMemo(
@@ -174,7 +174,7 @@ const Index = () => {
       if (esignStatus === 'approved' && esignDownloadPdf) {
         setOpenModalApprove(false)
         console.log('esign is approved for approver')
-        downloadPdf(tableData, tableHeaderData, tableBody, locationData, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, locationData.data, userDataPdf)
         resetState()
         return
       }
@@ -382,7 +382,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, locationData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, locationData.data, userDataPdf)
   }
   return (
     <Box padding={4}>

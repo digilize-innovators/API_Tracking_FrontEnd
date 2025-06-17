@@ -32,7 +32,7 @@ const Index = () => {
   const { settings } = useSettings()
   const [openModal, setOpenModal] = useState(false)
   const [editData, setEditData] = useState({})
-  const [productData, setProduct] = useState([])
+  const [productData, setProduct] = useState({ data: [], index: 0 })
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [productImage, setProductImage] = useState('/images/avatars/p.png')
   const [file, setFile] = useState('')
@@ -64,10 +64,9 @@ const Index = () => {
     setConfig(decodedToken)
     return () => {}
   }, [])
-  console.log('productData', productData)
-  const tableBody = productData?.map((item, index) => [
-    index + 1,
-    item.product_id,
+  const tableBody = productData?.data?.map((item, index) => [
+    index + productData.index,
+    item?.product_id,
     item?.product_name,
     item?.gtin,
     item?.ndc,
@@ -239,7 +238,7 @@ const Index = () => {
       if (esignStatus === 'approved' && esignDownloadPdf) {
         setOpenModalApprove(false)
         console.log('esign is approved for approver')
-        downloadPdf(tableData, tableHeaderData, tableBody, productData, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, productData.data, userDataPdf)
         resetState()
         return
       }
@@ -462,8 +461,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    console.log(productData)
-    downloadPdf(tableData, tableHeaderData, tableBody, productData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, productData.data, userDataPdf)
   }
 
   const handleSearch = val => {

@@ -500,7 +500,7 @@ const Row = ({
             <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
           )}
           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-            {moment(row.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
+            {moment(row.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
           </TableCell>
           <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
             {isPendingEsign && config_dept?.role != 'admin' ? renderAuthIcon() : renderEditIcon()}
@@ -556,7 +556,7 @@ const Row = ({
                           )}
 
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            Updated At
+                            Created At
                           </TableCell>
                         </TableRow>
                       </TableHead>
@@ -680,7 +680,7 @@ const TableDepartment = ({
       setIsLoading(false)
       if (res.data.success) {
         setDepartmentData({ data: res.data.data.departments, total: res.data.data.total })
-        setDepartment(res.data.data.departments)
+        setDepartment({ data: res.data.data.departments, index: res.data.data.offset })
       } else if (res.data.code === 401) {
         removeAuthToken()
         router.push('/401')
@@ -689,30 +689,39 @@ const TableDepartment = ({
       setIsLoading(false)
     }
   }
-  const handleSort = (key, isBoolean = false) => {
+  const handleSort = (key, child) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const booleanSort = (a, b) => {
-      if (a[key] === b[key]) return 0
-      let comparison = a[key] ? 1 : -1
-      if (newSortDirection !== 'asc') {
-        comparison = a[key] ? -1 : 1
+    const data = departmentData?.data
+    const sorted = [...data].sort((a, b) => {
+      if (key == 'updated_at') {
+        const dateA = new Date(a.updated_at)
+        const dateB = new Date(b.updated_at)
+        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
       }
-      return comparison
-    }
-    const regularSort = (a, b) => {
-      if (a[key] === b[key]) return 0
-      let comparison = a[key] > b[key] ? 1 : -1
-      if (newSortDirection !== 'asc') {
-        comparison = a[key] > b[key] ? -1 : 1
+      if (!child) {
+        if (a[key].toLowerCase() > b[key].toLowerCase()) {
+          return newSortDirection === 'asc' ? 1 : -1
+        }
+
+        if (a[key].toLowerCase() < b[key].toLowerCase()) {
+          return newSortDirection === 'asc' ? -1 : 1
+        }
+        return 0
+      } else {
+        if (a[key][child] > b[key][child]) {
+          return newSortDirection === 'asc' ? 1 : -1
+        }
+
+        if (a[key][child] < b[key][child]) {
+          return newSortDirection === 'asc' ? -1 : 1
+        }
+        return 0
       }
-      return comparison
-    }
-    const sorted = [...departmentData.data].sort(isBoolean ? booleanSort : regularSort)
+    })
     setDepartmentData({ ...departmentData, data: sorted })
     setSortDirection(newSortDirection)
     setSortBy(key)
   }
-
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
   }
@@ -775,8 +784,16 @@ const TableDepartment = ({
                   E-Sign
                 </TableCell>
               )}
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                Created At
+              <TableCell
+                align='center'
+                sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSort('updated_at')}
+              >
+                Updated At
+                <IconButton align='center' aria-label='expand row' size='small'>
+                  {getSortIcon(sortBy, 'updated_at', sortDirection)}
+                </IconButton>
               </TableCell>
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 Action

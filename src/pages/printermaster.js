@@ -26,7 +26,7 @@ import PrinterMasterModal from 'src/components/Modal/PrinterMasterModal'
 const Index = () => {
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [allPrinterMasterData, setAllPrinterMaster] = useState()
+  const [allPrinterMasterData, setAllPrinterMaster] = useState({ data: [], index: 0 })
   const [editData, setEditData] = useState({})
   const { setIsLoading } = useLoading()
   const { settings } = useSettings()
@@ -70,14 +70,13 @@ const Index = () => {
     }
     handleUserAction()
   }, [formData, pendingAction])
-
-  const tableBody = allPrinterMasterData?.map((item, index) => [
-    index + 1,
-    item.PrinterCategory.printer_category_name,
-    item.printer_id,
-    item.printer_ip,
-    item.printer_port,
-    item.esign_status
+  const tableBody = allPrinterMasterData?.data?.map((item, index) => [
+    index + allPrinterMasterData.index,
+    item?.PrinterCategory.PrinterCategoryHistory[0]?.printer_category_name,
+    item?.printer_id,
+    item?.printer_ip,
+    item?.printer_port,
+    item?.esign_status
   ])
 
   const tableData = useMemo(
@@ -280,7 +279,7 @@ const Index = () => {
           if (esignStatus === 'approved' && esignDownloadPdf) {
             setOpenModalApprove(false)
             console.log('esign is approved for approver')
-            downloadPdf(tableData, tableHeaderData, tableBody, allPrinterMasterData, userDataPdf)
+            downloadPdf(tableData, tableHeaderData, tableBody, allPrinterMasterData.data, userDataPdf)
             resetState()
             return
           }
@@ -403,7 +402,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, allPrinterMasterData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, allPrinterMasterData.data, userDataPdf)
   }
   return (
     <Box padding={4}>

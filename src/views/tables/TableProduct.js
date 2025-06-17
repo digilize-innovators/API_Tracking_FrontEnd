@@ -1,18 +1,20 @@
 import { useState, Fragment, useEffect, useMemo } from 'react'
-import Box from '@mui/material/Box'
-import Table from '@mui/material/Table'
-import Collapse from '@mui/material/Collapse'
-import TableRow from '@mui/material/TableRow'
-import TableHead from '@mui/material/TableHead'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import Typography from '@mui/material/Typography'
-import IconButton from '@mui/material/IconButton'
+import {
+  Box,
+  Table,
+  Collapse,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+  Typography,
+  IconButton,
+  Tooltip
+} from '@mui/material'
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md'
 import ChevronUp from 'mdi-material-ui/ChevronUp'
 import ChevronDown from 'mdi-material-ui/ChevronDown'
 import CustomTable from 'src/components/CustomTable'
-import { Tooltip } from '@mui/material'
 import PropTypes from 'prop-types'
 import { statusObj } from 'src/configs/statusConfig'
 import { getSortIcon } from 'src/utils/sortUtils'
@@ -89,7 +91,7 @@ const Row = ({
           <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
         )}
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {moment(row?.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
+          {moment(row?.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
           {/* {moment(row?.created_at).format('DD/MM/YYYY, hh:mm:ss a')} */}
         </TableCell>
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
@@ -166,7 +168,7 @@ const Row = ({
                           </TableCell>
                         )}
                         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Updated At
+                          Created At
                         </TableCell>
                       </TableRow>
                     </TableHead>
@@ -286,33 +288,38 @@ const TableProduct = ({
     setPage(0)
   }
 
-  const handleSort = (key, child) => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data = productData.data
-    const sorted = [...data].sort((a, b) => {
-      if (!child) {
-        if (a[key] > b[key]) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
-
-        if (a[key] < b[key]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      } else {
-        if (a[key][child] > b[key][child]) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
-
-        if (a[key][child] < b[key][child]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
+  const getValueByPath = (obj, path) => {
+    return path.split('.').reduce((acc, part) => {
+      const match = part.match(/^(\w+)\[(\d+)\]$/)
+      if (match) {
+        const [, arrayKey, index] = match
+        return acc?.[arrayKey]?.[parseInt(index, 10)]
       }
+      return acc?.[part]
+    }, obj)
+  }
+
+  const handleSort = path => {
+    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+    const data = productData?.data || []
+
+    const sorted = [...data].sort((a, b) => {
+      if (path == 'updated_at') {
+        const dateA = new Date(a.updated_at)
+        const dateB = new Date(b.updated_at)
+        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
+      }
+      const aValue = getValueByPath(a, path)
+      const bValue = getValueByPath(b, path)
+
+      if (aValue.toLowerCase() > bValue.toLowerCase()) return newSortDirection === 'asc' ? 1 : -1
+      if (aValue.toLowerCase() < bValue.toLowerCase()) return newSortDirection === 'asc' ? -1 : 1
+      return 0
     })
+
     setProductData({ ...productData, data: sorted })
     setSortDirection(newSortDirection)
-    setSortBy(key)
+    setSortBy(path)
   }
 
   const getProducts = async () => {
@@ -328,7 +335,7 @@ const TableProduct = ({
       setIsLoading(false)
       if (res.data.success) {
         setProductData({ data: res.data.data.products, total: res.data.data.total })
-        setProduct(res.data.data.products)
+        setProduct({ data: res.data.data.products, index: res.data.data.offset })
       } else {
         console.log('Error to get all products ', res.data)
         console.log('Error to get all products ', res.data)
@@ -387,7 +394,7 @@ const TableProduct = ({
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   Product ID
                   <IconButton aria-label='expand row' size='small'>
-                    {getSortIcon(sortBy, 'ID', sortDirection)}
+                    {getSortIcon(sortBy, 'product_id', sortDirection)}
                   </IconButton>
                 </Box>
               </TableCell>
@@ -399,7 +406,7 @@ const TableProduct = ({
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   Product Name
                   <IconButton aria-label='expand row' size='small'>
-                    {getSortIcon(sortBy, 'Name', sortDirection)}
+                    {getSortIcon(sortBy, 'product_name', sortDirection)}
                   </IconButton>
                 </Box>
               </TableCell>
@@ -411,7 +418,7 @@ const TableProduct = ({
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   GTIN
                   <IconButton aria-label='expand row' size='small'>
-                    {getSortIcon(sortBy, 'GTIN', sortDirection)}
+                    {getSortIcon(sortBy, 'gtin', sortDirection)}
                   </IconButton>
                 </Box>
               </TableCell>
@@ -423,20 +430,16 @@ const TableProduct = ({
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   NDC No.
                   <IconButton aria-label='expand row' size='small'>
-                    {getSortIcon(sortBy, 'NDC', sortDirection)}
+                    {getSortIcon(sortBy, 'ndc', sortDirection)}
                   </IconButton>
                 </Box>
               </TableCell>
               <TableCell
                 align='center'
                 sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                onClick={() => handleSort('mrp')}
               >
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   MRP
-                  <IconButton aria-label='expand row' size='small'>
-                    {getSortIcon(sortBy, 'MRP', sortDirection)}
-                  </IconButton>
                 </Box>
               </TableCell>
               <TableCell
@@ -447,43 +450,39 @@ const TableProduct = ({
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   Generic Name
                   <IconButton aria-label='expand row' size='small'>
-                    {getSortIcon(sortBy, 'GenericName', sortDirection)}
+                    {getSortIcon(sortBy, 'generic_name', sortDirection)}
                   </IconButton>
                 </Box>
               </TableCell>
               <TableCell
                 align='center'
                 sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                onClick={() => handleSort('packaging_size')}
               >
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   Packaging Size
-                  <IconButton aria-label='expand row' size='small'>
-                    {getSortIcon(sortBy, 'PackagingSize', sortDirection)}
-                  </IconButton>
                 </Box>
               </TableCell>
               <TableCell
                 align='center'
                 sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                onClick={() => handleSort('company', 'company_name')}
+                onClick={() => handleSort('company.CompanyHistory[0].company_name')}
               >
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   Company Name
                   <IconButton aria-label='expand row' size='small'>
-                    {getSortIcon(sortBy, 'CompanyName', sortDirection)}
+                    {getSortIcon(sortBy, 'company.CompanyHistory[0].company_name', sortDirection)}
                   </IconButton>
                 </Box>
               </TableCell>
               <TableCell
                 align='center'
                 sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                onClick={() => handleSort('countryMaster', 'country')}
+                onClick={() => handleSort('countryMaster.country')}
               >
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   Country
                   <IconButton aria-label='expand row' size='small'>
-                    {getSortIcon(sortBy, 'Country', sortDirection)}
+                    {getSortIcon(sortBy, 'countryMaster.country', sortDirection)}
                   </IconButton>
                 </Box>
               </TableCell>
@@ -508,8 +507,12 @@ const TableProduct = ({
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'
                 }}
+                onClick={() => handleSort('updated_at')}
               >
-                Created At
+                Updated At
+                <IconButton aria-label='expand row' size='small'>
+                  {getSortIcon(sortBy, 'updated_at', sortDirection)}
+                </IconButton>
               </TableCell>
               <TableCell
                 align='center'

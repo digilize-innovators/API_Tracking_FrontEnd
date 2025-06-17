@@ -34,7 +34,7 @@ const Index = () => {
   })
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [formData, setFormData] = useState({})
-  const [allPrinterCategoryData, setAllPrinterCategoryData] = useState([])
+  const [allPrinterCategoryData, setAllPrinterCategoryData] = useState({ data: [], index: 0 })
   const [editData, setEditData] = useState({})
   const { setIsLoading } = useLoading()
   const { getUserData, removeAuthToken } = useAuth()
@@ -52,10 +52,10 @@ const Index = () => {
   const [esignRemark, setEsignRemark] = useState('')
   const apiAccess = useApiAccess('printercategory-create', 'printercategory-update', 'printercategory-approve')
 
-  const tableBody = allPrinterCategoryData.map((item, index) => [
-    index + 1,
-    item.printer_category_name,
-    item.esign_status
+  const tableBody = allPrinterCategoryData?.data?.map((item, index) => [
+    index + allPrinterCategoryData.index,
+    item?.printer_category_name,
+    item?.esign_status
   ])
 
   const tableData = useMemo(
@@ -274,7 +274,7 @@ const Index = () => {
         if (esignStatus === 'approved' && esignDownloadPdf) {
           setOpenModalApprove(false)
           resetState()
-          downloadPdf(tableData, tableHeaderData, tableBody, allPrinterCategoryData, userDataPdf)
+          downloadPdf(tableData, tableHeaderData, tableBody, allPrinterCategoryData.data, userDataPdf)
           return
         }
         if (esignStatus === 'rejected' && esignDownloadPdf) {
@@ -386,7 +386,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, allPrinterCategoryData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, allPrinterCategoryData.data, userDataPdf)
   }
 
   return (
