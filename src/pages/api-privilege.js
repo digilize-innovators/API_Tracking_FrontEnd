@@ -190,7 +190,7 @@ const Index = () => {
     console.log('Selected Value:', newValue)
     if (newValue) {
       setFilteredDepartments(
-        departments.filter(dept => dept.department.toLowerCase()==newValue?.department?.toLowerCase())
+        departments.filter(dept => dept.department.toLowerCase() == newValue?.department?.toLowerCase())
       )
       setSelectedDeptValue(newValue)
     } else {
@@ -261,9 +261,15 @@ const Index = () => {
                   No department and designation available
                 </Typography>
               ) : (
-                <TableContainer component={Paper}>
+                <TableContainer
+                  component={Paper}
+                  style={{
+                    maxHeight: '800px', // or any height you need
+                    overflowY: 'auto'
+                  }}
+                >
                   <Table aria-label='checkbox table'>
-                    <TableHead>
+                    <TableHead style={{ backgroundColor: 'white', position: 'sticky', top: 0, zIndex: 4 }}>
                       <TableRow>
                         <TableCell
                           style={{
@@ -313,10 +319,8 @@ const Index = () => {
                                 borderBottom: '1px solid rgba(224, 224, 224, 1)',
                                 borderLeft: '1px solid rgba(224, 224, 224, 1)',
                                 borderRight: '1px solid rgba(224, 224, 224, 1)',
-
-                                
                                 height: 56,
-                                p: 1,
+                                p: 1
                               }}
                             >
                               {department}
@@ -367,10 +371,10 @@ const Index = () => {
                               align='center'
                               style={{
                                 border: '1px solid rgba(224, 224, 224, 1)',
-                                
+
                                 height: '56px',
                                 padding: '8px',
-                                minWidth: 170,
+                                minWidth: 170
                               }}
                             >
                               {designation.designation_name}
@@ -387,7 +391,7 @@ const Index = () => {
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
                               position: 'sticky',
                               left: 0,
-                              zIndex: 2,
+                              zIndex: 1,
                               backgroundColor: 'white',
                               width: '50px',
                               minWidth: '50px',
@@ -403,7 +407,7 @@ const Index = () => {
                               borderTop: index === 0 ? '1px solid rgba(224, 224, 224, 1)' : 'none',
                               position: 'sticky',
                               left: '50px',
-                              zIndex: 2,
+                              zIndex: 1,
                               backgroundColor: 'white',
                               width: '250px',
                               minWidth: '250px',

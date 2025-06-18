@@ -197,7 +197,7 @@ const Index = () => {
     console.log('Selected Value:', newValue)
     if (newValue) {
       setFilteredDepartments(
-        departments.filter(dept => dept.department.toLowerCase()===newValue.department.toLowerCase())
+        departments.filter(dept => dept.department.toLowerCase() === newValue.department.toLowerCase())
       )
       setSelectedDeptValue(newValue)
     } else {
@@ -263,9 +263,16 @@ const Index = () => {
                   No department and designation available
                 </Typography>
               ) : (
-                <TableContainer component={Paper}>
+                <TableContainer
+                  component={Paper}
+                  style={{
+                    maxHeight: '800px', // or any height you need
+                    overflowY: 'auto',
+                    scrollSnapType: 'y mandatory'
+                  }}
+                >
                   <Table aria-label='checkbox table'>
-                    <TableHead>
+                    <TableHead style={{ backgroundColor: 'white', position: 'sticky', top: 0, zIndex: 4 }}>
                       <TableRow>
                         <TableCell
                           style={{
@@ -298,7 +305,7 @@ const Index = () => {
                         <TableCell
                           style={{
                             borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
-                            
+
                             backgroundColor: 'white',
                             height: '56px',
                             padding: '8px'
@@ -306,8 +313,8 @@ const Index = () => {
                         ></TableCell>
                         {filteredDepartments?.map(({ department, designations }, rowIndex) => {
                           // console.log()
-                          if(!designations.length) return null
-                          return (  
+                          if (!designations.length) return null
+                          return (
                             <TableCell
                               key={`dept-${rowIndex + 1}`}
                               colSpan={designations.length}
@@ -345,7 +352,7 @@ const Index = () => {
                           style={{
                             borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
                             borderTop: '0.5px solid rgba(224, 224, 224, 1)',
-                            
+
                             position: 'sticky',
                             left: '50px',
                             zIndex: 3,
@@ -390,7 +397,7 @@ const Index = () => {
                             style={{
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
                               borderTop: '1px solid rgba(224, 224, 224, 1)',
-                              
+
                               position: 'sticky',
                               left: 0,
                               zIndex: 2,

@@ -420,7 +420,6 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    console.log('data', cameraData.data)
     downloadPdf(tableData, tableHeaderData, tableBody, cameraData.data, userDataPdf)
   }
 

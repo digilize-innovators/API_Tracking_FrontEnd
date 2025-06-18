@@ -1,9 +1,6 @@
 'use-client'
-import React, { useState, useEffect, useRef, useMemo } from 'react'
-import Box from '@mui/material/Box'
-import Grid2 from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
-import { Button, TextField, Paper, TableContainer } from '@mui/material'
+import React, { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
+import { Button, TextField, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
 import { CiExport } from 'react-icons/ci'
 import TableAuditLog from 'src/views/tables/TableAuditLog'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -16,9 +13,13 @@ import { useSettings } from 'src/@core/hooks/useSettings'
 import moment from 'moment'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
-import { validateToken } from 'src/utils/ValidateToken';
+import { validateToken } from 'src/utils/ValidateToken'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import downloadPdf from 'src/utils/DownloadPdf'
+import AuthModal from 'src/components/authModal'
+import { getTokenValues } from '../utils/tokenUtils'
+import { useApiAccess } from 'src/@core/hooks/useApiAccess'
+import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 
 const Index = () => {
   const { settings } = useSettings()
@@ -27,57 +28,90 @@ const Index = () => {
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [tableHeaderData, setTableHeaderData] = useState({
     searchVal: ''
-  });
-  const [auditLogData, setAuditLog] = useState()
+  })
+  const [auditLogData, setAuditLog] = useState({ data: [], index: 0 })
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [openModalApprove, setOpenModalApprove] = useState(false)
+  const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
+  const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
+
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData } = useAuth()
   const [openStartPicker, setOpenStartPicker] = useState(false)
   const [openEndPicker, setOpenEndPicker] = useState(false)
+  const [config, setConfig] = useState(null)
+  const apiAccess = useApiAccess('auditlog-create', 'auditlog-update', 'auditlog-approve')
+
   const startPickerRef = useRef(null)
   const endPickerRef = useRef(null)
-  const searchBarRef = useRef(null);
+  const searchBarRef = useRef(null)
 
-
-  const tableBody = auditLogData?.map((item, index) => [
+  const tableBody = auditLogData?.data?.map((item, index) => [
     index + 1,
     item.performed_action,
     item.remarks,
     item.user_name,
     item.user_id,
     item.performed_at
-  ]);
-  const tableData = useMemo(() => ({
-    tableHeader: ['Sr.No.', 'Action', 'Remarks', 'User Name', 'User ID', 'Timestamp'],
-    tableHeaderText: 'Audit Log Report',
-    tableBodyText: 'Audit Log Data',
-    filename: 'Audit-log'
-  }), []);
-  useEffect(() => {
-    const data = getUserData()
+  ])
+  const tableData = useMemo(
+    () => ({
+      tableHeader: ['Sr.No.', 'Action', 'Remarks', 'User Name', 'User ID', 'Timestamp'],
+      tableHeaderText: 'Audit Log Report',
+      tableBodyText: 'Audit Log Data',
+      filename: 'Audit-log'
+    }),
+    []
+  )
+  useLayoutEffect(() => {
+    let data = getUserData()
+    const decodedToken = getTokenValues()
+    setConfig(decodedToken)
     setUserDataPdf(data)
+    return () => {}
   }, [])
-
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
-  const handleSearch = (val) => {
+  const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
+  }
+  const handleAuthModalClose = () => {
+    setAuthModalOpen(false)
+    setOpenModalApprove(false)
   }
 
   const resetFilter = () => {
     if (searchBarRef.current) {
-      searchBarRef.current.resetSearch();
+      searchBarRef.current.resetSearch()
     }
-    setTableHeaderData({ ...tableHeaderData, searchVal: "" })
+    setTableHeaderData({ ...tableHeaderData, searchVal: '' })
     setStartDate(null)
     setEndDate(null)
   }
-
-
-  const pdfDownload = () => {
-    downloadPdf(tableData, tableHeaderData, tableBody, auditLogData, userDataPdf)
+  const handleAuthModalOpen = () => {
+    setApproveAPI({
+      approveAPIName: 'auditlog-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/auditlog'
+    })
+    setAuthModalOpen(true)
   }
+  const handleDownloadPdf = () => {
+    setApproveAPI({
+      approveAPIName: 'auditlog-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/auditlog'
+    })
+    if (config?.config?.esign_status) {
+      setEsignDownloadPdf(true)
+      setAuthModalOpen(true)
+      return
+    }
+    downloadPdf(tableData, tableHeaderData, tableBody, auditLogData.data, userDataPdf)
+  }
+
   useEffect(() => {
     const handleClickOutside = event => {
       if (startPickerRef.current && !startPickerRef.current.contains(event.target)) {
@@ -92,6 +126,42 @@ const Index = () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
+  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
+    console.log('handleAuthResult 02', config.userId, user.user_id)
+
+    const resetState = () => {
+      setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
+      setEsignDownloadPdf(false)
+      setAuthModalOpen(false)
+    }
+
+    const handleUnauthenticated = () => {
+      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
+      resetState()
+    }
+
+    if (!isAuthenticated) {
+      handleUnauthenticated()
+      return
+    }
+    if (isApprover && esignDownloadPdf) {
+      downloadPdf(tableData, tableHeaderData, tableBody, auditLogData.data, userDataPdf)
+      resetState()
+      return
+    }
+
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied: Download pdf disabled for this user.'
+      })
+      resetState()
+      return
+    }
+  }
   return (
     <Box padding={4}>
       <Head>
@@ -159,25 +229,9 @@ const Index = () => {
                 </LocalizationProvider>
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
-                <Box className='d-flex'>
-                  <Box>
-                    <Button variant='contained' style={{ display: 'inline-flex' }} onClick={pdfDownload}>
-                      <Box style={{ display: 'flex', alignItems: 'baseline' }}>
-                        <span>
-                          <CiExport fontSize={20} />
-                        </span>
-                        <span style={{ marginLeft: 8 }}>Export</span>
-                      </Box>
-                    </Button>
-                  </Box>
-                  <Box className='mx-2'>
-                    <Button variant='contained' style={{ display: 'inline-flex' }} onClick={resetFilter}>
-                      Reset
-                    </Button>
-                  </Box>
-                </Box>
-                <Box className='d-flex justify-content-between align-items-center '>
+                <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
 
+                <Box className='d-flex justify-content-between align-items-center '>
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
                 </Box>
               </Box>
@@ -199,6 +253,17 @@ const Index = () => {
           </Box>
         </Grid2>
       </Grid2>
+      <AuthModal
+        open={authModalOpen}
+        handleClose={handleAuthModalClose}
+        handleAuthResult={handleAuthResult}
+        approveAPIName={approveAPI.approveAPIName}
+        approveAPIEndPoint={approveAPI.approveAPIEndPoint}
+        approveAPImethod={approveAPI.approveAPImethod}
+        config={config}
+        handleAuthModalOpen={handleAuthModalOpen}
+        openModalApprove={openModalApprove}
+      />
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
       <AccessibilitySettings />
       <ChatbotComponent />

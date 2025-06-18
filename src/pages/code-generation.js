@@ -40,7 +40,7 @@ const Index = () => {
   const [auditLogMark, setAuditLogMark] = useState('')
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
-  const [codeRequestData, setCodeRequest] = useState([])
+  const [codeRequestData, setCodeRequest] = useState({ data: [], index: 0 })
   const [availableCodeData, setAvailableCodeData] = useState({})
   const [formData, setFormData] = useState({})
   const [isCodeReGeneration, setIsCodeReGeneration] = useState(false)
@@ -65,14 +65,14 @@ const Index = () => {
     []
   )
 
-  const tableBody = codeRequestData.map((item, index) => [
-    index + 1,
-    item.product.product_history[0].product_name,
-    item.batch.batch_no,
-    item.locations.location_name,
-    item.batch.qty,
-    item.no_of_codes,
-    item.status
+  const tableBody = codeRequestData?.data?.map((item, index) => [
+    index + codeRequestData.index,
+    item?.product.product_history[0].product_name,
+    item?.batch.batch_no,
+    item?.locations.location_name,
+    item?.batch.qty,
+    item?.no_of_codes,
+    item?.status
   ])
 
   const closeSnackbar = () => {
@@ -135,7 +135,7 @@ const Index = () => {
       if (esignStatus === 'approved' && esignDownloadPdf) {
         setOpenModalApprove(false)
         console.log('esign is approved for approver')
-        downloadPdf(tableData, tableHeaderData, tableBody, codeRequestData, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, codeRequestData.data, userDataPdf)
         resetState()
         return
       }
@@ -242,7 +242,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, codeRequestData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, codeRequestData.data, userDataPdf)
   }
 
   const getWantToGenerate = level => {

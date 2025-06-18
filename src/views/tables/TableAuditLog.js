@@ -44,8 +44,9 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
       console.log(params.toString())
       const response = await api(`/auditlog/?${params.toString()}`, {}, 'get', true)
       if (response.data.success) {
+        console.log('audit log', response.data.data.auditlogs)
         setAuditLogData({ data: response.data.data.auditlogs, total: response.data.data.total })
-        setAuditLog(response.data.data.auditlogs)
+        setAuditLog({ data: response.data.data.auditlogs, index: response.data.data.offset })
       } else {
         console.error('Error fetching audit logs:', response.data)
         if (response.data.code === 401) {

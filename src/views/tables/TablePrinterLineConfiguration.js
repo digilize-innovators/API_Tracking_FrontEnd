@@ -43,7 +43,6 @@ const Row = ({
   const isOpen = openRows[row.id]
   return (
     <Fragment>
-      {console.log(row)}
       <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
         <TableCell className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           <IconButton align='center' aria-label='expand row' size='small' onClick={() => handleRowToggle(row.id)}>
@@ -94,7 +93,7 @@ const Row = ({
           <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
         )}
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {moment(row?.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
+          {moment(row?.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
         </TableCell>
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
           {row.esign_status === 'pending' && config?.config?.esign_status === true ? (
@@ -332,7 +331,7 @@ const TablePrinterLineConfiguration = ({
       console.log('get printer line configuration', res?.data)
       if (res.data.success) {
         setAllPrinterLineConfigurationData({ data: res.data.data.printerLineConfigs, total: res.data.data.total })
-        setAllPrinterLineConfiguration(res.data.data.printerLineConfigs)
+        setAllPrinterLineConfiguration({ data: res.data.data.printerLineConfigs, index: res.data.data.offset })
       } else {
         console.log('Error to get all printer line configuration', res.data)
         if (res.data.code === 401) {
@@ -355,34 +354,37 @@ const TablePrinterLineConfiguration = ({
     getAllPrinterLineConfigurationData()
   }, [tableHeaderData, rowsPerPage, page, pendingAction])
 
-  const handleSort = (key, child) => {
+  const getValueByPath = (obj, path) => {
+    return path.split('.').reduce((acc, part) => {
+      const match = part.match(/^(\w+)\[(\d+)\]$/)
+      if (match) {
+        const [, arrayKey, index] = match
+        return acc?.[arrayKey]?.[parseInt(index, 10)]
+      }
+      return acc?.[part]
+    }, obj)
+  }
+
+  const handleSort = path => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data = allPrinterLineConfigurationData?.data
+    const data = allPrinterLineConfigurationData?.data || []
 
     const sorted = [...data].sort((a, b) => {
-      if (!child) {
-        if (a[key] > b[key]) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
-
-        if (a[key] < b[key]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      } else {
-        if (a[key][child] > b[key][child]) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
-
-        if (a[key][child] < b[key][child]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
+      if (path == 'updated_at') {
+        const dateA = new Date(a.updated_at)
+        const dateB = new Date(b.updated_at)
+        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
       }
+      const aValue = getValueByPath(a, path)
+      const bValue = getValueByPath(b, path)
+
+      if (aValue.toLowerCase() > bValue.toLowerCase()) return newSortDirection === 'asc' ? 1 : -1
+      if (aValue.toLowerCase() < bValue.toLowerCase()) return newSortDirection === 'asc' ? -1 : 1
+      return 0
     })
     setAllPrinterLineConfigurationData({ ...allPrinterLineConfigurationData, data: sorted })
     setSortDirection(newSortDirection)
-    setSortBy(key)
+    setSortBy(path)
   }
 
   return (
@@ -412,7 +414,7 @@ const TablePrinterLineConfiguration = ({
               >
                 Printer Line Name
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'PrinterLineName', sortDirection)}
+                  {getSortIcon(sortBy, 'printer_line_name', sortDirection)}
                 </IconButton>
               </TableCell>
 
@@ -420,93 +422,89 @@ const TablePrinterLineConfiguration = ({
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('area_category', 'area_category_name')}
+                onClick={() => handleSort('area_category.history[0].area_category_name')}
               >
                 Area Category
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'area_category', sortDirection)}
+                  {getSortIcon(sortBy, 'area_category.history[0].area_category_name', sortDirection)}
                 </IconButton>
               </TableCell>
               <TableCell
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('area', 'area_name')}
+                onClick={() => handleSort('area.history[0].area_name')}
               >
                 Area
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'area', sortDirection)}
+                  {getSortIcon(sortBy, 'area.history[0].area_name', sortDirection)}
                 </IconButton>
               </TableCell>
               <TableCell
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('PrinterCategory', 'printer_category_name')}
+                onClick={() => handleSort('PrinterCategory.PrinterCategoryHistory[0].printer_category_name')}
               >
                 Printer Category
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'PrinterCategory', sortDirection)}
+                  {getSortIcon(
+                    sortBy,
+                    'PrinterCategory.PrinterCategoryHistory[0].printer_category_name',
+                    sortDirection
+                  )}
                 </IconButton>
               </TableCell>
               <TableCell
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('PrinterMaster', 'printer_id')}
+                onClick={() => handleSort('PrinterMaster.PrinterMasterHistory[0].printer_id')}
               >
                 Printer Name
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'PrinterMaster', sortDirection)}
+                  {getSortIcon(sortBy, 'PrinterMaster.PrinterMasterHistory[0].printer_id', sortDirection)}
                 </IconButton>
               </TableCell>
               <TableCell
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('locations', 'location_name')}
+                onClick={() => handleSort('locations.history[0].location_name')}
               >
                 Location
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'locations', sortDirection)}
+                  {getSortIcon(sortBy, 'locations.history[0].location_name', sortDirection)}
                 </IconButton>
               </TableCell>
-              <TableCell
-                align='center'
-                sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('locations', 'location_name')}
-              >
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 Camera Enable
-                <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'locations', sortDirection)}
-                </IconButton>
               </TableCell>
               <TableCell
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('ControlPanel', 'name')}
+                onClick={() => handleSort('ControlPanel.ControlPanelMasterHistory[0].name')}
               >
                 Control Panel
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'ControlPanel', sortDirection)}
+                  {getSortIcon(sortBy, 'ControlPanel.ControlPanelMasterHistory[0].name', sortDirection)}
                 </IconButton>
               </TableCell>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
+                Line No
+              </TableCell>
+              {config?.config?.esign_status === true && <TableCell align='center'>E-Sign</TableCell>}
               <TableCell
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('line_no')}
+                onClick={() => handleSort('updated_at')}
               >
-                Line No
+                Updated At
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'line_no', sortDirection)}
+                  {getSortIcon(sortBy, 'updated_at', sortDirection)}
                 </IconButton>
-              </TableCell>
-              {config?.config?.esign_status === true && <TableCell align='center'>E-Sign</TableCell>}
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                Created At
               </TableCell>
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 Action

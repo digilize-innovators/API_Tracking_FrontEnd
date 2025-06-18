@@ -51,7 +51,7 @@ const Index = () => {
   )
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const searchBarRef = useRef()
-  const [allPrinterLineConfigurationData, setAllPrinterLineConfiguration] = useState([])
+  const [allPrinterLineConfigurationData, setAllPrinterLineConfiguration] = useState({ data: [], index: 0 })
   const [formData, setFormData] = useState()
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
@@ -81,14 +81,15 @@ const Index = () => {
 
     handleUserAction()
   }, [formData, pendingAction])
-  const tableBody = allPrinterLineConfigurationData?.map((item, index) => [
-    index + 1,
+  const tableBody = allPrinterLineConfigurationData?.data?.map((item, index) => [
+    index + allPrinterLineConfigurationData.index,
     item?.printer_line_name,
     item?.PrinterMaster.PrinterMasterHistory[0]?.printer_id,
-    item?.camera_enable,
+    item?.cameraMaster?.CameraMasterHistory[0]?.camera_enable,
     item?.cameraMaster?.CameraMasterHistory[0]?.name,
     item?.esign_status || 'N/A'
   ])
+  console.log(tableBody)
 
   const tableData = useMemo(
     () => ({
@@ -270,7 +271,7 @@ const Index = () => {
       setOpenModalApprove(!isApproved)
       if (isApproved && esignDownloadPdf) {
         console.log('esign is approved for download')
-        downloadPdf(tableData, tableHeaderData, tableBody, allPrinterLineConfigurationData, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, allPrinterLineConfigurationData.data, userDataPdf)
       }
     }
 
@@ -411,7 +412,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, allPrinterLineConfigurationData, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, allPrinterLineConfigurationData.data, userDataPdf)
   }
 
   return (
