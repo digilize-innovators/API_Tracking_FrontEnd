@@ -275,27 +275,45 @@ const Index = () => {
                 </Typography>
               ) : (
                 <TableContainer component={Paper} style={{ maxHeight: '800px', overflowY: 'auto' }}>
-                  <Table aria-label='checkbox table'>
-                    <TableHead style={{ position: 'sticky', top: 0, zIndex: 3 }}>
+                  <Table
+                    aria-label='checkbox table'
+                    style={{
+                      borderCollapse: 'separate' // Crucial for sticky borders
+                    }}
+                  >
+                    <TableHead
+                      style={{
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 4, // Higher z-index for the entire header
+                        backgroundColor: 'white', // Ensure header background is solid
+                        boxShadow:
+                          '0px 1px 2px -1px rgba(0,0,0,0.1), 0px 2px 3px 0px rgba(0,0,0,0.01), 0px 0.5px 5px 0px rgba(0,0,0,0.01)'
+                      }}
+                    >
                       <TableRow>
+                        {/* First Sticky Cell (Empty for API Name / Screen Name Header) */}
                         <TableCell
                           style={{
                             position: 'sticky',
                             left: 0,
-                            top: 0,
-                            zIndex: 3,
-                            borderBottom: '1px solid #fff',
-                            backgroundColor: '#fff'
+                            top: 0, // Crucial for sticky header cells
+                            zIndex: 5, // Higher than other header cells if they are sticky left/right
+                            backgroundColor: 'white', // Solid background
+                            borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                            borderRight: '1px solid rgba(224, 224, 224, 1)' // Visible right border
                           }}
                         ></TableCell>
+                        {/* Screen Name Header Cells */}
                         {screens.map((screen, index) => (
                           <TableCell
                             key={`master-${index + 1}`}
                             align='center'
                             style={{
+                              backgroundColor: 'white', // Solid background
+                              zIndex: 3, // Standard header z-index
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                              backgroundColor: '#fff',
-                              zIndex: 2
+                              borderRight: '1px solid rgba(224, 224, 224, 1)' // Visible right border
                             }}
                           >
                             {screen.screen_name}
@@ -306,24 +324,30 @@ const Index = () => {
                     <TableBody>
                       {apis.map((api, apiIndex) => (
                         <TableRow key={`row-${apiIndex + 1}`}>
+                          {/* Sticky API Name Cell */}
                           <TableCell
                             style={{
                               position: 'sticky',
                               left: 0,
-                              overflow: 'hidden',
-                              background: '#fff',
-                              zIndex: 1,
+                              zIndex: 2, // Higher than normal body cells
+                              backgroundColor: 'white', // Solid background
                               fontWeight: 600,
-                              borderBottom: '1px solid rgba(224, 224, 224, 1)'
+                              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                              borderRight: '1px solid rgba(224, 224, 224, 1)' // Visible right border
                             }}
                           >
                             {api.name}
                           </TableCell>
+                          {/* Checkbox Cells */}
                           {screens.map((screen, screenIndex) => (
                             <TableCell
                               key={`${apiIndex}-${screenIndex}`}
                               align='center'
-                              style={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+                              style={{
+                                backgroundColor: 'white', // Ensure content cells also have a background
+                                borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                                borderRight: '1px solid rgba(224, 224, 224, 1)' // Visible right border
+                              }}
                             >
                               <Checkbox
                                 key={`${apiIndex}-${screenIndex}`}

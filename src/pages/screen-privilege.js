@@ -266,66 +266,89 @@ const Index = () => {
                 <TableContainer
                   component={Paper}
                   style={{
-                    maxHeight: '800px', // or any height you need
+                    maxHeight: '800px', // Original height
                     overflowY: 'auto',
-                    scrollSnapType: 'y mandatory'
+                    backgroundColor: 'inherit'
                   }}
                 >
-                  <Table aria-label='checkbox table'>
-                    <TableHead style={{ backgroundColor: 'white', position: 'sticky', top: 0, zIndex: 4 }}>
+                  <Table
+                    aria-label='checkbox table'
+                    style={{
+                      borderCollapse: 'separate' // Crucial for distinct borders with sticky elements, keep this.
+                    }}
+                  >
+                    <TableHead
+                      style={{
+                        backgroundColor: 'white', // Must be solid to cover content underneath
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 4, // Ensures header is on top
+                        // Subtler box-shadow for visual separation without being too prominent
+                        boxShadow:
+                          '0px 1px 2px -1px rgba(0,0,0,0.1), 0px 2px 3px 0px rgba(0,0,0,0.01), 0px 0.5px 5px 0px rgba(0,0,0,0.01)'
+                      }}
+                    >
                       <TableRow>
+                        {/* First Sticky Cell (Checkbox Column) - Header Row 1 */}
                         <TableCell
                           style={{
-                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            // borderBottom: '1px solid rgba(224, 224, 224, 1)',
                             position: 'sticky',
                             left: 0,
                             zIndex: 3,
                             backgroundColor: 'white',
-                            width: '50px',
-                            minWidth: '50px',
-                            maxWidth: '50px',
-                            height: '56px',
-                            padding: '8px'
+                            width: '40px', // Reduced from 50px
+                            minWidth: '40px', // Reduced from 50px
+                            maxWidth: '40px', // Reduced from 50px
+                            height: '50px',
+                            padding: '3px' // Reduced padding
                           }}
                         ></TableCell>
+                        {/* Second sticky cell (apiName column) */}
                         <TableCell
                           style={{
-                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
+                            // borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                            // borderLeft: '1px solid rgba(224, 224, 224, 1)',
                             position: 'sticky',
-                            left: '50px',
+                            left: '30px',
                             zIndex: 3,
                             backgroundColor: 'white',
-                            width: '200px',
-                            minWidth: '200px',
-                            maxWidth: '200px',
+                            width: '150px', // Reduced from 200px
+                            minWidth: '150px', // Reduced from 200px
+                            maxWidth: '200px', // Allow a bit more if needed, but prefer smaller
                             height: '56px',
-                            padding: '8px'
+                            padding: '4px 8px',
+                            fontSize: '14px', // Reduced horizontal padding
+                            textAlign: 'center',
+                            right: '15px'
                           }}
                         ></TableCell>
+                        {/* Third non-sticky cell in header (empty) */}
                         <TableCell
                           style={{
-                            borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
-
-                            backgroundColor: 'white',
+                            borderBottom: '1px solid rgba(224, 224, 224, 1)',
                             height: '56px',
-                            padding: '8px'
+                            padding: '3px', // Reduced padding
+                            width: '10px', // Give it a minimal width
+                            minWidth: '10px',
+                            maxWidth: '10px'
                           }}
                         ></TableCell>
+
                         {filteredDepartments?.map(({ department, designations }, rowIndex) => {
-                          // console.log()
                           if (!designations.length) return null
                           return (
                             <TableCell
                               key={`dept-${rowIndex + 1}`}
                               colSpan={designations.length}
                               align='center'
-                              style={{
-                                backgroundColor: 'white',
+                              sx={{
                                 borderBottom: '1px solid rgba(224, 224, 224, 1)',
                                 borderLeft: '1px solid rgba(224, 224, 224, 1)',
                                 borderRight: '1px solid rgba(224, 224, 224, 1)',
                                 height: 56,
-                                p: 1
+                                p: '4px 8px', // Reduced padding, Material-UI's p prop is for padding
+                                minWidth: '100px' // Reduced from 170, adjust as needed
                               }}
                             >
                               {department}
@@ -333,7 +356,10 @@ const Index = () => {
                           )
                         })}
                       </TableRow>
+
+                      {/* First Sticky Cell (Checkbox Column) - Header Row 2 */}
                       <TableRow>
+                        {/* First sticky cell in second header row */}
                         <TableCell
                           style={{
                             borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
@@ -341,35 +367,39 @@ const Index = () => {
                             left: 0,
                             zIndex: 3,
                             backgroundColor: 'white',
-                            width: '50px',
-                            minWidth: '50px',
-                            maxWidth: '50px',
+                            width: '30px', // Consistent with above
+                            minWidth: '30px', // Consistent with above
+                            maxWidth: '30px', // Consistent with above
                             height: '56px',
-                            padding: '8px'
+                            padding: '4px' // Reduced padding
                           }}
                         ></TableCell>
+                        {/* Second sticky cell in second header row */}
                         <TableCell
                           style={{
                             borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
-                            borderTop: '0.5px solid rgba(224, 224, 224, 1)',
-
                             position: 'sticky',
-                            left: '50px',
+                            left: '30px', // Adjusted left position
                             zIndex: 3,
                             backgroundColor: 'white',
-                            width: '200px',
-                            minWidth: '200px',
-                            maxWidth: '200px',
+                            width: '150px', // Consistent with above
+                            minWidth: '150px', // Consistent with above
+                            maxWidth: '200px', // Consistent with above
                             height: '56px',
-                            padding: '8px'
+                            padding: '4px 8px', // Reduced padding
+                            alignContent: 'center',
+                            fontSize: '14px'
                           }}
                         ></TableCell>
+                        {/* Third non-sticky cell in second header row */}
                         <TableCell
                           style={{
                             borderBottom: '0.5px solid rgba(224, 224, 224, 1)',
-                            borderTop: '0.5px solid rgba(224, 224, 224, 1)',
                             height: '56px',
-                            padding: '8px'
+                            padding: '4px', // Reduced padding
+                            width: '10px', // Consistent with above
+                            minWidth: '10px',
+                            maxWidth: '10px'
                           }}
                         ></TableCell>
                         {filteredDepartments?.map((dept, rowIndex) =>
@@ -380,8 +410,12 @@ const Index = () => {
                               style={{
                                 border: '1px solid rgba(224, 224, 224, 1)',
                                 height: '56px',
-                                padding: '8px',
-                                minWidth: 170
+                                padding: '4px 8px', // Reduced padding
+                                minWidth: '100px', // Significantly reduced for individual designation cells
+                                maxWidth: '100px', // Added maxWidth to constrain
+                                whiteSpace: 'nowrap', // Keep text on one line
+                                overflow: 'hidden', // Hide overflowing text
+                                textOverflow: 'ellipsis' // Show ellipsis for truncated text
                               }}
                             >
                               {designation.designation_name}
@@ -392,53 +426,62 @@ const Index = () => {
                     </TableHead>
                     <TableBody>
                       {checkboxes.map((checkboxRow, index) => (
-                        <TableRow key={`row-${index + 1}`}>
+                        <TableRow
+                          key={`row-${index + 1}`}
+                          style={{
+                            backgroundColor: 'inherit' // Ensures row itself doesn't obscure
+                          }}
+                        >
+                          {/* First Sticky Cell (Checkbox Column) - Body */}
                           <TableCell
                             style={{
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                              borderTop: '1px solid rgba(224, 224, 224, 1)',
-
                               position: 'sticky',
                               left: 0,
                               zIndex: 2,
                               backgroundColor: 'white',
-                              width: '50px',
-                              minWidth: '50px',
-                              maxWidth: '50px',
-                              height: '56px',
-                              padding: '8px'
+                              width: '40px', // Consistent with header
+                              minWidth: '40px', // Consistent with header
+                              maxWidth: '40px', // Consistent with header
+                              height: '50px',
+                              padding: '3px' // Reduced padding
                             }}
                           ></TableCell>
+                          {/* Sticky second column cell (apiName) */}
                           <TableCell
                             style={{
                               fontWeight: '600',
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                              borderTop: '1px solid rgba(224, 224, 224, 1)',
+                              borderTop: index === 0 ? '1px solid rgba(224, 224, 224, 1)' : 'none',
                               position: 'sticky',
-                              left: '50px',
+                              left: '30px', // Adjusted left position
                               zIndex: 2,
                               backgroundColor: 'white',
-                              width: '200px',
-                              minWidth: '200px',
-                              maxWidth: '200px',
+                              width: '150px', // Consistent with header
+                              minWidth: '150px', // Consistent with header
+                              maxWidth: '200px', // Consistent with header
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               height: '56px',
-                              padding: '8px',
+                              padding: '2px 8px', // Reduced padding
                               verticalAlign: 'middle'
                             }}
                           >
                             {checkboxRow.screenName}
                           </TableCell>
+                          {/* Third Cell (Empty Spacer) - Body */}
                           <TableCell
                             style={{
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                              borderTop: '1px solid rgba(224, 224, 224, 1)',
                               height: '56px',
-                              padding: '8px'
+                              padding: '4px', // Reduced padding
+                              width: '10px', // Consistent with header
+                              minWidth: '10px',
+                              maxWidth: '10px'
                             }}
                           ></TableCell>
+                          {/* Dynamic Checkbox Cells - Body */}
                           {checkboxRow.checkboxes.map((checkbox, colIndex) => {
                             const shouldDisplay =
                               selectedDeptValue === null || selectedDeptValue?.department_id == checkbox.department_id
@@ -449,15 +492,19 @@ const Index = () => {
                                   align='center'
                                   style={{
                                     borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                                    height: '56px',
-                                    padding: '8px',
-                                    verticalAlign: 'middle'
+                                    borderLeft: '1px solid rgba(224, 224, 224, 1)',
+                                    height: '40px',
+                                    padding: '2px 8px', // Reduced padding
+                                    minWidth: '70px', // Consistent with header
+                                    maxWidth: '100px', // Consistent with header
+                                    verticalAlign: 'middle',
+                                    backgroundColor: 'white'
                                   }}
                                 >
                                   <Checkbox
                                     role='checkbox'
                                     aria-checked={checkbox.checked}
-                                    data-testid={`${checkboxRow.screenName}-${checkbox.designation_id}`}
+                                    data-testid={`<span class="math-inline">\{checkboxRow\.screenName\}\-</span>{checkbox.designation_id}`}
                                     checked={checkbox.checked}
                                     onChange={() => handleCheckboxChange(index, colIndex)}
                                   />
