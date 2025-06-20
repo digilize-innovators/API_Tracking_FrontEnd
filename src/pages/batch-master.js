@@ -252,11 +252,21 @@ const Index = () => {
       resetState()
     }
 
-    const handleModalActions = isApproved => {
+    const handleModalActions = async isApproved => {
       setOpenModalApprove(!isApproved)
       if (isApproved && esignDownloadPdf) {
         console.log('esign is approved for download')
-        downloadPdf(tableData, tableHeaderData, tableBody, batchData.data, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, batchData.data, user)
+        if (config?.config?.audit_logs) {
+          const data = {}
+          data.audit_log = {
+            audit_log: true,
+            performed_action: 'Export report of batchMaster',
+            remarks: remarks?.length > 0 ? remarks : `Batch master export report `,
+            authUser: user
+          }
+          await api(`/auditlog/`, data, 'post', true)
+        }
       }
     }
 

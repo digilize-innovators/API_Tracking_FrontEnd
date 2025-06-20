@@ -210,10 +210,24 @@ const Index = () => {
       resetState()
     }
 
-    const handleModalActions = isApproved => {
+    const handleModalActions = async isApproved => {
       setOpenModalApprove(!isApproved)
+
       if (isApproved && esignDownloadPdf) {
-        downloadPdf(tableData, tableHeaderData, tableBody, areaData.data, userDataPdf)
+        resetState()
+        downloadPdf(tableData, tableHeaderData, tableBody, areaData.data, user)
+        if (config?.config?.audit_logs) {
+          const data = {}
+          data.audit_log = {
+            audit_log: true,
+            performed_action: 'Export report of areaMaster ',
+            remarks: remarks?.length > 0 ? remarks : `Area master export report `,
+            authUser: user
+          }
+          await api(`/auditlog/`, data, 'post', true)
+        }
+
+        return
       }
     }
 
@@ -254,6 +268,7 @@ const Index = () => {
         }
       }
       await handleUpdateStatus()
+      console.log('ggggg')
       resetState()
     }
 

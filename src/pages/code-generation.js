@@ -135,7 +135,17 @@ const Index = () => {
       if (esignStatus === 'approved' && esignDownloadPdf) {
         setOpenModalApprove(false)
         console.log('esign is approved for approver')
-        downloadPdf(tableData, tableHeaderData, tableBody, codeRequestData.data, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, codeRequestData.data, user)
+        if (config?.config?.audit_logs) {
+          const data = {}
+          data.audit_log = {
+            audit_log: true,
+            performed_action: 'Export report of codeGeneration',
+            remarks: remarks?.length > 0 ? remarks : `Code generation export report `,
+            authUser: user
+          }
+          await api(`/auditlog/`, data, 'post', true)
+        }
         resetState()
         return
       }

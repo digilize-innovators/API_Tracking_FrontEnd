@@ -228,7 +228,6 @@ const Index = () => {
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-
     console.log('handleAuthResult 02', config?.userId, user.user_id)
     const resetState = () => {
       setApproveAPI({
@@ -261,8 +260,19 @@ const Index = () => {
       }
       if (esignStatus === 'approved' && esignDownloadPdf) {
         setOpenModalApprove(false)
-        downloadPdf(tableData, tableHeaderData, tableBody, allAreaCategoryData.data, userDataPdf)
         resetState()
+        downloadPdf(tableData, tableHeaderData, tableBody, allAreaCategoryData.data, user)
+        if (config?.config?.audit_logs) {
+          const data = {}
+          data.audit_log = {
+            audit_log: true,
+            performed_action: 'Export report of areaCategory ',
+            remarks: remarks?.length > 0 ? remarks : `Area category export report `,
+            authUser: user
+          }
+          await api(`/auditlog/`, data, 'post', true)
+        }
+
         return
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)

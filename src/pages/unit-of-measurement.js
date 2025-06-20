@@ -200,11 +200,22 @@ const Index = () => {
           : {}
       }
     }
-    const handleApproveDownload = () => {
+    const handleApproveDownload = async () => {
       setOpenModalApprove(false)
       console.log('esign is approved for approver')
       resetApprovalState()
-      downloadPdf(tableData, tableHeaderData, tableBody, allUOMData.data, userDataPdf)
+
+      downloadPdf(tableData, tableHeaderData, tableBody, allUOMData.data, user)
+      if (config?.config?.audit_logs) {
+        const data = {}
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'Export report of unit of measurement ',
+          remarks: remarks?.length > 0 ? remarks : `Unit of measurement export report `,
+          authUser: user
+        }
+        await api(`/auditlog/`, data, 'post', true)
+      }
     }
     const handleRejectDownload = () => {
       console.log('approver rejected')

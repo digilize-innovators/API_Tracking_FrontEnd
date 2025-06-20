@@ -249,11 +249,21 @@ const Index = () => {
             }
           : {}
       }
+
       if (esignStatus === 'approved' && esignDownloadPdf) {
-        console.log('esign is approved for approver')
         setOpenModalApprove(false)
+        downloadPdf(tableData, tableHeaderData, tableBody, companyData.data, user)
+        if (config?.config?.audit_logs) {
+          const data = {}
+          data.audit_log = {
+            audit_log: true,
+            performed_action: 'Export report of company ',
+            remarks: remarks?.length > 0 ? remarks : `Company master export report `,
+            authUser: user
+          }
+          await api(`/auditlog/`, data, 'post', true)
+        }
         resetState()
-        downloadPdf(tableData, tableHeaderData, tableBody, companyData.data, userDataPdf)
         return
       }
 

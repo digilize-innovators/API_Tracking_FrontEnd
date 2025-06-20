@@ -20,6 +20,7 @@ import AuthModal from 'src/components/authModal'
 import { getTokenValues } from '../utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
+import { api } from 'src/utils/Rest-API'
 
 const Index = () => {
   const { settings } = useSettings()
@@ -146,7 +147,17 @@ const Index = () => {
       return
     }
     if (isApprover && esignDownloadPdf) {
-      downloadPdf(tableData, tableHeaderData, tableBody, auditLogData.data, userDataPdf)
+      downloadPdf(tableData, tableHeaderData, tableBody, auditLogData.data, user)
+      if (config?.config?.audit_logs) {
+        const data = {}
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'Export report of auditlog ',
+          remarks: remarks?.length > 0 ? remarks : `Auditlog export report `,
+          authUser: user
+        }
+        await api(`/auditlog/`, data, 'post', true)
+      }
       resetState()
       return
     }

@@ -184,8 +184,22 @@ const Row = ({
         if (esignDownloadPdf) {
           if (esignStatus === 'approved' && esignDownloadPdf) {
             setOpenModalApprove(false)
+
+            downloadPdf(tableData, null, tableBody, arrayDesignation, user)
+            if (config?.config?.audit_logs) {
+              const data = {}
+              data.audit_log = {
+                audit_log: true,
+                performed_action: `Export report of designation of department=${depData?.department_name} `,
+                remarks:
+                  remarks?.length > 0
+                    ? remarks
+                    : ` Designation of Department=${depData?.department_name} export report`,
+                authUser: user
+              }
+              await api(`/auditlog/`, data, 'post', true)
+            }
             resetState()
-            downloadPdf(tableData, null, tableBody, arrayDesignation, userDataPdf)
             return
           }
           if (esignStatus === 'rejected' && esignDownloadPdf) {

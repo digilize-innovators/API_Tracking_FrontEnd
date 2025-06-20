@@ -32,11 +32,12 @@ const BatchReport = () => {
   const { setIsLoading } = useLoading()
   const [config, setConfig] = useState(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [esignModalForCreator, setEsignModalForCreator] = useState(true)
   const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [exportedBy, setExportedBy] = useState('')
   const [approvedBy, setApprovedBy] = useState('')
+  const [selectedProductName, setSelectedProductName] = useState('')
+  const [selectedBatchName, setSelectedBatchName] = useState('')
 
   useLayoutEffect(() => {
     let data = getUserData()
@@ -48,7 +49,7 @@ const BatchReport = () => {
   }, [])
 
   useEffect(() => {
-    if (selectedProduct) {
+    if (selectedProduct.length > 0) {
       getAllBatches()
     }
   }, [selectedProduct])
@@ -103,14 +104,21 @@ const BatchReport = () => {
     }
   }
   const handleProductChange = event => {
+    const productId = event.target.value
     setSelectedProduct(event.target.value)
+    const selected = products.find(p => p.product_uuid === productId)
+    setSelectedProductName(selected?.product_name || '')
     setSelectedBatch('')
     setBatches([])
     setReport(null)
     setIsReportGenerated(false)
   }
   const handleBatchChange = event => {
+    const batchId = event.target.value
     setSelectedBatch(event.target.value)
+    const selected = batches.find(b => b.batch_uuid === batchId)
+    setSelectedBatchName(selected?.batch_no || '')
+
     setIsReportGenerated(false)
     setSelectFormat('')
   }
@@ -164,20 +172,12 @@ const BatchReport = () => {
   }
   const handleDownloadReport = () => {
     setIsReportGenerated(false)
-    if (esignModalForCreator) {
-      setApproveAPI({
-        approveAPIName: 'batch-report-create',
-        approveAPImethod: 'POST',
-        approveAPIEndPoint: '/api/v1/batch-report'
-      })
-    } else {
+    if (config?.config?.esign_status) {
       setApproveAPI({
         approveAPIName: 'batch-report-approve',
         approveAPImethod: 'PATCH',
         approveAPIEndPoint: '/api/v1/batch-report'
       })
-    }
-    if (config?.config?.esign_status) {
       setAuthModalOpen(true)
       return
     }
@@ -856,6 +856,9 @@ const BatchReport = () => {
         approveAPImethod: '',
         approveAPIEndPoint: ''
       })
+      setSelectFormat('')
+      setSelectedBatch('')
+      setSelectedProduct('')
       setAuthModalOpen(false)
     }
     if (!isAuthenticated) {
@@ -868,20 +871,11 @@ const BatchReport = () => {
       esignStatus,
       audit_log: {}
     }
-    if (config?.config?.audit_logs) {
-      const auditlogRemark = remarks
-      data.audit_log = {
-        user_id: user.userId,
-        user_name: user.userName,
-        performed_action: 'approved',
-        remarks: auditlogRemark?.length > 0 ? auditlogRemark : `batch report approved - ${approvedBy}`
-      }
-    }
+
     if (isApprover) {
       if (esignStatus === 'approved') {
         setApprovedBy({ userId: user.user_id, userName: user.userName, timeStamp: new Date() })
         setOpenModalApprove(false)
-        resetState()
 
         switch (selectedFormat) {
           case 'pdfDetail': {
@@ -910,6 +904,17 @@ const BatchReport = () => {
             console.log('no format is selected')
           }
         }
+        if (config?.config?.audit_logs) {
+          const data = {}
+          data.audit_log = {
+            audit_log: true,
+            performed_action: `Export ${selectedFormat} of product=${selectedProductName} and batchno=${selectedBatchName} `,
+            remarks: remarks?.length > 0 ? remarks : `Export batch report`,
+            authUser: user
+          }
+          await api(`/auditlog/`, data, 'post', true)
+        }
+        resetState()
         return
       } else if (esignStatus === 'rejected') {
         console.log('approver rejected')
@@ -919,31 +924,32 @@ const BatchReport = () => {
       }
       const res = await api('/esign-status/update-esign-status', data, 'patch', true)
       console.log('esign status update', res?.data)
-    } else if (esignStatus === 'rejected') {
-      setAuthModalOpen(false)
-      setOpenModalApprove(false)
-      setAlertData({
-        ...alertData,
-        openSnackbar: true,
-        type: 'error',
-        message: 'Access denied for this user.'
-      })
-    } else if (esignStatus === 'approved') {
-      console.log('esign is approved for creator to download')
-      setOpenModalApprove(true)
-      setExportedBy({ userId: user.user_id, userName: user.userName, exportedAt: new Date() })
     }
+    // else if (esignStatus === 'rejected') {
+    //   setAuthModalOpen(false)
+    //   setOpenModalApprove(false)
+    //   setAlertData({
+    //     ...alertData,
+    //     openSnackbar: true,
+    //     type: 'error',
+    //     message: 'Access denied for this user.'
+    //   })
+    // } else if (esignStatus === 'approved') {
+    //   console.log('esign is approved for creator to download')
+    //   setOpenModalApprove(true)
+    //   setExportedBy({ userId: user.user_id, userName: user.userName, exportedAt: new Date() })
+    // }
     resetState()
   }
+
   const handleAuthModalOpen = () => {
     console.log('OPen auth model')
-    setApproveAPI({
-      approveAPIName: 'batch-report-approve',
-      approveAPImethod: 'PATCH',
-      approveAPIEndPoint: '/api/v1/batch-report'
-    })
-    setAuthModalOpen(true)
-    setEsignModalForCreator(true)
+    // setApproveAPI({
+    //   approveAPIName: 'batch-report-approve',
+    //   approveAPImethod: 'PATCH',
+    //   approveAPIEndPoint: '/api/v1/batch-report'
+    // })
+    // setAuthModalOpen(true)
   }
   return (
     <Box>

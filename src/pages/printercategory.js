@@ -274,7 +274,18 @@ const Index = () => {
         if (esignStatus === 'approved' && esignDownloadPdf) {
           setOpenModalApprove(false)
           resetState()
-          downloadPdf(tableData, tableHeaderData, tableBody, allPrinterCategoryData.data, userDataPdf)
+          downloadPdf(tableData, tableHeaderData, tableBody, allPrinterCategoryData.data, user)
+          if (config?.config?.audit_logs) {
+            const data = {}
+            data.audit_log = {
+              audit_log: true,
+              performed_action: 'Export report of printerCategory ',
+              remarks: remarks?.length > 0 ? remarks : `Printer category export report `,
+              authUser: user
+            }
+            await api(`/auditlog/`, data, 'post', true)
+          }
+
           return
         }
         if (esignStatus === 'rejected' && esignDownloadPdf) {

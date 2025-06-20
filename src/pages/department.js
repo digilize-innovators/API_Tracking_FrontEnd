@@ -194,7 +194,17 @@ const Index = () => {
           if (esignStatus === 'approved' && esignDownloadPdf) {
             setOpenModalApprove(false)
             console.log('esign is approved for approver')
-            downloadPdf(tableData, tableHeaderData, tableBody, departmentData.data, userDataPdf)
+            downloadPdf(tableData, tableHeaderData, tableBody, departmentData.data, user)
+            if (config?.config?.audit_logs) {
+              const data = {}
+              data.audit_log = {
+                audit_log: true,
+                performed_action: 'Export report of department ',
+                remarks: remarks?.length > 0 ? remarks : `Department export report `,
+                authUser: user
+              }
+              await api(`/auditlog/`, data, 'post', true)
+            }
             resetState()
             return
           }

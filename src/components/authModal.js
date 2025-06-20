@@ -122,11 +122,11 @@ const AuthModal = ({
         return
       }
       if (res.data.success) {
-        const { userId, userName, user_id } = res.data.data
-        const user = { userId, userName, user_id }
+        const { userId, userName, user_id, departmentName } = res.data.data
+        const user = { userId, userName, user_id, departmentName }
         const isAuthenticated = true
         const isApprover = approveAPIName.includes('approve')
-        console.log(approveAPIName)
+        console.log(approveAPIName.includes('approve'))
         //  && config.userId !== user.user_id;
 
         handleAuthResult(isAuthenticated, user, isApprover, esignStatus, remarks)

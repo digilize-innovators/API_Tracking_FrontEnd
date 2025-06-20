@@ -342,10 +342,20 @@ const Index = () => {
       }
       return data
     }
-    const handleApproveDownload = () => {
+    const handleApproveDownload = async () => {
       setOpenModalApprove(false)
-      downloadPdf(tableData, tableHeaderData, tableBody, userData.data, userDataPdf)
       resetApprovalState()
+      downloadPdf(tableData, tableHeaderData, tableBody, userData.data, user)
+      if (config?.config?.audit_logs) {
+        const data = {}
+        data.audit_log = {
+          audit_log: true,
+          performed_action: 'Export report of userMaster ',
+          remarks: remarks?.length > 0 ? remarks : `User master export report `,
+          authUser: user
+        }
+        await api(`/auditlog/`, data, 'post', true)
+      }
     }
     const handleRejectDownload = () => {
       setOpenModalApprove(false)
