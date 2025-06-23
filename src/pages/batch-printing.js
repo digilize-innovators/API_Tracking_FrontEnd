@@ -554,9 +554,10 @@ const Index = ({ userId, ip }) => {
     approveAPImethod: '',
     approveAPIEndPoint: '',
     session: '',
-    authUser: {}
+    authUser: {},
+    lineId: null
   })
-  const [config, setConfig] = useState(null)
+  const [config, setConfig] = useState(null);
 
   useEffect(() => {
     ;(async () => {
@@ -1249,14 +1250,15 @@ const Index = ({ userId, ip }) => {
     }
   }
 
-  const handleSessionStart = async () => {
+  const handleSessionStart = async (data) => {
     if (config?.config?.esign_status) {
       setApproveData({
         approveAPIName: 'batch-printing-create',
         approveAPImethod: 'POST',
         approveAPIEndPoint: '/api/v1/batch-printing',
         session: 'start',
-        authUser: {}
+        authUser: {},
+        lineId: data.id
       })
       setAuthModalOpen(true)
     } else {
@@ -1264,14 +1266,15 @@ const Index = ({ userId, ip }) => {
     }
   }
 
-  const handleSessionStop = async () => {
+  const handleSessionStop = async (data) => {
     if (config?.config?.esign_status) {
       setApproveData({
         approveAPIName: 'batch-printing-create',
         approveAPImethod: 'POST',
         approveAPIEndPoint: '/api/v1/batch-printing',
         session: 'stop',
-        authUser: {}
+        authUser: {},
+        lineId: data.id
       })
       setAuthModalOpen(true)
     } else {
@@ -1298,8 +1301,7 @@ const Index = ({ userId, ip }) => {
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     const resetState = () => {
-      console.log('RESETING>>...')
-      setApproveData({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '', authUser: {} })
+      setApproveData({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '', authUser: {}, lineId: null })
       setAuthModalOpen(false)
     }
     if (!isAuthenticated) {
@@ -1308,12 +1310,15 @@ const Index = ({ userId, ip }) => {
     }
     const prepareData = () => ({
       esignStatus: esignStatus,
+      session: approveData.session,
+      lineId: approveData.lineId,
       audit_log: config?.config?.audit_logs
         ? {
             user_id: user.userId,
             user_name: user.userName,
             performed_action: 'approved',
-            remarks: remarks.length > 0 ? remarks : `Batch printing session start approved`
+            remarks: remarks.length > 0 ? remarks : `Batch printing session ${approveData.session === 'start' ? 'start' : 'stop'} approved`,
+            authUser: user.user_id,
           }
         : {}
     })
@@ -1326,7 +1331,8 @@ const Index = ({ userId, ip }) => {
               user_id: user.userId,
               user_name: user.userName,
               performed_action: 'approved',
-              remarks: remarks.length > 0 ? remarks : `Batch printing session start requested`
+              remarks: remarks.length > 0 ? remarks : `Batch printing session ${approveData.session === 'start' ? 'start' : 'stop' } requested`,
+              authUser: user.user_id,
             }
           : {}
       }
@@ -1335,7 +1341,7 @@ const Index = ({ userId, ip }) => {
     }
     const handleApproverActions = async () => {
       console.log('esign approve by approver.')
-      const data = prepareData()
+      const data = prepareData();
       await api('/esign-status/double-esign', data, 'patch', true)
     }
     if (isApprover && esignStatus === 'approved') {
@@ -1583,7 +1589,7 @@ const Index = ({ userId, ip }) => {
                           <Button
                             variant='contained'
                             className='py-2'
-                            onClick={() => handleSessionStart()}
+                            onClick={() => handleSessionStart(line)}
                             disabled={line.disabledStartSession}
                           >
                             Start Session
@@ -1593,7 +1599,7 @@ const Index = ({ userId, ip }) => {
                           <Button
                             variant='contained'
                             className='py-2'
-                            onClick={() => handleSessionStop(panelIndex, lineIndex, line)}
+                            onClick={() => handleSessionStop(line)}
                             disabled={line.disabledStopSession}
                           >
                             Stop Session
