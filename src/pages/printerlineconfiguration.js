@@ -199,10 +199,7 @@ const Index = () => {
 
   const editPrinterLineConfiguration = async esign_status => {
     try {
-      console.log('formData', formData)
-
       const data = { ...formData }
-
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,

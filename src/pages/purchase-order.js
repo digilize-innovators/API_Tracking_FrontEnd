@@ -122,19 +122,14 @@ const Index = () => {
 
   const addPurchaseOrder = async () => {
     try {
-      console.log('formdata', formData)
       const data = { ...formData }
       setIsLoading(true)
-      const res = await api('/purchase-order/', data, 'post', true)
-      console.log('res Add purchase order ', res)
-
-      console.log(res, 'res')
+      const res = await api('/purchase-order/', data, 'post', true);
       setIsLoading(false)
-
       if (res?.data?.success) {
         setOpenModal(false)
         console.log('Add purchase order :-', res?.data)
-        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'purchase order added successfully' })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Purchase order added successfully' })
         setEditData({})
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })

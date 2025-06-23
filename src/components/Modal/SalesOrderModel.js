@@ -31,7 +31,9 @@ const SalesOrderSchema = yup.object().shape({
                     .number()
                     .required('Quantity is required')
                     .typeError('Quantity must be a number')
-                    .positive('Quantity must be greater than zero'),
+                    .positive('Quantity must be greater than zero')
+                    .min(1)
+                    .max(10000),
             })
         )
         .min(1, 'At least one purchase item is required')
@@ -137,16 +139,13 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
     useEffect(() => {
         watchedProducts?.forEach((purchase, index) => {
             const productId = purchase?.productId;
-            console.log(productId)
             if (!productId) return;
             const existing = batchOptionsMap[index];
             if (existing && existing.productId === productId) return;
 
-
             const fetchBatches = async () => {
                 try {
-                    const res = await api(`/batch/${productId}`, {}, 'get', true);
-                    console.log('batches', res.data.data)
+                    const res = await api(`/batch/${productId}?onlyended=true`, {}, 'get', true);
                     if (res.data.success) {
                         const options = res.data.data.batches?.map(batch => ({
                             id: batch.batch_uuid,
@@ -171,7 +170,6 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
     }, [watchedProducts]);
 
     const orderTypeValue = watch('type');
-    console.log("ORDER TYPE CHANGE ", orderTypeValue);
     
     const getLocationOptions = () => {
         if (orderTypeValue === 'SALES_RETURN') {
@@ -207,7 +205,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                     }
                 }
             } catch (error) {
-                console.log('Error in get designation ', error)
+                console.log('Error in get location type-so-sto ', error)
                 setIsLoading(false)
             }
         }
@@ -233,7 +231,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                     }
                 }
             } catch (error) {
-                console.log('Error in get designation ', error)
+                console.log('Error in get location type-sr ', error)
                 setIsLoading(false)
             }
         }
@@ -421,8 +419,8 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                             </Button>
 
                         </Grid2>
-
-                        {fields.map((field, index) => (
+                        <Grid2 style={{  maxHeight: '300px',  overflowY: 'auto', paddingRight: 1 }}>
+                            {fields.map((field, index) => (
                                 <Grid2 container spacing={2} key={field.id}>
                                     <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                                         <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -515,6 +513,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                                 </Grid2>
 
                             ))}
+                        </Grid2>
                         {errors.orders?.root?.message && (
                             <Grid2>
                                 <Typography color="error" sx={{ mt: 2, fontSize: 14 }}>

@@ -141,17 +141,12 @@ const Index = () => {
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
  
-  const addStockTransfer = async (esign_status, remarks) => {
+  const addStockTransfer = async () => {
     try {
-      console.log('formdata', formData)
       const data = { ...formData }
       setIsLoading(true)
       const res = await api('/stocktransfer-order/', data, 'post', true)
-      console.log('res Add purchase order ', res)
-
-      console.log(res, 'res')
       setIsLoading(false)
-
       if (res?.data?.success) {
         setOpenModal(false)
         console.log('Add order :-', res?.data)

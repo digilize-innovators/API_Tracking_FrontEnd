@@ -239,7 +239,6 @@ const TableCameraMaster = ({
         search: tableHeaderData.searchVal,
         esign_status: tableHeaderData.esignStatus
       })
-      console.log(params.toString())
       const response = await api(`/cameramaster/?${params.toString()}`, {}, 'get', true)
       console.log('controlpanelmaster data res ', response.data)
       if (response.data.success) {

@@ -9,7 +9,6 @@ function SnackbarAlert({ openSnackbar, closeSnackbar, alertData }) {
   const [color, setColor] = useState('')
 
   useEffect(() => {
-    console.log('Setting font color ', settings.color)
     if (settings.color) {
       setColor(settings.color)
     } else {

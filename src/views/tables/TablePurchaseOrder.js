@@ -163,7 +163,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,handleView
         </TableCell>
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
         
-            <Tooltip title={!apiAccess.editApiAccess || row.status === "CREATED" && 'No edit access'}>
+            <Tooltip title={!apiAccess.editApiAccess || row.status !== "CREATED" && 'No edit access'}>
               <span>
                 <MdModeEdit
                   fontSize={20}
@@ -286,8 +286,7 @@ const handleSort = (key,child) => {
         limit: rowsPerPage === -1 ? -1 : rowsPerPage,
         search: tableHeaderData.searchVal,
         esign_status: tableHeaderData.esignStatus
-      })
-      console.log(params.toString())
+      });
       const response = await api(`/purchase-order/?${params.toString()}`, {}, 'get', true)
       console.log('GET purchase-order response :- ', response.data)
       if (response?.data?.success) {

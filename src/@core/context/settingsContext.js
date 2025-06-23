@@ -1,6 +1,6 @@
-import { createContext, useState, useEffect, useMemo } from 'react';
-import themeConfig from '../../configs/themeConfig';
-import PropTypes from 'prop-types';
+import { createContext, useState, useEffect, useMemo } from 'react'
+import themeConfig from '../../configs/themeConfig'
+import PropTypes from 'prop-types'
 
 const initialSettings = {
   themeColor: '#50BDA0',
@@ -9,44 +9,43 @@ const initialSettings = {
   recordPerPage: [5, 10, 25, 50, 100],
   rowsPerPage: 25,
   fontFamily: 'Arial',
-  fontSize: 16,
-};
+  fontSize: 16
+}
 
 export const SettingsContext = createContext({
   saveSettings: () => null,
-  settings: initialSettings,
-});
+  settings: initialSettings
+})
 
 export const SettingsProvider = ({ children }) => {
-  const [settings, setSettings] = useState({ ...initialSettings });
+  const [settings, setSettings] = useState({ ...initialSettings })
 
   useEffect(() => {
     if (settings.themeColor) {
-      document.documentElement.style.setProperty('--theme-color', settings.themeColor);
+      document.documentElement.style.setProperty('--theme-color', settings.themeColor)
     }
-  }, [settings.themeColor]);
+  }, [settings.themeColor])
 
-  const saveSettings = (updatedSettings) => {
+  const saveSettings = updatedSettings => {
     setSettings(prevSettings => ({
       ...prevSettings,
-      ...updatedSettings,
-    }));
-  };
+      ...updatedSettings
+    }))
+  }
 
-  const contextValue = useMemo(() => ({
-    settings,
-    saveSettings,
-  }), [settings]);
+  const contextValue = useMemo(
+    () => ({
+      settings,
+      saveSettings
+    }),
+    [settings]
+  )
 
-  return (
-    <SettingsContext.Provider value={contextValue}>
-      {children}
-    </SettingsContext.Provider>
-  );
-};
+  return <SettingsContext.Provider value={contextValue}>{children}</SettingsContext.Provider>
+}
 
 SettingsProvider.propTypes = {
-  children: PropTypes.any,
-};
+  children: PropTypes.any
+}
 
-export const SettingsConsumer = SettingsContext.Consumer;
+export const SettingsConsumer = SettingsContext.Consumer

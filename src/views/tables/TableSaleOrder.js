@@ -48,7 +48,6 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
     try {
       setIsLoading(true)
       const res = await api(`/sales-order/transaction-details/${id}`, {}, 'get', true)
-      console.log(' in table traction sale', res)
       setIsLoading(false)
       if (res.data.success) {
         setSalDetail(res.data.data)
@@ -61,7 +60,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
         router.push('/401')
       }
     } catch (error) {
-      console.log('Error in get designation ', error)
+      console.log('Error in get sales-order transaction info ', error)
       setIsLoading(false)
     }
   }
@@ -89,14 +88,12 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
   )
 
   const toggleDrawer = (anchor, open) => event => {
-    console.log('open drawer', open)
     if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return
     }
     setState({ ...state, [anchor]: open })
   }
   const handleDrawerOpen = row => {
-    console.log('data', row)
     setOrderId(row.id)
   }
 
@@ -110,11 +107,8 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
     try {
       const data = { orderId: orderId }
       setIsLoading(true)
-      const res = await api('/sales-order/generate-invoice/', data, 'post', true)
-      console.log('res generate Invoice ', res)
-
+      const res = await api('/sales-order/generate-invoice/', data, 'post', true);
       setIsLoading(false)
-
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Invoice Generated successfully' })
         setStatus(false)
@@ -281,7 +275,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
           {moment(row?.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
         </TableCell>
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
-          <Tooltip title={!apiAccess.editApiAccess || row.status === 'CREATED' && 'No edit access'}>
+          <Tooltip title={!apiAccess.editApiAccess || row.status !== 'CREATED' && 'No edit access'}>
             <span>
               <MdModeEdit
                 fontSize={20}
@@ -402,8 +396,7 @@ const TableSaleOrder = ({ handleUpdate, apiAccess, setSaleOrder, pendingAction, 
         search: tableHeaderData.searchVal,
         esign_status: tableHeaderData.esignStatus,
         type: orderTypeFilter
-      })
-      console.log(params.toString())
+      });
       const response = await api(`/sales-order/?${params.toString()}`, {}, 'get', true)
       console.log('GET sale order response :- ', response.data)
       if (response?.data?.success) {

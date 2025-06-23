@@ -161,7 +161,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess,updateView
                    </TableCell>
                    <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
                    
-                       <Tooltip title={!apiAccess.editApiAccess || row.status === "CREATED" && 'No edit access'}>
+                       <Tooltip title={!apiAccess.editApiAccess || row.status !== "CREATED" && 'No edit access'}>
                          <span>
                            <MdModeEdit
                              fontSize={20}
@@ -284,10 +284,8 @@ const TableStocktransfer = ({
         limit: rowsPerPage === -1 ? -1 : rowsPerPage,
         search: tableHeaderData.searchVal,
         esign_status: tableHeaderData.esignStatus
-      })
-      console.log(params.toString())
-      const response = await api(`/stocktransfer-order/?${params.toString()}`, {}, 'get', true)
-      console.log('GET stocktransfer-order response :- ', response.data)
+      });
+      const response = await api(`/stocktransfer-order/?${params.toString()}`, {}, 'get', true);
       if (response?.data?.success) {
         setStocktransferData({data: response.data.data.stockTransferOrder, total:response.data.data.total})
         setStocktransfer(response.data.data.stockTransferOrder)
