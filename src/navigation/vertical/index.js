@@ -118,13 +118,13 @@ const navigation = () => {
       icon: MdOutlineBatchPrediction,
       path: '/batch-printing',
       mainTitle: false
+    },
+    {
+      title: 'Batch Cloud Upload',
+      icon: MdCloudUpload,
+      path: '/batch-cloud-upload',
+      mainTitle: false
     }
-    // {
-    //   title: 'Batch Cloud Upload',
-    //   icon: MdCloudUpload,
-    //   path: '/batch-cloud-upload',
-    //   mainTitle: false
-    // }
   ]
 
   const printerScreens = [

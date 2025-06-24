@@ -456,22 +456,22 @@ const Index = () => {
                               borderBottom: '1px solid rgba(224, 224, 224, 1)',
                               borderTop: index === 0 ? '1px solid rgba(224, 224, 224, 1)' : 'none',
                               position: 'sticky',
-                              left: '30px', // Adjusted left position
+                              left: '30px',
                               zIndex: 2,
                               backgroundColor: 'white',
-                              width: '150px', // Consistent with header
-                              minWidth: '150px', // Consistent with header
-                              maxWidth: '200px', // Consistent with header
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              height: '56px',
-                              padding: '2px 8px', // Reduced padding
+                              width: '150px',
+                              minWidth: '150px',
+                              maxWidth: '200px',
+                              whiteSpace: 'normal', // ✅ allow text to wrap
+                              wordBreak: 'break-word', // ✅ break long strings if needed
+                              height: 'auto', // ✅ let height grow
+                              padding: '2px 8px',
                               verticalAlign: 'middle'
                             }}
                           >
                             {checkboxRow.apiName}
                           </TableCell>
+
                           {/* Non-sticky third cell in body */}
                           <TableCell
                             style={{

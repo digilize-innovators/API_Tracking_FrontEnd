@@ -1,13 +1,6 @@
 'use-client'
 import React, { useState, useLayoutEffect, useMemo, useRef } from 'react'
-import Box from '@mui/material/Box'
-import Select from '@mui/material/Select'
-import Grid2 from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
-import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
-import { Button, MenuItem } from '@mui/material'
-import Modal from '@mui/material/Modal'
+import { Box, Select, Grid2, Typography, FormControl, InputLabel, Button, MenuItem, Modal } from '@mui/material'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
@@ -28,6 +21,7 @@ import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import downloadPdf from 'src/utils/DownloadPdf'
+import moment from 'moment'
 
 const Index = () => {
   const router = useRouter()
@@ -40,7 +34,7 @@ const Index = () => {
   const [allLocationData, setAllLocationData] = useState([])
   const { setIsLoading } = useLoading()
   const { settings } = useSettings()
-  const [id, setId] = useState('')
+  const [batchDetail, setBatchDetail] = useState({})
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData, removeAuthToken } = useAuth()
   const [config, setConfig] = useState(null)
@@ -58,14 +52,17 @@ const Index = () => {
   })
 
   const apiAccess = useApiAccess('batch-cloud-upload-create', 'batch-cloud-upload-update', 'batch-cloud-upload-approve')
-  const tableBody = batchData.map((item, index) => [
-    index + 1,
-    item.batch_no,
-    item.productHistory.product_name,
-    item.location.location_name,
-    item.qty,
-    item.esign_status
+  const tableBody = batchData?.data?.map((item, index) => [
+    index + batchData.index,
+    item?.batch_no,
+    item?.product?.product_history[0]?.product_name,
+    item?.location?.history[0]?.location_name,
+    item?.manufacturing_date ? moment(item.manufacturing_date).format('DD-MM-YYYY') : 'N/A',
+    item?.expiry_date ? moment(item.expiry_date).format('DD-MM-YYYY') : 'N/A',
+    item?.qty,
+    item?.esign_status
   ])
+
   const tableData = useMemo(
     () => ({
       tableHeader: ['Sr.No.', 'Batch No.', 'Product Name', 'Location Name', 'Quality', 'E-Sign'],
@@ -139,25 +136,30 @@ const Index = () => {
     setOpenModal(false)
   }
 
-  const handleSubmitForm = async () => {
-    BatchDataUploadOnCloud(id)
+  const handleSubmitForm = async => {
+    setApproveAPI({
+      approveAPIName: 'batch-cloud-upload-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/batch-cloud-upload'
+    })
+    if (config?.config?.esign_status) {
+      setEsignDownloadPdf(false)
+      setAuthModalOpen(true)
+      return
+    }
+    BatchDataUploadOnCloud(batchDetail)
   }
-  const BatchDataUploadOnCloud = async (id, remarks) => {
+  const BatchDataUploadOnCloud = async (batch, remarks) => {
     try {
-      const data = { dataId: id, tableName: 'batch' }
+      const data = { dataId: batch.id, tableName: 'batch' }
       const auditlogRemark = remarks
-      const audit_log = config?.config?.audit_logs
-        ? {
-            audit_log: true,
-            performed_action: `Copy Batch data of ${id}`,
-            remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Copy Batch data of ${id}`
-          }
-        : {
-            audit_log: false,
-            performed_action: 'none',
-            remarks: `none`
-          }
-      data.audit_log = audit_log
+      if (config?.config?.audit_logs) {
+        data.audit_logs = {
+          audit_log: true,
+          performed_action: `Copy Batch data of ${batch.batch_no}`,
+          remarks: auditlogRemark?.length > 0 ? auditlogRemark : `Copy Batch data of ${batch.batch_no}`
+        }
+      }
       console.log('Add batch data ', data)
       setIsLoading(true)
       const res = await api('/batch-cloud-upload/', data, 'post', true)
@@ -204,47 +206,31 @@ const Index = () => {
         approveAPIEndPoint: ''
       })
       setAuthModalOpen(false)
+      setEsignDownloadPdf(false)
     }
     if (!isAuthenticated) {
       setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' })
       return
     }
-    const prepareData = () => ({
-      modelName: 'batch',
-      esignStatus: esignStatus,
-      id: eSignStatusId,
-      audit_log: config?.config?.audit_logs
-        ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            performed_action: 'approved',
-            remarks: remarks.length > 0 ? remarks : `batch approved - ${auditLogMark}`
-          }
-        : {}
-    })
-    const handleEsignApproved = () => {
-      if (esignDownloadPdf) {
-        console.log('esign is approved for download.')
-        setOpenModalApprove(true)
-        downloadPdf(tableData, tableHeaderData, tableBody, batchData, userDataPdf)
-      } else {
-        console.log('esign is approved for creator.')
-        const esign_status = 'pending'
-        BatchDataUploadOnCloud(esign_status, remarks)
-      }
-    }
+
     const handleApproverActions = async () => {
-      const data = prepareData()
       if (esignStatus === 'approved' && esignDownloadPdf) {
         setOpenModalApprove(false)
         console.log('esign is approved for approver.')
         resetState()
-        downloadPdf(tableData, tableHeaderData, tableBody, batchData, userDataPdf)
+        downloadPdf(tableData, tableHeaderData, tableBody, batchData.data, user)
+        if (config?.config?.audit_logs) {
+          const data = {}
+          data.audit_log = {
+            audit_log: true,
+            performed_action: `Export report of batchClould of product= ${filterProductVal}`,
+            remarks: remarks?.length > 0 ? remarks : `Batch clould export report of product =${filterProductVal} `,
+            authUser: user
+          }
+          await api(`/auditlog/`, data, 'post', true)
+        }
         return
-      }
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('esign status update', res?.data)
-      if (esignStatus === 'rejected' && esignDownloadPdf) {
+      } else if (esignStatus === 'rejected' && esignDownloadPdf) {
         console.log('approver rejected.')
         setOpenModalApprove(false)
         resetState()
@@ -255,16 +241,18 @@ const Index = () => {
       if (esignStatus === 'rejected') {
         setAuthModalOpen(false)
         setOpenModalApprove(false)
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: 'error',
-          message: 'Access denied for this user.'
-        })
+        setOpenModal(false)
+        // setAlertData({
+        //   ...alertData,
+        //   openSnackbar: BatchDataUploadOnCloudtrue,
+        //   type: 'error',
+        //   message: 'Access denied for this user.'
+        // })
       }
 
       if (esignStatus === 'approved') {
-        handleEsignApproved()
+        // const esign_status = 'pending'
+        BatchDataUploadOnCloud(batchDetail, remarks)
       }
     }
 
@@ -278,29 +266,31 @@ const Index = () => {
       resetState()
       return
     }
-    if (isApprover) {
+    if (isApprover && esignDownloadPdf) {
       await handleApproverActions()
-    } else {
+    } else if (isApprover) {
+      console.log('hello for batch cloud')
       handleCreatorActions()
     }
     resetState()
   }
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
+    return
 
-    setApproveAPI({
-      approveAPIName: 'batch-approve',
-      approveAPImethod: 'PATCH',
-      approveAPIEndPoint: '/api/v1/batch'
-    })
-    setAuthModalOpen(true)
-    setESignStatusId(row.id)
-    setAuditLogMark(row.batch_no)
-    console.log('row', row)
+    // console.log('handleAuthCheck', row)
+    // setApproveAPI({
+    //   approveAPIName: 'batch-cloud-upload-create',
+    //   approveAPImethod: 'POST',
+    //   approveAPIEndPoint: '/api/v1/batch'
+    // })
+    // setAuthModalOpen(true)
+    // setESignStatusId(row.id)
+    // setAuditLogMark(row.batch_no)
+    // console.log('row', row)
   }
   const handleUpdate = row => {
-    setId(row.id)
-    handleOpenModal()
+    setBatchDetail(row)
+    handleOpenModal(true)
   }
 
   const resetFilter = () => {
@@ -322,20 +312,19 @@ const Index = () => {
     console.log('OPen auth model')
 
     setApproveAPI({
-      approveAPIName: 'batch-approve',
+      approveAPIName: 'batch-cloud-upload-approve',
       approveAPImethod: 'PATCH',
-      approveAPIEndPoint: '/api/v1/batch'
+      approveAPIEndPoint: '/api/v1/batch-cloud-upload'
     })
     setAuthModalOpen(true)
   }
   const handleDownloadPdf = () => {
     setApproveAPI({
-      approveAPIName: 'batch-create',
-      approveAPImethod: 'POST',
-      approveAPIEndPoint: '/api/v1/batch'
+      approveAPIName: 'batch-cloud-upload-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/batch-cloud-upload'
     })
     if (config?.config?.esign_status) {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return

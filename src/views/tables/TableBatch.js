@@ -27,6 +27,7 @@ import { useSettings } from 'src/@core/hooks/useSettings'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useRouter } from 'next/router'
 import { api } from 'src/utils/Rest-API'
+import { isNumber } from '@mui/x-data-grid/internals'
 
 const Row = ({
   row,
@@ -92,7 +93,7 @@ const Row = ({
             {row.sent_to_cloud ? 'Completed' : 'Pending'}
           </TableCell>
         )}
-        {row.esign_status === 'pending' && config?.config?.esign_status === true ? (
+        {row.esign_status === 'pending' && config?.config?.esign_status === true && !isBatchCloud ? (
           <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
             <span>
               <MdOutlineDomainVerification fontSize={20} onClick={() => handleAuthCheck(row)} />
@@ -105,10 +106,10 @@ const Row = ({
                 <span>
                   <MdOutlineCloudUpload
                     fontSize={20}
-                    onClick={() => !row?.sent_to_cloud && handleUpdate(row)}
+                    onClick={() => (!row?.sent_to_cloud && row.esign_status === 'approved' ? handleUpdate(row) : '')}
                     style={{
-                      cursor: !row?.sent_to_cloud ? 'pointer' : 'not-allowed',
-                      opacity: !row?.sent_to_cloud ? 1 : 0.5
+                      cursor: !row?.sent_to_cloud && row.esign_status === 'approved' ? 'pointer' : 'not-allowed',
+                      opacity: !row?.sent_to_cloud && row.esign_status === 'approved' ? 1 : 0.5
                     }}
                   />
                 </span>
@@ -307,7 +308,11 @@ const TableBatch = ({
       }
       const aValue = getValueByPath(a, path)
       const bValue = getValueByPath(b, path)
+      const isNumeric = !isNaN(aValue) && !isNaN(bValue)
 
+      if (isNumeric) {
+        return newSortDirection === 'asc' ? Number(aValue) - Number(bValue) : Number(bValue) - Number(aValue)
+      }
       if (aValue.toLowerCase() > bValue.toLowerCase()) return newSortDirection === 'asc' ? 1 : -1
       if (aValue.toLowerCase() < bValue.toLowerCase()) return newSortDirection === 'asc' ? -1 : 1
       return 0
