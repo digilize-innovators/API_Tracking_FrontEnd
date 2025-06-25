@@ -106,10 +106,18 @@ const Row = ({
                 <span>
                   <MdOutlineCloudUpload
                     fontSize={20}
-                    onClick={() => (!row?.sent_to_cloud && row.esign_status === 'approved' ? handleUpdate(row) : '')}
+                    onClick={() =>
+                      !row?.sent_to_cloud && row.esign_status === 'approved' && row.isBatchEnd === true
+                        ? handleUpdate(row)
+                        : ''
+                    }
                     style={{
-                      cursor: !row?.sent_to_cloud && row.esign_status === 'approved' ? 'pointer' : 'not-allowed',
-                      opacity: !row?.sent_to_cloud && row.esign_status === 'approved' ? 1 : 0.5
+                      cursor:
+                        !row?.sent_to_cloud && row.esign_status === 'approved' && row.isBatchEnd === true
+                          ? 'pointer'
+                          : 'not-allowed',
+                      opacity:
+                        !row?.sent_to_cloud && row.esign_status === 'approved' && row.isBatchEnd === true ? 1 : 0.5
                     }}
                   />
                 </span>
