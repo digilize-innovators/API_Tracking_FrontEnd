@@ -479,7 +479,7 @@ function ProductModal({
     try {
       setIsLoading(true)
       const res = await api('/country-master?limit=-1', {}, 'get', true)
-      setIsLoading(false);
+      setIsLoading(false)
       if (res.data.success) {
         setCountries(res.data.data.countryMaster)
       } else {
@@ -507,7 +507,7 @@ function ProductModal({
         genericName: editData?.generic_name || '',
         // productImage: editData?.product_image || '/images/avatars/p.png',
         packagingSize: editData?.packaging_size || '',
-        companyUuid: editData?.company?.id || '',
+        companyUuid: editData?.company_uuid || '',
         country: editData?.country_id || '',
         firstLayer: editData?.firstLayer || '',
         secondLayer: editData?.secondLayer || '',
@@ -690,7 +690,11 @@ function ProductModal({
                     onClick={async () => {
                       const img = editData.product_image.split(BaseUrl)
                       console.log(editData?.id, editData?.product_image != '/images/avatars/p.png')
-                      if (img[img?.length-1]!=='/' && editData?.id && editData?.product_image != '/images/avatars/p.png') {
+                      if (
+                        img[img?.length - 1] !== '/' &&
+                        editData?.id &&
+                        editData?.product_image != '/images/avatars/p.png'
+                      ) {
                         setProductImage('/images/avatars/p.png')
                         setValue('productImage', '/images/avatars/p.png') // Clear form value
                       }
