@@ -43,7 +43,7 @@ const Index = () => {
   const apiAccess = useApiAccess('cameramaster-create', 'cameramaster-update', 'cameramaster-approve')
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const searchBarRef = useRef(null)
-  const [cameraData, setCamera] = useState({ data: [], index: 0 })
+  const [cameraData, setCameraData] = useState({ data: [], index: 0 })
   const [formData, setFormData] = useState()
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
@@ -327,21 +327,6 @@ const Index = () => {
       resetState()
     }
 
-    const processNonApproverActions = () => {
-      if (esignStatus === 'rejected') {
-        resetState()
-        return
-      }
-      if (esignStatus === 'approved') {
-        handleModalActions(true)
-        if (!esignDownloadPdf) {
-          console.log('esign is approved for creator', user)
-
-          setPendingAction(editData?.id ? 'edit' : 'add')
-        }
-      }
-    }
-
     const handleCreatorActions = () => {
       if (esignStatus === 'rejected') {
         setAuthModalOpen(false)
@@ -462,7 +447,7 @@ const Index = () => {
 
                     {apiAccess.addApiAccess && (
                       <Box className='mx-2'>
-                        <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                        <Button variant='contained' sx={{ py: 2 }} onClick={handleOpenModal}>
                           <span>
                             <IoMdAdd />
                           </span>
@@ -483,7 +468,7 @@ const Index = () => {
                   handleUpdate={handleUpdate}
                   tableHeaderData={tableHeaderData}
                   pendingAction={pendingAction}
-                  setCamera={setCamera}
+                  setCamera={setCameraData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}

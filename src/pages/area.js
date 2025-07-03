@@ -43,7 +43,7 @@ const Index = () => {
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const apiAccess = useApiAccess('area-create', 'area-update', 'area-approve')
   const searchBarRef = useRef(null)
-  const [areaData, setArea] = useState({ data: [], index: 0 })
+  const [areaData, setAreaData] = useState({ data: [], index: 0 })
   const [formData, setFormData] = useState({})
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
@@ -213,21 +213,21 @@ const Index = () => {
     const handleModalActions = async isApproved => {
       setOpenModalApprove(!isApproved)
 
-      if (isApproved && esignDownloadPdf) {
-        resetState()
-        downloadPdf(tableData, tableHeaderData, tableBody, areaData.data, user)
-        if (config?.config?.audit_logs) {
-          const data = {}
-          data.audit_log = {
+      if (!isApproved || !esignDownloadPdf) return
+
+      resetState()
+      downloadPdf(tableData, tableHeaderData, tableBody, areaData.data, user)
+
+      if (config?.config?.audit_logs) {
+        const data = {
+          audit_log: {
             audit_log: true,
-            performed_action: 'Export report of areaMaster ',
-            remarks: remarks?.length > 0 ? remarks : `Area master export report `,
+            performed_action: 'Export report of areaMaster',
+            remarks: remarks?.length > 0 ? remarks : 'Area master export report',
             authUser: user
           }
-          await api(`/auditlog/`, data, 'post', true)
         }
-
-        return
+        await api(`/auditlog/`, data, 'post', true)
       }
     }
 
@@ -412,7 +412,7 @@ const Index = () => {
                   handleUpdate={handleUpdate}
                   tableHeaderData={tableHeaderData}
                   pendingAction={pendingAction}
-                  setArea={setArea}
+                  setArea={setAreaData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}

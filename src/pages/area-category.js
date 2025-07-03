@@ -27,7 +27,7 @@ const Index = () => {
   const { settings } = useSettings()
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [allAreaCategoryData, setAreaCat] = useState({ data: [], index: 0 })
+  const [allAreaCategoryData, setAllAreaCategoryData] = useState({ data: [], index: 0 })
   const [editData, setEditData] = useState({})
   const { setIsLoading } = useLoading()
   const { getUserData, removeAuthToken } = useAuth()
@@ -405,7 +405,7 @@ const Index = () => {
 
                   {apiAccess.addApiAccess && (
                     <Box className='mx-2'>
-                      <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                      <Button variant='contained' sx={{ py: 2 }} onClick={handleOpenModal}>
                         <span>
                           <IoMdAdd />
                         </span>
@@ -424,7 +424,7 @@ const Index = () => {
                 <TableAreaCategory
                   pendingAction={pendingAction}
                   handleUpdate={handleUpdate}
-                  setAreaCat={setAreaCat}
+                  setAreaCat={setAllAreaCategoryData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}

@@ -1,9 +1,8 @@
 'use-client'
-import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef, useEffect, useState } from 'react'
 import { Button, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
 import { IoMdAdd } from 'react-icons/io'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import { useLoading } from 'src/@core/hooks/useLoading'
@@ -426,7 +425,7 @@ const Index = () => {
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
                   {apiAccess.addApiAccess && (
                     <Box className='mx-2'>
-                      <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                      <Button variant='contained' sx={{ py: 2 }} onClick={handleOpenModal}>
                         <span>
                           <IoMdAdd />
                         </span>
