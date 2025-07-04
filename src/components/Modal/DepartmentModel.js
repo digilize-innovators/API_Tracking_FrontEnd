@@ -5,6 +5,8 @@ import * as yup from 'yup';
 import { Modal, Box, Typography, Button, Grid2, FormControlLabel, Switch } from '@mui/material';
 import { style } from 'src/configs/generalConfig'
 import CustomTextField from 'src/components/CustomTextField';
+import PropTypes from 'prop-types'
+
 const departmentSchema = yup.object().shape({
   departmentId: yup
     .string()
@@ -24,7 +26,6 @@ const DepartmentModel = ({ open, onClose, editData, handleSubmitForm }) => {
   const {
     control,
     handleSubmit,
-    formState: { errors },
     reset
   } = useForm({
     resolver: yupResolver(departmentSchema),
@@ -52,7 +53,6 @@ const DepartmentModel = ({ open, onClose, editData, handleSubmitForm }) => {
       open={open}
       onClose={onClose}
       data-testid="modal"
-      role='dialog'
       aria-labelledby='modal-modal-title'
       aria-describedby='modal-modal-description'
     >
@@ -117,5 +117,11 @@ const DepartmentModel = ({ open, onClose, editData, handleSubmitForm }) => {
 
 
   )
+}
+ DepartmentModel.propTypes = {
+  open: PropTypes.any,
+  onClose: PropTypes.any,
+  editData: PropTypes.any,
+  handleSubmitForm: PropTypes.any
 }
 export default DepartmentModel

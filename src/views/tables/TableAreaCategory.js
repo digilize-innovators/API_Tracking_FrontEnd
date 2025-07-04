@@ -190,7 +190,7 @@ const TableAreaCategory = ({
   const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
   const [page, setPage] = useState(0)
   const [sortDirection, setSortDirection] = useState('asc')
-  const [areaCategoryData, setAllAreaCategoryData] = useState({ data: [], total: 0 })
+  const [areaCategoryData, setAreaCategoryData] = useState({ data: [], total: 0 })
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
   const router = useRouter()
@@ -218,7 +218,7 @@ const TableAreaCategory = ({
       const res = await api(`/area-category/?${params.toString()}`, {}, 'get', true)
       console.log('get area category ', res?.data)
       if (res.data.success) {
-        setAllAreaCategoryData({ data: res.data.data.areaCategories, total: res.data.data.total })
+        setAreaCategoryData({ data: res.data.data.areaCategories, total: res.data.data.total })
         setAreaCat({ data: res.data.data.areaCategories, index: res.data.data.offset })
       } else {
         console.log('Error to get all area categories ', res.data)
@@ -251,7 +251,7 @@ const TableAreaCategory = ({
 
       return 0
     })
-    setAllAreaCategoryData({ ...areaCategoryData, data: sorted })
+    setAreaCategoryData({ ...areaCategoryData, data: sorted })
     setSortDirection(newSortDirection)
     setSortBy(key)
   }
@@ -343,6 +343,7 @@ TableAreaCategory.propTypes = {
   setAreaCat: PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
-  handleAuthCheck: PropTypes.any
+  handleAuthCheck: PropTypes.any,
+  tableHeaderData:PropTypes.any
 }
 export default TableAreaCategory

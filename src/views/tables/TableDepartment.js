@@ -141,86 +141,110 @@ const Row = ({
       setAuthModalOpen(false)
     }
 
-    const handleApproverActions = async () => {
+   const handleApproverActions = async () => {
+  if (!hasApproverAccess()) {
+    showAccessDenied()
+    resetState()
+    return
+  }
+
+  const data = constructEsignData()
+
+  if (!esignDownloadPdf) {
+    await updateEsignStatus(data)
+    setPendingAction(true)
+  }
+
+  if (esignDownloadPdf) {
+    await handlePdfDownload()
+    return
+  }
+
+  if (approveAPI.approveAPIName === 'department-approve') {
+    handleDepartmentApproval()
+  }
+}
+
+const hasApproverAccess = () => {
+  return esignDownloadPdf || (isApprover && approveAPI.approveAPIName === 'designation-approve')
+}
+
+const showAccessDenied = () => {
+  setAlertData({
+    ...alertData,
+    openSnackbar: true,
+    type: 'error',
+    message: 'Access denied for this user.'
+  })
+}
+
+const constructEsignData = () => {
+  return {
+    modelName: 'designation',
+    esignStatus,
+    id: eSignStatusId,
+    name: auditLogMark,
+    audit_log: config?.config?.audit_logs
+      ? {
+          user_id: user.userId,
+          user_name: user.userName,
+          remarks: remarks.length > 0 ? remarks : `designation ${esignStatus} - ${auditLogMark}`,
+          authUser: user.user_id,
+          department: depData?.department_name
+        }
+      : {}
+  }
+}
+
+const updateEsignStatus = async (data) => {
+  const res = await api('/esign-status/update-esign-status', data, 'patch', true)
+  if (res.data) {
+    setAlertData({
+      ...alertData,
+      openSnackbar: true,
+      type: res.data.code === 200 ? 'success' : 'error',
+      message: res.data.message
+    })
+  }
+}
+
+const handlePdfDownload = async () => {
+  if (esignStatus === 'approved') {
+    setOpenModalApprove(false)
+    downloadPdf(tableData, null, tableBody, arrayDesignation, user)
+
+    if (config?.config?.audit_logs) {
       const data = {
-        modelName: 'designation',
-        esignStatus,
-        id: eSignStatusId,
-        name: auditLogMark,
-        audit_log: config?.config?.audit_logs
-          ? {
-              user_id: user.userId,
-              user_name: user.userName,
-              remarks: remarks.length > 0 ? remarks : `designation ${esignStatus} - ${auditLogMark}`,
-              authUser: user.user_id,
-              department: depData?.department_name
-            }
-          : {}
-      }
-
-      if (!esignDownloadPdf && isApprover && approveAPI.approveAPIName !== 'designation-approve') {
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: 'error',
-          message: 'Access denied for this user.'
-        })
-        resetState()
-        return
-      } else {
-        if (!esignDownloadPdf) {
-          const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-          if (res.data) {
-            setAlertData({
-              ...alertData,
-              openSnackbar: true,
-              type: res.data.code === 200 ? 'success' : 'error',
-              message: res.data.message
-            })
-          }
-          setPendingAction(true)
-        }
-
-        if (esignDownloadPdf) {
-          if (esignStatus === 'approved' && esignDownloadPdf) {
-            setOpenModalApprove(false)
-
-            downloadPdf(tableData, null, tableBody, arrayDesignation, user)
-            if (config?.config?.audit_logs) {
-              const data = {}
-              data.audit_log = {
-                audit_log: true,
-                performed_action: `Export report of designation of department=${depData?.department_name} `,
-                remarks:
-                  remarks?.length > 0
-                    ? remarks
-                    : ` Designation of Department=${depData?.department_name} export report`,
-                authUser: user
-              }
-              await api(`/auditlog/`, data, 'post', true)
-            }
-            resetState()
-            return
-          }
-          if (esignStatus === 'rejected' && esignDownloadPdf) {
-            setOpenModalApprove(false)
-            resetState()
-            return 0
-          }
-        } else if (approveAPI.approveAPIName === 'department-approve') {
-          if (esignStatus === 'approved') {
-            setOpenModalApprove(false)
-            setPendingAction(true)
-            resetState()
-            return
-          }
-          if (esignStatus === 'rejected') {
-            setOpenModalApprove(false)
-            resetState()
-          }
+        audit_log: {
+          audit_log: true,
+          performed_action: `Export report of designation of department=${depData?.department_name} `,
+          remarks:
+            remarks?.length > 0
+              ? remarks
+              : `Designation of Department=${depData?.department_name} export report`,
+          authUser: user
         }
       }
+      await api(`/auditlog/`, data, 'post', true)
     }
+
+    resetState()
+  } else if (esignStatus === 'rejected') {
+    setOpenModalApprove(false)
+    resetState()
+  }
+}
+
+const handleDepartmentApproval = () => {
+  setOpenModalApprove(false)
+
+  if (esignStatus === 'approved') {
+    setPendingAction(true)
+  }
+
+  resetState()
+}
+
     const handleCreatorActions = async () => {
       if (esignStatus === 'rejected') {
         setAuthModalOpen(false)
@@ -405,7 +429,7 @@ const Row = ({
     downloadPdf(tableData, null, tableBody, arrayDesignation, userDataPdf)
   }
   const list = anchor => (
-    <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
+    <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }}>
       <Grid2 item xs={12}>
         <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8 }}>
           Add Designation For: {depData?.department_name}
@@ -638,9 +662,6 @@ Row.propTypes = {
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
   config_dept: PropTypes.any,
-  handleSortById: PropTypes.any,
-  handleSortByName: PropTypes.any,
-  sortDirection: PropTypes.any,
   setAlertData: PropTypes.any,
   alertData: PropTypes.any,
   departmentData: PropTypes.any,
@@ -700,38 +721,37 @@ const TableDepartment = ({
         router.push('/401')
       }
     } catch (error) {
+      console.log('error whilt get api of department',error)
       setIsLoading(false)
     }
   }
   const handleSort = (key, child) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
     const data = departmentData?.data
-    const sorted = [...data].sort((a, b) => {
-      if (key == 'updated_at') {
-        const dateA = new Date(a.updated_at)
-        const dateB = new Date(b.updated_at)
-        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
-      }
-      if (!child) {
-        if (a[key].toLowerCase() > b[key].toLowerCase()) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
+    const sortByDate = (dateA, dateB) => {
+  const aTime = new Date(dateA).getTime()
+  const bTime = new Date(dateB).getTime()
+  return newSortDirection === 'asc' ? aTime - bTime : bTime - aTime
+}
 
-        if (a[key].toLowerCase() < b[key].toLowerCase()) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      } else {
-        if (a[key][child] > b[key][child]) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
+const sortByValue = (a, b) => {
+  const valA = typeof a === 'string' ? a.toLowerCase() : a
+  const valB = typeof b === 'string' ? b.toLowerCase() : b
 
-        if (a[key][child] < b[key][child]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      }
-    })
+  if (valA > valB) return newSortDirection === 'asc' ? 1 : -1
+  if (valA < valB) return newSortDirection === 'asc' ? -1 : 1
+  return 0
+}
+   const sorted = [...data].sort((a, b) => {
+  if (key === 'updated_at') return sortByDate(a.updated_at, b.updated_at)
+
+  const valA = child ? a[key]?.[child] : a[key]
+  const valB = child ? b[key]?.[child] : b[key]
+
+  return sortByValue(valA, valB)
+})
+
+
     setDepartmentData({ ...departmentData, data: sorted })
     setSortDirection(newSortDirection)
     setSortBy(key)

@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import CustomTextField from 'src/components/CustomTextField';
+import PropTypes from 'prop-types'
 
 const UomSchema = yup.object().shape({
   unitName: yup
@@ -17,7 +18,6 @@ const UomModal = ({ open, onClose, editData, handleSubmitForm }) => {
   const {
     control,
     handleSubmit,
-    formState: { errors },
     reset,
   } = useForm({
     resolver: yupResolver(UomSchema),
@@ -64,5 +64,10 @@ const UomModal = ({ open, onClose, editData, handleSubmitForm }) => {
     )
 
 }
-
+ UomModal.propTypes = {
+  open: PropTypes.any,
+  onClose: PropTypes.any,
+  editData: PropTypes.any,
+  handleSubmitForm: PropTypes.any
+}
 export default UomModal;

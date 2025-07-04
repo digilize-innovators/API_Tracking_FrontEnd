@@ -1,5 +1,4 @@
-import React from 'react'
-import { useEffect } from 'react';
+import React , { useEffect } from 'react'
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -7,6 +6,7 @@ import { Modal, Box, Typography, Button, Grid2 } from '@mui/material';
 import { style } from 'src/configs/generalConfig'
 import CustomTextField from 'src/components/CustomTextField';
 import CustomDropdown from '../CustomDropdown';
+import PropTypes from 'prop-types'
 
 const designationSchema = yup.object().shape({
   designationId: yup.string()
@@ -31,7 +31,6 @@ const DesignationModal = ({ open, onClose, editData, handleSubmitForm, departmen
   const {
     control,
     handleSubmit,
-    formState: { errors },
     reset
   } =
     useForm({
@@ -119,5 +118,12 @@ const DesignationModal = ({ open, onClose, editData, handleSubmitForm, departmen
 
   )
 }
-
+DesignationModal.propTypes = {
+  open: PropTypes.any,
+  onClose: PropTypes.any,
+  editData: PropTypes.any,
+  handleSubmitForm: PropTypes.any,
+   departmentData: PropTypes.any, 
+   depData: PropTypes.any
+}
 export default DesignationModal

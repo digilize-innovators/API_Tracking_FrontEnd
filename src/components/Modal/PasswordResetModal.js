@@ -5,6 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { api } from 'src/utils/Rest-API'
 import CustomTextField from '../CustomTextField';
+import PropTypes from 'prop-types';
 
 // Yup validation schema
 const passwordSchema = yup.object().shape({
@@ -39,8 +40,6 @@ const PasswordResetModal = ({ openPasswordModal, onClose, userId, setAlertData }
     control: passwordControler,
     handleSubmit: handlePasswordChange,
     reset,
-
-    formState: { errors },
   } = useForm({
     resolver: yupResolver(passwordSchema),
     defaultValues: {
@@ -101,5 +100,11 @@ const PasswordResetModal = ({ openPasswordModal, onClose, userId, setAlertData }
     </Modal>
   );
 };
+PasswordResetModal.propTypes={
+ openPasswordModal:PropTypes.any,
+ onClose:PropTypes.any,
+  userId:PropTypes.any,
+ setAlertData:PropTypes.any
+}
 
 export default PasswordResetModal;

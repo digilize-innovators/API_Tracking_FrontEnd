@@ -30,7 +30,7 @@ const Index = () => {
   const [pendingAction, setPendingAction] = useState(null)
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [locationData, setLocation] = useState({ data: [], index: 0 })
+  const [locationData, setLocationData] = useState({ data: [], index: 0 })
   const { setIsLoading } = useLoading()
   const [editData, setEditData] = useState({})
   const [userDataPdf, setUserDataPdf] = useState()
@@ -343,6 +343,7 @@ const Index = () => {
         }
       }
     } catch (error) {
+      console.log('internal error while updating location',error)
       setOpenModal(false)
       router.push('/500')
     } finally {
@@ -423,7 +424,7 @@ const Index = () => {
 
                     {apiAccess.addApiAccess && (
                       <Box className='mx-2'>
-                        <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                        <Button variant='contained' sx={{py:2}} onClick={handleOpenModal} >
                           <span>
                             <IoMdAdd />
                           </span>
@@ -444,7 +445,7 @@ const Index = () => {
                   handleUpdate={handleUpdate}
                   tableHeaderData={tableHeaderData}
                   pendingAction={pendingAction}
-                  setLocation={setLocation}
+                  setLocation={setLocationData}
                   apiAccess={apiAccess}
                   handleAuthCheck={handleAuthCheck}
                   config={config}

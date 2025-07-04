@@ -142,7 +142,6 @@ const LoginPage = () => {
             if (res.data.success) {
               setIsLoading(true);
               setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Login successful' });
-              // setOpenSnackbar(true);
               console.log("screens", res.data.data.screens);
               login(`Bearer ${res.data.data.token}`);
               Cookies.set('token', res.data.data.token);
@@ -167,7 +166,7 @@ const LoginPage = () => {
   };
   const handleConfirmLogin = useCallback(async () => {
     try {
-      setIsLoading(true);``
+      setIsLoading(true);
       data.forceFully = true;
       const res = await api('/auth/login', data, 'post', false);
       console.log("login res data is ", res.data);
@@ -188,7 +187,6 @@ const LoginPage = () => {
       }
       if (res.data.success) {
         setAlertData({ ...alertData,openSnackbar:true, type: 'success', message: 'Login successful' });
-        // setOpenSnackbar(true);
         login(`Bearer ${res.data.data.token}`);
         Cookies.set('token', res.data.data.token);
         Cookies.set('screens', JSON.stringify(res.data.data.screens));

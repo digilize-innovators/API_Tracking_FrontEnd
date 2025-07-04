@@ -29,7 +29,7 @@ import CompanyModal from 'src/components/Modal/CompanyModal'
 const Index = () => {
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [companyData, setCompany] = useState({ data: [], index: 0 })
+  const [companyData, setCompanyData] = useState({ data: [], index: 0 })
   const [editData, setEditData] = useState({})
   const { setIsLoading } = useLoading()
   const { settings } = useSettings()
@@ -412,7 +412,7 @@ const Index = () => {
                     <CustomSearchBar handleSearchClick={handleSearch} ref={searchRef} />
                     {apiAccess.addApiAccess && (
                       <Box className='mx-2'>
-                        <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                        <Button variant='contained' sx={{py:2}} onClick={handleOpenModal}>
                           <span>
                             <IoMdAdd />
                           </span>
@@ -435,7 +435,7 @@ const Index = () => {
                 apiAccess={apiAccess}
                 config={config}
                 handleUpdate={handleUpdate}
-                setCompany={setCompany}
+                setCompany={setCompanyData}
               />
             </Grid2>
           </Box>

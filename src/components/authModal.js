@@ -141,7 +141,7 @@ const AuthModal = ({
         return
       }
     } catch (error) {
-      setError('An error occurred during verification.')
+      setError('An error occurred during verification.',error)
     }
   }
 

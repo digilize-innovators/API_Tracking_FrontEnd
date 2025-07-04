@@ -239,7 +239,8 @@ const TableCollapsiblelocation = ({
 
   const handleSort = key => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const sorted = [...locationData?.data].sort((a, b) => {
+    const data = locationData?.data || []
+    const sorted = data.sort((a, b) => {
       if (key == 'updated_at') {
         const dateA = new Date(a.updated_at)
         const dateB = new Date(b.updated_at)
@@ -256,7 +257,6 @@ const TableCollapsiblelocation = ({
     setLocationData({ ...locationData, data: sorted })
     setSortDirection(newSortDirection)
     setSortBy(key)
-    console.log('locationData :-> ', locationData)
   }
 
   useEffect(() => {

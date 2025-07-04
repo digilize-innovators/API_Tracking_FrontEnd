@@ -40,7 +40,7 @@ const mainUrl = BaseUrl
 const Index = () => {
   const router = useRouter()
   const { settings } = useSettings()
-  const [userData, setUser] = useState({ data: [], index: 0 })
+  const [userData, setUserData] = useState({ data: [], index: 0 })
   const [allDepartment, setAllDepartment] = useState([])
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [departmentFilter, setDepartmentFilter] = useState('')
@@ -318,6 +318,7 @@ const Index = () => {
       try {
         await updateEsignStatus(data)
       } catch (error) {
+        console.log('internal error while upating esign',error)
         handleEsignUpdateError()
         return
       }
@@ -422,7 +423,7 @@ const Index = () => {
     if (isApprover) {
       await handleApproverActions(user, esignStatus, remarks)
     } else {
-      handleCreatorActions(esignStatus, remarks)
+      handleCreatorActions(esignStatus)
     }
     resetApprovalState()
   }
@@ -606,7 +607,7 @@ const Index = () => {
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
 
                   {apiAccess.addApiAccess && (
-                    <Button variant='contained' className='mx-2' onClick={handleOpenModal} role='button'>
+                    <Button variant='contained' sx={{mx:2}} onClick={handleOpenModal}>
                       <span>
                         <IoMdAdd />
                       </span>
@@ -624,7 +625,7 @@ const Index = () => {
                 <TableCollapsibleuser
                   pendingAction={pendingAction}
                   handleUpdate={handleUpdate}
-                  setUser={setUser}
+                  setUser={setUserData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}

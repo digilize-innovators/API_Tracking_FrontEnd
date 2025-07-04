@@ -1,9 +1,6 @@
 'use-client'
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import Box from '@mui/material/Box'
-import Grid2 from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
-import { Button } from '@mui/material'
+import {Box,Grid2,Typography,Button} from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
@@ -30,7 +27,7 @@ const Index = () => {
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [editData, setEditData] = useState({})
-  const [allUOMData, setAllUOM] = useState({ data: [], index: 0 })
+  const [allUOMData, setAllUOMData] = useState({ data: [], index: 0 })
   const { setIsLoading } = useLoading()
   const { getUserData, removeAuthToken } = useAuth()
   const [userDataPdf, setUserDataPdf] = useState()
@@ -261,7 +258,7 @@ const Index = () => {
     if (isApprover) {
       await handleApproverActions(user, esignStatus, remarks)
     } else {
-      handleCreatorActions(esignStatus, remarks)
+      handleCreatorActions(esignStatus)
     }
     resetApprovalState()
   }
@@ -303,6 +300,7 @@ const Index = () => {
         }
       }
     } catch (error) {
+      console.log('internal error while adding uom',error)
       router.push('/500')
       setOpenModal(false)
     } finally {
@@ -342,6 +340,7 @@ const Index = () => {
         }
       }
     } catch (error) {
+      console.log('internal error while updating uom',error)
       router.push('/500')
       setOpenModal(false)
     } finally {
@@ -413,7 +412,7 @@ const Index = () => {
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
                   {apiAccess.addApiAccess && (
                     <Box className='mx-2'>
-                      <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                      <Button variant='contained' sx={{py:2}} onClick={handleOpenModal} >
                         <span>
                           <IoMdAdd />
                         </span>
@@ -429,7 +428,7 @@ const Index = () => {
                 Unit Of Measurement Data
               </Typography>
               <TableUOM
-                setAllUOM={setAllUOM}
+                setAllUOM={setAllUOMData}
                 handleUpdate={handleUpdate}
                 tableHeaderData={tableHeaderData}
                 handleAuthCheck={handleAuthCheck}

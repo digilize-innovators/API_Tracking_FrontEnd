@@ -375,6 +375,7 @@ const Index = () => {
         }
       }
     } catch (error) {
+      console.err("Internal error while adding",error)
       router.push('/500')
       setOpenModal(false)
     } finally {

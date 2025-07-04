@@ -10,6 +10,8 @@ import { useLoading } from 'src/@core/hooks/useLoading';
 import { useAuth } from 'src/Context/AuthContext';
 import { api } from 'src/utils/Rest-API';
 import { useRouter } from 'next/router';
+import PropTypes from 'prop-types'
+
 
 
 const AreaSchema = yup.object().shape({
@@ -37,7 +39,6 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
     const {
         control,
         handleSubmit,
-        formState: { errors },
         reset
     } = useForm({
         resolver: yupResolver(AreaSchema),
@@ -120,9 +121,7 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
 
     return (
         <Modal open={open}
-
             onClose={onClose}
-            role="dialog"
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description" >
             <Box sx={style}>
@@ -183,5 +182,10 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
         </Modal>
     )
 }
-
+ AreaModel.propTypes = {
+  open: PropTypes.any,
+  onClose: PropTypes.any,
+  editData: PropTypes.any,
+  handleSubmitForm: PropTypes.any
+}
 export default AreaModel

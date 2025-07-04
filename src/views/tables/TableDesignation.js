@@ -1,11 +1,10 @@
 import { useState, Fragment, useEffect } from 'react'
-import{Box,Table,Collapse,TableRow,TableHead,TableBody,TableCell,Typography} from '@mui/material'
+import{Box,Table,Collapse,TableRow,TableHead,TableBody,TableCell,Typography,Tooltip} from '@mui/material'
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md'
 import IconButton from '@mui/material/IconButton'
 import ChevronUp from 'mdi-material-ui/ChevronUp'
 import ChevronDown from 'mdi-material-ui/ChevronDown'
 import moment from 'moment'
-import { Tooltip } from '@mui/material';
 import PropTypes from 'prop-types';
 import { statusObj } from 'src/configs/statusConfig';
 import { getSortIcon } from 'src/utils/sortUtils';

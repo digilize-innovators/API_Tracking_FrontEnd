@@ -26,7 +26,6 @@ import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
 import { api } from 'src/utils/Rest-API'
-import { offset } from '@popperjs/core'
 
 const Row = ({
   row,
@@ -270,31 +269,29 @@ const TableCameraMaster = ({
   const handleSort = (key, child) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
     const data = cameraData?.data || []
-    const sorted = [...data].sort((a, b) => {
-      if (key === 'updated_at') {
-        const dateA = new Date(a.updated_at)
-        const dateB = new Date(b.updated_at)
-        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
-      } else if (!child) {
-        if (a[key].toLowerCase() > b[key].toLowerCase()) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
+    const sortByDate = (dateA, dateB) => {
+  const aTime = new Date(dateA).getTime()
+  const bTime = new Date(dateB).getTime()
+  return newSortDirection === 'asc' ? aTime - bTime : bTime - aTime
+}
 
-        if (a[key].toLowerCase() < b[key].toLowerCase()) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      } else {
-        if (a[key][child] > b[key][child]) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
+const sortByValue = (a, b) => {
+  const valA = typeof a === 'string' ? a.toLowerCase() : a
+  const valB = typeof b === 'string' ? b.toLowerCase() : b
 
-        if (a[key][child] < b[key][child]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      }
-    })
+  if (valA > valB) return newSortDirection === 'asc' ? 1 : -1
+  if (valA < valB) return newSortDirection === 'asc' ? -1 : 1
+  return 0
+}
+   const sorted = [...data].sort((a, b) => {
+  if (key === 'updated_at') return sortByDate(a.updated_at, b.updated_at)
+
+  const valA = child ? a[key]?.[child] : a[key]
+  const valB = child ? b[key]?.[child] : b[key]
+
+  return sortByValue(valA, valB)
+})
+
     setCameraData({ ...cameraData, data: sorted })
     setSortDirection(newSortDirection)
     setSortBy(key)
@@ -399,6 +396,7 @@ TableCameraMaster.propTypes = {
   tableHeaderData: PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
-  handleAuthCheck: PropTypes.any
+  handleAuthCheck: PropTypes.any,
+  pendingAction:PropTypes.any
 }
 export default TableCameraMaster

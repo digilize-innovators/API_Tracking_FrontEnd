@@ -469,12 +469,14 @@ const TableCollapsibleUser = ({
 }
 
 TableCollapsibleUser.propTypes = {
-  userData: PropTypes.any,
-
+  pendingAction:PropTypes.any,
+  setUser: PropTypes.any,
   handleUpdate: PropTypes.any,
-  sortDirection: PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
-  handleAuthCheck: PropTypes.any
+  handleAuthCheck: PropTypes.any,
+   tableHeaderData: PropTypes.any,
+  departmentFilter: PropTypes.any,
+  statusFilter: PropTypes.any
 }
 export default TableCollapsibleUser

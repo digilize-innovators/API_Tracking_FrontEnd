@@ -1,4 +1,4 @@
-import { useState, Fragment, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import TableRow from '@mui/material/TableRow';
 import TableHead from '@mui/material/TableHead';
@@ -33,7 +33,6 @@ const Row = ({
     };
     const serialNumber = getSerialNumber(index);
     return (
-        <Fragment>
             <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
                 <TableCell className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                     <IconButton align='center' aria-label='expand row' size='small' onClick={() => handleRowToggle(row.id)}>
@@ -75,16 +74,13 @@ const Row = ({
                     )}
                 </TableCell>
             </TableRow>
-        </Fragment>
+       
     );
 };
 Row.propTypes = {
     row: PropTypes.any,
     index: PropTypes.any,
-    isOpen: PropTypes.any,
     handleRowToggle: PropTypes.any,
-    page: PropTypes.any,
-    rowsPerPage: PropTypes.any,
     config: PropTypes.any,
     handleUpdate: PropTypes.any,
     apiAccess: PropTypes.any,
@@ -118,28 +114,28 @@ const TableCountryMaster = ({
       const handleSort = (key,child) => {
         const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
         const data=countryMasterData?.data
-        const sorted = [...data].sort((a, b) => {
-            if(!child){
-                if (a[key] > b[key]) {
-                return newSortDirection === 'asc' ? 1 : -1
-              }
-    
-              if (a[key] < b[key]) {
-                return newSortDirection === 'asc' ? -1 : 1
-              }
-              return 0
-            }
-            else{
-                if (a[key][child] > b[key][child]) {
-                    return newSortDirection === 'asc' ? 1 : -1
-                  }
-        
-                  if (a[key][child] < b[key][child]) {
-                    return newSortDirection === 'asc' ? -1 : 1
-                  }
-                  return 0
-            }
-        })
+        const sortByDate = (dateA, dateB) => {
+  const aTime = new Date(dateA).getTime()
+  const bTime = new Date(dateB).getTime()
+  return newSortDirection === 'asc' ? aTime - bTime : bTime - aTime
+}
+
+const sortByValue = (a, b) => {
+  const valA = typeof a === 'string' ? a.toLowerCase() : a
+  const valB = typeof b === 'string' ? b.toLowerCase() : b
+
+  if (valA > valB) return newSortDirection === 'asc' ? 1 : -1
+  if (valA < valB) return newSortDirection === 'asc' ? -1 : 1
+  return 0
+}
+   const sorted = [...data].sort((a, b) => {
+  if (key === 'updated_at') return sortByDate(a.updated_at, b.updated_at)
+
+  const valA = child ? a[key]?.[child] : a[key]
+  const valB = child ? b[key]?.[child] : b[key]
+
+  return sortByValue(valA, valB)
+})
         setCountryMasterData({...countryMasterData,data:sorted})
         setSortDirection(newSortDirection)
         setSortBy(key)

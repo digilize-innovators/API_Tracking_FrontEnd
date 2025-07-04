@@ -23,7 +23,6 @@ import moment from 'moment'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { api } from 'src/utils/Rest-API'
 import { useAuth } from 'src/Context/AuthContext'
-import { useLoading } from 'src/@core/hooks/useLoading'
 import { useRouter } from 'next/router'
 
 const Row = ({
@@ -264,7 +263,6 @@ const TableCompany = ({
   const [companyData, setCompanyData] = useState({ data: [], total: 0 })
   const [sortDirection, setSortDirection] = useState('asc')
   const { removeAuthToken } = useAuth()
-  const { setIsLoading } = useLoading()
   const router = useRouter()
 
   useEffect(() => {
@@ -285,32 +283,30 @@ const TableCompany = ({
   const handleSort = (key, child) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
     const data = companyData?.data
-    const sorted = [...data].sort((a, b) => {
-      if (key == 'updated_at') {
-        const dateA = new Date(a.updated_at)
-        const dateB = new Date(b.updated_at)
-        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
-      }
-      if (!child) {
-        if (a[key].toLowerCase() > b[key].toLowerCase()) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
 
-        if (a[key].toLowerCase() < b[key].toLowerCase()) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      } else {
-        if (a[key][child] > b[key][child]) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
+    const sortByDate = (dateA, dateB) => {
+  const aTime = new Date(dateA).getTime()
+  const bTime = new Date(dateB).getTime()
+  return newSortDirection === 'asc' ? aTime - bTime : bTime - aTime
+}
 
-        if (a[key][child] < b[key][child]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      }
-    })
+const sortByValue = (a, b) => {
+  const valA = typeof a === 'string' ? a.toLowerCase() : a
+  const valB = typeof b === 'string' ? b.toLowerCase() : b
+
+  if (valA > valB) return newSortDirection === 'asc' ? 1 : -1
+  if (valA < valB) return newSortDirection === 'asc' ? -1 : 1
+  return 0
+}
+   const sorted = [...data].sort((a, b) => {
+  if (key === 'updated_at') return sortByDate(a.updated_at, b.updated_at)
+
+  const valA = child ? a[key]?.[child] : a[key]
+  const valB = child ? b[key]?.[child] : b[key]
+
+  return sortByValue(valA, valB)
+})
+
     setCompanyData({ ...companyData, data: sorted })
     setSortDirection(newSortDirection)
     setSortBy(key)

@@ -5,6 +5,7 @@ import * as yup from 'yup';
 import { Modal, Box, Typography, Button, Grid2 } from '@mui/material';
 import { style } from 'src/configs/generalConfig';
 import CustomTextField from 'src/components/CustomTextField';
+import PropTypes from 'prop-types'
 
 const CompanySchema = yup.object().shape({
   companyId: yup
@@ -29,7 +30,7 @@ const CompanySchema = yup.object().shape({
 
   contactNo: yup
     .string()
-    .matches(/^[0-9]+$/, 'Contact No should only contain numbers')
+    .matches(/^\d+$/, 'Contact No should only contain numbers')
     .length(10, 'Contact No must be exactly 10 digits')
     .required(),
 
@@ -68,7 +69,7 @@ thirdGsprefix: yup
 
 function CompanyModal({ open, onClose, editData, handleSubmitForm }) {
 
-    const { control, handleSubmit, formState: { errors }, reset } = useForm({
+    const { control, handleSubmit, reset } = useForm({
         resolver: yupResolver(CompanySchema),
         defaultValues: {
             companyId: editData?.company_id || '',
@@ -105,7 +106,7 @@ function CompanyModal({ open, onClose, editData, handleSubmitForm }) {
             onClose={onClose}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
-            role="dialog">
+          >
             <Box sx={style}>
                 <Typography variant="h4" className="my-2">
                     {editData?.id ? 'Edit Company' : 'Add Company'}
@@ -205,5 +206,10 @@ function CompanyModal({ open, onClose, editData, handleSubmitForm }) {
         </Modal>
     );
 }
-
+CompanyModal.propTypes = {
+  open: PropTypes.any,
+  onClose: PropTypes.any,
+  editData: PropTypes.any,
+  handleSubmitForm: PropTypes.any
+}
 export default CompanyModal;

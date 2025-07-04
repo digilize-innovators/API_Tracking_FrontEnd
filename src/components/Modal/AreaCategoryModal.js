@@ -5,6 +5,7 @@ import * as yup from 'yup';
 import { Modal, Box, Typography, Button, Grid2} from '@mui/material';
 import { style } from 'src/configs/generalConfig'
 import CustomTextField from 'src/components/CustomTextField';
+import PropTypes from 'prop-types'
 
 const AreaCategorySchema = yup.object().shape({
   areaCategoryName: yup
@@ -22,7 +23,6 @@ const AreaCategoryModal = ({ open, onClose, editData, handleSubmitForm }) => {
   const {
     control,
     handleSubmit,
-    formState: { errors },
     reset,
   } = useForm({
     resolver: yupResolver(AreaCategorySchema),
@@ -35,7 +35,7 @@ const AreaCategoryModal = ({ open, onClose, editData, handleSubmitForm }) => {
   }, [editData, reset]);
 
   return (
-    <Modal open={open} onClose={onClose} data-testid="modal" role="dialog" aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+    <Modal open={open} onClose={onClose} data-testid="modal"  aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
       <Box sx={style}>
         {console.log(editData)}
         <Typography variant="h4" className="my-2">
@@ -66,5 +66,10 @@ const AreaCategoryModal = ({ open, onClose, editData, handleSubmitForm }) => {
     </Modal>
   );
 };
-
+AreaCategoryModal.propTypes = {
+  open: PropTypes.any,
+  onClose: PropTypes.any,
+  editData: PropTypes.any,
+  handleSubmitForm: PropTypes.any
+}
 export default AreaCategoryModal;

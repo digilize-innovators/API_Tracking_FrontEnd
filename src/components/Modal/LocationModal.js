@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import CustomDropdown from '../CustomDropdown';
-
+import PropTypes from 'prop-types'
 
 const locationSchema = yup.object().shape({
   locationId: yup
@@ -55,7 +55,6 @@ const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
     handleSubmit,
     control,
     reset,
-    formState: { errors },
   } = useForm({
     resolver:yupResolver(locationSchema),
     defaultValues: {
@@ -157,4 +156,11 @@ const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
   );
 };
 
+
+LocationModal.propTypes={
+  open:PropTypes.any,
+  handleClose:PropTypes.any,
+  editData:PropTypes.any,
+  handleSubmitForm:PropTypes.any
+}
 export default LocationModal;

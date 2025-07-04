@@ -11,6 +11,8 @@ import { useRouter } from 'next/router';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { useAuth } from 'src/Context/AuthContext';
 import { api } from 'src/utils/Rest-API';
+import PropTypes from 'prop-types'
+
 
 const ButtonStyled = styled(Button)(({ theme }) => ({
   [theme.breakpoints.down('sm')]: {
@@ -78,7 +80,7 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
   const [allLocation, setAllLocation] = useState([])
   const [departmentId, setDepartmentId] = useState('')
 
-  const {control,handleSubmit,formState: { errors },reset,watch} = useForm({
+  const {control,handleSubmit,reset,watch} = useForm({
     resolver: yupResolver(UserSchema),
     defaultValues: {
       userId: editData?.id || '',
@@ -186,12 +188,11 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
   }, [])
 
   return (
-    <>
+ 
       <Modal
         open={open}
         onClose={onClose}
         data-testid="modal"
-        role='dialog'
         aria-labelledby='modal-modal-title'
         aria-describedby='modal-modal-description'
       >
@@ -371,9 +372,19 @@ function UserModel({ open, onClose, editData,handleSubmitForm, allDepartment, pr
           </form>
         </Box>
       </Modal>
-    </>
+  
 
   )
 }
 
+UserModel.propTypes={
+   open: PropTypes.any,
+    onClose:PropTypes.any,
+     editData:PropTypes.any,
+     handleSubmitForm:PropTypes.any,
+      allDepartment:PropTypes.any,
+       profilePhoto:PropTypes.any,
+       setProfilePhoto:PropTypes.any,
+        onChange :PropTypes.any
+}
 export default UserModel

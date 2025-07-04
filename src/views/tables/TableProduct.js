@@ -92,7 +92,6 @@ const Row = ({
         )}
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {moment(row?.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
-          {/* {moment(row?.created_at).format('DD/MM/YYYY, hh:mm:ss a')} */}
         </TableCell>
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
           {row.esign_status === 'pending' && config?.config?.esign_status === true ? (
@@ -223,7 +222,6 @@ const Row = ({
                           )}
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             {moment(historyRow?.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
-                            {/* {moment(historyRow?.created_at).format('DD/MM/YYYY, hh:mm:ss a')} */}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -558,11 +556,12 @@ const TableProduct = ({
   )
 }
 TableProduct.propTypes = {
-  productData: PropTypes.any,
+    setProduct: PropTypes.any,
   handleUpdate: PropTypes.any,
   tableHeaderData: PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
+  pendingAction:PropTypes.any,
   handleAuthCheck: PropTypes.any
 }
 export default TableProduct
