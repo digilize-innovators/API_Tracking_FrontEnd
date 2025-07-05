@@ -30,8 +30,6 @@ import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import Cookies from 'js-cookie'
 import { validateToken } from 'src/utils/ValidateToken'
 import { useSettings } from 'src/@core/hooks/useSettings'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import { ChevronDown } from 'mdi-material-ui'
 
 const Index = () => {
   const [checkboxes, setCheckboxes] = useState([])
@@ -50,7 +48,7 @@ const Index = () => {
   useEffect(() => {
     getDesignationDepartmentWise()
     getAPIPrivilige()
-    return () => {}
+    return () => { }
   }, [])
   const getDesignationDepartmentWise = async () => {
     try {
@@ -250,7 +248,7 @@ const Index = () => {
                   variant='contained'
                   sx={{ display: 'inline-flex', ml: 4 }}
                   onClick={handleSaveChanges}
-                  role='button'
+
                 >
                   Save Changes
                 </Button>
@@ -504,7 +502,9 @@ const Index = () => {
                                   }}
                                 >
                                   <Checkbox
-                                    inputProps={{ 'data-testid': `${checkboxRow.apiName}-${checkbox.designation_id}` }}
+                                    slotProps={{
+                                      input: { 'data-testid': `${checkboxRow.apiName}-${checkbox.designation_id}` }
+                                    }}
                                     checked={checkbox.checked}
                                     onChange={() => handleCheckboxChange(index, colIndex)}
                                   />

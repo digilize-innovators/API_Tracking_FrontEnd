@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
@@ -74,5 +75,7 @@ const Barchart = ({ data }) => {
     </div>
   );
 };
-
+Barchart.propTypes={
+  data:PropTypes.any
+}
 export default Barchart;

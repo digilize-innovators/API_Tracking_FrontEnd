@@ -43,7 +43,7 @@ const Index = () => {
   const apiAccess = useApiAccess('controlpanelmaster-create', 'controlpanelmaster-update', 'controlpanelmaster-approve')
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const searchBarRef = useRef(null)
-  const [controlPanelData, setControlPanel] = useState({ data: [], index: 0 })
+  const [controlPanelData, setControlPanelData] = useState({ data: [], index: 0 })
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
   const [formData, setFormData] = useState()
@@ -444,7 +444,7 @@ const Index = () => {
 
                     {apiAccess.addApiAccess && (
                       <Box className='mx-2'>
-                        <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                        <Button variant='contained' sx={{py:2}} onClick={handleOpenModal}>
                           <span>
                             <IoMdAdd />
                           </span>
@@ -466,7 +466,7 @@ const Index = () => {
                   tableHeaderData={tableHeaderData}
                   pendingAction={pendingAction}
                   controlPanelData={controlPanelData}
-                  setControlPanel={setControlPanel}
+                  setControlPanel={setControlPanelData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}

@@ -3,7 +3,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Divider,
   Table,
   TableBody,
   TableCell,
@@ -13,6 +12,7 @@ import {
   Paper
 } from "@mui/material";
 import { useSettings } from 'src/@core/hooks/useSettings';
+import PropTypes from "prop-types";
 
 const TopLineShow = ({ data }) => {
   const { settings } = useSettings();
@@ -59,7 +59,7 @@ const TopLineShow = ({ data }) => {
             <TableBody>
               {lineData?.map((item, index) => (
                 <TableRow
-                  key={index}
+                  key={item?.line_name}
                   hover
                   sx={{
                     '&:last-child td, &:last-child th': { border: 0 },
@@ -81,5 +81,7 @@ const TopLineShow = ({ data }) => {
     </Card>
   );
 };
-
+TopLineShow.propTypes={
+  data:PropTypes.any
+}
 export default TopLineShow;

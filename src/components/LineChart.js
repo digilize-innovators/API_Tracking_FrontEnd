@@ -9,6 +9,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
+import PropTypes from 'prop-types';
 
 const Linechart = ({ data }) => {
   return (
@@ -61,5 +62,8 @@ const Linechart = ({ data }) => {
     </div>
   );
 };
+Linechart.propTypes={
+  data:PropTypes.any
+}
 
 export default Linechart;

@@ -11,14 +11,13 @@ import {
   IconButton,
   Collapse,
   Paper,
-  Tooltip
 } from '@mui/material';
 import { ChevronUp, ChevronDown } from 'mdi-material-ui';
 import moment from 'moment';
-import { MdModeEdit } from 'react-icons/md';
 import { getTokenValues } from 'src/utils/tokenUtils';
 import StatusChip from './StatusChip'; // Adjust path if needed
 import { statusObj } from 'src/configs/statusConfig';
+import PropTypes from 'prop-types';
 
 const List = ({ data }) => {
   const [config, setConfig] = useState(null);
@@ -150,7 +149,7 @@ const List = ({ data }) => {
                                 </TableHead>
                                 <TableBody>
                                   {row.history.map((h, i) => (
-                                    <TableRow key={i}>
+                                    <TableRow key={h?.created_at}>
                                       <TableCell align="center">{i + 1}</TableCell>
                                       <TableCell align="center">{h?.product?.product_name}</TableCell>
                                       <TableCell align="center">{h?.batch_no}</TableCell>
@@ -187,5 +186,8 @@ const List = ({ data }) => {
     </Box>
   );
 };
+List.propTypes={
+  data:PropTypes.any
+}
 
 export default List;

@@ -15,6 +15,7 @@ import {
 } from '@mui/material'
 import { style } from 'src/configs/generalConfig'
 import CustomTextField from 'src/components/CustomTextField'
+import PropTypes from 'prop-types'
 
 const printerValidationSchema = yup.object().shape({
   printerCategoryID: yup.string().required("printer category id can't be empty"),
@@ -49,7 +50,7 @@ const PrintingCategoryModal = ({ open, onClose, editData, handleSubmitForm }) =>
   }, [editData])
 
   return (
-    <Modal open={open} onClose={onClose} data-testid='modal' role='dialog'>
+    <Modal open={open} onClose={onClose} data-testid='modal'>
       <Box sx={style}>
         {console.log(editData)}{' '}
         <Typography variant='h4' className='my-2'>
@@ -60,7 +61,7 @@ const PrintingCategoryModal = ({ open, onClose, editData, handleSubmitForm }) =>
             <Grid2 item xs={6}>
               <CustomTextField
                 name='printerCategoryID'
-                disabled={editData?.id ? true : false}
+                disabled={!!editData?.id}
                 label='Printer Category Id'
                 control={control}
               />
@@ -77,8 +78,8 @@ const PrintingCategoryModal = ({ open, onClose, editData, handleSubmitForm }) =>
               render={({ field }) => (
                 <>
                   <RadioGroup row {...field}>
-                    <FormControlLabel value='inkBased' control={<Radio disabled={editData?.id ? true : false} />} label='Ink Based' />
-                    <FormControlLabel value='ribbonBased' control={<Radio disabled={editData?.id ? true : false} />} label='Ribbon Based' />
+                    <FormControlLabel value='inkBased' control={<Radio disabled={!!editData?.id} />} label='Ink Based' />
+                    <FormControlLabel value='ribbonBased' control={<Radio disabled={!!editData?.id} />} label='Ribbon Based' />
                   </RadioGroup>
                   {errors.printerType && (
                     <FormHelperText error>{errors.printerType.message}</FormHelperText> // Display validation error
@@ -110,5 +111,10 @@ const PrintingCategoryModal = ({ open, onClose, editData, handleSubmitForm }) =>
     </Modal>
   )
 }
-
+PrintingCategoryModal.propTypes={
+  open:PropTypes.any,
+  onClose:PropTypes.any,
+  editData:PropTypes.any,
+  handleSubmitForm:PropTypes.any
+}
 export default PrintingCategoryModal

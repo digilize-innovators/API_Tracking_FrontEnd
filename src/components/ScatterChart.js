@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import {
   Legend,
@@ -24,10 +25,10 @@ const ScatterchartGraph = ({ data }) => {
   }));
 
   // Determine if xKey is string or number
-  const isCategory = typeof transformedData[0][xKey] === 'string';
+  // const isCategory = typeof transformedData[0][xKey] === 'string';
 
   // Unique sorted ticks (for months: 'Jan', 'Feb', ..., for years: 2021, 2022, ...)
-  const ticks = [...new Set(transformedData.map(item => item[xKey]))];
+  // const ticks = [...new Set(transformedData.map(item => item[xKey]))];
 
   return (
     <div style={{
@@ -78,5 +79,8 @@ const ScatterchartGraph = ({ data }) => {
     </div>
   );
 };
+ScatterchartGraph.propTypes={
+  data:PropTypes.any
+}
 
 export default ScatterchartGraph;

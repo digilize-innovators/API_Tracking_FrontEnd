@@ -2,6 +2,7 @@ import React from "react";
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { useSettings } from 'src/@core/hooks/useSettings';
+import PropTypes from "prop-types";
 
 const Featured = ({ data }) => {
   const { settings } = useSettings();
@@ -133,5 +134,8 @@ const Featured = ({ data }) => {
     </div>
   );
 };
+Featured.propTypes={
+  data:PropTypes.any
+}
 
 export default Featured;

@@ -502,9 +502,9 @@ const Index = () => {
                                   }}
                                 >
                                   <Checkbox
-                                    role='checkbox'
+                                    
                                     aria-checked={checkbox.checked}
-                                    data-testid={`<span class="math-inline">\{checkboxRow\.screenName\}\-</span>{checkbox.designation_id}`}
+                                    data-testid={`<span class="math-inline">checkboxRow.screenName-</span>{checkbox.designation_id}`}
                                     checked={checkbox.checked}
                                     onChange={() => handleCheckboxChange(index, colIndex)}
                                   />

@@ -1,15 +1,8 @@
 /* eslint-disable no-undef */
 'use-client'
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import Checkbox from '@mui/material/Checkbox'
-import TableContainer from '@mui/material/TableContainer'
-import Table from '@mui/material/Table'
-import TableHead from '@mui/material/TableHead'
-import TableBody from '@mui/material/TableBody'
-import TableRow from '@mui/material/TableRow'
-import TableCell from '@mui/material/TableCell'
-import Paper from '@mui/material/Paper'
-import { Grid2, Typography, Button, Box, FormControl, TextField, Autocomplete } from '@mui/material'
+import { Grid2, Typography, Button, Box, FormControl, TextField,
+   Autocomplete,Checkbox,Table,TableBody,TableCell,TableRow,Paper,TableHead,TableContainer } from '@mui/material'
 import Head from 'next/head'
 import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'

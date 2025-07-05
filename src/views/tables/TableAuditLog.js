@@ -1,11 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import Box from '@mui/material/Box'
-import Table from '@mui/material/Table'
-import TableRow from '@mui/material/TableRow'
-import TableHead from '@mui/material/TableHead'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import IconButton from '@mui/material/IconButton'
+import {Box,Table,TableRow,TableHead,TableBody,TableCell,IconButton} from '@mui/material'
 import ChevronUp from 'mdi-material-ui/ChevronUp'
 import ChevronDown from 'mdi-material-ui/ChevronDown'
 import CustomTable from 'src/components/CustomTable'
@@ -64,27 +58,29 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
   const handleSort = (key, child) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
     const data = auditLogData?.data
-    const sorted = [...data].sort((a, b) => {
-      if (!child) {
-        if (a[key] > b[key]) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
+    const sortByDate = (dateA, dateB) => {
+  const aTime = new Date(dateA).getTime()
+  const bTime = new Date(dateB).getTime()
+  return newSortDirection === 'asc' ? aTime - bTime : bTime - aTime
+}
 
-        if (a[key] < b[key]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      } else {
-        if (a[key][child] > b[key][child]) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
+const sortByValue = (a, b) => {
+  const valA = typeof a === 'string' ? a.toLowerCase() : a
+  const valB = typeof b === 'string' ? b.toLowerCase() : b
 
-        if (a[key][child] < b[key][child]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      }
-    })
+  if (valA > valB) return newSortDirection === 'asc' ? 1 : -1
+  if (valA < valB) return newSortDirection === 'asc' ? -1 : 1
+  return 0
+}
+   const sorted = [...data].sort((a, b) => {
+  if (key === 'updated_at') return sortByDate(a.updated_at, b.updated_at)
+
+  const valA = child ? a[key]?.[child] : a[key]
+  const valB = child ? b[key]?.[child] : b[key]
+
+  return sortByValue(valA, valB)
+})
+
     setAuditLogData({ ...auditLogData, data: sorted })
     setSortDirection(newSortDirection)
     setSortBy(key)

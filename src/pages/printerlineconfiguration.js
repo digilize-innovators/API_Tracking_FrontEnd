@@ -1,8 +1,5 @@
 'use-client'
-import { Button, Paper, TableContainer } from '@mui/material'
-import Box from '@mui/material/Box'
-import Grid2 from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
+import { Button, Paper, TableContainer,Box,Grid2,Typography } from '@mui/material'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -51,7 +48,7 @@ const Index = () => {
   )
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const searchBarRef = useRef()
-  const [allPrinterLineConfigurationData, setAllPrinterLineConfiguration] = useState({ data: [], index: 0 })
+  const [allPrinterLineConfigurationData, setAllPrinterLineConfigurationData] = useState({ data: [], index: 0 })
   const [formData, setFormData] = useState()
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
@@ -159,7 +156,7 @@ const Index = () => {
         data.audit_log = {
           audit_log: true,
           remarks:
-            esignRemark?.length > 0 ? esignRemark : `Printer Line Configuration added - ${formData.printerLineName}`,
+            esignRemark?.length > 0 ? esignRemark : `Printer Line Configuration added - ${formData?.printerLineName}`,
           authUser
         }
       }
@@ -449,7 +446,7 @@ const Index = () => {
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
                   {apiAccess.addApiAccess && (
                     <Box className='mx-2'>
-                      <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                      <Button variant='contained' className='py-2' onClick={handleOpenModal} >
                         <span>
                           <IoMdAdd />
                         </span>
@@ -470,7 +467,7 @@ const Index = () => {
                   tableHeaderData={tableHeaderData}
                   pendingAction={pendingAction}
                   editable={apiAccess.editApiAccess}
-                  setAllPrinterLineConfiguration={setAllPrinterLineConfiguration}
+                  setAllPrinterLineConfiguration={setAllPrinterLineConfigurationData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}

@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import {
   BarChart,
@@ -101,5 +102,8 @@ const TopSellingProductsData = ({ data }) => {
     </div>
   );
 };
+TopSellingProductsData.propTypes={
+  data:PropTypes.any
+}
 
 export default TopSellingProductsData;

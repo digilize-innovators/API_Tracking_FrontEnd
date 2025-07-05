@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import {
   BarChart,
@@ -105,5 +106,7 @@ const TopPerformingLocationsData = ({ data }) => {
     </div>
   );
 };
-
+TopPerformingLocationsData.propTypes={
+  data:PropTypes.any
+}
 export default TopPerformingLocationsData;

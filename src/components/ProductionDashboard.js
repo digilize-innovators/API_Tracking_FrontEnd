@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { Box, Button, Typography, Grid2 } from '@mui/material'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import moment from 'moment'
+import PropTypes from 'prop-types'
 
 export default function ExcelLikeDashboard({ data }) {
   const currentPrintingStatus = data?.printerLineStatus || data || []
@@ -162,7 +163,7 @@ export default function ExcelLikeDashboard({ data }) {
             <img
               src={lineOrders[0]?.users_printingStatus_updated_byTousers?.profile_photo || '/images/avatars/1.png'}
               crossOrigin='anonymous'
-              //alt="Profile"
+              alt="Profile"
               style={{
                 width: '110px',
                 height: '110px',
@@ -192,6 +193,9 @@ export default function ExcelLikeDashboard({ data }) {
     </>
   )
 }
+ExcelLikeDashboard.propTypes={
+  data:PropTypes.any
+}
 
 const CurrentOrder = ({ selectedLine }) => {
   console.log('CurrentOrder received selectedLine:', selectedLine)
@@ -214,7 +218,6 @@ const CurrentOrder = ({ selectedLine }) => {
   console.log('Current item data:', currentItem)
 
   return (
-    <>
       <Grid2 container spacing={2} sx={{ mb: 2, pl: 4, py: 3 }}>
         <Grid2 item size={12}>
           <Typography variant='subtitle2' color='text.secondary' fontWeight='bold' fontSize='1.3rem'>
@@ -272,6 +275,8 @@ const CurrentOrder = ({ selectedLine }) => {
           </Typography>
         </Grid2>
       </Grid2>
-    </>
   )
+}
+CurrentOrder.propTypes={
+  selectedLine:PropTypes.any
 }

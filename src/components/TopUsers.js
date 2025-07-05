@@ -63,7 +63,7 @@ const TopUserShow = ({ data }) => {
             <TableBody>
               {userData?.map((item, index) => (
                 <TableRow
-                  key={index}
+                  key={item.user_id}
                   hover
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
@@ -99,7 +99,7 @@ const TopUserShow = ({ data }) => {
           >
             {topUserData?.map((user, index) => (
               <Card
-                key={index}
+                key={user?.user_id}
                 sx={{
                   minWidth: 120,
                   maxWidth: 120,
@@ -126,7 +126,7 @@ const TopUserShow = ({ data }) => {
                   <img
                     src={user?.profile_photo || '/images/avatars/1.png'}
                     crossOrigin="anonymous" 
-                    // alt="/images/avtars/1.png"
+                    alt="/images/avtars/1.png"
                     style={{
                       width: '80px',
                       height: '80px',
@@ -148,5 +148,7 @@ const TopUserShow = ({ data }) => {
     </Card>
   );
 };
-
+TopUserShow.propTypes={
+  data:PropTypes.any
+}
 export default TopUserShow;
