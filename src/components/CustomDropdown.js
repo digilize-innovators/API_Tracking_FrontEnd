@@ -1,8 +1,8 @@
 import { FormControl, FormHelperText, InputLabel, MenuItem, Select } from '@mui/material';
 import { Controller } from 'react-hook-form';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types'
 
-const CustomDropdown = ({ name, label, control, options, disabled}) => {
+const CustomDropdown = ({ name, label, control, options, disabled=false}) => {
   
   return (
     <Controller
@@ -26,7 +26,11 @@ const CustomDropdown = ({ name, label, control, options, disabled}) => {
   );
 };
 
-CustomDropdown.defaultProps = {
-  disabled: false
+CustomDropdown.propTypes = {
+  name:PropTypes.any, 
+  label:PropTypes.any,
+   control:PropTypes.any, 
+   options:PropTypes.any,
+   disabled:PropTypes.any
 }
 export default CustomDropdown;

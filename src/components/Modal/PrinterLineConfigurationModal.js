@@ -10,6 +10,9 @@ import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
 import { api } from 'src/utils/Rest-API'
 import { useRouter } from 'next/router'
+import PropTypes from 'prop-types'
+import isValidIPv4 from 'src/@core/utils/isValidIPv4'
+
 
 const PrinterLineCongSchema = yup.object().shape({
   printerLineName: yup
@@ -58,11 +61,7 @@ const PrinterLineCongSchema = yup.object().shape({
 
   linePcAddress: yup
     .string()
-    .matches(
-      /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/,
-      'Invalid IP address format'
-    )
-    .required("Line PC Address can't be empty")
+    .test("is-valid-ipv4", "Invalid IPv4 address", (value) => isValidIPv4(value)),
 })
 
 function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubmitForm }) {
@@ -72,7 +71,6 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     setValue,
     watch,
     reset,
-    formState: { errors }
   } = useForm({
     resolver: yupResolver(PrinterLineCongSchema),
     defaultValues: {
@@ -94,7 +92,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   const [allAreaCategory, setAllAreaCategory] = useState([])
   const [allArea, setAllArea] = useState([])
   const [allLocation, setAllLocation] = useState([])
-  const [allPrinterCategory, setAllPrinterCatergory] = useState([])
+  const [allPrinterCategory, setAllPrinterCategory] = useState([])
   const [allPrinter, setAllPrinter] = useState([])
   const router = useRouter()
   const [printerCategoryId, setPrinterCategoryId] = useState('')
@@ -249,7 +247,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
       const res = await api('/printercategory?limit=-1&history_latest=true', {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
-        setAllPrinterCatergory(res.data.data.printerCategories)
+        setAllPrinterCategory(res.data.data.printerCategories)
       } else {
         console.log('Error to get all printer category ', res.data)
         if (res.data.code === 401) {
@@ -356,7 +354,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
       open={open}
       onClose={handleClose}
       data-testid='modal'
-      role='dialog'
+
       aria-labelledby='modal-modal-title'
       aria-describedby='modal-modal-description'
     >
@@ -454,6 +452,12 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
       </Box>
     </Modal>
   )
+}
+PrinterLineConfigurationModal.propTypes={
+  open:PropTypes.any,
+  handleClose:PropTypes.any,
+  editData:PropTypes.any,
+  handleSubmitForm:PropTypes.any
 }
 
 export default PrinterLineConfigurationModal

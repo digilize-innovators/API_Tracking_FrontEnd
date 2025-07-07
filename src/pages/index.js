@@ -10,24 +10,18 @@ import {
   styled,
   TextField,
   Button,
-  Box, Card, CardContent
+  Box,  CardContent
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import ProtectedRoute from '../components/ProtectedRoute'
-import { jwt_secret } from '../../constants'
-import { parseCookies } from 'nookies'
-import { verify } from 'jsonwebtoken'
 import dynamic from 'next/dynamic'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
-import PieChartWithYearValues from 'src/components/PieChartWithYearValues'
 import { api } from 'src/utils/Rest-API'
 import SnackbarAlert from 'src/components/SnackbarAlert'
 import Barchart from 'src/components/BarChart'
 import Areachart from 'src/components/AreaChart'
-// import Linechart from 'src/components/LineChart';
-// import Piechart from 'src/components/PieChart';
 import Widget from 'src/components/Widget/Widget';
 import moment from 'moment';
 import Featured from 'src/components/Featured';
@@ -91,7 +85,7 @@ const Dashboard = () => {
   const [InwardedOrdersData, setInwardedOrdersData] = useState([]);
   const [topSellingProductsData, setTopSellingProductsData] = useState([]);
   const [casesDispatchedData, setCasesDispatchedData] = useState([]);
-  const [topPerformingLocations, setTopPerformingLocationsData] = useState([]);
+  const [topPerformingLocations, setTopPerformingLocations] = useState([]);
   const [casesInwardedData, setCasesInwardedData] = useState([]);
 
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
@@ -176,7 +170,6 @@ const Dashboard = () => {
       else {
         const res = await api(`/dashboard/topproduct?&${params.toString()}`, {}, 'get', true)
         console.log("GET top Products APIs RESPONSE :->", res);
-        // console.log("GET top Products APIs RESPONSE :->", res?.data.data);
         setTopProductsData(res?.data.data)
 
         setAlertData({
@@ -341,7 +334,7 @@ const Dashboard = () => {
       else {
         const res = await api(`/dashboard/topPerformingLocations?&${params.toString()}`, {}, 'get', true)
         console.log('RES of TopPerformingLocations:', res.data);
-        setTopPerformingLocationsData(res?.data?.data)
+        setTopPerformingLocations(res?.data?.data)
         setAlertData({
           ...alertData,
           openSnackbar: true,
@@ -545,7 +538,6 @@ const Dashboard = () => {
   const getCodeGenerationData = async () => {
     console.log("@@@@");
     try {
-      // const param = {}
       const params = new URLSearchParams();
       let errorMessage = '';
       switch (timePeriod) {
@@ -595,7 +587,6 @@ const Dashboard = () => {
         const res = await api(`/dashboard/codegeneration?&${params.toString()}`, {}, 'get', true)
         console.log("codegeneration RESPONSE :->", res);
 
-        // console.log(res?.data.data);
 
         setCodeGenerationData(res?.data.data)
 
@@ -615,7 +606,6 @@ const Dashboard = () => {
 
   const getBatchData = async () => {
     try {
-      // const param = {}
       const params = new URLSearchParams();
       let errorMessage = '';
       switch (timePeriod) {
@@ -694,16 +684,6 @@ const Dashboard = () => {
     }
   }
 
-  // const handleCustomStartDateChange = date => {
-  //   //setCustomStartDate(date);
-  //   setCustomDate({ ...customDate, customStartDate: date })
-  //   console.log('Custom Start Date:', date)
-  // }
-
-  // const handleCustomEndDateChange = date => {
-  //   setCustomDate({ ...customDate, customEndDate: date })
-  //   console.log('Custom End Date:', date)
-  // }
 
   const handleMonthlyStartYearChange = event => {
     console.log(new Date(event).getMonth())
@@ -731,18 +711,7 @@ const Dashboard = () => {
     await getCasesInwardedData()
   }
 
-  const handleCustomSubmit = async () => {
-    console.log('custom submit btn press..')
-    await getBatchData()
-    await getCodeGenerationData()
-    await getTopProductsData()
-    await getTopUsersData()
-    await getOrdersInwardedData()
-    await getTopSellingProductsData()
-    await getCasesDispatched()
-    await getTopPerformingLocationsData()
-    await getCasesInwardedData()
-  };
+
 
   useEffect(() => {
     if (timePeriod != undefined && timePeriod === "yearly") {
@@ -781,35 +750,11 @@ const Dashboard = () => {
               >
                 <FormControlLabel value='yearly' control={<StyledRadio />} label='Yearly' />
                 <FormControlLabel value='monthly' control={<StyledRadio />} label='Monthly' />
-                {/* <FormControlLabel value='custom' control={<StyledRadio />} label='Custom' /> */}
               </RadioGroup>
             </FormControl>
           </Grid2>
 
-          {/* {timePeriod === 'custom' && (
-            <Grid2 item xs={12} sx={{ mt: 2, mb: 4 }}>
-              <Grid2 container spacing={3}>
-                <Grid2 item xs={12} sm={6} md={4}>
-                  <DatePicker
-                    label='Start Date'
-                    onChange={handleCustomStartDateChange}
-                    renderInput={params => <TextField {...params} fullWidth />}
-                  />
-                </Grid2>
-                <Grid2 item xs={12} sm={6} md={4}>
-                  <DatePicker
-                    label='End Date'
-                    onChange={handleCustomEndDateChange}
-                    renderInput={params => <TextField {...params} fullWidth />}
-                  />
-                </Grid2>
-                <Button onClick={handleCustomSubmit} variant='contained'>
-                  Submit
-                </Button>
-              </Grid2>
-            </Grid2>
-          )} */}
-
+       
           {timePeriod === 'monthly' && (
             <Grid2 item xs={12} sx={{ mt: 2, mb: 4 }}>
               <Grid2 container spacing={3} alignItems='center'>
@@ -1010,7 +955,6 @@ const Dashboard = () => {
               alignItems: 'stretch',
               justifyContent: 'space-between',
               flexWrap: 'wrap',
-              mt: 6,
             }}
           >
             <CardContent
@@ -1024,7 +968,6 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              {/* <Piechart data={batchData} /> */}
               <TopPerformingLocationsData data={topPerformingLocations} />
             </CardContent>
 
@@ -1119,11 +1062,9 @@ const Dashboard = () => {
                 p: 0,
               }}
             >
-              {/* <OrdersInwarded data={InwardedOrdersData} /> */}
             </CardContent>
           </Box>
 
-          {/* <PieChartWithYearValues Data={batchData} /> */}
 
         </Grid2>
 

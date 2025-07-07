@@ -32,10 +32,9 @@ const Index = () => {
   const { settings } = useSettings()
   const [openModal, setOpenModal] = useState(false)
   const [editData, setEditData] = useState({})
-  const [productData, setProduct] = useState({ data: [], index: 0 })
+  const [productData, setProductData] = useState({ data: [], index: 0 })
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [productImage, setProductImage] = useState('/images/avatars/p.png')
-  const [file, setFile] = useState('')
   const { setIsLoading } = useLoading()
   const { getUserData, removeAuthToken } = useAuth()
   const [userDataPdf, setUserDataPdf] = useState()
@@ -142,7 +141,6 @@ const Index = () => {
   const resetForm = () => {
     setProductImage('/images/avatars/p.png')
     setProductImage('/images/avatars/p.png')
-    setFile('')
     setEditData({})
   }
 
@@ -324,16 +322,16 @@ const Index = () => {
     console.log('row', row)
   }
   const addProduct = async esign_status => {
-    const uploadRes = await uploadFile(formData.file, '/upload/productImage')
+    const uploadRes = await uploadFile(formData?.file, '/upload/productImage')
     if (!uploadRes?.success) {
       setAlertData({ ...alertData, type: 'error', message: 'File upload failed', openSnackbar: true })
       return
     }
     try {
-      delete formData['file']
+      delete formData?.['file']
       const data = {
         ...formData,
-        mrp: formData.mrp === '' ? null : formData.mrp,
+        mrp: formData?.mrp === '' ? null : formData?.mrp,
         pallet_size: formData?.pallet_size?.toString(),
         productImage: uploadRes?.url.split('/').pop()
       }
@@ -503,7 +501,7 @@ const Index = () => {
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
                   {apiAccess.addApiAccess && (
                     <Box className='mx-2'>
-                      <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                      <Button variant='contained' sx={{py:2}} onClick={handleOpenModal} >
                         <span>
                           <IoMdAdd />
                         </span>
@@ -521,8 +519,8 @@ const Index = () => {
               <TableContainer component={Paper}>
                 <TableProduct
                   tableHeaderData={tableHeaderData}
-                  setProduct={setProduct}
-                  pendingAction={pendingAction}
+                  setProduct={setProductData}
+                  pendingAction={pendingAction}s
                   handleUpdate={handleUpdate}
                   editable={apiAccess.editApiAccess}
                   handleAuthCheck={handleAuthCheck}

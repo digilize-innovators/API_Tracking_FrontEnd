@@ -1,9 +1,6 @@
 
 import React from 'react';
-import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
-import Select from '@mui/material/Select'
-import { MenuItem } from '@mui/material'
+import {InputLabel,Select,MenuItem,FormControl } from '@mui/material'
 import PropTypes from 'prop-types'
 
 const EsignStatusDropdown = ({ tableHeaderData, setTableHeaderData }) => {
@@ -14,7 +11,6 @@ const EsignStatusDropdown = ({ tableHeaderData, setTableHeaderData }) => {
         <FormControl className='w-25'>
             <InputLabel id='esign-status'>E-Sign</InputLabel>
             <Select
-                role="combobox"
                 labelId='esign-status'
                 id='esign-status-id'
                 value={tableHeaderData.esignStatus}
@@ -35,8 +31,8 @@ EsignStatusDropdown.propTypes = {
     setTableHeaderData: PropTypes.func,
 };
 
-EsignStatusDropdown.defaultProps = {
-    esignStatus: ''
-}
+// EsignStatusDropdown.defaultProps = {
+//     esignStatus: ''
+// }
 
 export default EsignStatusDropdown;

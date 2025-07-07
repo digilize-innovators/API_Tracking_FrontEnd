@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
+import React from 'react';
+import {Box,Card,CardContent,Typography} from '@mui/material';
 import { MdOutlinePersonOutline, MdOutlineBatchPrediction } from "react-icons/md";
 import { AiOutlineProduct, } from 'react-icons/ai'
 import { TfiLayoutMediaRightAlt } from 'react-icons/tfi'
 import { MdProductionQuantityLimits } from "react-icons/md";
 import Link from 'next/link';
+import PropTypes from 'prop-types';
 
 const Widget = ({ data }) => {
   console.log("data", data)
@@ -72,7 +70,7 @@ const Widget = ({ data }) => {
       pb: 2,
     }}>
       {metrics.map((metric, index) => (
-        <Card key={index} sx={{
+        <Card key={metric?.title} sx={{
           borderRadius: '0px',
           boxShadow: '2px 4px 10px 1px rgba(201, 201, 201, 0.47)',
           backgroundColor: '#fff'
@@ -149,5 +147,7 @@ const Widget = ({ data }) => {
 
   );
 }
-
+Widget.propTypes={
+  data:PropTypes.any
+}
 export default Widget;

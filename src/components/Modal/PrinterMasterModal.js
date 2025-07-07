@@ -10,6 +10,8 @@ import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useRouter } from 'next/router'
 import { useAuth } from 'src/Context/AuthContext'
+import PropTypes from 'prop-types'
+
 const PrinterMasterSchema = yup.object().shape({
   printerId: yup
     .string()
@@ -34,7 +36,7 @@ const PrinterMasterSchema = yup.object().shape({
     .string()
     .trim()
     .required("Printer IP can't be empty")
-    .matches(/^([0-9]{1,3}\.){3}[0-9]{1,3}$/, 'Invalid IP address format')
+.matches(/^(\d{1,3}\.){3}\d{1,3}$/, 'Invalid IP address format')
 })
 
 function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
@@ -79,7 +81,6 @@ function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
   const {
     control,
     handleSubmit,
-    formState: { errors },
     reset
   } = useForm({
     resolver: yupResolver(PrinterMasterSchema),
@@ -106,7 +107,6 @@ function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
     <Modal
       open={open}
       onClose={onClose}
-      role='dialog'
       aria-labelledby='modal-modal-title'
       aria-describedby='modal-modal-description'
     >
@@ -153,5 +153,10 @@ function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
     </Modal>
   )
 }
-
+PrinterMasterModal.propTypes={
+  open:PropTypes.any,
+  onClose:PropTypes.any,
+  editData:PropTypes.any,
+  handleSubmitForm:PropTypes.any
+}
 export default PrinterMasterModal

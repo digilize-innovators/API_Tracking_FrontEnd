@@ -15,6 +15,7 @@ import {
   Paper
 } from "@mui/material";
 import { useSettings } from 'src/@core/hooks/useSettings';
+import PropTypes from "prop-types";
 
 const TopUserShow = ({ data }) => {
   const { settings } = useSettings();

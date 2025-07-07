@@ -5,6 +5,9 @@ import CustomTextField from "../CustomTextField";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useEffect } from "react";
+import PropTypes from 'prop-types'
+import isValidIPv4 from "src/@core/utils/isValidIPv4";
+
 
 const validationSchema = yup.object().shape({
     name: yup.string()
@@ -16,10 +19,7 @@ const validationSchema = yup.object().shape({
     ip: yup.string()
         .trim()
         .required("IP Address can't be empty")
-        .matches(
-            /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/,
-            "Provide a valid IP address"
-        ),
+        .test("is-valid-ipv4", "Invalid IPv4 address", (value) => isValidIPv4(value)),
 
     port: yup.number()
         .typeError("Port Number must be a valid number")
@@ -31,7 +31,7 @@ const validationSchema = yup.object().shape({
 
 
 function ControlPanelModal({ openModal, handleClose, editData, handleSubmitForm }) {
-    const { handleSubmit, control, formState: { errors }, reset } = useForm({
+    const { handleSubmit, control, reset } = useForm({
         resolver: yupResolver(validationSchema),
         defaultValues: {
             port: editData?.port || '',
@@ -64,8 +64,7 @@ function ControlPanelModal({ openModal, handleClose, editData, handleSubmitForm 
             aria-labelledby='modal-modal-title'
             aria-describedby='modal-modal-description'
             data-testid="modal"
-            role='dialog'
-        >
+             >
 
             <Box sx={style}>
                 <Typography variant='h4' className='my-2'>
@@ -102,5 +101,11 @@ function ControlPanelModal({ openModal, handleClose, editData, handleSubmitForm 
         </Modal >
     )
 }
+ControlPanelModal.propTypes={
+ openModal:PropTypes.any,
+ handleClose:PropTypes.any,
+ editData:PropTypes.any,
+ handleSubmitForm:PropTypes.any
 
+}
 export default ControlPanelModal

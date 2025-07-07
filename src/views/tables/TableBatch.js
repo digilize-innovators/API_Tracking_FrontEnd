@@ -27,8 +27,6 @@ import { useSettings } from 'src/@core/hooks/useSettings'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useRouter } from 'next/router'
 import { api } from 'src/utils/Rest-API'
-import { isNumber } from '@mui/x-data-grid/internals'
-
 const Row = ({
   row,
   index,
@@ -255,7 +253,8 @@ Row.propTypes = {
   config: PropTypes.any,
   handleAuthCheck: PropTypes.any,
   handleUpdate: PropTypes.any,
-  apiAccess: PropTypes.any
+  apiAccess: PropTypes.any,
+  isBatchCloud:PropTypes.any
 }
 const TableBatch = ({
   handleUpdate,

@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import {
   BarChart,
@@ -81,5 +82,7 @@ const OrdersInwarded = ({ data }) => {
     </div>
   );
 };
-
+OrdersInwarded.propTypes={
+  data:PropTypes.any
+}
 export default OrdersInwarded;

@@ -1,14 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import Box from '@mui/material/Box'
-import Switch from '@mui/material/Switch'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Button from '@mui/material/Button'
-import Dialog from '@mui/material/Dialog'
-import DialogActions from '@mui/material/DialogActions'
-import DialogContent from '@mui/material/DialogContent'
-import Radio from '@mui/material/Radio'
-import RadioGroup from '@mui/material/RadioGroup'
-import FormControl from '@mui/material/FormControl'
+import { Box, Switch, FormControlLabel, Button, Dialog, DialogActions, DialogContent, Radio, RadioGroup, FormControl } from '@mui/material'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import Head from 'next/head'
@@ -135,9 +126,6 @@ const Index = () => {
   }
 
   const handleCloseGenerateDialog = () => {
-    // setCodeLength('');
-    // setProductCodeLength('');
-    // setGenerateCode({ ...generateCode, length: '', productCodeLength: '', errorMessage: '', isError: false, errorMessageProduct: '', isErrorProduct: false });
     setOpenGenerateDialog(false)
   }
 
@@ -150,7 +138,6 @@ const Index = () => {
     setCodeLength(event.target.value)
     if (intVal >= 6 && intVal <= 8) {
       setGenerateCode({ ...generateCode, length: intVal, errorMessage: '', isError: false })
-      return
     } else {
       setGenerateCode({
         ...generateCode,
@@ -166,7 +153,6 @@ const Index = () => {
     setProductCodeLength(event.target.value)
     if (intVal >= 2 && intVal <= 4) {
       setGenerateCode({ ...generateCode, productCodeLength: intVal, errorMessageProduct: '', isErrorProduct: false })
-      return
     } else {
       setGenerateCode({
         ...generateCode,
@@ -263,7 +249,6 @@ const Index = () => {
                 onChange={handleEsignStatusChange}
                 name='esignStatusToggle'
                 color='primary'
-                role='button'
               />
             }
             label='Enable eSignStatus'
@@ -277,7 +262,6 @@ const Index = () => {
                 onChange={handleAuditLogsChange}
                 name='auditLogsToggle'
                 color='primary'
-                role='button'
               />
             }
             label='Enable Audit Logs'

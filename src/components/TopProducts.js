@@ -10,6 +10,8 @@ import {
   LabelList,
   Legend,
 } from 'recharts';
+import PropTypes from 'prop-types';
+
 
 const TopProductShow = ({ data }) => {
   console.log("Top 10 Products :=>", data);
@@ -132,5 +134,8 @@ const TopProductShow = ({ data }) => {
     </div>
   );
 };
+TopProductShow.propTypes={
+  data:PropTypes.any
+}
 
 export default TopProductShow;

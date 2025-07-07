@@ -200,7 +200,9 @@ Row.propTypes = {
   historyData: PropTypes.any,
   config: PropTypes.any,
   handleAuthCheck: PropTypes.any,
-  apiAccess: PropTypes.any
+  apiAccess: PropTypes.any,
+  handleOpenModal2:PropTypes.any
+  
 }
 
 const TableCodeGeneration = ({
@@ -276,33 +278,39 @@ const TableCodeGeneration = ({
       return acc?.[part]
     }, obj)
   }
-
-  const handleSort = path => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data = codeRequestData?.data || []
-
-    const sorted = [...data].sort((a, b) => {
-      if (path == 'updated_at') {
-        const dateA = new Date(a.updated_at)
-        const dateB = new Date(b.updated_at)
-        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
-      }
-      const aValue = getValueByPath(a, path)
-      const bValue = getValueByPath(b, path)
-      if (isNumber(aValue)) {
-        if (aValue > bValue) return newSortDirection === 'asc' ? 1 : -1
-        if (aValue < bValue) return newSortDirection === 'asc' ? -1 : 1
-        return 0
-      }
-
-      if (aValue.toLowerCase() > bValue.toLowerCase()) return newSortDirection === 'asc' ? 1 : -1
-      if (aValue.toLowerCase() < bValue.toLowerCase()) return newSortDirection === 'asc' ? -1 : 1
-      return 0
-    })
-    setCodeRequestData({ ...codeRequestData, data: sorted })
-    setSortDirection(newSortDirection)
-    setSortBy(path)
+  const compareValues = (aValue, bValue, direction) => {
+  if (isNumber(aValue) && isNumber(bValue)) {
+    return direction === 'asc' ? aValue - bValue : bValue - aValue;
   }
+
+  const aStr = (aValue ?? '').toString().toLowerCase();
+  const bStr = (bValue ?? '').toString().toLowerCase();
+
+  if (aStr > bStr) return direction === 'asc' ? 1 : -1;
+  if (aStr < bStr) return direction === 'asc' ? -1 : 1;
+  return 0;
+};
+
+ const handleSort = path => {
+  const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+  const data = codeRequestData?.data || [];
+
+  const sorted = [...data].sort((a, b) => {
+    if (path === 'updated_at') {
+      const dateA = new Date(a.updated_at);
+      const dateB = new Date(b.updated_at);
+      return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+    }
+
+    const aValue = getValueByPath(a, path);
+    const bValue = getValueByPath(b, path);
+    return compareValues(aValue, bValue, newSortDirection);
+  });
+
+  setCodeRequestData({ ...codeRequestData, data: sorted });
+  setSortDirection(newSortDirection);
+  setSortBy(path);
+};
 
   return (
     <CustomTable
