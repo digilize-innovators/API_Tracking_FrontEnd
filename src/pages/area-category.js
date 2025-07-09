@@ -226,116 +226,124 @@ const Index = () => {
     setEditData(item)
     setFormData({ ...formData, areaCategoryName: item.area_category_name })
   }
-  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-    console.log('handleAuthResult 02', config?.userId, user.user_id)
-    const resetState = () => {
-      setApproveAPI({
-        approveAPIName: '',
-        approveAPImethod: '',
-        approveAPIEndPoint: ''
-      })
-
-      setEsignDownloadPdf(false)
-      setAuthModalOpen(false)
-    }
-    if (!isAuthenticated) {
-      setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' })
-      return
-    }
-    const handleApproverActions = async () => {
-      const data = {
-        modelName: 'areacategory',
-        esignStatus,
-        id: eSignStatusId,
-        name: auditLogMark,
-        audit_log: config?.config?.audit_logs
-          ? {
-              user_id: user.userId,
-              authUser: user.user_id,
-              user_name: user.userName,
-              remarks: remarks.length > 0 ? remarks : `area category ${esignStatus} - ${auditLogMark}`
-            }
-          : {}
-      }
-      if (esignStatus === 'approved' && esignDownloadPdf) {
-        setOpenModalApprove(false)
-        resetState()
-        downloadPdf(tableData, tableHeaderData, tableBody, allAreaCategoryData.data, user)
-        if (config?.config?.audit_logs) {
-          const data = {}
-          data.audit_log = {
-            audit_log: true,
-            performed_action: 'Export report of areaCategory ',
-            remarks: remarks?.length > 0 ? remarks : `Area category export report `,
-            authUser: user
-          }
-          await api(`/auditlog/`, data, 'post', true)
-        }
-
-        return
-      }
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      if (res.data) {
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: res.data.code === 200 ? 'success' : 'error',
-          message: res.data.message
-        })
-      }
-
-      setPendingAction(true)
-      if (res?.data.esign_status === 'rejected') {
-        setOpenModalApprove(false)
-        resetState()
-      }
-    }
-    const handleCreatorActions = () => {
-      if (esignStatus === 'rejected') {
-        setAuthModalOpen(false)
-        setOpenModalApprove(false)
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: 'error',
-          message: 'Access denied for this user.'
-        })
-      }
-      if (esignStatus === 'approved') {
-        if (esignDownloadPdf) {
-          setOpenModalApprove(true)
-        } else if (!isApprover && approveAPI.approveAPIName === 'area-category-approve') {
-          setAlertData({
-            ...alertData,
-            openSnackbar: true,
-            type: 'error',
-            message: 'Same user cannot Approve'
-          })
-        } else {
-          setAuthUser(user)
-          setEsignRemark(remarks)
-          setPendingAction(editData?.id ? 'edit' : 'add')
-        }
-      }
-    }
-    if (!isApprover && esignDownloadPdf) {
-      setAlertData({
-        ...alertData,
-        openSnackbar: true,
-        type: 'error',
-        message: 'Access denied: Download pdf disabled for this user.'
-      })
-      resetState()
-      return
-    }
-    if (isApprover) {
-      await handleApproverActions()
-    } else {
-      handleCreatorActions()
-    }
-    resetState()
+ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+  if (!isAuthenticated) {
+    return handleAuthenticationFailure();
   }
+
+  resetState();
+
+  if (isApprover) {
+    await handleApproverActions(user, esignStatus, remarks);
+  } else {
+    handleCreatorActions(user, esignStatus, remarks);
+  }
+
+  resetState();
+};
+
+const handleAuthenticationFailure = () => {
+  setAlertData({
+    openSnackbar: true,
+    type: 'error',
+    message: 'Authentication failed, Please try again.'
+  });
+};
+
+const resetState = () => {
+  setApproveAPI({
+    approveAPIName: '',
+    approveAPImethod: '',
+    approveAPIEndPoint: ''
+  });
+
+  setEsignDownloadPdf(false);
+  setAuthModalOpen(false);
+};
+
+const handleApproverActions = async (user, esignStatus, remarks) => {
+  if (esignStatus === 'approved' && esignDownloadPdf) {
+    setOpenModalApprove(false);
+    downloadPdf(tableData, tableHeaderData, tableBody, allAreaCategoryData.data, user);
+    await logAuditAction(user, remarks);
+    return;
+  }
+
+  const data = buildApproverData(user, esignStatus, remarks);
+  const res = await api('/esign-status/update-esign-status', data, 'patch', true);
+
+  setAlertData({
+    openSnackbar: true,
+    type: res.data.code === 200 ? 'success' : 'error',
+    message: res.data.message
+  });
+  setPendingAction(true);
+
+  if (res?.data.esign_status === 'rejected') {
+    setOpenModalApprove(false);
+    resetState();
+  }
+};
+
+const buildApproverData = (user, esignStatus, remarks) => ({
+  modelName: 'areacategory',
+  esignStatus,
+  id: eSignStatusId,
+  name: auditLogMark,
+  audit_log: config?.config?.audit_logs
+    ? {
+        user_id: user.userId,
+        authUser: user.user_id,
+        user_name: user.userName,
+        remarks: remarks.length > 0 ? remarks : `area category ${esignStatus} - ${auditLogMark}`
+      }
+    : {}
+});
+
+const logAuditAction = async (user, remarks) => {
+  if (config?.config?.audit_logs) {
+    const data = {
+      audit_log: {
+        audit_log: true,
+        performed_action: 'Export report of areaCategory',
+        remarks: remarks.length > 0 ? remarks : 'Area category export report',
+        authUser: user
+      }
+    };
+    await api('/auditlog/', data, 'post', true);
+  }
+};
+
+const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
+  if (esignStatus === 'rejected') {
+    setAuthModalOpen(false);
+    setOpenModalApprove(false);
+    setAlertData({
+      openSnackbar: true,
+      type: 'error',
+      message: 'Access denied for this user.'
+    });
+  } else if (esignStatus === 'approved') {
+    handleApprovalForCreator(user, remarks,isApprover);
+  }
+};
+
+const handleApprovalForCreator = (user, remarks,isApprover) => {
+  if (esignDownloadPdf) {
+    setOpenModalApprove(true);
+  } else if (!isApprover && approveAPI.approveAPIName === 'area-category-approve') {
+    setAlertData({
+      openSnackbar: true,
+      type: 'error',
+      message: 'Same user cannot Approve'
+    });
+  } else {
+    setAuthUser(user);
+    setEsignRemark(remarks);
+    setPendingAction(editData?.id ? 'edit' : 'add');
+  }
+};
+
   const handleAuthCheck = async row => {
     setApproveAPI({
       approveAPIName: 'area-category-approve',

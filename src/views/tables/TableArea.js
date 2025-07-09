@@ -66,10 +66,10 @@ const Row = ({
           {row?.area_name}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.area_category.history[0].area_category_name}
+          {row.area_category.history[0]?.area_category_name}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.location.history[0].location_name}
+          {row.location.history[0]?.location_name}
         </TableCell>
 
         {config?.config?.esign_status === true && (

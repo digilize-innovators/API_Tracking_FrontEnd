@@ -126,6 +126,7 @@
     "puppeteer": "^23.4.1",
     "react-test-renderer": "^18.3.1",
     "react-testing-library": "^8.0.1",
+    "sonarqube-scanner": "^4.3.0",
     "stylelint": "^16.9.0",
     "stylelint-config-standard": "^36.0.1",
     "whatwg-fetch": "^3.6.20"
