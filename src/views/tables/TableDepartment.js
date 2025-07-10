@@ -36,6 +36,7 @@ import DesignationModal from 'src/components/Modal/DesignationModal'
 import downloadPdf from 'src/utils/DownloadPdf'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { useRouter } from 'next/router'
+import { sortData } from 'src/utils/sortData'
 
 const ChevronIcon = ({ isOpen }) => (isOpen ? <ChevronUp /> : <ChevronDown />)
 ChevronIcon.propTypes = {
@@ -725,36 +726,15 @@ const TableDepartment = ({
       setIsLoading(false)
     }
   }
-  const handleSort = (key, child) => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data = departmentData?.data
-    const sortByDate = (dateA, dateB) => {
-  const aTime = new Date(dateA).getTime()
-  const bTime = new Date(dateB).getTime()
-  return newSortDirection === 'asc' ? aTime - bTime : bTime - aTime
-}
+ const handleSort = (path) => {
+   const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+   const data = departmentData?.data || [];
+ 
+   const sortedData = sortData(data, path, newSortDirection);
 
-const sortByValue = (a, b) => {
-  const valA = typeof a === 'string' ? a.toLowerCase() : a
-  const valB = typeof b === 'string' ? b.toLowerCase() : b
-
-  if (valA > valB) return newSortDirection === 'asc' ? 1 : -1
-  if (valA < valB) return newSortDirection === 'asc' ? -1 : 1
-  return 0
-}
-   const sorted = [...data].sort((a, b) => {
-  if (key === 'updated_at') return sortByDate(a.updated_at, b.updated_at)
-
-  const valA = child ? a[key]?.[child] : a[key]
-  const valB = child ? b[key]?.[child] : b[key]
-
-  return sortByValue(valA, valB)
-})
-
-
-    setDepartmentData({ ...departmentData, data: sorted })
+    setDepartmentData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
-    setSortBy(key)
+    setSortBy(path)
   }
   const handleChangePage = (event, newPage) => {
     setPage(newPage)

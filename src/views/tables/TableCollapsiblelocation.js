@@ -24,6 +24,7 @@ import moment from 'moment'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { api } from 'src/utils/Rest-API'
+import { sortData } from 'src/utils/sortData'
 
 const Row = ({
   row,
@@ -237,26 +238,13 @@ const TableCollapsiblelocation = ({
     console.log('tableHeaderData.searchVal', tableHeaderData.searchVal)
   }, [tableHeaderData, rowsPerPage])
 
-  const handleSort = key => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data = locationData?.data || []
-    const sorted = data.sort((a, b) => {
-      if (key == 'updated_at') {
-        const dateA = new Date(a.updated_at)
-        const dateB = new Date(b.updated_at)
-        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
-      }
-      if (a[key].toLowerCase() > b[key].toLowerCase()) {
-        return newSortDirection === 'asc' ? 1 : -1
-      }
-      if (a[key].toLowerCase() < b[key].toLowerCase()) {
-        return newSortDirection === 'asc' ? -1 : 1
-      }
-      return 0
-    })
-    setLocationData({ ...locationData, data: sorted })
+   const handleSort = (path) => {
+     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+     const data = locationData?.data || [];
+     const sortedData = sortData(data, path, newSortDirection);
+    setLocationData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
-    setSortBy(key)
+    setSortBy(path)
   }
 
   useEffect(() => {

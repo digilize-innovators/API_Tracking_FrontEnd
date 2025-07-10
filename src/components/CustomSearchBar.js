@@ -1,8 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import Box from '@mui/material/Box';
-import { TextField, Button } from '@mui/material';
+import { TextField, Button,Box} from '@mui/material';
 import { IoMdSearch } from 'react-icons/io';
-import PropTypes from 'prop-types';
 
 const CustomSearchBar = forwardRef(({ handleSearchClick }, ref) => {
     const searchInputRef = useRef(null);
@@ -45,8 +43,5 @@ const CustomSearchBar = forwardRef(({ handleSearchClick }, ref) => {
     );
 });
 
-CustomSearchBar.propTypes = {
-    handleSearchClick: PropTypes.func.isRequired
-};
 
 export default CustomSearchBar;
