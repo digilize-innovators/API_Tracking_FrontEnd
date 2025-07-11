@@ -25,6 +25,7 @@ import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
+import { sortData } from 'src/utils/sortData'
 
 const Row = ({
   row,
@@ -234,26 +235,13 @@ const TableAreaCategory = ({
     }
   }
 
-  const handleSortByName = key => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const sorted = [...areaCategoryData.data].sort((a, b) => {
-      if (key === 'updated_at') {
-        const dateA = new Date(a.updated_at)
-        const dateB = new Date(b.updated_at)
-        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
-      }
-      if (a.area_category_name > b.area_category_name) {
-        return newSortDirection === 'asc' ? 1 : -1
-      }
-      if (a.area_category_name < b.area_category_name) {
-        return newSortDirection === 'asc' ? -1 : 1
-      }
-
-      return 0
-    })
-    setAreaCategoryData({ ...areaCategoryData, data: sorted })
+  const handleSort = (path) => {
+   const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+   const data = areaCategoryData?.data || [];
+   const sortedData = sortData(data, path, newSortDirection);
+    setAreaCategoryData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
-    setSortBy(key)
+    setSortBy(path)
   }
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
@@ -283,11 +271,11 @@ const TableAreaCategory = ({
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSortByName('Name')}
+                onClick={() => handleSort('area_category_name')}
               >
                 Area Category
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'Name', sortDirection)}
+                  {getSortIcon(sortBy, 'area_category_name', sortDirection)}
                 </IconButton>
               </TableCell>
               {config?.config?.esign_status === true && <TableCell align='center'>E-Sign</TableCell>}
@@ -295,7 +283,7 @@ const TableAreaCategory = ({
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSortByName('updated_at')}
+                onClick={() => handleSort('updated_at')}
               >
                 Updated At
                 <IconButton align='center' aria-label='expand row' size='small'>

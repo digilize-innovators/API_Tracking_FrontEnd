@@ -26,6 +26,7 @@ import { useLoading } from 'src/@core/hooks/useLoading'
 import { api } from 'src/utils/Rest-API'
 import { useRouter } from 'next/router'
 import { useAuth } from 'src/Context/AuthContext'
+import { sortData } from 'src/utils/sortData'
 
 const Row = ({
   row,
@@ -191,32 +192,15 @@ const TableUOM = ({ handleUpdate, apiAccess, config, handleAuthCheck, tableHeade
   useMemo(() => {
     setPage(0)
   }, [tableHeaderData, rowsPerPage])
-  const handleSort = key => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data = allUOMData?.data
-    const sorted = [...data].sort((a, b) => {
-      if (key == 'updated_at') {
-        const dateA = new Date(a.updated_at)
-        const dateB = new Date(b.updated_at)
-        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
-      }
-
-      const valueA = a[key]?.toLowerCase() || ''
-      const valueB = b[key]?.toLowerCase() || ''
-      if (valueA > valueB) {
-        return newSortDirection === 'asc' ? 1 : -1
-      }
-      if (valueA < valueB) {
-        return newSortDirection === 'asc' ? -1 : 1
-      }
-      return 0
-    })
-    console.log(allUOMData)
-    setAllUOMData({ ...allUOMData, data: sorted })
+ 
+  const handleSort = (path) => {
+   const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+   const data = allUOMData?.data || [];
+   const sortedData = sortData(data, path, newSortDirection);
+    setAllUOMData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
-    setSortBy(key)
+    setSortBy(path)
   }
-
   const getData = async () => {
     console.log('AAA')
 

@@ -14,6 +14,7 @@ import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
 import { api } from 'src/utils/Rest-API'
 import { useRouter } from 'next/router'
+import { sortData } from 'src/utils/sortData'
 
 const Row = ({
   row,
@@ -199,28 +200,13 @@ const TableDesignation = ({
     getDesignations()
   }, [departmentId,pendingAction])
   
-  const handleSort = (key, isBoolean = false) => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    const booleanSort = (a, b) => {
-      if (a[key] === b[key]) return 0;
-      let comparison = a[key] ? 1 : -1;
-      if (newSortDirection !== 'asc') {
-        comparison = a[key] ? -1 : 1;
-      }
-      return comparison;
-    };
-    const regularSort = (a, b) => {
-      if (a[key] === b[key]) return 0;
-      let comparison = a[key] > b[key] ? 1 : -1;
-      if (newSortDirection !== 'asc') {
-        comparison = a[key] > b[key] ? -1 : 1;
-      }
-      return comparison;
-    };
-    const sorted = [...designationData].sort(isBoolean ? booleanSort : regularSort);
-    setDesignationData(sorted);
+ const handleSort = (path) => {
+   const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+   const data = designationData?.data || [];
+    const sortedData = sortData(data, path, newSortDirection);
+    setDesignationData(prev => ({ ...prev, data: sortedData }));;
     setSortDirection(newSortDirection);
-    setSortBy(key)
+    setSortBy(path)
   };
   return (
     <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', marginTop: '30px' }}>
@@ -250,7 +236,7 @@ const TableDesignation = ({
           <TableBody>
             {designationData?.map((item, index) => (
               <Row
-                key={index + 1}
+                key={item.id}
                 row={item}
                 index={index}
                 openRows={openRows}

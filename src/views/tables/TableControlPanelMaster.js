@@ -26,6 +26,7 @@ import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
 import { api } from 'src/utils/Rest-API'
+import { sortData } from 'src/utils/sortData'
 
 const Row = ({
   row,
@@ -266,35 +267,13 @@ const TableControlPanelMaster = ({
     getData()
   }, [tableHeaderData, page, rowsPerPage, pendingAction])
 
-  const handleSort = (key, child) => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data = controlPanelData?.data || []
-   const sortByDate = (dateA, dateB) => {
-  const aTime = new Date(dateA).getTime()
-  const bTime = new Date(dateB).getTime()
-  return newSortDirection === 'asc' ? aTime - bTime : bTime - aTime
-}
-
-const sortByValue = (a, b) => {
-  const valA = typeof a === 'string' ? a.toLowerCase() : a
-  const valB = typeof b === 'string' ? b.toLowerCase() : b
-
-  if (valA > valB) return newSortDirection === 'asc' ? 1 : -1
-  if (valA < valB) return newSortDirection === 'asc' ? -1 : 1
-  return 0
-}
-   const sorted = [...data].sort((a, b) => {
-  if (key === 'updated_at') return sortByDate(a.updated_at, b.updated_at)
-
-  const valA = child ? a[key]?.[child] : a[key]
-  const valB = child ? b[key]?.[child] : b[key]
-
-  return sortByValue(valA, valB)
-})
-
-    setControlPanelData({ ...controlPanelData, data: sorted })
+ const handleSort = (path) => {
+   const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+   const data = controlPanelData?.data || [];
+    const sortedData = sortData(data, path, newSortDirection);
+    setControlPanelData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
-    setSortBy(key)
+    setSortBy(path)
   }
 
   return (
@@ -359,7 +338,7 @@ const sortByValue = (a, b) => {
           <TableBody>
             {controlPanelData?.data?.map((item, index) => (
               <Row
-                key={index + 1}
+                key={item.id}
                 row={item}
                 index={index}
                 page={page}

@@ -27,6 +27,7 @@ import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
 import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
+import { sortData } from 'src/utils/sortData'
 
 const Row = ({
   row,
@@ -286,36 +287,12 @@ const TableProduct = ({
     setPage(0)
   }
 
-  const getValueByPath = (obj, path) => {
-    return path.split('.').reduce((acc, part) => {
-      const match = part.match(/^(\w+)\[(\d+)\]$/)
-      if (match) {
-        const [, arrayKey, index] = match
-        return acc?.[arrayKey]?.[parseInt(index, 10)]
-      }
-      return acc?.[part]
-    }, obj)
-  }
-
-  const handleSort = path => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data = productData?.data || []
-
-    const sorted = [...data].sort((a, b) => {
-      if (path == 'updated_at') {
-        const dateA = new Date(a.updated_at)
-        const dateB = new Date(b.updated_at)
-        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
-      }
-      const aValue = getValueByPath(a, path)
-      const bValue = getValueByPath(b, path)
-
-      if (aValue.toLowerCase() > bValue.toLowerCase()) return newSortDirection === 'asc' ? 1 : -1
-      if (aValue.toLowerCase() < bValue.toLowerCase()) return newSortDirection === 'asc' ? -1 : 1
-      return 0
-    })
-
-    setProductData({ ...productData, data: sorted })
+ 
+   const handleSort = (path) => {
+   const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+   const data = productData?.data || [];
+   const sortedData = sortData(data, path, newSortDirection);
+    setProductData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
     setSortBy(path)
   }

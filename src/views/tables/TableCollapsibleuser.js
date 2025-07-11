@@ -307,21 +307,10 @@ const TableCollapsibleUser = ({
     setRowsPerPage(parseInt(event.target.value))
   }
 
-  const getValueByPath = (obj, path) => {
-    return path.split('.').reduce((acc, part) => {
-      const match = part.match(/^(\w+)\[(\d+)\]$/)
-      if (match) {
-        const [, arrayKey, index] = match
-        return acc?.[arrayKey]?.[parseInt(index, 10)]
-      }
-      return acc?.[part]
-    }, obj)
-  }
-
+  
   const handleSort = (path) => {
    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
    const data = userData?.data || [];
- 
    const sortedData = sortData(data, path, newSortDirection);
     setUserData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
@@ -429,7 +418,7 @@ const TableCollapsibleUser = ({
           <TableBody>
             {userData?.data?.map((item, index) => (
               <Row
-                key={index + 1}
+                key={item.id}
                 row={item}
                 index={index}
                 page={page}

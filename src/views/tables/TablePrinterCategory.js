@@ -25,6 +25,7 @@ import { useLoading } from 'src/@core/hooks/useLoading'
 import { api } from 'src/utils/Rest-API'
 import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
+import { sortData } from 'src/utils/sortData'
 
 const Row = ({
   row,
@@ -234,26 +235,13 @@ const TablePrinterCategory = ({
     console.log(tableHeaderData.searchVal)
   }, [tableHeaderData, rowsPerPage])
 
-  const handleSort = key => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data = allPrinterCategoryData?.data
-    const sorted = [...data].sort((a, b) => {
-      if (key == 'updated_at') {
-        const dateA = new Date(a.updated_at)
-        const dateB = new Date(b.updated_at)
-        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
-      }
-      if (a[key].toLowerCase() > b[key].toLowerCase()) {
-        return newSortDirection === 'asc' ? 1 : -1
-      }
-      if (a[key].toLowerCase() < b[key].toLowerCase()) {
-        return newSortDirection === 'asc' ? -1 : 1
-      }
-      return 0
-    })
-    setAllPrinterCategoryData({ ...allPrinterCategoryData, data: sorted })
+  const handleSort = (path) => {
+   const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+   const data = allPrinterCategoryData?.data || [];
+   const sortedData = sortData(data, path, newSortDirection);
+    setAllPrinterCategoryData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
-    setSortBy(key)
+    setSortBy(path)
   }
 
   const getData = async () => {

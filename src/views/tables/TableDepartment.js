@@ -729,9 +729,7 @@ const TableDepartment = ({
  const handleSort = (path) => {
    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
    const data = departmentData?.data || [];
- 
    const sortedData = sortData(data, path, newSortDirection);
-
     setDepartmentData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
     setSortBy(path)

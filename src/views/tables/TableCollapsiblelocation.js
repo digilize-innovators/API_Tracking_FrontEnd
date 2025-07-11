@@ -380,7 +380,7 @@ const TableCollapsiblelocation = ({
           <TableBody>
             {locationData?.data?.map((item, index) => (
               <Row
-                key={index + 1}
+                key={item.id}
                 row={item}
                 index={index}
                 page={page}

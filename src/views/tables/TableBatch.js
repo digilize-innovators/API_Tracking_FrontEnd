@@ -27,6 +27,7 @@ import { useSettings } from 'src/@core/hooks/useSettings'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useRouter } from 'next/router'
 import { api } from 'src/utils/Rest-API'
+import { sortData } from 'src/utils/sortData'
 const Row = ({
   row,
   index,
@@ -292,40 +293,13 @@ const TableBatch = ({
     setPage(newPage)
   }
 
-  const getValueByPath = (obj, path) => {
-    return path.split('.').reduce((acc, part) => {
-      const match = part.match(/^(\w+)\[(\d+)\]$/)
-      if (match) {
-        const [, arrayKey, index] = match
-        return acc?.[arrayKey]?.[parseInt(index, 10)]
-      }
-      return acc?.[part]
-    }, obj)
-  }
+ 
 
-  const handleSort = path => {
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data = batchData?.data || []
-
-    const sorted = [...data].sort((a, b) => {
-      if (path == 'updated_at') {
-        const dateA = new Date(a.updated_at)
-        const dateB = new Date(b.updated_at)
-        return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
-      }
-      const aValue = getValueByPath(a, path)
-      const bValue = getValueByPath(b, path)
-      const isNumeric = !isNaN(aValue) && !isNaN(bValue)
-
-      if (isNumeric) {
-        return newSortDirection === 'asc' ? Number(aValue) - Number(bValue) : Number(bValue) - Number(aValue)
-      }
-      if (aValue.toLowerCase() > bValue.toLowerCase()) return newSortDirection === 'asc' ? 1 : -1
-      if (aValue.toLowerCase() < bValue.toLowerCase()) return newSortDirection === 'asc' ? -1 : 1
-      return 0
-    })
-
-    setBatchData({ ...batchData, data: sorted })
+   const handleSort = (path) => {
+   const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+   const data = batchData?.data || [];
+   const sortedData = sortData(data, path, newSortDirection);
+    setBatchData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
     setSortBy(path)
   }
