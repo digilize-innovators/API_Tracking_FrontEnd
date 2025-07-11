@@ -2,9 +2,9 @@
 
 
 
-import React, { useState, Fragment, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
-import {Box,Table,Collapse,TableBody,TableRow,TableHead,TableCell,IconButton, Tooltip} from '@mui/material'
+import {Box,Table,TableBody,TableRow,TableHead,TableCell,IconButton, Tooltip} from '@mui/material'
 import CustomTable from 'src/components/CustomTable'
 import { getSortIcon } from 'src/utils/sortUtils'
 import { useSettings } from 'src/@core/hooks/useSettings'
@@ -17,7 +17,6 @@ const Row = ({
   
 }) => {
   return (
-   <Fragment>
          <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
           
            <TableCell
@@ -54,7 +53,7 @@ const Row = ({
                    </TableCell>
          </TableRow>
        
-       </Fragment>
+       
       
   )
 }
@@ -66,7 +65,6 @@ Row.propTypes = {
 
 }
 const TableStockTranferDetail = ({
-    orderId,
     stocktransferDetail,
     setOrderDetail
 }) => {

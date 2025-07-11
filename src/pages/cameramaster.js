@@ -245,135 +245,151 @@ const Index = () => {
     setOpenModal(true)
   }
 
-  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-    console.log('handleAuthResult 02', config?.userId, user.user_id)
+ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+  console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user);
+  console.log('handleAuthResult 02', config?.userId, user.user_id);
 
-    const resetState = () => {
-      setApproveAPI({
-        approveAPIName: '',
-        approveAPImethod: '',
-        approveAPIEndPoint: ''
-      })
-      setAuthModalOpen(false)
-      setEsignDownloadPdf(false)
-    }
-
-    const handleUnauthenticated = () => {
-      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
-      resetState()
-    }
-
-    const handleModalActions = async isApproved => {
-      setOpenModalApprove(!isApproved)
-      if (isApproved && esignDownloadPdf) {
-        console.log('esign is approved for download')
-
-        downloadPdf(tableData, tableHeaderData, tableBody, cameraData.data, user)
-        if (config?.config?.audit_logs) {
-          const data = {}
-          data.audit_log = {
-            audit_log: true,
-            performed_action: 'Export report of cameraMaster ',
-            remarks: remarks?.length > 0 ? remarks : `Camera master export report `,
-            authUser: user
-          }
-          await api(`/auditlog/`, data, 'post', true)
-        }
-      }
-    }
-
-    const createAuditLog = action =>
-      config?.config?.audit_logs
-        ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            remarks: remarks?.length > 0 ? remarks : `Camera master ${action} - ${auditLogMark}`,
-            authUser: user.user_id
-          }
-        : {}
-
-    const handleUpdateStatus = async () => {
-      const data = {
-        modelName: 'cameramaster',
-        esignStatus,
-        id: eSignStatusId,
-        name: auditLogMark,
-        audit_log: createAuditLog(esignStatus)
-      }
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      if (res.data) {
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: res.data.code === 200 ? 'success' : 'error',
-          message: res.data.message
-        })
-      }
-
-      console.log('esign status update', res?.data)
-      setPendingAction(true)
-    }
-
-    const processApproverActions = async () => {
-      if (esignStatus === 'approved' || esignStatus === 'rejected') {
-        handleModalActions(esignStatus === 'approved')
-        if (esignStatus === 'approved' && esignDownloadPdf) {
-          resetState()
-          return
-        }
-      }
-      await handleUpdateStatus()
-      resetState()
-    }
-
-    const handleCreatorActions = () => {
-      if (esignStatus === 'rejected') {
-        setAuthModalOpen(false)
-        setOpenModalApprove(false)
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: 'error',
-          message: 'Access denied for this user.'
-        })
-      }
-
-      if (esignStatus === 'approved') {
-        if (esignDownloadPdf) {
-          console.log('esign is approved for creator to download')
-          setOpenModalApprove(true)
-        } else {
-          console.log('esign is approved for creator')
-          setAuthUser(user)
-          setEsignRemark(remarks)
-          setPendingAction(editData?.id ? 'edit' : 'add')
-        }
-      }
-    }
-
-    if (!isAuthenticated) {
-      handleUnauthenticated()
-      return
-    }
-    if (!isApprover && esignDownloadPdf) {
-      setAlertData({
-        ...alertData,
-        openSnackbar: true,
-        type: 'error',
-        message: 'Access denied: Download pdf disabled for this user.'
-      })
-      resetState()
-      return
-    }
-    if (isApprover) {
-      await processApproverActions()
-    } else {
-      handleCreatorActions()
-    }
-    resetState()
+  if (!isAuthenticated) {
+    return handleUnauthenticated();
   }
 
+  if (!isApprover && esignDownloadPdf) {
+    return handleUnauthorizedDownload();
+  }
+
+  if (isApprover) {
+    await processApproverActions(esignStatus, user, remarks);
+  } else {
+    handleCreatorActions(esignStatus, user, remarks);
+  }
+
+  resetState();
+};
+const resetState = () => {
+  setApproveAPI({
+    approveAPIName: '',
+    approveAPImethod: '',
+    approveAPIEndPoint: ''
+  });
+  setAuthModalOpen(false);
+  setEsignDownloadPdf(false);
+};
+
+const handleUnauthenticated = () => {
+  setAlertData({
+    type: 'error',
+    message: 'Authentication failed, Please try again.',
+    openSnackbar: true
+  });
+  resetState();
+};
+
+const handleUnauthorizedDownload = () => {
+  setAlertData({
+    ...alertData,
+    openSnackbar: true,
+    type: 'error',
+    message: 'Access denied: Download pdf disabled for this user.'
+  });
+  resetState();
+};
+
+const handleModalActions = async (isApproved, user, remarks) => {
+  setOpenModalApprove(!isApproved);
+
+  if (isApproved && esignDownloadPdf) {
+    console.log('esign is approved for download');
+
+    downloadPdf(tableData, tableHeaderData, tableBody, cameraData?.data, user);
+
+    if (config?.config?.audit_logs) {
+      const data = {
+        audit_log: {
+          audit_log: true,
+          performed_action: 'Export report of cameraMaster',
+          remarks: remarks?.length > 0 ? remarks : 'Camera master export report',
+          authUser: user
+        }
+      };
+      await api('/auditlog/', data, 'post', true);
+    }
+  }
+};
+
+const createAuditLog = (action, user, remarks) => {
+  return config?.config?.audit_logs
+    ? {
+        user_id: user.userId,
+        user_name: user.userName,
+        remarks: remarks?.length > 0 ? remarks : `Camera master ${action} - ${auditLogMark}`,
+        authUser: user.user_id
+      }
+    : {};
+};
+
+const handleUpdateStatus = async (esignStatus, user, remarks) => {
+  const data = {
+    modelName: 'cameramaster',
+    esignStatus,
+    id: eSignStatusId,
+    name: auditLogMark,
+    audit_log: createAuditLog(esignStatus, user, remarks)
+  };
+
+  const res = await api('/esign-status/update-esign-status', data, 'patch', true);
+
+  if (res?.data) {
+    setAlertData({
+      ...alertData,
+      openSnackbar: true,
+      type: res.data.code === 200 ? 'success' : 'error',
+      message: res.data.message
+    });
+  }
+  console.log('esign status update', res?.data);
+  setPendingAction(true);
+};
+
+const processApproverActions = async (esignStatus, user, remarks) => {
+  const isApproved = esignStatus === 'approved';
+
+  if (isApproved || esignStatus === 'rejected') {
+    await handleModalActions(isApproved, user, remarks);
+
+    if (isApproved && esignDownloadPdf) {
+      resetState();
+      return;
+    }
+  }
+
+  await handleUpdateStatus(esignStatus, user, remarks);
+};
+
+const handleCreatorActions = (esignStatus, user, remarks) => {
+  if (esignStatus === 'rejected') {
+    setAuthModalOpen(false);
+    setOpenModalApprove(false);
+    setAlertData({
+      ...alertData,
+      openSnackbar: true,
+      type: 'error',
+      message: 'Access denied for this user.'
+    });
+    return;
+  }
+
+  if (esignStatus === 'approved') {
+    if (esignDownloadPdf) {
+      console.log('esign is approved for creator to download');
+      setOpenModalApprove(true);
+    } else {
+      console.log('esign is approved for creator');
+      setAuthUser(user);
+      setEsignRemark(remarks);
+      setPendingAction(editData?.id ? 'edit' : 'add');
+    }
+  }
+};
   const handleAuthCheck = async row => {
     console.log('handleAuthCheck', row)
     setApproveAPI({

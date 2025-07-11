@@ -25,6 +25,9 @@ import { api } from 'src/utils/Rest-API'
 import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
 import { sortData } from 'src/utils/sortData'
+import { useLoading } from 'src/@core/hooks/useLoading'
+
+
 
 const Row = ({
   row,
@@ -265,6 +268,7 @@ const TableCompany = ({
   const [sortDirection, setSortDirection] = useState('asc')
   const { removeAuthToken } = useAuth()
   const router = useRouter()
+    const { setIsLoading } = useLoading()
 
   useEffect(() => {
     getData()
@@ -292,6 +296,7 @@ const TableCompany = ({
 
   const getData = async (pageNumber, rowsNumber, status, search) => {
     try {
+      setIsLoading(true)
       const params = new URLSearchParams({
         page: page + 1,
         limit: rowsPerPage === -1 ? -1 : rowsPerPage,
@@ -315,6 +320,9 @@ const TableCompany = ({
       }
     } catch (error) {
       console.log('Error in get company ', error)
+    }
+    finally {
+      setIsLoading(false)
     }
   }
 

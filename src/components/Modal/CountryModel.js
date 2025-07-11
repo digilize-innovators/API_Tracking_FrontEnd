@@ -5,6 +5,7 @@ import { useLoading } from 'src/@core/hooks/useLoading'
 import { useRouter } from 'next/router'
 import { api } from 'src/utils/Rest-API'
 import SnackbarAlert from '../SnackbarAlert'
+import PropTypes from 'prop-types'
 
 const modalBoxStyle = {
   width: '50vw', // 70% of viewport width
@@ -381,7 +382,6 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
           handleCloseModal()
         }}
         data-testid='modal'
-        role='dialog'
         aria-labelledby='modal-modal-title'
         aria-describedby='modal-modal-description'
       >
@@ -446,14 +446,14 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
             </Grid2>
 
             {urlMakerData.map((item, index) => (
-              <Grid2 container spacing={2} key={index}>
+              <Grid2 container spacing={2} key={item.label}>
                 <Grid2 size={5} sx={{ display: 'flex', alignItems: 'center' }}>
                   <Typography variant='body1'>{item.label} :</Typography>
                 </Grid2>
                 <Grid2 size={7}>
                   <FormGroup row>
                     {item?.options?.map((option, idx) => (
-                      <Grid2 size='auto' key={idx}>
+                      <Grid2 size='auto' key={option.value}>
                         <FormControlLabel
                           control={
                             <Checkbox
@@ -532,5 +532,12 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
       <SnackbarAlert alertData={alertData} closeSnackbar={closeSnackbar} openSnackbar={alertData.openSnackbar} />
     </>
   )
+}
+AddCountryModalComponent.propTypes={
+  openModal:PropTypes.any,
+   handleCloseModal:PropTypes.any,
+    editData:PropTypes.any, 
+    setEditData:PropTypes.any,
+     setOpenModal:PropTypes.any
 }
 export default AddCountryModalComponent
