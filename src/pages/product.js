@@ -394,18 +394,18 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
         ? (await uploadFile(formData?.file, '/upload/productImage'))?.url
         : editData.product_image
     try {
-      delete formData['productId']
-      delete formData['file']
+      delete formData?.['productId']
+      delete formData?.['file']
       const data = {
         ...formData,
-        mrp: formData.mrp === '' ? null : formData.mrp,
+        mrp: formData?.mrp === '' ? null : formData?.mrp,
         pallet_size: formData?.pallet_size?.toString(),
         productImage: productImage !== editData.product_image ? productImageUrl?.split('/').pop() : productImageUrl
       }
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          remarks: esignRemark > 0 ? esignRemark : `product edited - ${formData.productName}`,
+          remarks: esignRemark > 0 ? esignRemark : `product edited - ${formData?.productName}`,
           authUser
         }
       }

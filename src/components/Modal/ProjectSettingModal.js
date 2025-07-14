@@ -24,6 +24,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import CustomDropdown from '../CustomDropdown';
+import PropTypes from 'prop-types';
 
 const validationSchema = yup.object().shape({
     label: yup.string().required('Label is required'),
@@ -34,7 +35,6 @@ const validationSchema = yup.object().shape({
 });
 
 const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAccess, ip }) => {
-    // console.log('Project setting data ', projectSettingData);
     const { setValue, reset ,control, handleSubmit, watch, formState: { errors } } = useForm({
         resolver: yupResolver(validationSchema),
         defaultValues: {
@@ -131,11 +131,10 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
 
     useEffect(() => {
         if (formData && pendingAction) {
-            const esign_status = "approved";
             if (pendingAction === "edit") {
                 editSetting();
             } else {
-                addSetting(esign_status);
+                addSetting();
             }
             setPendingAction(null);
         }
@@ -168,11 +167,11 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     const addSetting = async () => {
         const data = {
             printerLineId: projectSettingData.lineId,
-            label: formData.label,
-            dateFormat: formData.dateFormat,
-            noOfGroups: formData.noOfGroups.toString(),
-            printPerGroup: formData.printPerGroup.toString(),
-            variables: formData.selectedVariables
+            label: formData?.label,
+            dateFormat: formData?.dateFormat,
+            noOfGroups: formData?.noOfGroups.toString(),
+            printPerGroup: formData?.printPerGroup.toString(),
+            variables: formData?.selectedVariables
         };
 
         console.log('add setting data ', data)
@@ -201,11 +200,11 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     const editSetting = async () => {
         const data = {
             printerLineId: projectSettingData.lineId,
-            label: formData.label,
-            dateFormat: formData.dateFormat,
-            noOfGroups: formData.noOfGroups.toString(),
-            printPerGroup: formData.printPerGroup.toString(),
-            variables: formData.selectedVariables
+            label: formData?.label,
+            dateFormat: formData?.dateFormat,
+            noOfGroups: formData?.noOfGroups.toString(),
+            printPerGroup: formData?.printPerGroup.toString(),
+            variables: formData?.selectedVariables
         };
         try {
             setIsLoading(true);
@@ -233,7 +232,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         console.log("Data :", data)
         setFormData(data)
         setPendingAction(editId ? "edit" : "add");
-        // editId ? await editSetting() : await addSetting()
     }
 
     const closeModal = () => {
@@ -258,7 +256,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                 setLabels(res.data?.data?.projectNames);
             }
         } catch (error) {
-            console.error("Error to get print line setting")
+            console.error("Error to get print line setting",error)
             setIsLoading(false)
         }
     }
@@ -313,7 +311,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                                                 onOpen={getLabels} // Fetch labels when dropdown opens
                                             >
                                                 {labels?.map((item, index) => (
-                                                    <MenuItem key={index} value={item}>
+                                                    <MenuItem key={item} value={item}>
                                                         {item}
                                                     </MenuItem>
                                                 ))}
@@ -429,5 +427,11 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     )
 }
 
-
+ProjectSettings.propTypes={
+     openModal:PropTypes.any,
+      setOpenModal:PropTypes.any,
+       projectSettingData:PropTypes.any,
+        apiAccess:PropTypes.any, 
+        ip:PropTypes.any 
+}
 export default ProjectSettings
