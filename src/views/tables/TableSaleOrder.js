@@ -13,8 +13,7 @@ import {
   SwipeableDrawer,
   Grid2
 } from '@mui/material'
-import { MdModeEdit } from 'react-icons/md'
-
+import { MdModeEdit,MdVisibility } from 'react-icons/md'
 import CustomTable from 'src/components/CustomTable'
 import PropTypes from 'prop-types'
 import { getSortIcon } from 'src/utils/sortUtils'
@@ -22,20 +21,19 @@ import moment from 'moment'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { api } from 'src/utils/Rest-API'
-import { IoIosAdd } from 'react-icons/io'
 import { CiExport } from 'react-icons/ci'
 import TableSaleDetail from './TableSaleDetail'
-import { MdVisibility } from 'react-icons/md'
 import TableSaleTransaction from './TableSaleTransaction'
 import { useAuth } from 'src/Context/AuthContext'
 import downloadPdf from 'src/utils/DownloadPdf'
 import { useRouter } from 'next/router'
 import SnackbarAlert from 'src/components/SnackbarAlert'
+import { sortData } from 'src/utils/sortData'
 
 const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
   const [state, setState] = useState({ addDrawer: false })
   const [orderId, setOrderId] = useState('')
-  const [saleDetail, setSalDetail] = useState('')
+  const [saleDetail, setSaleDetail] = useState('')
   const [status, setStatus] = useState(false)
   const [orderDetail, setOrderDetail] = useState([])
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
@@ -50,7 +48,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
       const res = await api(`/sales-order/transaction-details/${id}`, {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
-        setSalDetail(res.data.data)
+        setSaleDetail(res.data.data)
 
         setStatus(
           res.data.data.transactions.every(item => item.status === 'COMPLETED') && row.status !== 'INVOICE_GENERATED'
@@ -130,7 +128,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
     }
   }
   const list = anchor => (
-    <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }} role='presentation'>
+    <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }}>
       <Grid2 item xs={12}>
         <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8 }}>
           Sale Order Detail
@@ -213,7 +211,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ marginLeft: 6 }} onClick={handleGenerate}>
-            {' '}
+           
             Generate Invoice
           </span>
         </Box>
@@ -342,37 +340,13 @@ const TableSaleOrder = ({ handleUpdate, apiAccess, setSaleOrder, pendingAction, 
     setPage(0)
   }, [tableHeaderData, rowsPerPage])
 
-  const handleSort = (key, child) => {
-    console.log('sort', key, child)
-    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const data = orderSaleData?.data
-
-    const sorted = [...data].sort((a, b) => {
-      if (!child) {
-        if (key === 'updated_at' || key === 'order_date') {
-          const dateA = new Date(a[key])
-          const dateB = new Date(b[key])
-          return newSortDirection === 'asc' ? dateA - dateB : dateB - dateA
-        } else {
-          if (a[key] > b[key]) return newSortDirection === 'asc' ? 1 : -1
-          if (a[key] < b[key]) return newSortDirection === 'asc' ? -1 : 1
-          return 0
-        }
-      } else {
-        if (a[key][child] > b[key][child]) {
-          console.log('hello')
-          return newSortDirection === 'asc' ? 1 : -1
-        }
-
-        if (a[key][child] < b[key][child]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      }
-    })
-    setOrderSaleData({ ...orderSaleData, data: sorted })
+  const handleSort = (path) => {
+   const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    const data = orderSaleData?.data || [];
+    const sortedData = sortData(data, path, newSortDirection);
+    setOrderSaleData(prev => ({ ...prev, data: sortedData }))
     setSortDirection(newSortDirection)
-    setSortBy(key)
+    setSortBy(path)
   }
 
   useEffect(() => {
@@ -449,22 +423,22 @@ const TableSaleOrder = ({ handleUpdate, apiAccess, setSaleOrder, pendingAction, 
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('order_from_location', 'location_name')}
+                onClick={() => handleSort('order_from_location.location_name')}
               >
                 From
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'order_from_location', sortDirection)}
+                  {getSortIcon(sortBy, 'order_from_location.location_name', sortDirection)}
                 </IconButton>
               </TableCell>
               <TableCell
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('order_to_location', 'location_name')}
+                onClick={() => handleSort('order_to_location.location_name')}
               >
                 To
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'order_to_location', sortDirection)}
+                  {getSortIcon(sortBy, 'order_to_location.location_name', sortDirection)}
                 </IconButton>
               </TableCell>
               <TableCell
@@ -519,7 +493,7 @@ const TableSaleOrder = ({ handleUpdate, apiAccess, setSaleOrder, pendingAction, 
           <TableBody>
             {orderSaleData?.data?.map((item, index) => (
               <Row
-                key={index + 1}
+                key={item?.id}
                 row={item}
                 index={index}
                 page={page}

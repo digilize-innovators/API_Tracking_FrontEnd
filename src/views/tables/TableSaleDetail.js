@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useEffect } from 'react'
+import React, { useState,  useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { Box, Table, TableBody, TableRow, TableHead, TableCell, IconButton, Tooltip } from '@mui/material'
 import CustomTable from 'src/components/CustomTable'
@@ -6,26 +6,25 @@ import { getSortIcon } from 'src/utils/sortUtils'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { CiExport } from 'react-icons/ci'
 import { useLoading } from 'src/@core/hooks/useLoading'
-import { useRouter } from 'next/router'
 import { api } from 'src/utils/Rest-API'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { headerContentFix } from 'src/utils/headerContentPdfFix'
 import { footerContent } from 'src/utils/footerContentPdf'
 import { useAuth } from 'src/Context/AuthContext'
+import { sortData } from 'src/utils/sortData'
 
-const Row = ({ key, row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlertData }) => {
+const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlertData }) => {
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
 
-  const [codes, SetCodes] = useState([])
   const downloadPdf = data => {
     const doc = new jsPDF()
     const headerContent = () => {
       headerContentFix(doc, 'Scanned Detail')
 
       doc.setFontSize(10)
-      doc.text('Order No : ' + (orderDetail.order_no || '__'), 15, 25)
+      doc.text('Order No : ' + (orderDetail?.order_no || '__'), 15, 25)
 
       doc.text('Product Name  : ' + (row.product_name || '__'), 15, 30)
       doc.text('Batch No. : ' + (row.batch_no || '__'), 15, 35)
@@ -107,7 +106,6 @@ const Row = ({ key, row, index, page, rowsPerPage, orderDetail, userDataPdf, set
   }
 
   return (
-    <Fragment>
       <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
         <TableCell
           align='center'
@@ -148,14 +146,18 @@ const Row = ({ key, row, index, page, rowsPerPage, orderDetail, userDataPdf, set
           </span>
         </TableCell>
       </TableRow>
-    </Fragment>
+  
   )
 }
 Row.propTypes = {
   row: PropTypes.any,
   index: PropTypes.any,
   page: PropTypes.any,
-  rowsPerPage: PropTypes.any
+  rowsPerPage: PropTypes.any,
+  orderDetail:PropTypes.any,
+   userDataPdf:PropTypes.any,
+    setAlertData:PropTypes.any
+
 }
 const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf, setAlertData }) => {
   const [sortBy, setSortBy] = useState('')
@@ -178,32 +180,12 @@ const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf,
     setOrderDetail(saleDetail?.orders?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage))
   }, [saleDetail, page, rowsPerPage])
 
-  const handleSort = (key, child) => {
+  const handleSort = (path) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    const sorted = [...data].sort((a, b) => {
-      if (!child) {
-        if (a[key] > b[key]) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
-
-        if (a[key] < b[key]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      } else {
-        if (a[key][child] > b[key][child]) {
-          return newSortDirection === 'asc' ? 1 : -1
-        }
-
-        if (a[key][child] < b[key][child]) {
-          return newSortDirection === 'asc' ? -1 : 1
-        }
-        return 0
-      }
-    })
-    setData(sorted)
+   const sortedData = sortData(data, path, newSortDirection);
+     setData(sortedData)
     setSortDirection(newSortDirection)
-    setSortBy(key)
+    setSortBy(path)
   }
 
   return (
@@ -278,7 +260,7 @@ const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf,
           <TableBody>
             {data?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((item, index) => (
               <Row
-                key={index + 1}
+                key={item?.id}
                 orderDetail={orderDetail}
                 userDataPdf={userDataPdf}
                 row={item}
@@ -305,6 +287,7 @@ TableSaleDetail.propTypes = {
   saleDetail: PropTypes.any,
   setOrderDetail: PropTypes.any,
   orderDetail: PropTypes.any,
-  userDataPdf: PropTypes.any
+  userDataPdf: PropTypes.any,
+  setAlertData:PropTypes.any
 }
 export default TableSaleDetail

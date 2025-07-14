@@ -170,7 +170,13 @@ const Index = () => {
       const filteredOrders = data.orders.filter(order =>
         !saleDetail.some(purchase => purchase.product_id === order.productId)
       );
-      filteredOrders.length>0 ? data.orders=filteredOrders : delete data.orders
+     if (filteredOrders.length > 0) {
+       data.orders = filteredOrders;
+         }
+          else {
+            delete data.orders;
+               }
+      // filteredOrders.length>0 ? data.orders=filteredOrders : delete data.orders
 
       setIsLoading(true)
       const res = await api(`/sales-order/${editData.id}`, data, 'put', true)
@@ -188,6 +194,7 @@ const Index = () => {
         }
       }
     } catch (error) {
+      console.log('error while updating the sale order',error)
       setOpenModal(false)
       router.push('/500')
     } finally {
@@ -265,7 +272,7 @@ const Index = () => {
 
                     {apiAccess.addApiAccess && (
                       <Box className='mx-2'>
-                        <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                        <Button variant='contained' sx={{py:2}} onClick={handleOpenModal} >
                           <span>
                             <IoMdAdd />
                           </span>

@@ -1,5 +1,5 @@
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
-import { Modal, Box, Typography, Button, Grid2,  TextField, Dialog, DialogActions } from '@mui/material';
+import { Modal, Box, Typography, Button, Grid2,  TextField, Dialog, DialogActions,IconButton, Tooltip } from '@mui/material';
 import CustomTextField from 'src/components/CustomTextField';
 import { style } from 'src/configs/generalConfig';
 import { useEffect, useState } from 'react';
@@ -8,11 +8,11 @@ import * as yup from 'yup';
 import CustomDropdown from '../CustomDropdown';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { api } from 'src/utils/Rest-API';
-import { IconButton, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useSettings } from 'src/@core/hooks/useSettings';
+import PropTypes from 'prop-types';
 
 
 const SalesOrderSchema = yup.object().shape({
@@ -40,14 +40,17 @@ const SalesOrderSchema = yup.object().shape({
         .test('no-duplicate-batch', 'Duplicate batch not allowed', (orders) => {
             if (!orders) return true;
             const seen = new Set();
-            for (let i = 0; i < orders.length; i++) {
-                const key = orders[i]?.batchId;
-                if (seen.has(key)) {
-                    return false;
-                }
-                key && seen.add(key);
-            }
-            return true;
+
+            for (const order of orders) {
+    const key = order?.batchId;
+    if (seen.has(key)) {
+        return false;
+    }
+    if (key) {
+        seen.add(key);
+    }
+}
+return true;
         }),
 });
 
@@ -67,7 +70,6 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
         reset,
         formState: { errors },
         getValues,
-        setValue,
         watch
     } = useForm({
         resolver: yupResolver(SalesOrderSchema),
@@ -137,6 +139,87 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
         }, [editData]);
 
     useEffect(() => {
+    fetchAllInitialData();
+}, []);
+
+const fetchAllInitialData = async () => {
+    try {
+        setIsLoading(true);
+        await Promise.all([
+            fetchProducts(),
+            fetchLocationSoSto(),
+            fetchLocationSr(),
+        ]);
+    } catch (error) {
+        console.error('Error fetching initial data:', error);
+    } finally {
+        setIsLoading(false);
+    }
+};
+
+const fetchProducts = async () => {
+    try {
+        const res = await api('/product?limit=-1&history_latest=true', {}, 'get', true);
+        if (res.data.success) {
+            const products = res.data.data.products?.map((item) => ({
+                id: item.product_uuid,
+                value: item.product_uuid,
+                label: item.product_name,
+            }));
+            setProductData(products);
+        } else {
+            handleAuthError(res.data);
+        }
+    } catch (error) {
+        console.error('Error fetching products:', error);
+    }
+};
+
+const fetchLocationSoSto = async () => {
+    try {
+        const res = await api(`/location/type-so-sto`, {}, 'get', true);
+        if (res.data.success) {
+            const locations = res.data.data?.map((item) => ({
+                id: item.location_uuid,
+                value: item.location_uuid,
+                label: item.location_name,
+            }));
+            setLocationSoSto(locations);
+        } else {
+            handleAuthError(res.data);
+        }
+    } catch (error) {
+        console.error('Error fetching location SO-STO:', error);
+    }
+};
+
+const fetchLocationSr = async () => {
+    try {
+        const res = await api(`/location/type-sr`, {}, 'get', true);
+        if (res.data.success) {
+            const locations = res.data.data?.map((item) => ({
+                id: item.location_uuid,
+                value: item.location_uuid,
+                label: item.location_name,
+            }));
+            setLocationSr(locations);
+        } else {
+            handleAuthError(res.data);
+        }
+    } catch (error) {
+        console.error('Error fetching location SR:', error);
+    }
+};
+
+const handleAuthError = (data) => {
+    console.error('API error:', data);
+    if (data.code === 401) {
+        removeAuthToken();
+        router.push('/401');
+    }
+};
+
+    useEffect(() => {
         watchedProducts?.forEach((purchase, index) => {
             const productId = purchase?.productId;
             if (!productId) return;
@@ -181,90 +264,9 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
         }
     };
 
-    const locationOptions = getLocationOptions();
+ const locationOptions = getLocationOptions();
 
-    useEffect(() => {
-        const getLocationSoSto = async () => {
-            try {
-                setIsLoading(true)
-                const res = await api(`/location/type-so-sto`, {}, 'get', true)
-                setIsLoading(false)
-                console.log('All locations ', res.data)
-                if (res.data.success) {
-                    const data = res.data.data?.map((item) => ({
-                        id: item.location_uuid,
-                        value: item.location_uuid,
-                        label: item.location_name,
-                    }));
-                    setLocationSoSto(data);
-                } else {
-                    console.log('Error to get all designation ', res.data)
-                    if (res.data.code === 401) {
-                        removeAuthToken()
-                        router.push('/401');
-                    }
-                }
-            } catch (error) {
-                console.log('Error in get location type-so-sto ', error)
-                setIsLoading(false)
-            }
-        }
-        const getLocationSR = async () => {
-            try {
-                setIsLoading(true)
-                const res = await api(`/location/type-sr`, {}, 'get', true)
-                setIsLoading(false)
-                console.log('All locations ', res.data)
-                if (res.data.success) {
-                    const data = res.data.data?.map((item) => ({
-                        id: item.location_uuid,
-                        value: item.location_uuid,
-                        label: item.location_name,
-                    }));
-
-                    setLocationSr(data);
-                } else {
-                    console.log('Error to get all designation ', res.data)
-                    if (res.data.code === 401) {
-                        removeAuthToken()
-                        router.push('/401');
-                    }
-                }
-            } catch (error) {
-                console.log('Error in get location type-sr ', error)
-                setIsLoading(false)
-            }
-        }
-        const getAllProducts = async () => {
-            try {
-                setIsLoading(true);
-                const res = await api('/product?limit=-1&history_latest=true', {}, 'get', true)
-                setIsLoading(false);
-                if (res.data.success) {
-                    const data = res.data.data.products?.map((item) => ({
-                        id: item.product_uuid,
-                        value: item.product_uuid,
-                        label: item.product_name,
-                    }))
-                    setProductData(data)
-
-                } else {
-                    console.log('Error to get all products ', res.data)
-                    if (res.data.code === 401) {
-                        removeAuthToken();
-                        router.push('/401');
-                    }
-                }
-            } catch (error) {
-                console.log('Error in get products ', error)
-                setIsLoading(true); ``
-            }
-        }
-        getAllProducts()
-        getLocationSoSto()
-        getLocationSR()
-
-    }, []);
+   
 
     useEffect(() => {
         if (open) {
@@ -394,7 +396,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                                 name='from'
                                 label='From'
                                 control={control}
-                                options={locationOptions.from || []}
+                                options={locationOptions?.from || []}
                                 Grid2
                             />
 
@@ -405,7 +407,7 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                                 name='to'
                                 label='To'
                                 control={control}
-                                options={locationOptions.to || []}
+                                options={locationOptions?.to || []}
                             />
                         </Grid2>
                     </Grid2>
@@ -559,8 +561,9 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
                         variant='contained'
                         color='error'
                         onClick={() => {
-                            const orderItem = saleDetail && saleDetail[deleteIndex];
-                            if (orderItem && orderItem.id) {
+                            const orderItem = saleDetail?.[deleteIndex];
+                            console.log(orderItem)
+                            if (orderItem?.id) {
                                 handleDeleteOrder(orderItem.id, deleteIndex);
                             } else {
                                 remove(deleteIndex);
@@ -577,6 +580,13 @@ const SalesOrderModel = ({ open, handleClose, editData,saleDetail, handleSubmitF
     </>
     );
 };
+SalesOrderModel.propTypes={
+ open:PropTypes.any,
+ handleClose:PropTypes.any,
+ editData:PropTypes.any,
+  saleDetail:PropTypes.any, 
+  handleSubmitForm:PropTypes.any
+}
 
 export default SalesOrderModel;
 
