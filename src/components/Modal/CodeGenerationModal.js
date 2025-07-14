@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from 'src/Context/AuthContext'
 import { useEffect, useState } from 'react'
 import SnackbarAlert from '../SnackbarAlert'
+import PropTypes from 'prop-types'
 
 function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAuthModalOpen,config}) {
   const [formData, setFormData] = useState({ productId: '', batchId: '', batch:'',generateQuantity: '' })
@@ -144,7 +145,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
       const level2 = showBox1Data?.productHistory?.secondLayer
       const level3 = showBox1Data?.productHistory?.thirdLayer
 
-      const generateLevel0 = batchSize * (formData.generateQuantity / 100) * (level0 / level0)
+      const generateLevel0 = batchSize * (formData.generateQuantity / 100) 
       const generateLevel1 = batchSize * (formData.generateQuantity / 100) * (level1 / level0)
       const generateLeve2 = batchSize * (formData.generateQuantity / 100) * (level2 / level0)
       const generateLeve3 = batchSize * (formData.generateQuantity / 100) * (level3 / level0)
@@ -210,7 +211,6 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
         open={open}
         onClose={handleCloseModal}
         data-testid='modal'
-        role='dialog'
         aria-labelledby='modal-modal-title'
         aria-describedby='modal-modal-description'
       >
@@ -346,7 +346,9 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
                       label='Generate Qty in %'
                       placeholder='Generate Qty in %'
                       value={formData.generateQuantity}
-                      inputProps={{ step: '1' }}
+                      slotProps={{
+                      input: { step: '1' }
+                       }}
                       type='number'
                       onChange={event => {
                         const value = event.target.value
@@ -419,5 +421,12 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
     </>
   )
 }
-
+CodeGenerationModal.propTypes={
+ open:PropTypes.any,
+  onClose:PropTypes.any,
+   handleGenerateCode:PropTypes.any ,
+    setForm:PropTypes.any,
+    setAuthModalOpen:PropTypes.any,
+    config:PropTypes.any
+}
 export default CodeGenerationModal
