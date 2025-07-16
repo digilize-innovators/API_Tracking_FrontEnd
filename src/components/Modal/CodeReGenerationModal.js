@@ -18,13 +18,13 @@ import {
   Tooltip
 } from '@mui/material'
 import moment from 'moment'
+import PropTypes from 'prop-types'
 import React, { useEffect, useState } from 'react'
 import { style } from 'src/configs/generalConfig'
 
 const CodeReGenerationModal = ({
   open,
   onClose,
-  handleGenerateCode,
   availableCodeData,
   setAvailableCodeData,
   setAuthModalOpen,
@@ -32,23 +32,15 @@ const CodeReGenerationModal = ({
 }) => {
   const [selected, setSelected] = useState([])
   const [errorData, setErrorData] = useState({ error: false, message: '' })
-  const [isCodeGenerate, setIsCodeReGeneration] = useState(false)
-  const [clickedRowId, setClickedRowId] = useState(null)
 
   useEffect(() => {
     setSelected([])
     setErrorData({ error: false, message: '' })
-    setClickedRowId(null)
   }, [open])
 
-  // const handleCheckboxChange = id => {
-  //   setSelected(prevSelected =>
-  //     prevSelected.includes(id) ? prevSelected.filter(item => item !== id) : [...prevSelected, id]
-  //   )
-  // }
+  
   const handleCheckboxChange = rowId => {
     if (selected.includes(rowId)) {
-      // Unchecking: remove from selected and clear its generate value
       setSelected(prev => prev.filter(id => id !== rowId))
       setAvailableCodeData(prev => ({
         ...prev,
@@ -57,9 +49,7 @@ const CodeReGenerationModal = ({
         )
       }))
     } else {
-      // Checking: add to selected
 
-      setClickedRowId(null)
       setSelected(prev => [...prev, rowId])
     }
   }
@@ -79,25 +69,20 @@ const CodeReGenerationModal = ({
   }
   const handleSubmit = () => {
     const hasGeneratedCodes = availableCodeData.packagingHierarchyData.some(item => item.generate.length > 0)
-    setIsCodeReGeneration(hasGeneratedCodes)
     if (config?.config?.esign_status && selected.length > 0 && hasGeneratedCodes) {
       setErrorData({ error: false, message: '' })
       setAuthModalOpen(true)
-      return
     } else {
       setErrorData({ error: true, message: 'Enter number code to generate ' })
-      return
     }
-    // handleGenerateCode(true, {}, 'approved')
   }
 
   return (
-    <>
+    
       <Modal
         open={open}
         onClose={onClose}
         data-testid='modal'
-        role='dialog'
         aria-labelledby='modal-modal-title'
         aria-describedby='modal-modal-description'
       >
@@ -211,24 +196,29 @@ const CodeReGenerationModal = ({
                         <TableCell>{parseInt(row.availableCodes)}</TableCell>
                         <TableCell onClick={e => e.stopPropagation()}>
                           <div>
-                            <TextField
-                              value={row.generate}
-                              InputProps={{
-                                readOnly: !selected.includes(row.id)
-                              }}
-                              onClick={() => {
-                                if (!selected.includes(row.id)) {
-                                  setClickedRowId(row.id)
-                                } else {
-                                  setClickedRowId(null)
-                                }
-                              }}
-                              onChange={e => changeGenereateCode(row.id, e.target.value, row.availableCodes)}
-                              size='medium'
-                            />
-                            {!selected.includes(row.id) && clickedRowId === row.id && (
-                              <FormHelperText error>First select the checkbox</FormHelperText>
-                            )}
+                          <TextField
+  value={row.generate}
+  disabled={!selected.includes(row.id)}
+  slotProps={{
+    input: {
+      inputMode: 'numeric',  // Shows numeric keyboard on mobile
+      pattern: '[0-9]*',     // Allows only digits
+      onInput: e => {
+        e.target.value = e.target.value.replace(/\D/g, ''); // Remove non-digits live
+      }
+    }
+  }}
+  
+  onChange={e => {
+    const value = e.target.value;
+    if (/^\d*$/.test(value)) { // extra safety in case input event is bypassed
+      changeGenereateCode(row.id, value, row.availableCodes);
+    }
+  }}
+  size="medium"
+/>
+
+                          
                           </div>
                         </TableCell>
                       </TableRow>
@@ -279,8 +269,14 @@ const CodeReGenerationModal = ({
           </Grid2>
         </Box>
       </Modal>
-    </>
   )
 }
-
+CodeReGenerationModal.propTypes={
+   open:PropTypes.any,
+  onClose:PropTypes.any,
+  availableCodeData:PropTypes.any,
+  setAvailableCodeData:PropTypes.any,
+  setAuthModalOpen:PropTypes.any,
+  config:PropTypes.any
+}
 export default CodeReGenerationModal

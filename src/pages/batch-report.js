@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react'
-import { Box, Button, Select, MenuItem, InputLabel, FormControl } from '@mui/material'
+import { Box, Button, Select, MenuItem, InputLabel, FormControl, Grid2, Typography } from '@mui/material'
 import SnackbarAlert from 'src/components/SnackbarAlert'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -16,14 +16,13 @@ import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken'
 import { getTokenValues } from 'src/utils/tokenUtils'
 import Head from 'next/head'
-import { Grid2, Typography } from '@mui/material'
 
 const BatchReport = () => {
   const [products, setProducts] = useState([])
   const [selectedProduct, setSelectedProduct] = useState('')
   const [batches, setBatches] = useState([])
   const [selectedBatch, setSelectedBatch] = useState('')
-  const [selectedFormat, setSelectFormat] = useState('')
+  const [selectedFormat, setSelectedFormat] = useState('')
   const [isReportGenerated, setIsReportGenerated] = useState(false)
   const [report, setReport] = useState(null)
   const router = useRouter()
@@ -35,7 +34,6 @@ const BatchReport = () => {
   const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [exportedBy, setExportedBy] = useState('')
-  const [approvedBy, setApprovedBy] = useState('')
   const [selectedProductName, setSelectedProductName] = useState('')
   const [selectedBatchName, setSelectedBatchName] = useState('')
 
@@ -120,10 +118,10 @@ const BatchReport = () => {
     setSelectedBatchName(selected?.batch_no || '')
 
     setIsReportGenerated(false)
-    setSelectFormat('')
+    setSelectedFormat('')
   }
   const handleFormatChange = event => {
-    setSelectFormat(event.target.value)
+    setSelectedFormat(event.target.value)
     setIsReportGenerated(false)
   }
   const handleGenerateReport = async () => {
@@ -249,31 +247,39 @@ const BatchReport = () => {
       return
     }
 
-    const jsonData = {
-      ProductionInfo: {
-        ENVELOPE: {
-          FILENAME: AggregationFile,
-          Tertiary: data.map(tertiary => ({
-            SSCC: tertiary.SSCC,
-            SubItemCnt: tertiary.Subitem,
-            Product: {
-              ProductCode: gtin,
-              Secondary: tertiary.secondary.map(secondary => ({
-                SecSrNo: secondary.unique_code,
-                BatchNo: BatchNo,
-                NoOfPrimaries: secondary.count,
-                Primary: secondary.level0.map(primary => ({
-                  PriSrNo: primary.unique_code
-                }))
-              }))
-            }
-          }))
-        }
-      }
-    }
+    const buildPrimaryStructure = (primary) => ({
+  PriSrNo: primary.unique_code
+});
+const buildSecondaryStructure = (secondary, BatchNo) => ({
+  SecSrNo: secondary.unique_code,
+  BatchNo: BatchNo,
+  NoOfPrimaries: secondary.count,
+  Primary: secondary.level0.map(buildPrimaryStructure)
+});
+const buildTertiaryStructure = (tertiary, gtin, BatchNo) => ({
+  SSCC: tertiary.SSCC,
+  SubItemCnt: tertiary.Subitem,
+  Product: {
+    ProductCode: gtin,
+    Secondary: tertiary.secondary.map(sec => buildSecondaryStructure(sec, BatchNo))
+  }
+});
+const buildEnvelopeStructure = (data, gtin, BatchNo, AggregationFile) => ({
+  FILENAME: AggregationFile,
+  Tertiary: data.map(tert => buildTertiaryStructure(tert, gtin, BatchNo))
+});
 
+// Main function to construct the final object
+const constructProductionInfo = (data, gtin, BatchNo, AggregationFile) => ({
+  ProductionInfo: {
+    ENVELOPE: buildEnvelopeStructure(data, gtin, BatchNo, AggregationFile)
+  }
+});
+
+// Usage
+const jsonData = constructProductionInfo(data, gtin, BatchNo, AggregationFile);
     const xmlData = buildXMLData(jsonData)
-    const response = await api(
+    await api(
       '/batch/reportFormat',
       {
         fileName: AggregationFile,
@@ -341,7 +347,7 @@ const BatchReport = () => {
 
       const xmlData = buildXMLData(jsonData)
 
-      const response = await api(
+       await api(
         '/batch/reportFormat',
         {
           fileName: BatchFileName,
@@ -494,6 +500,13 @@ const BatchReport = () => {
         footerContent(i, totalPages)
       }
     }
+      const createTableRow = (item, index) => [index + 1, item];
+        const getTableBody = (data) => {
+          if (!Array.isArray(data)) {
+               return [[data]];
+                        }
+                return data.map(createTableRow);
+                 };
     const renderBatchDetails = () => {
       const BatchDetail = data.batch
       const rows = [
@@ -557,40 +570,37 @@ const BatchReport = () => {
       let columns = ['Code', 'Parent Code', 'Grand Parent Code']
       let hasData = false
 
-      for (let [key, value] of Object.entries(rows)) {
+      for (const value of Object.values(rows)) {
         if (value.length > 0) {
           unique.push([...value])
           hasData = true
         }
       }
       if (!hasData) return false
-      const uniqueData = unique.map(item => {
-        return item.map(Uc => {
-          return Uc.unique_code
-        })
-      })
-
+      const getUniqueCode = (item) => item.unique_code;
+      const extractUniqueCodes = (items) => items.map(getUniqueCode);
+      const processUniqueItems = (unique) => unique.map(extractUniqueCodes);
+      const uniqueData = hasData ? processUniqueItems(unique) : null;
       currentY = currentY + 10
       doc.setFontSize(12).setFont(undefined, 'bold')
-
       uniqueData.forEach((data, index) => {
+
+      
         if (data.length > 0) {
-          console.log(data)
+          // console.log(data)
           doc.text(heading, 14, currentY)
         }
         autoTable(doc, {
           startY: currentY + 5, // Ensure `currentY` is correctly calculated
           head: [['SR.NO', columns[index]]], // `columns[index]` should match the current table's header
-          body: Array.isArray(data) ? data.map((item, key) => [key + 1, item]) : [[data]], // Ensure body is a 2D array
+          body: getTableBody(data),
           styles: { fontSize: 8, cellPadding: 1, overflow: 'linebreak', halign: 'center' },
           theme: 'grid',
           margin: { top: HEADER_HEIGHT + 5, bottom: FOOTER_HEIGHT + 10 },
           headStyles: { halign: 'center', fontStyle: 'bold' },
           bodyStyles: { halign: 'center' },
 
-          didDrawPage: data => {
-            if (headerContent) headerContent(data)
-          }
+          didDrawPage:headerContent
         })
 
         currentY = doc.lastAutoTable.finalY + 20
@@ -598,11 +608,7 @@ const BatchReport = () => {
     }
 
     const renderAggregated = (item, name) => {
-      const code = []
-      item.forEach(item => {
-        return item.forEach(item => [code.push(item)])
-      })
-
+     const code = item.flat();
       doc.setFontSize(12).setFont(undefined, 'bold')
       currentY += 10
       name == 'primary'
@@ -670,7 +676,7 @@ const BatchReport = () => {
 
       return
     }
-    const response = await api(
+     await api(
       '/batch/reportFormat',
       {
         fileName: BatchRecordFile,
@@ -691,7 +697,7 @@ const BatchReport = () => {
       const img = new Image()
       img.src = '/images/brand.png'
       img.onload = () => resolve(img)
-      img.onerror = err => reject('Logo image failed to load: ' + err)
+      img.onerror = () => reject(new Error('Logo image failed to load: ' ))
     })
     if (!report) {
       setAlertData({
@@ -827,7 +833,7 @@ const BatchReport = () => {
 
       return
     }
-    const response = await api(
+     await api(
       '/batch/reportFormat',
       {
         fileName: BatchSummaryFile,
@@ -856,7 +862,7 @@ const BatchReport = () => {
         approveAPImethod: '',
         approveAPIEndPoint: ''
       })
-      setSelectFormat('')
+      setSelectedFormat('')
       setSelectedBatch('')
       setSelectedProduct('')
       setAuthModalOpen(false)
@@ -874,7 +880,6 @@ const BatchReport = () => {
 
     if (isApprover) {
       if (esignStatus === 'approved') {
-        setApprovedBy({ userId: user.user_id, userName: user.userName, timeStamp: new Date() })
         setOpenModalApprove(false)
 
         switch (selectedFormat) {
@@ -944,12 +949,7 @@ const BatchReport = () => {
 
   const handleAuthModalOpen = () => {
     console.log('OPen auth model')
-    // setApproveAPI({
-    //   approveAPIName: 'batch-report-approve',
-    //   approveAPImethod: 'PATCH',
-    //   approveAPIEndPoint: '/api/v1/batch-report'
-    // })
-    // setAuthModalOpen(true)
+ 
   }
   return (
     <Box>

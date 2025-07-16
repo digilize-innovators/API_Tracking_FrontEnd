@@ -96,6 +96,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
   const fieldsToDisplay = levelFields[level] || []
 
   useEffect(() => {
+
     if (formData.batchId) {
       const getData = async () => {
         try {
@@ -196,11 +197,12 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
 
     setPackagingHierarchyData({})
     setShowBox1Data({})
-    setFormData({ productId: '', batchId: '', generateQuantity: '' })
+    setBatches([])
+    setFormData({productId: '', batchId: '', batch:'',generateQuantity: '' })
   }
   const handleCloseModal = () => {
-    onClose()
     resetAll()
+     onClose()
   }
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
@@ -229,7 +231,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
                     label='Product *'
                     value={formData.productId}
                     onChange={e => {
-                      setFormData({ ...formData, productId: e.target.value })
+                      setFormData({ ...formData, productId: e.target.value ,batchId:''})
                       setErrorData(prev => ({ ...prev, productError: { isError: false, message: '' } }))
                     }}
                   >
@@ -299,7 +301,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
                         : ''
                     }
                     disabled={true}
-                  />{' '}
+                  />
                 </Box>
                 <Box className='w-50' sx={{ ml: 2 }}>
                   <TextField
@@ -350,6 +352,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
                       input: { step: '1' }
                        }}
                       type='number'
+                      disabled={!!showBox1Data}
                       onChange={event => {
                         const value = event.target.value
                         if (value <= 100 && value >= 0) {
