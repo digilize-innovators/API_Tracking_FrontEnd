@@ -1,7 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
-import { Button, TextField, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
-import { CiExport } from 'react-icons/ci'
+import { TextField, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
 import TableAuditLog from 'src/views/tables/TableAuditLog'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
@@ -18,7 +17,6 @@ import CustomSearchBar from 'src/components/CustomSearchBar'
 import downloadPdf from 'src/utils/DownloadPdf'
 import AuthModal from 'src/components/authModal'
 import { getTokenValues } from '../utils/tokenUtils'
-import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import { api } from 'src/utils/Rest-API'
 
@@ -41,7 +39,6 @@ const Index = () => {
   const [openStartPicker, setOpenStartPicker] = useState(false)
   const [openEndPicker, setOpenEndPicker] = useState(false)
   const [config, setConfig] = useState(null)
-  const apiAccess = useApiAccess('auditlog-create', 'auditlog-update', 'auditlog-approve')
 
   const startPickerRef = useRef(null)
   const endPickerRef = useRef(null)
@@ -81,6 +78,7 @@ const Index = () => {
   const handleAuthModalClose = () => {
     setAuthModalOpen(false)
     setOpenModalApprove(false)
+    setEsignDownloadPdf(false)
   }
 
   const resetFilter = () => {

@@ -117,6 +117,7 @@ const Index = () => {
   const handleAuthModalClose = () => {
     setAuthModalOpen(false)
     setOpenModalApprove(false)
+    setEsignDownloadPdf(false)
   }
   const handleCloseModal = () => {
     resetForm()
@@ -254,7 +255,7 @@ const Index = () => {
       }
     }
 
-    const handleDepartmentApproveFlow = async (data, auditRemarks) => {
+    const handleDepartmentApproveFlow = async (data) => {
       try {
         console.log('data', data)
         const res = await api('/esign-status/update-esign-status', data, 'patch', true)

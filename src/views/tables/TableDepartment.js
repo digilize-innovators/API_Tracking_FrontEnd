@@ -127,6 +127,7 @@ const Row = ({
   const handleAuthModalClose = () => {
     setAuthModalOpen(false)
     setOpenModalApprove(false)
+    setEsignDownloadPdf(false)
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)

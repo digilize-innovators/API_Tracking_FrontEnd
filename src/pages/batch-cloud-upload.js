@@ -40,8 +40,6 @@ const Index = () => {
   const [config, setConfig] = useState(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-  const [eSignStatusId, setESignStatusId] = useState('')
-  const [auditLogMark, setAuditLogMark] = useState('')
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const searchBarRef = useRef(null)
@@ -131,12 +129,13 @@ const Index = () => {
   const handleAuthModalClose = () => {
     setAuthModalOpen(false)
     setOpenModalApprove(false)
+    setEsignDownloadPdf(false)
   }
   const handleCloseModal = () => {
     setOpenModal(false)
   }
 
-  const handleSubmitForm = async => {
+  const handleSubmitForm = () => {
     setApproveAPI({
       approveAPIName: 'batch-cloud-upload-approve',
       approveAPImethod: 'PATCH',
@@ -274,20 +273,7 @@ const Index = () => {
     }
     resetState()
   }
-  const handleAuthCheck = async row => {
-    return
 
-    // console.log('handleAuthCheck', row)
-    // setApproveAPI({
-    //   approveAPIName: 'batch-cloud-upload-create',
-    //   approveAPImethod: 'POST',
-    //   approveAPIEndPoint: '/api/v1/batch'
-    // })
-    // setAuthModalOpen(true)
-    // setESignStatusId(row.id)
-    // setAuditLogMark(row.batch_no)
-    // console.log('row', row)
-  }
   const handleUpdate = row => {
     setBatchDetail(row)
     handleOpenModal(true)
@@ -405,7 +391,7 @@ const Index = () => {
                   filterLocationVal={filterLocationVal}
                   tableHeaderData={tableHeaderData}
                   setBatch={setBatchData}
-                  handleAuthCheck={handleAuthCheck}
+                  handleAuthCheck={()=> {}}
                   apiAccess={apiAccess}
                   config={config}
                   pendingAction={openModal}

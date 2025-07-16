@@ -1,7 +1,7 @@
 import axios from 'axios';
 import config from '../../constants';
 import Cookies from 'js-cookie';
-const trustedOrigins = ['http://192.168.1.50:3000', "http://192.168.1.155:3000","http://192.168.1.170:3000", "http://192.168.5.143:3000", "http://192.168.5.144:3000", "http://192.168.5.145:3000"];
+const trustedOrigins = ['http://192.168.1.50:3000', "http://192.168.1.8:3000","http://192.168.1.170:3000", "http://192.168.5.143:3000", "http://192.168.5.144:3000", "http://192.168.5.145:3000"];
 const getCorsHeaders = (origin) => {
   if (trustedOrigins.includes(origin)) {
     return { 'Access-Control-Allow-Origin': origin };
