@@ -1,4 +1,17 @@
-import {Modal,Box, Typography,Button,Grid2,Divider,TextField,FormControl,InputLabel,Select,MenuItem,FormHelperText} from '@mui/material'
+import {
+  Modal,
+  Box,
+  Typography,
+  Button,
+  Grid2,
+  Divider,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText
+} from '@mui/material'
 import { style } from 'src/configs/generalConfig'
 import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
@@ -8,8 +21,8 @@ import { useEffect, useState } from 'react'
 import SnackbarAlert from '../SnackbarAlert'
 import PropTypes from 'prop-types'
 
-function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAuthModalOpen,config}) {
-  const [formData, setFormData] = useState({ productId: '', batchId: '', batch:'',generateQuantity: '' })
+function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAuthModalOpen, config }) {
+  const [formData, setFormData] = useState({ productId: '', batchId: '', batch: '', generateQuantity: '' })
   const [errorData, setErrorData] = useState({
     productError: { isError: false, message: '' },
     batchError: { isError: false, message: '' },
@@ -62,7 +75,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
         try {
           setIsLoading(true)
           const res = await api(`/batch/${productId}`, {}, 'get', true)
-          setIsLoading(false);
+          setIsLoading(false)
           if (res.data.success) {
             const data = res.data.data.batches?.map(item => ({
               id: item.batch_uuid,
@@ -96,7 +109,6 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
   const fieldsToDisplay = levelFields[level] || []
 
   useEffect(() => {
-
     if (formData.batchId) {
       const getData = async () => {
         try {
@@ -118,10 +130,15 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
               outerLayer: 1
             })
           } else {
+            setShowBox1Data([])
+            setFormData(prev => {
+              return { ...prev, generateQuantity: 0 }
+            })
             console.log('Error to get batch from productId and batchNo ', res.data)
             setAlertData({ type: 'error', openSnackbar: true, message: res.data.message, variant: 'filled' })
             if (res.data.code === 401) {
               removeAuthToken()
+
               router.push('/401')
             }
           }
@@ -146,7 +163,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
       const level2 = showBox1Data?.productHistory?.secondLayer
       const level3 = showBox1Data?.productHistory?.thirdLayer
 
-      const generateLevel0 = batchSize * (formData.generateQuantity / 100) 
+      const generateLevel0 = batchSize * (formData.generateQuantity / 100)
       const generateLevel1 = batchSize * (formData.generateQuantity / 100) * (level1 / level0)
       const generateLeve2 = batchSize * (formData.generateQuantity / 100) * (level2 / level0)
       const generateLeve3 = batchSize * (formData.generateQuantity / 100) * (level3 / level0)
@@ -185,11 +202,11 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
     }
     if (config?.config?.esign_status) {
       setForm(data)
-      setAuthModalOpen(true);
-      return;
+      setAuthModalOpen(true)
+      return
     }
     console.log('on submit ', data)
-    handleGenerateCode(false, data, "approved")
+    handleGenerateCode(false, data, 'approved')
   }
 
   const resetAll = () => {
@@ -198,11 +215,11 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
     setPackagingHierarchyData({})
     setShowBox1Data({})
     setBatches([])
-    setFormData({productId: '', batchId: '', batch:'',generateQuantity: '' })
+    setFormData({ productId: '', batchId: '', batch: '', generateQuantity: '' })
   }
   const handleCloseModal = () => {
     resetAll()
-     onClose()
+    onClose()
   }
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
@@ -231,7 +248,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
                     label='Product *'
                     value={formData.productId}
                     onChange={e => {
-                      setFormData({ ...formData, productId: e.target.value ,batchId:''})
+                      setFormData({ ...formData, productId: e.target.value, batchId: '' })
                       setErrorData(prev => ({ ...prev, productError: { isError: false, message: '' } }))
                     }}
                   >
@@ -255,15 +272,15 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
                     label='Batch *'
                     value={formData.batchId}
                     onChange={e => {
-                      const selectedValue = e.target.value;
-                      const selectedItem = batches.find(item => item.value === selectedValue);
-                  
+                      const selectedValue = e.target.value
+                      const selectedItem = batches.find(item => item.value === selectedValue)
+
                       setFormData({
                         ...formData,
                         batchId: selectedValue,
                         batch: selectedItem?.label || ''
-                      });
-                  
+                      })
+
                       setErrorData(prev => ({ ...prev, batchError: { isError: false, message: '' } }))
                     }}
                   >
@@ -348,21 +365,51 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
                       label='Generate Qty in %'
                       placeholder='Generate Qty in %'
                       value={formData.generateQuantity}
-                      slotProps={{
-                      input: { step: '1' }
-                       }}
                       type='number'
-                      disabled={!!showBox1Data}
+                      slotProps={{
+                        input: {
+                          step: '1',
+                          min: '0',
+                          max: '100',
+                          pattern: '[0-9]*' // Forces numeric input on mobile
+                        }
+                      }}
+                      disabled={!showBox1Data?.location}
                       onChange={event => {
                         const value = event.target.value
-                        if (value <= 100 && value >= 0) {
-                          setFormData({ ...formData, generateQuantity: value })
+                        // Check if empty string (allowing empty field)
+                        if (value === '') {
+                          setFormData({ ...formData, generateQuantity: '' })
+                          setErrorData(prev => ({ ...prev, generateQuantityError: { isError: false, message: '' } }))
+                          return
+                        }
+
+                        // Convert to number and validate
+                        const numValue = Number(value)
+                        if (Number.isInteger(numValue) && numValue >= 0 && numValue <= 100) {
+                          setFormData({ ...formData, generateQuantity: numValue })
                           setErrorData(prev => ({ ...prev, generateQuantityError: { isError: false, message: '' } }))
                         } else {
                           setErrorData(prev => ({
                             ...prev,
-                            generateQuantityError: { isError: true, message: 'Value must be between 0 and 100' }
+                            generateQuantityError: {
+                              isError: true,
+                              message: 'Must be a whole number between 0-100'
+                            }
                           }))
+                        }
+                      }}
+                      onKeyDown={event => {
+                        // Prevent decimal point, comma, exponent, etc.
+                        if (['.', ',', 'e', 'E', '+', '-'].includes(event.key)) {
+                          event.preventDefault()
+                        }
+                      }}
+                      onBlur={() => {
+                        // Final validation when leaving field
+                        if (formData.generateQuantity !== '') {
+                          const clampedValue = Math.min(100, Math.max(0, Math.round(Number(formData.generateQuantity))))
+                          setFormData({ ...formData, generateQuantity: clampedValue })
                         }
                       }}
                     />
@@ -424,12 +471,12 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode , setForm,setAu
     </>
   )
 }
-CodeGenerationModal.propTypes={
- open:PropTypes.any,
-  onClose:PropTypes.any,
-   handleGenerateCode:PropTypes.any ,
-    setForm:PropTypes.any,
-    setAuthModalOpen:PropTypes.any,
-    config:PropTypes.any
+CodeGenerationModal.propTypes = {
+  open: PropTypes.any,
+  onClose: PropTypes.any,
+  handleGenerateCode: PropTypes.any,
+  setForm: PropTypes.any,
+  setAuthModalOpen: PropTypes.any,
+  config: PropTypes.any
 }
 export default CodeGenerationModal

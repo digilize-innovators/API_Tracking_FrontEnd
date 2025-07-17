@@ -284,7 +284,7 @@ const handleApproverActions = async (user, esignStatus, remarks) => {
   const payload = {
     modelName: 'batch',
     esignStatus,
-    id: eSignStatusId,
+    id: eSignStatusId?.id,
     name: auditLogMark,
     audit_log: buildAuditLog(user, remarks, esignStatus)
   };

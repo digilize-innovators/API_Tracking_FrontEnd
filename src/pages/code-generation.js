@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 'use-client'
-import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react'
+import React, { useState, useMemo, useLayoutEffect, useRef } from 'react'
 import { Button, TableContainer, Paper, Box, Grid2, Typography } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
@@ -40,7 +40,7 @@ const Index = () => {
   const [auditLogMark, setAuditLogMark] = useState('')
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
-  const [codeRequestData, setCodeRequest] = useState({ data: [], index: 0 })
+  const [codeRequestData, setCodeRequestData] = useState({ data: [], index: 0 })
   const [availableCodeData, setAvailableCodeData] = useState({})
   const [formData, setFormData] = useState({})
   const [isCodeReGeneration, setIsCodeReGeneration] = useState(false)
@@ -102,112 +102,119 @@ const Index = () => {
     setOpenModalApprove(false)
   }
 
-  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult', { isAuthenticated, isApprover, esignStatus, user })
+  const resetState = () => {
+  setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' });
+  setAuthModalOpen(false);
+  setEsignDownloadPdf(false);
+};
 
-    const resetState = () => {
-      setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-      setAuthModalOpen(false)
-      setEsignDownloadPdf(false)
-    }
-    if (!isAuthenticated) {
-      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.' })
-      setAlertData({ ...alertData, openSnackbar: true })
-      resetState()
-      return
-    }
-
-    const handleApproverActions = async () => {
-      const data = {
-        modelName: 'codeGenerationRequest',
-        esignStatus,
-        id: eSignStatusId,
-        name: `Code Generation ${esignStatus} of batch_no=${auditLogMark}`,
-        audit_log: config?.config?.audit_logs
-          ? {
-              user_id: user.userId,
-              user_name: user.userName,
-              remarks: remarks || `code generation ${esignStatus} - ${auditLogMark}`,
-              authUser: user.user_id
-            }
-          : {}
-      }
-      if (esignStatus === 'approved' && esignDownloadPdf) {
-        setOpenModalApprove(false)
-        console.log('esign is approved for approver')
-        downloadPdf(tableData, tableHeaderData, tableBody, codeRequestData.data, user)
-        if (config?.config?.audit_logs) {
-          const data = {}
-          data.audit_log = {
-            audit_log: true,
-            performed_action: 'Export report of codeGeneration',
-            remarks: remarks?.length > 0 ? remarks : `Code generation export report `,
-            authUser: user
-          }
-          await api(`/auditlog/`, data, 'post', true)
+const handleApproverActions = async (user, esignStatus, remarks) => {
+  const data = {
+    modelName: 'codeGenerationRequest',
+    esignStatus,
+    id: eSignStatusId,
+    name: `Code Generation ${esignStatus} of batch_no=${auditLogMark}`,
+    audit_log: config?.config?.audit_logs
+      ? {
+          user_id: user.userId,
+          user_name: user.userName,
+          remarks: remarks || `code generation ${esignStatus} - ${auditLogMark}`,
+          authUser: user.user_id
         }
-        resetState()
-        return
-      }
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      if (res.data) {
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: res.data.code === 200 ? 'success' : 'error',
-          message: res.data.message
-        })
-      }
-      if (res?.data.esign_status === 'rejected') {
-        console.log('approver rejected')
-        setOpenModalApprove(false)
-        resetState()
-      }
-      setTableHeaderData({ ...tableHeaderData, searchVal: '', esignStatus: '' })
+      : {}
+  };
+
+  if (esignStatus === 'approved' && esignDownloadPdf) {
+    setOpenModalApprove(false);
+    console.log('esign is approved for approver');
+    downloadPdf(tableData, tableHeaderData, tableBody, codeRequestData.data, user);
+
+    if (config?.config?.audit_logs) {
+      const auditPayload = {
+        audit_log: true,
+        performed_action: 'Export report of codeGeneration',
+        remarks: remarks?.length > 0 ? remarks : `Code generation export report `,
+        authUser: user
+      };
+      await api(`/auditlog/`, { audit_log: auditPayload }, 'post', true);
     }
 
-    const handleCreatorActions = () => {
-      if (esignStatus === 'rejected') {
-        setAuthModalOpen(false)
-        setOpenModalApprove(false)
-        setAlertData({
-          ...alertData,
-          openSnackbar: true,
-          type: 'error',
-          message: 'Access denied for this user.'
-        })
-      }
-      if (esignStatus === 'approved') {
-        if (esignDownloadPdf) {
-          console.log('esign is approved for creator to download')
-          setOpenModalApprove(true)
-        } else {
-          console.log('esign is approved for creator ', user)
-          isCodeReGeneration
-            ? handleGenerateCode(true, null, user, remarks)
-            : handleGenerateCode(false, formData, user, remarks)
-        }
-      }
-    }
-
-    if (!isApprover && esignDownloadPdf) {
-      setAlertData({
-        ...alertData,
-        openSnackbar: true,
-        type: 'error',
-        message: 'Access denied: Download pdf disabled for this user.'
-      })
-      resetState()
-      return
-    }
-
-    if (isApprover) {
-      await handleApproverActions()
-    } else {
-      handleCreatorActions()
-    }
-    resetState()
+    return;
   }
+
+  const res = await api('/esign-status/update-esign-status', data, 'patch', true);
+  if (res?.data) {
+    setAlertData(prev => ({
+      ...prev,
+      openSnackbar: true,
+      type: res.data.code === 200 ? 'success' : 'error',
+      message: res.data.message
+    }));
+
+    if (res?.data.esign_status === 'rejected') {
+      console.log('approver rejected');
+      setOpenModalApprove(false);
+    }
+
+    setTableHeaderData(prev => ({ ...prev, searchVal: '', esignStatus: '' }));
+  }
+};
+
+const handleCreatorActions = (user, esignStatus, remarks) => {
+  if (esignStatus === 'rejected') {
+    setAuthModalOpen(false);
+    setOpenModalApprove(false);
+    setAlertData(prev => ({
+      ...prev,
+      openSnackbar: true,
+      type: 'error',
+      message: 'Access denied for this user.'
+    }));
+    return;
+  }
+
+  if (esignStatus === 'approved') {
+    if (esignDownloadPdf) {
+      console.log('esign is approved for creator to download');
+      setOpenModalApprove(true);
+    } else {
+      console.log('esign is approved for creator ', user);
+      isCodeReGeneration
+        ? handleGenerateCode(true, null, user, remarks)
+        : handleGenerateCode(false, formData, user, remarks);
+    }
+  }
+};
+
+const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+  console.log('handleAuthResult', { isAuthenticated, isApprover, esignStatus, user });
+
+  if (!isAuthenticated) {
+    setAlertData({ type: 'error', message: 'Authentication failed, Please try again.' });
+    setAlertData(prev => ({ ...prev, openSnackbar: true }));
+    resetState();
+    return;
+  }
+
+  if (!isApprover && esignDownloadPdf) {
+    setAlertData(prev => ({
+      ...prev,
+      openSnackbar: true,
+      type: 'error',
+      message: 'Access denied: Download pdf disabled for this user.'
+    }));
+    resetState();
+    return;
+  }
+
+  if (isApprover) {
+    await handleApproverActions(user, esignStatus, remarks);
+  } else {
+    handleCreatorActions(user, esignStatus, remarks);
+  }
+
+  resetState();
+};
 
   const handleAuthCheck = async row => {
     console.log('handleAuthCheck', row)
@@ -408,7 +415,7 @@ const Index = () => {
 
                   {apiAccess.addApiAccess && (
                     <Box className='mx-2'>
-                      <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                      <Button variant='contained' sx={{py:2}} onClick={handleOpenModal} >
                         <span>
                           <IoMdAdd />
                         </span>
@@ -425,7 +432,7 @@ const Index = () => {
               </Typography>
               <TableContainer component={Paper}>
                 <TableCodeGeneration
-                  setCodeRequest={setCodeRequest}
+                  setCodeRequest={setCodeRequestData}
                   tableHeaderData={tableHeaderData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}

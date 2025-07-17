@@ -59,13 +59,13 @@ const Row = ({
           {serialNumber}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.product.product_history[0].product_name}
+          {row.product?.product_history[0]?.product_name}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {row.batch.batch_no}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.locations.history[0].location_name}
+          {row.locations?.history[0]?.location_name}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {row.batch.qty}
