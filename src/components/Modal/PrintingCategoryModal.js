@@ -18,15 +18,26 @@ import CustomTextField from 'src/components/CustomTextField'
 import PropTypes from 'prop-types'
 
 const printerValidationSchema = yup.object().shape({
-  printerCategoryID: yup.string().required("printer category id can't be empty"),
+  printerCategoryID: yup
+    .string()
+    .trim() // removes leading/trailing spaces
+    .matches(/^[a-zA-Z0-9-]+$/, 'Only letters, numbers, and hyphens are allowed. No spaces.')
+    .max(30, 'Printer Category ID should be less than 30 characters')
+    .required("Printer Category ID can't be empty"),
+
   printerCategoryName: yup
     .string()
-    .required("Printer Name can't be empty")
-    .max(100, 'Printer Name length should be less than 101')
-    .matches(/^[a-zA-Z0-9\s-]+$/, 'Printer name cannot contain any special symbols'),
+    .trim()
+    .matches(/^[a-zA-Z0-9\s-]+$/, 'Printer name cannot contain any special symbols')
+    .max(50, 'Printer Name length should be less than 50')
+    .required("Printer Name can't be empty"),
 
-  printerType: yup.string().required('Printing Technology is required')
-})
+  printerType: yup
+    .string()
+    .trim()
+    .required('Printing Technology is required')
+});
+
 
 const PrintingCategoryModal = ({ open, onClose, editData, handleSubmitForm }) => {
   const {

@@ -12,9 +12,6 @@ import {
 } from 'recharts';
 
 const TopPerformingLocationsData = ({ data }) => {
-  console.log("getTopPerformingLocationsData :", data);
-
-  const yAxisKey = data?.[0]?.year ? 'year' : 'month';
 
   // Prepare chart data with dynamic tooltip label
   const chartData = data?.map((item) => {
@@ -23,10 +20,11 @@ const TopPerformingLocationsData = ({ data }) => {
     const truncatedName = fullName.length > 10 ? `${fullName.slice(0,8)} ..`: fullName;
     return {
       name: truncatedName,
-      topLocations: parseInt(item.total, 10),
+      top_Locations: parseInt(item.total, 10),
       tooltipLabel: `${item.location_name} (${timeLabel})`,
     };
   });
+
 
   return (
     <div
@@ -51,7 +49,7 @@ const TopPerformingLocationsData = ({ data }) => {
           fontWeight: '580',
         }}
       >
-        Top Performing Locations ({yAxisKey})
+        Top Performing Locations 
       </h3>
 
       <ResponsiveContainer width="100%" height="100%">
@@ -94,9 +92,10 @@ const TopPerformingLocationsData = ({ data }) => {
           />
 
           <Legend layout="horizontal" verticalAlign="bottom" align="center" />
-          <Bar dataKey="topLocations" fill="#00d09c" barSize={20}>
+          <Bar dataKey="top_Locations"                           name="Top Locations"
+ fill="#00d09c" barSize={20}>
             <LabelList
-              dataKey="topLocations"
+              dataKey="top_Locations"
               position="right"
               style={{ fontSize: 12 }}
             />

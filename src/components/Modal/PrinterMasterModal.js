@@ -11,6 +11,7 @@ import { useLoading } from 'src/@core/hooks/useLoading'
 import { useRouter } from 'next/router'
 import { useAuth } from 'src/Context/AuthContext'
 import PropTypes from 'prop-types'
+import isValidIPv4 from 'src/@core/utils/isValidIPv4'
 
 const PrinterMasterSchema = yup.object().shape({
   printerId: yup
@@ -34,9 +35,8 @@ const PrinterMasterSchema = yup.object().shape({
     .max(65535, 'Port number must be less than or equal to 65535'),
   printerIp: yup
     .string()
-    .trim()
-    .required("Printer IP can't be empty")
-.matches(/^(\d{1,3}\.){3}\d{1,3}$/, 'Invalid IP address format')
+    .trim().required("IP Address can't be empty")
+        .test("is-valid-ipv4", "Invalid IPv4 address", (value) => isValidIPv4(value)),
 })
 
 function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {

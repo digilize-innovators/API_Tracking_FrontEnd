@@ -1,5 +1,6 @@
 // src/components/AreaChart.js
 
+import PropTypes from "prop-types";
 import React from "react";
 import { Area, AreaChart, Tooltip, XAxis, YAxis, ResponsiveContainer, Legend } from "recharts";
 
@@ -73,6 +74,7 @@ const Areachart = ({ data }) => {
                     <Area
                         type="monotone"
                         dataKey="executedBatch"
+                        name="Executed Batches"
                         stroke="#00d09c"
                         fillOpacity={1}
                         fill="url(#colorUv)"
@@ -80,6 +82,7 @@ const Areachart = ({ data }) => {
                     <Area
                         type="monotone"
                         dataKey="totalBatch"
+                        name="Total Batches"
                         stroke="#5EADAE"
                         fillOpacity={1}
                         fill="url(#colorPv)"
@@ -89,6 +92,8 @@ const Areachart = ({ data }) => {
         </div>
     );
 };
-
+Areachart.propTypes={
+    data:PropTypes.any
+}
 export default Areachart;
 

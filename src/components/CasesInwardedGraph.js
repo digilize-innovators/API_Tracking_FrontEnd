@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import React from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
@@ -28,7 +29,7 @@ const CasesInwarded = ({ data }) => {
           fontWeight: '580'
         }}
       >
-        Cases Inwarded ({xAxisKey})
+        Cases Inwarded
       </h3>
 
       <ResponsiveContainer width='100%' height='100%'>
@@ -52,5 +53,7 @@ const CasesInwarded = ({ data }) => {
     </div>
   )
 }
-
+CasesInwarded.propTypes={
+  data:PropTypes.any
+}
 export default CasesInwarded

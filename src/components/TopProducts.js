@@ -12,7 +12,24 @@ import {
 } from 'recharts';
 import PropTypes from 'prop-types';
 
+const CustomYAxisTick = (props) => {
+  const { x, y, payload } = props;
 
+  return (
+    <text
+      x={x - 5}
+      y={y + 4}
+      textAnchor="end"
+      fill="#666"
+      fontSize={12}
+    >
+      {payload?.value}
+    </text>
+  );
+};
+CustomYAxisTick.propTypes={
+  props:PropTypes.any
+}
 const TopProductShow = ({ data }) => {
   console.log("Top 10 Products :=>", data);
 
@@ -71,36 +88,14 @@ const TopProductShow = ({ data }) => {
           <YAxis
             dataKey="name"
             type="category"
-            tick={({ x, y, payload }) => {
-              return (
-                <text
-                  x={x - 5}
-                  y={y + 4}
-                  textAnchor="end"
-                  fill="#666"
-                  fontSize={12}
-                >
-                  {payload.value}
-                </text>
-              );
-            }}
+            tick={<CustomYAxisTick />}
             width={95}
             interval={0}
             axisLine={false}
             tickLine={false}
           />
 
-          {/* <Tooltip
-            formatter={(value) => [value, 'Total']}
-            labelFormatter={(label) => `Product : ${label}`}
-            contentStyle={{
-              backgroundColor: '#393939',
-              borderRadius: '4px',
-              border: 'none',
-              color: '#fff',
-              fontSize: 12,
-            }}
-          /> */}
+          
           <Tooltip
             formatter={(value, name, props) => [value, 'Total']}
             labelFormatter={(label, payload) => {
@@ -121,7 +116,7 @@ const TopProductShow = ({ data }) => {
             align="center"
           />
 
-          <Bar dataKey="topProducts" fill="#00d09c" barSize={20} >
+          <Bar dataKey="topProducts"  name="Top Products" fill="#00d09c" barSize={20} >
             <LabelList
               dataKey="topProducts"
               position="right"

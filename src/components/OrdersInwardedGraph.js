@@ -38,7 +38,7 @@ const OrdersInwarded = ({ data }) => {
           fontWeight: '580',
         }}
       >
-        Orders Inwarded ({xAxisKey})
+        Orders Inwarded 
       </h3>
 
       <ResponsiveContainer width="100%" height="100%">

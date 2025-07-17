@@ -50,7 +50,7 @@ const TopSellingProductsData = ({ data }) => {
           fontWeight: '580',
         }}
       >
-        Top Selling Products ({yAxisKey})
+        Top Selling Products 
       </h3>
 
       <ResponsiveContainer width="100%" height="100%">
@@ -90,7 +90,7 @@ const TopSellingProductsData = ({ data }) => {
             }}
           />
           <Legend layout="horizontal" verticalAlign="bottom" align="center" />
-          <Bar dataKey="topProducts" fill="#00d09c" barSize={20}>
+          <Bar dataKey="topProducts"  name="Top Products" fill="#00d09c" barSize={20}>
             <LabelList
               dataKey="topProducts"
               position="right"

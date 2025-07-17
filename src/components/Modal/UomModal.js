@@ -11,7 +11,13 @@ const UomSchema = yup.object().shape({
   unitName: yup
     .string()
     .required("Unit name can't be empty")
-    .max(50, 'Unit name length should be <= 50'),
+    .max(50, 'Unit name length should be <= 50')
+     .test(
+    'no-whitespace',
+    'Unit name cannot be just spaces',
+    (value) => value?.trim()?.length > 0
+  )
+  .transform((value) => value?.trim()),
 });
 
 const UomModal = ({ open, onClose, editData, handleSubmitForm }) => {

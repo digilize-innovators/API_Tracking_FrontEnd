@@ -238,6 +238,7 @@ const TablePrinterCategory = ({
   const handleSort = (path) => {
    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
    const data = allPrinterCategoryData?.data || [];
+   console.log(data)
    const sortedData = sortData(data, path, newSortDirection);
     setAllPrinterCategoryData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
@@ -330,8 +331,13 @@ const TablePrinterCategory = ({
               </TableCell>
               {config?.config?.esign_status === true && <TableCell align='center'>E-Sign</TableCell>}
 
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
+              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+              style={{ cursor: 'pointer' }}
+                onClick={() => handleSort('printingTechnology')}>
                 Printer Type
+                  <IconButton align='center' aria-label='expand row' size='small'>
+                  {getSortIcon(sortBy, 'printingTechnology', sortDirection)}
+                </IconButton>
               </TableCell>
               <TableCell
                 align='center'

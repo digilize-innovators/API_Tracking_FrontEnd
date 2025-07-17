@@ -66,6 +66,7 @@ const Barchart = ({ data }) => {
           <Legend />
           <Bar
             dataKey="codeGenerated"
+            name="Code Generated"
             fill="#00d09c"
             //radius={[10, 10, 0, 0]}
             barSize={20}
