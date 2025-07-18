@@ -486,20 +486,6 @@ const Dashboard = () => {
             errorMessage = 'Please select both the start and end month and year.';
           }
           break;
-
-        // case 'custom':
-        //   params.append('selectOption', 'custom');
-        //   console.log(
-        //     (customDate?.customStartDate != '' && customDate?.customEndDate != '')
-        //   )
-        //   if (customDate?.customStartDate != '' && customDate?.customEndDate != '') {
-        //     params.append('startDate', customDate.customStartDate);
-        //     params.append('endDate', customDate.customEndDate);
-        //   } else {
-        //     errorMessage = 'Please select both the start and end date.';
-        //   }
-        //   break;
-
         default:
           errorMessage = 'Invalid time period selected.';
       }

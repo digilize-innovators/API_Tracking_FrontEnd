@@ -1,17 +1,12 @@
-import React, { useState, Fragment, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
-  Tooltip,
-  Typography,
   IconButton,
   TableCell,
   TableBody,
   TableHead,
   TableRow,
-  Collapse,
-  Table,
-  Box
+  
 } from '@mui/material'
-import { MdModeEdit, MdOutlineDomainVerification, MdOutlineCloudUpload } from 'react-icons/md'
 import ChevronUp from 'mdi-material-ui/ChevronUp'
 import ChevronDown from 'mdi-material-ui/ChevronDown'
 import CustomTable from 'src/components/CustomTable'
@@ -28,6 +23,8 @@ import { useLoading } from 'src/@core/hooks/useLoading'
 import { useRouter } from 'next/router'
 import { api } from 'src/utils/Rest-API'
 import { sortData } from 'src/utils/sortData'
+import BatchAction from '../TableAction/BatchAction'
+import BatchHistory from '../TableHistory/BatchHistory'
 const Row = ({
   row,
   index,
@@ -42,207 +39,49 @@ const Row = ({
   apiAccess,
   isBatchCloud
 }) => {
-  const isOpen = openRows[row.id]
-  const serialNumber = getSerialNumber(index, page, rowsPerPage)
+  const isOpen = openRows[row.id];
+  const serialNumber = getSerialNumber(index, page, rowsPerPage);
+
   return (
-    <Fragment>
-      <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
-        <TableCell className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          <IconButton align='center' aria-label='expand row' size='small' onClick={() => handleRowToggle(row.id)}>
+    <>
+      <TableRow>
+        <TableCell>
+          <IconButton size="small" onClick={() => handleRowToggle(row.id)}>
             {isOpen ? <ChevronUp /> : <ChevronDown />}
           </IconButton>
         </TableCell>
-        <TableCell
-          align='center'
-          component='th'
-          scope='row'
-          className='p-2'
-          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
-        >
-          {serialNumber}
-        </TableCell>
-        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.batch_no}
-        </TableCell>
-        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.product?.product_history[0]?.product_name}
-        </TableCell>
-        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.location?.history[0]?.location_name}
-        </TableCell>
-
-        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {moment(row.manufacturing_date).format('DD/MM/YYYY')}
-        </TableCell>
-        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {moment(row.expiry_date).format('DD/MM/YYYY')}
-        </TableCell>
-
-        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.qty}
-        </TableCell>
-        {config?.config?.esign_status === true && (
-          <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
+        <TableCell align="center">{serialNumber}</TableCell>
+        <TableCell align="center">{row.batch_no}</TableCell>
+        <TableCell align="center">{row.product?.product_history[0]?.product_name}</TableCell>
+        <TableCell align="center">{row.location?.history[0]?.location_name}</TableCell>
+        <TableCell align="center">{moment(row.manufacturing_date).format('DD/MM/YYYY')}</TableCell>
+        <TableCell align="center">{moment(row.expiry_date).format('DD/MM/YYYY')}</TableCell>
+        <TableCell align="center">{row.qty}</TableCell>
+        {config?.config?.esign_status && (
+          <TableCell align="center">
+            <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
+          </TableCell>
         )}
-        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {moment(row?.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
-        </TableCell>
+        <TableCell align="center">{moment(row?.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}</TableCell>
         {isBatchCloud && (
-          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-            {row.sent_to_cloud ? 'Completed' : 'Pending'}
-          </TableCell>
+          <TableCell align="center">{row.sent_to_cloud ? 'Completed' : 'Pending'}</TableCell>
         )}
-        {row.esign_status === 'pending' && config?.config?.esign_status === true && !isBatchCloud ? (
-          <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
-            <span>
-              <MdOutlineDomainVerification fontSize={20} onClick={() => handleAuthCheck(row)} />
-            </span>
-          </TableCell>
-        ) : (
-          <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
-            {isBatchCloud ? (
-              <Tooltip>
-                <span>
-                  <MdOutlineCloudUpload
-                    fontSize={20}
-                    onClick={() =>
-                      !row?.sent_to_cloud && row.esign_status === 'approved' && row.isBatchEnd === true
-                        ? handleUpdate(row)
-                        : ''
-                    }
-                    style={{
-                      cursor:
-                        !row?.sent_to_cloud && row.esign_status === 'approved' && row.isBatchEnd === true
-                          ? 'pointer'
-                          : 'not-allowed',
-                      opacity:
-                        !row?.sent_to_cloud && row.esign_status === 'approved' && row.isBatchEnd === true ? 1 : 0.5
-                    }}
-                  />
-                </span>
-              </Tooltip>
-            ) : (
-              <Tooltip
-                title={
-                  !apiAccess.editApiAccess || row.isBatchEnd
-                    ? `${row.isBatchEnd ? 'Can not edit batch due to mark end-batch' : 'No edit access'}`
-                    : ''
-                }
-              >
-                <span>
-                  <MdModeEdit
-                    fontSize={20}
-                    onClick={apiAccess.editApiAccess && !row.isBatchEnd ? () => handleUpdate(row) : null}
-                    style={{
-                      cursor: apiAccess.editApiAccess ? 'pointer' : 'not-allowed',
-                      opacity: apiAccess.editApiAccess ? 1 : 0.5
-                    }}
-                  />
-                </span>
-              </Tooltip>
-            )}
-          </TableCell>
-        )}
+        <BatchAction
+          row={row}
+          config={config}
+          apiAccess={apiAccess}
+          isBatchCloud={isBatchCloud}
+          handleAuthCheck={handleAuthCheck}
+          handleUpdate={handleUpdate}
+        />
       </TableRow>
       {isOpen && (
-        <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          <TableCell colSpan={12} sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-            <Collapse in={isOpen} timeout='auto' unmountOnExit>
-              <Box sx={{ mx: 2 }}>
-                <Typography variant='h6' gutterBottom component='div'>
-                  History
-                </Typography>
-                <Box style={{ display: 'flex', justifyContent: 'center' }}>
-                  <Table size='small' aria-label='purchases'>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Sr.No.
-                        </TableCell>
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Batch No.
-                        </TableCell>
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Product Name
-                        </TableCell>
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Location Name
-                        </TableCell>
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Manufacturing Date
-                        </TableCell>
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Expiry Date
-                        </TableCell>
-
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Quantity
-                        </TableCell>
-                        {config?.config?.esign_status === true && (
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            E-Sign
-                          </TableCell>
-                        )}
-                        <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                          Created At
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {historyData[row.id]?.map((historyRow, idx) => (
-                        <TableRow
-                          key={historyRow.created_at}
-                          align='center'
-                          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
-                        >
-                          <TableCell
-                            component='th'
-                            scope='row'
-                            align='center'
-                            sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
-                          >
-                            {idx + 1}
-                          </TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {historyRow.batch_no}
-                          </TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {historyRow.product?.product_history[0]?.product_name}
-                          </TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {historyRow.location?.history[0]?.location_name}
-                          </TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {moment(historyRow.manufacturing_date).format('DD/MM/YYYY')}
-                          </TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {moment(historyRow.expiry_date).format('DD/MM/YYYY')}
-                          </TableCell>
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {historyRow.qty}
-                          </TableCell>
-                          {config?.config?.esign_status === true && (
-                            <StatusChip
-                              label={historyRow.esign_status}
-                              color={statusObj[historyRow.esign_status]?.color || 'default'}
-                            />
-                          )}
-                          <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {moment(historyRow?.created_at).format('DD/MM/YYYY, hh:mm:ss a')}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Box>
-              </Box>
-            </Collapse>
-          </TableCell>
-        </TableRow>
+        <BatchHistory historyData={historyData} row={row} config={config} />
       )}
-    </Fragment>
-  )
-}
+    </>
+  );
+};
+
 Row.propTypes = {
   row: PropTypes.any,
   index: PropTypes.any,
@@ -303,13 +142,13 @@ const TableBatch = ({
     setSortDirection(newSortDirection)
     setSortBy(path)
   }
-  const getBatches = async (pageNumber, rowsNumber, status, search, filterLocation) => {
-    const paramsPage = pageNumber || page
-    const paramsRows = rowsNumber || rowsPerPage
-    const paramsEsignStatus = status === '' ? status : tableHeaderData.esignStatus
-    const paramsSearchVal = search === '' ? search : tableHeaderData.searchVal
-    const paramsFilterLocationVal = filterLocation === '' ? filterLocation : filterLocationVal
-    const paramsFilterProductVal = filterProductVal === '' ? filterProductVal : filterProductVal
+  const getBatches = async () => {
+    const paramsPage = page
+    const paramsRows =  rowsPerPage
+    const paramsEsignStatus =  tableHeaderData.esignStatus
+    const paramsSearchVal = tableHeaderData.searchVal
+    const paramsFilterLocationVal =  filterLocationVal
+    const paramsFilterProductVal = filterProductVal
     try {
       const params = new URLSearchParams({
         page: paramsPage + 1,
@@ -487,6 +326,8 @@ TableBatch.propTypes = {
   handleAuthCheck: PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
+  setBatch:PropTypes.any,
+  pendingAction:PropTypes.any,
   isBatchCloud: PropTypes.any,
   filterProductVal: PropTypes.any,
   filterLocationVal: PropTypes.any,

@@ -12,10 +12,8 @@ import {
 } from 'recharts';
 
 const TopSellingProductsData = ({ data }) => {
-  const yAxisKey = data?.[0]?.year ? 'year' : 'month';
   console.log("DATA TOP SELLING...", data);
   
-  // Prepare chart data with dynamic tooltip label
   const chartData = data?.map((item) => {
     const timeLabel = item.month || item.year || '';
     const fullName = item.product_name;

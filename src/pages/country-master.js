@@ -58,7 +58,6 @@ const Index = () => {
                       variant='contained'
                       className='py-2 d-flex align-items-center'
                       onClick={handleOpenModal}
-                      role='button'
                     >
                       <span>
                         <IoMdAdd />

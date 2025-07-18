@@ -1,9 +1,8 @@
 import React from 'react';
 import {Box,Card,CardContent,Typography} from '@mui/material';
-import { MdOutlinePersonOutline, MdOutlineBatchPrediction } from "react-icons/md";
+import { MdOutlinePersonOutline, MdOutlineBatchPrediction,MdProductionQuantityLimits } from "react-icons/md";
 import { AiOutlineProduct, } from 'react-icons/ai'
 import { TfiLayoutMediaRightAlt } from 'react-icons/tfi'
-import { MdProductionQuantityLimits } from "react-icons/md";
 import Link from 'next/link';
 import PropTypes from 'prop-types';
 

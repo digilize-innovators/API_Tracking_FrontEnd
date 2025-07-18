@@ -12,8 +12,7 @@ import {
 } from 'recharts';
 import PropTypes from 'prop-types';
 
-const CustomYAxisTick = (props) => {
-  const { x, y, payload } = props;
+const CustomYAxisTick = ({ x, y, payload }) => {
 
   return (
     <text
@@ -28,7 +27,9 @@ const CustomYAxisTick = (props) => {
   );
 };
 CustomYAxisTick.propTypes={
-  props:PropTypes.any
+  x:PropTypes.any,
+  y:PropTypes.any,
+  payload:PropTypes.any
 }
 const TopProductShow = ({ data }) => {
   console.log("Top 10 Products :=>", data);

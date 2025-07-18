@@ -62,7 +62,7 @@ export default function ExcelLikeDashboard({ data }) {
   // If no data is available, show a message
   if (!currentPrintingStatus || currentPrintingStatus.length === 0) {
     return (
-      <Box sx={{ p: 4 }}>
+      <Box sx={{ p: 4, background:'#fff',marginTop:4 }}>
         <Typography>No printing status data available.</Typography>
       </Box>
     )

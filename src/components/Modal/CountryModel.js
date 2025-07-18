@@ -236,14 +236,18 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
       setCrmURL({ value: 'CRMURL', checked: true })
     }
 
-    setUrlMakerData(prevData =>
-      prevData.map(group => ({
-        ...group,
-        options: group?.options?.map(option =>
-          valuesToFind?.includes(option.value) ? { ...option, checked: true } : option
-        )
-      }))
-    )
+     const updateGroupOptions = group => {
+    const updatedOptions = group?.options?.map(option => {
+      if (valuesToFind?.includes(option.value)) {
+        return { ...option, checked: true };
+      }
+      return option;
+    });
+
+    return { ...group, options: updatedOptions };
+  };
+
+  setUrlMakerData(prevData => prevData.map(updateGroupOptions))
   }
 
   const getCRMURL = async () => {
@@ -269,16 +273,16 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
     }
   }
 
-  const validateNotEmpty = (field, value, fieldName, required = true) => {
-    if ((required && value?.trim() === '') || (!required && !value)) {
-      field({ isError: true, message: `${fieldName} can't be empty` })
-    } else {
-      field({ isError: false, message: '' })
-    }
+  const validateNotEmpty = (field, value, fieldName) => {
+  if (!value?.trim()) {
+    field({ isError: true, message: `${fieldName} can't be empty` });
+  } else {
+    field({ isError: false, message: '' });
+  }
   }
 
   const applyValidation = () => {
-    validateNotEmpty(setErrorCountry, country, 'Country', true)
+    validateNotEmpty(setErrorCountry, country, 'Country')
     // validateNotEmpty(setErrorCodeStructure, codeStructure, 'url', true)
   }
 

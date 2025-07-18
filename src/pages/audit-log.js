@@ -1,15 +1,13 @@
 'use-client'
-import React, { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
+import React, { useState, useRef, useMemo, useLayoutEffect } from 'react'
 import {  TextField, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
 import TableAuditLog from 'src/views/tables/TableAuditLog'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
 import { useAuth } from 'src/Context/AuthContext'
 import Head from 'next/head'
-import { LocalizationProvider, StaticDateTimePicker } from '@mui/x-date-pickers'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { LocalizationProvider } from '@mui/x-date-pickers'
 import { useSettings } from 'src/@core/hooks/useSettings'
-import moment from 'moment'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { validateToken } from 'src/utils/ValidateToken'
@@ -19,6 +17,10 @@ import AuthModal from 'src/components/authModal'
 import { getTokenValues } from '../utils/tokenUtils'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import { api } from 'src/utils/Rest-API'
+import { DesktopDateTimePicker } from '@mui/x-date-pickers/DesktopDateTimePicker'
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
+
+
 
 const Index = () => {
   const { settings } = useSettings()
@@ -36,13 +38,9 @@ const Index = () => {
 
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData } = useAuth()
-  const [openStartPicker, setOpenStartPicker] = useState(false)
-  const [openEndPicker, setOpenEndPicker] = useState(false)
+ 
   const [config, setConfig] = useState(null)
  
-
-  const startPickerRef = useRef(null)
-  const endPickerRef = useRef(null)
   const searchBarRef = useRef(null)
 
   const tableBody = auditLogData?.data?.map((item, index) => [
@@ -110,21 +108,6 @@ const Index = () => {
     }
     downloadPdf(tableData, tableHeaderData, tableBody, auditLogData.data, userDataPdf)
   }
-
-  useEffect(() => {
-    const handleClickOutside = event => {
-      if (startPickerRef.current && !startPickerRef.current.contains(event.target)) {
-        setOpenStartPicker(false)
-      }
-      if (endPickerRef.current && !endPickerRef.current.contains(event.target)) {
-        setOpenEndPicker(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
     console.log('handleAuthResult 02', config.userId, user.user_id)
@@ -188,54 +171,44 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-3'>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box ref={startPickerRef}>
-                      <TextField
-                        label='Start Date'
-                        value={startDate ? moment(startDate).format('DD/MM/YYYY, hh:mm:ss') : ''}
-                        onFocus={() => setOpenStartPicker(true)}
-                        fullWidth
-                        size='small'
-                        readOnly
-                      />
-                      {openStartPicker && (
-                        <Box position='absolute' zIndex={1000}>
-                          <StaticDateTimePicker
-                            displayStaticWrapperAs='desktop'
-                            value={startDate}
-                            onChange={newValue => {
-                              setStartDate(newValue)
-                              setOpenStartPicker(false)
-                            }}
-                          />
-                        </Box>
-                      )}
-                    </Box>
-                    <Box sx={{ ml: 3 }} ref={endPickerRef}>
-                      <TextField
-                        label='End Date'
-                        value={endDate ? moment(endDate).format('DD/MM/YYYY, hh:mm:ss') : ''}
-                        onFocus={() => setOpenEndPicker(true)}
-                        fullWidth
-                        size='small'
-                        readOnly
-                      />
-                      {openEndPicker && (
-                        <Box position='absolute' zIndex={1000}>
-                          <StaticDateTimePicker
-                            displayStaticWrapperAs='desktop'
-                            value={endDate}
-                            onChange={newValue => {
-                              setEndDate(newValue)
-                              setOpenEndPicker(false)
-                            }}
-                          />
-                        </Box>
-                      )}
-                    </Box>
-                  </Box>
-                </LocalizationProvider>
+             <LocalizationProvider dateAdapter={AdapterMoment}>
+  <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+    {/* Start Date */}
+    <DesktopDateTimePicker
+      label="Start Date"
+      value={startDate}
+      onChange={(newValue) => setStartDate(newValue)}
+      inputFormat="DD/MM/YYYY"
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          fullWidth
+          size="small"
+          readOnly
+        />
+      )}
+    />
+
+    {/* End Date */}
+    <DesktopDateTimePicker
+      label="End Date"
+      value={endDate}
+      onChange={(newValue) => setEndDate(newValue)}
+      inputFormat="DD/MM/YYYY"
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          fullWidth
+          size="small"
+          readOnly
+        />
+      )}
+    />
+  </Box>
+</LocalizationProvider>
+
+
+
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
@@ -279,6 +252,8 @@ const Index = () => {
     </Box>
   )
 }
+
+
 export async function getServerSideProps(context) {
   return validateToken(context, 'Audit Logs')
 }
