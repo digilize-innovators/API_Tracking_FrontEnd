@@ -6,28 +6,6 @@ import VerticalNavItems from 'src/navigation/vertical';
 import VerticalAppBarContent from './components/vertical/AppBarContent';
 import { useSettings } from 'src/@core/hooks/useSettings';
 
-// Context definition (if needed elsewhere in the app)
-// export const LoaderContext = createContext({
-//   isLoading: false,
-//   setIsLoading: () => null,
-// });
-
-// export const LoaderProvider = ({ children }) => {
-//   const [isLoading, setIsLoading] = useState(false);
-//   const contextValue = useMemo(() => ({ isLoading, setIsLoading }), [isLoading, setIsLoading]);
-
-//   return (
-//     <LoaderContext.Provider value={contextValue}>
-//       {children}
-//     </LoaderContext.Provider>
-//   );
-// };
-
-// LoaderProvider.propTypes = {
-//   children: PropTypes.any,
-// };
-
-// Separated AppBarContent component
 const AppBarContent = ({ hidden, settings, saveSettings, toggleNavVisibility }) => {
   return (
     <VerticalAppBarContent
@@ -46,11 +24,17 @@ AppBarContent.propTypes = {
   toggleNavVisibility: PropTypes.any,
 };
 
-// Main UserLayout component
 const UpgradeToProImg = () => {
   return <></>;
 };
-
+const renderAppBarContent = (props) => (
+  <AppBarContent
+    hidden={props.hidden}
+    settings={props.settings}
+    saveSettings={props.saveSettings}
+    toggleNavVisibility={props.toggleNavVisibility}
+  />
+);
 const UserLayout = ({ children }) => {
   const { settings, saveSettings } = useSettings();
   const hidden = useMediaQuery(theme => theme.breakpoints.down('lg'));
@@ -63,14 +47,14 @@ const UserLayout = ({ children }) => {
       saveSettings={saveSettings}
       verticalNavItems={navItems}
       afterVerticalNavMenuContent={<UpgradeToProImg />}
-      verticalAppBarContent={() => (
-        <AppBarContent
-          hidden={hidden}
-          settings={settings}
-          saveSettings={saveSettings}
-          toggleNavVisibility={(props) => props.toggleNavVisibility}
-        />
-      )}
+     verticalAppBarContent={(props) =>
+    renderAppBarContent({
+      ...props,
+      hidden,
+      settings,
+      saveSettings
+    })
+  }
     >
       {children}
     </VerticalLayout>
@@ -79,7 +63,6 @@ const UserLayout = ({ children }) => {
 
 UserLayout.propTypes = {
   children: PropTypes.any,
-  toggleNavVisibility: PropTypes.any,
 };
 
 export default UserLayout;

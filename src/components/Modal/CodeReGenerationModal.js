@@ -28,66 +28,81 @@ const CodeReGenerationModal = ({
   availableCodeData,
   setAvailableCodeData,
   setAuthModalOpen,
+  handleGenerateCode,
   config
 }) => {
-  const [selected, setSelected] = useState([])
   const [errorData, setErrorData] = useState({ error: false, message: '' })
-  const [isCodeAvailable, setIsCodeAvailable] = useState()
-  useEffect(() => {
-    setSelected([])
-    setIsCodeAvailable(false)
+  const [isCodeAvailable, setIsCodeAvailable] = useState(false)
 
-    if (availableCodeData?.packagingHierarchyData?.some(element => element?.availableCodes > 0)) {
-      setIsCodeAvailable(true)
-    }
+  useEffect(() => {
+    setIsCodeAvailable(
+      availableCodeData?.packagingHierarchyData?.some(row => row?.availableCodes > 0)
+    )
+
+    // Reset selections
+    setAvailableCodeData(prev => ({
+      ...prev,
+      packagingHierarchyData: prev.packagingHierarchyData?.map(row => ({
+        ...row,
+        selected: false,
+        generate: ''
+      }))
+    }))
     setErrorData({ error: false, message: '' })
-  }, [open, availableCodeData])
+  }, [open])
 
   const handleCheckboxChange = rowId => {
-    if (selected.includes(rowId)) {
-      setSelected(prev => prev.filter(id => id !== rowId))
-      setAvailableCodeData(prev => ({
-        ...prev,
-        packagingHierarchyData: prev.packagingHierarchyData.map(row =>
-          row.id === rowId ? { ...row, generate: '' } : row
-        )
-      }))
-    } else {
-      setSelected(prev => [...prev, rowId])
-    }
+    setAvailableCodeData(prev => ({
+      ...prev,
+      packagingHierarchyData: prev.packagingHierarchyData.map(row =>
+        row.id === rowId
+          ? {
+              ...row,
+              selected: !row.selected,
+              generate: !row.selected ? row.generate : ''
+            }
+          : row
+      )
+    }))
   }
 
   const changeGenereateCode = (id, value, availableValue) => {
-    if (value <= availableValue) {
-      const packagingHierarchyData = availableCodeData?.packagingHierarchyData
-      const updatedData = packagingHierarchyData.map(item => {
-        if (item.id === id) {
-          return { ...item, generate: value }
-        } else {
-          return item
-        }
-      })
-      setAvailableCodeData({ ...availableCodeData, packagingHierarchyData: updatedData })
-    }
-  }
-  const handleSubmit = () => {
-    const hasGeneratedCodes = availableCodeData.packagingHierarchyData.some(item => item.generate.length > 0)
-    if (config?.config?.esign_status && selected.length > 0 && hasGeneratedCodes) {
-      setErrorData({ error: false, message: '' })
-      setAuthModalOpen(true)
-    } else {
-      setErrorData({ error: true, message: 'Enter number code to generate ' })
+    if (parseInt(value || 0) <= availableValue) {
+      setAvailableCodeData(prev => ({
+        ...prev,
+        packagingHierarchyData: prev.packagingHierarchyData.map(row =>
+          row.id === id ? { ...row, generate: value } : row
+        )
+      }))
     }
   }
 
+  const handleSubmit = () => {
+    console.log('Selected rows:', availableCodeData.packagingHierarchyData);
+   const hasGenerated = availableCodeData.packagingHierarchyData.some(
+  row =>
+    row.selected &&
+    row.generate &&
+    /^\d+$/.test(row.generate) &&
+    parseInt(row.generate) > 0
+)
+    if(!hasGenerated)
+    {
+      setErrorData({ error: true, message: 'Enter number code to generate ' })
+      return
+    }
+     else if (config?.config?.esign_status) {
+      setErrorData({ error: false, message: '' })
+      setAuthModalOpen(true)
+      return 
+    } 
+   
+    handleGenerateCode(true)
+
+  }
+
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      data-testid='modal'
-      aria-labelledby='modal-modal-title'
-      aria-describedby='modal-modal-description'
-    >
+    <Modal open={open} onClose={onClose}>
       <Box sx={{ ...style, width: '70%', maxHeight: '700px', overflowY: 'auto' }}>
         <Typography variant='h3' className='my-2'>
           Re-Generate Codes
@@ -97,72 +112,62 @@ const CodeReGenerationModal = ({
           <Box className='w-50'>
             <TextField
               fullWidth
-              id='productId'
               label='Product'
-              placeholder='Product'
               value={availableCodeData?.product?.product_history[0]?.product_name}
-              disabled={true}
+              disabled
             />
           </Box>
           <Box className='w-50' sx={{ ml: 2 }}>
             <TextField
               fullWidth
-              id='batchId'
               label='Batch No.'
-              placeholder='Batch No.'
               value={availableCodeData?.batch?.batch_no}
-              disabled={true}
+              disabled
             />
           </Box>
           <Box className='w-50' sx={{ ml: 2 }}>
             <TextField
               fullWidth
-              id='location'
               label='Location'
-              placeholder='Location'
               value={availableCodeData?.locations?.history[0].location_name}
-              disabled={true}
+              disabled
             />
           </Box>
         </Grid2>
+
         <Grid2 item xs={12} className='d-flex justify-content-between align-items-center mb-2'>
           <Box className='w-50'>
             <TextField
               fullWidth
-              id='manufacturingDate'
               label='Mfg. Date'
-              placeholder='Mfg. Date'
               value={moment(availableCodeData?.batch?.manufacturing_date).format('DD-MM-YYYY')}
-              disabled={true}
+              disabled
             />
           </Box>
           <Box className='w-50' sx={{ ml: 2 }}>
             <TextField
               fullWidth
-              id='expiryDate'
               label='Expiry Date'
-              placeholder='Expiry Date'
               value={moment(availableCodeData?.batch?.expiry_date).format('DD-MM-YYYY')}
-              disabled={true}
+              disabled
             />
           </Box>
           <Box className='w-50' sx={{ ml: 2 }}>
             <TextField
               fullWidth
-              id='batchQuantity'
               label='Batch Quantity'
-              placeholder='Batch Quantity'
               value={availableCodeData?.batch?.qty}
-              disabled={true}
+              disabled
             />
           </Box>
         </Grid2>
+
         <Divider sx={{ my: 6, backgroundColor: 'black', width: '90%', mx: 'auto' }} />
 
         <Grid2 item xs={12} className='d-flex justify-content-between align-items-center mb-2'>
           <Box className='w-75'>
             <TableContainer component={Paper}>
-              <Table aria-label='simple table'>
+              <Table>
                 <TableHead>
                   <TableRow>
                     <TableCell></TableCell>
@@ -178,15 +183,18 @@ const CodeReGenerationModal = ({
                     <TableRow key={row.id}>
                       <Tooltip
                         title={
-                          selected.includes(row.id)
+                          row.selected
                             ? 'Unselect to disable input'
-                            : `Select to enable code generation on level ${parseInt(row.level)} `
+                            : `Select to enable code generation on level ${parseInt(row.level)}`
                         }
                         placement='right'
                         arrow
                       >
                         <TableCell padding='checkbox'>
-                          <Checkbox checked={selected.includes(row.id)} onChange={() => handleCheckboxChange(row.id)} />
+                          <Checkbox
+                            checked={row.selected}
+                            onChange={() => handleCheckboxChange(row.id)}
+                          />
                         </TableCell>
                       </Tooltip>
                       <TableCell>{parseInt(row.level)}</TableCell>
@@ -194,29 +202,26 @@ const CodeReGenerationModal = ({
                       <TableCell>{parseInt(row.generatedCodes)}</TableCell>
                       <TableCell>{parseInt(row.availableCodes)}</TableCell>
                       <TableCell onClick={e => e.stopPropagation()}>
-                        <div>
-                          <TextField
-                            value={row.generate}
-                            disabled={!selected.includes(row.id)}
-                            slotProps={{
-                              input: {
-                                inputMode: 'numeric', // Shows numeric keyboard on mobile
-                                pattern: '[0-9]*', // Allows only digits
-                                onInput: e => {
-                                  e.target.value = e.target.value.replace(/\D/g, '') // Remove non-digits live
-                                }
+                        <TextField
+                          value={row.generate}
+                          disabled={!row.selected}
+                          size='medium'
+                          slotProps={{
+                            input: {
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                              onInput: e => {
+                                e.target.value = e.target.value.replace(/\D/g, '')
                               }
-                            }}
-                            onChange={e => {
-                              const value = e.target.value
-                              if (/^\d*$/.test(value)) {
-                                // extra safety in case input event is bypassed
-                                changeGenereateCode(row.id, value, row.availableCodes)
-                              }
-                            }}
-                            size='medium'
-                          />
-                        </div>
+                            }
+                          }}
+                          onChange={e => {
+                            const value = e.target.value
+                            if (/^\d*$/.test(value)) {
+                              changeGenereateCode(row.id, value, row.availableCodes)
+                            }
+                          }}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -241,23 +246,21 @@ const CodeReGenerationModal = ({
             />
             <TextField
               fullWidth
-              id='packagingHierarchy'
               label='Packaging Hierarchy'
-              placeholder='Packaging Hierarchy'
               value={availableCodeData?.product?.product_history[0]?.packagingHierarchy}
-              disabled={true}
+              disabled
             />
           </Box>
         </Grid2>
-        <FormHelperText error>{errorData.error ? errorData.message : ''}</FormHelperText>
-        {console.log('iscodeAvailable', isCodeAvailable, availableCodeData?.batch?.isBatchEnd)}
 
-        <Grid2 item xs={12} className='my-3 '>
+        <FormHelperText error>{errorData.error ? errorData.message : ''}</FormHelperText>
+
+        <Grid2 item xs={12} className='my-3'>
           <Button
             variant='contained'
             sx={{ marginRight: 3.5 }}
             disabled={availableCodeData?.batch?.isBatchEnd || !isCodeAvailable}
-            onClick={() => handleSubmit()}
+            onClick={handleSubmit}
           >
             Generate
           </Button>
@@ -269,12 +272,15 @@ const CodeReGenerationModal = ({
     </Modal>
   )
 }
+
 CodeReGenerationModal.propTypes = {
   open: PropTypes.any,
   onClose: PropTypes.any,
   availableCodeData: PropTypes.any,
   setAvailableCodeData: PropTypes.any,
   setAuthModalOpen: PropTypes.any,
-  config: PropTypes.any
+  config: PropTypes.any,
+  handleGenerateCode:PropTypes.any
 }
+
 export default CodeReGenerationModal

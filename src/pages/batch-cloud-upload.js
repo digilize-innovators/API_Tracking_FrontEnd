@@ -40,8 +40,6 @@ const Index = () => {
   const [config, setConfig] = useState(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-  const [eSignStatusId, setESignStatusId] = useState('')
-  const [auditLogMark, setAuditLogMark] = useState('')
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const searchBarRef = useRef(null)
@@ -129,6 +127,7 @@ const Index = () => {
     setOpenModal(true)
   }
   const handleAuthModalClose = () => {
+    setEsignDownloadPdf(false)
     setAuthModalOpen(false)
     setOpenModalApprove(false)
   }
@@ -229,7 +228,6 @@ const Index = () => {
           }
           await api(`/auditlog/`, data, 'post', true)
         }
-        return
       } else if (esignStatus === 'rejected' && esignDownloadPdf) {
         console.log('approver rejected.')
         setOpenModalApprove(false)
@@ -277,20 +275,11 @@ const Index = () => {
   const handleAuthCheck = async row => {
     return
 
-    // console.log('handleAuthCheck', row)
-    // setApproveAPI({
-    //   approveAPIName: 'batch-cloud-upload-create',
-    //   approveAPImethod: 'POST',
-    //   approveAPIEndPoint: '/api/v1/batch'
-    // })
-    // setAuthModalOpen(true)
-    // setESignStatusId(row.id)
-    // setAuditLogMark(row.batch_no)
-    // console.log('row', row)
+  
   }
   const handleUpdate = row => {
     setBatchDetail(row)
-    handleOpenModal(true)
+    handleOpenModal()
   }
 
   const resetFilter = () => {
@@ -422,7 +411,6 @@ const Index = () => {
         aria-labelledby='modal-modal-title'
         aria-describedby='modal-modal-description'
         data-testid='modal'
-        role='dialog'
       >
         <Box sx={style}>
           <Typography variant='h4' className='my-2'>

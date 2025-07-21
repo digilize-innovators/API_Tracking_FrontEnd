@@ -5,7 +5,6 @@ export const decodeAndSetConfig = (setConfig) => {
     try {
         const token = Cookies.get('token');
         if (!token) {
-            // console.error("Error decoding token");
             return;
         }
         const decodedToken = jwtDecode(token);
@@ -19,7 +18,6 @@ export const getTokenValues = () => {
     try {
         const token = Cookies.get('token');
         if (!token) {
-            // console.error("Error decoding token");
             return;
         }
         const decodedToken = jwtDecode(token);

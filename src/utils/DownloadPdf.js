@@ -9,23 +9,27 @@ const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) =
   const head = tableData.tableHeader
   const doc = new jsPDF()
 
+  
+
   const headerContent = () => {
     headerContentFix(doc, `${tableData.tableHeaderText}`)
 
     doc.setFontSize(10)
-    tableHeaderData !== null ? doc.text('Search : ' + (tableHeaderData?.searchVal || '__'), 15, 25) : ''
+if (tableHeaderData !== null) {
+  doc.text('Search : ' + (tableHeaderData?.searchVal || '__'), 15, 25);
+}
     doc.text('Filters :\n', 15, 30)
 
     if (tableData.Filter) {
       console.log('Table status Filter ', tableData.statusFilter)
       doc.text(`${tableData.Filter[0]} : ` + (tableData.Filter[1] || '__'), 20, 35)
-      const statusText =
-        tableData.Filter[0] === 'department'
-          ? `Status : ${tableData?.statusFilter || '__'}`
-          : tableData.Filter[0] !== 'Order Type'
-            ? `E-Sign : ${tableHeaderData?.esignStatus || '__'}`
-            : ''
-      doc.text(statusText, 20, 40)
+      let labelText = '';
+if (tableData.Filter[0] === 'department') {
+  labelText = `Status : ${tableData?.statusFilter || '__'}`;
+} else if (tableData.Filter[0] !== 'Order Type') {
+  labelText = `E-Sign : ${tableHeaderData?.esignStatus || '__'}`;
+}
+      doc.text(labelText, 20, 40)
     } else if (tableHeaderData?.esignStatus) {
       doc.text('E-Sign : ' + (tableHeaderData?.esignStatus || '__'), 20, 35)
     }

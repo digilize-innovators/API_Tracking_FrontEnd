@@ -32,7 +32,6 @@ import { HiDocumentReport } from 'react-icons/hi'
 import Cookies from 'js-cookie'
 import jwt from 'jsonwebtoken'
 
-import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl'
 const navigation = () => {
   let role = ''
   let screens = (Cookies.get('screens')?.length ? JSON.parse(Cookies.get('screens')) : []) || []

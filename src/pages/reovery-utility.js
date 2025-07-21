@@ -1,13 +1,10 @@
 'use-client'
 import React, { useState, useEffect } from 'react'
-import Box from '@mui/material/Box'
-import Select from '@mui/material/Select'
 import { useSettings } from 'src/@core/hooks/useSettings'
-import { Grid2, Typography, FormControl, InputLabel, MenuItem, Button } from '@mui/material'
+import { Grid2, Typography, FormControl, InputLabel, MenuItem, Button,Box,Select } from '@mui/material'
 import { validateToken } from 'src/utils/ValidateToken'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import ChatbotComponent from 'src/components/ChatbotComponent'
-import { decodeAndSetConfig } from '../../utils/tokenUtils'
 import Head from 'next/head'
 import { api } from 'src/utils/Rest-API'
 import SnackbarAlert from 'src/components/SnackbarAlert'
@@ -16,7 +13,6 @@ import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
 
 const Index = () => {
-  const [config, setConfig] = useState(null)
   const [openSnackbar, setOpenSnackbar] = useState(false)
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled' })
   const [files, setFiles] = useState([])
@@ -25,11 +21,6 @@ const Index = () => {
   const { removeAuthToken } = useAuth()
   const { setIsLoading } = useLoading()
   const router = useRouter()
-
-  useEffect(() => {
-    decodeAndSetConfig(setConfig)
-    return () => {}
-  }, [])
 
   useEffect(() => {
     getFiles()
@@ -50,18 +41,18 @@ const Index = () => {
       if (response.data.success) {
         setOpenSnackbar(true)
         setAlertData({ ...alertData, type: 'success', message: response.data?.message })
-        setFiles([...response.data.data.files].sort())
+        setFiles([...response.data.data.files].sort((a,b)=>a-b))
       }
-      else{
-        if (response.data.code === 401) {
+      else if (response.data.code === 401) {
           removeAuthToken()
           router.push('/401')
-        } else {
+        }
+         else {
           setOpenSnackbar(true)
           setAlertData({ ...alertData, type: 'error', message: response.data?.message })
         }
       }
-    } catch (error) {
+    catch (error) {
       console.error(error)
       setOpenSnackbar(true)
       setAlertData({ ...alertData, type: 'error', message: error?.message })
@@ -84,15 +75,14 @@ const Index = () => {
         setOpenSnackbar(true)
         setAlertData({ ...alertData, type: 'success', message: response?.data?.message })
         setFiles([...response.data.data.files])
-      }else{
-        if (response.data.code === 401) {
+      }else if (response.data.code === 401) {
           removeAuthToken()
           router.push('/401')
         } else {
           setOpenSnackbar(true)
           setAlertData({ ...alertData, type: 'error', message: response?.data?.message })
         }
-      }
+      
     } catch (error) {
       console.error(error)
       setOpenSnackbar(true)
