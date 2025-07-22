@@ -129,7 +129,6 @@ const Row = ({
    setEsignDownloadPdf(false)
     setAuthModalOpen(false)
     setOpenModalApprove(false)
-    setEsignDownloadPdf(false)
   }
 
 const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {

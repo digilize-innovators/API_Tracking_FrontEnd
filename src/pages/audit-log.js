@@ -1,5 +1,5 @@
 'use-client'
-import React, { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
+import React, { useState, useRef, useMemo, useLayoutEffect } from 'react'
 import { TextField, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
 import TableAuditLog from 'src/views/tables/TableAuditLog'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -19,8 +19,7 @@ import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import { api } from 'src/utils/Rest-API'
 import { DesktopDateTimePicker } from '@mui/x-date-pickers/DesktopDateTimePicker'
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
-
-
+import moment from 'moment';
 
 const Index = () => {
   const { settings } = useSettings()
@@ -42,7 +41,8 @@ const Index = () => {
   const [config, setConfig] = useState(null)
  
   const searchBarRef = useRef(null)
-
+   const maxDate = moment(); // today
+   const minDate = moment().subtract(3, 'months');
   const tableBody = auditLogData?.data?.map((item, index) => [
     index + 1,
     item.performed_action,
@@ -169,7 +169,7 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-3'>
-             <LocalizationProvider dateAdapter={AdapterMoment}>
+            <LocalizationProvider dateAdapter={AdapterMoment}>
   <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
     {/* Start Date */}
     <DesktopDateTimePicker
@@ -177,6 +177,8 @@ const Index = () => {
       value={startDate}
       onChange={(newValue) => setStartDate(newValue)}
       inputFormat="DD/MM/YYYY"
+      minDate={minDate}
+      maxDate={maxDate}
       renderInput={(params) => (
         <TextField
           {...params}
@@ -193,6 +195,8 @@ const Index = () => {
       value={endDate}
       onChange={(newValue) => setEndDate(newValue)}
       inputFormat="DD/MM/YYYY"
+      minDate={minDate}
+      maxDate={maxDate}
       renderInput={(params) => (
         <TextField
           {...params}
