@@ -117,6 +117,7 @@ const Index = () => {
     setEsignDownloadPdf(false)
     setAuthModalOpen(false)
     setOpenModalApprove(false)
+    setEsignDownloadPdf(false)
   }
 
   const resetForm = () => {

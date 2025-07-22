@@ -130,12 +130,13 @@ const Index = () => {
     setEsignDownloadPdf(false)
     setAuthModalOpen(false)
     setOpenModalApprove(false)
+    setEsignDownloadPdf(false)
   }
   const handleCloseModal = () => {
     setOpenModal(false)
   }
 
-  const handleSubmitForm = async => {
+  const handleSubmitForm = () => {
     setApproveAPI({
       approveAPIName: 'batch-cloud-upload-approve',
       approveAPImethod: 'PATCH',
@@ -196,8 +197,6 @@ const Index = () => {
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-    console.log('handleAuthResult 02', config.userId, user.user_id)
     const resetState = () => {
       setApproveAPI({
         approveAPIName: '',
@@ -277,6 +276,7 @@ const Index = () => {
 
   
   }
+
   const handleUpdate = row => {
     setBatchDetail(row)
     handleOpenModal()
@@ -394,7 +394,7 @@ const Index = () => {
                   filterLocationVal={filterLocationVal}
                   tableHeaderData={tableHeaderData}
                   setBatch={setBatchData}
-                  handleAuthCheck={handleAuthCheck}
+                  handleAuthCheck={()=> {}}
                   apiAccess={apiAccess}
                   config={config}
                   pendingAction={openModal}

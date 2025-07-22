@@ -1,6 +1,6 @@
 'use-client'
-import React, { useState, useRef, useMemo, useLayoutEffect } from 'react'
-import {  TextField, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
+import React, { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
+import { TextField, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
 import TableAuditLog from 'src/views/tables/TableAuditLog'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
@@ -77,6 +77,7 @@ const Index = () => {
   const handleAuthModalClose = () => {
     setAuthModalOpen(false)
     setOpenModalApprove(false)
+    setEsignDownloadPdf(false)
   }
 
   const resetFilter = () => {
@@ -109,9 +110,6 @@ const Index = () => {
     downloadPdf(tableData, tableHeaderData, tableBody, auditLogData.data, userDataPdf)
   }
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-    console.log('handleAuthResult 02', config.userId, user.user_id)
-
     const resetState = () => {
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
       setEsignDownloadPdf(false)

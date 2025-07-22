@@ -274,9 +274,7 @@ const TableCollapsibleUser = ({
           status: statusFilter == null ? '' : statusFilter,
           department_name: departmentFilter
         })
-        console.log('params', params.toString())
         const res = await api(`/user/?${params.toString()}`, {}, 'get', true)
-        console.log('All User ', res.data)
         if (res.data.success) {
           setUserData({ data: res.data.data.users, total: res.data.data.total })
           setUser({ data: res.data.data.users, index: res.data.data.offset })
@@ -325,7 +323,7 @@ const TableCollapsibleUser = ({
       handleChangePage={handleChangePage}
       handleChangeRowsPerPage={handleChangeRowsPerPage}
     >
-      <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+      <Box sx={{ position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
@@ -377,8 +375,16 @@ const TableCollapsibleUser = ({
                   {getSortIcon(sortBy, 'designation.history[0].designation_name', sortDirection)}
                 </IconButton>
               </TableCell>
-              <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
+              <TableCell
+                align='center'
+                sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSort('location.history[0].location_name')}
+              >
                 Location Name
+                <IconButton align='center' aria-label='expand row' size='small'>
+                  {getSortIcon(sortBy, 'location.history[0].location_name', sortDirection)}
+                </IconButton>
               </TableCell>
               <TableCell
                 align='center'
@@ -447,13 +453,13 @@ const TableCollapsibleUser = ({
 }
 
 TableCollapsibleUser.propTypes = {
-  pendingAction:PropTypes.any,
+  pendingAction: PropTypes.any,
   setUser: PropTypes.any,
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
   config: PropTypes.any,
   handleAuthCheck: PropTypes.any,
-   tableHeaderData: PropTypes.any,
+  tableHeaderData: PropTypes.any,
   departmentFilter: PropTypes.any,
   statusFilter: PropTypes.any
 }

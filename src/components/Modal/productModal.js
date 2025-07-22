@@ -33,7 +33,7 @@ import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useRouter } from 'next/router'
 import { useAuth } from 'src/Context/AuthContext'
-import { BaseUrl } from 'constants'
+import { convertImageToBase64 } from 'src/utils/UrlToBase64'
 
 const validationSchema = yup.object().shape({
   productId: yup
@@ -301,7 +301,6 @@ function ProductModal({
   handleCloseModal,
   editData,
   handleSubmitForm,
-  convertImageToBase64,
   productImage,
   setProductImage,
   tableHeaderData
@@ -379,7 +378,6 @@ function ProductModal({
   const getPrefixData = () => {
     if (companyUuid) {
       const prefix_data = companies.find(company => company.company_uuid === companyUuid)
-      console.log(prefix_data)
       if (prefix_data) {
         let prefixs = [prefix_data.gs1_prefix].filter(Boolean) // Ensure no undefined values
         if (prefix_data.gs2_prefix) prefixs.push(prefix_data.gs2_prefix)
@@ -459,7 +457,7 @@ function ProductModal({
       setIsLoading(true)
       const res = await api('/company?limit=-1&history_latest=true', {}, 'get', true)
       setIsLoading(false)
-      console.log('All companies ', res?.data?.data)
+      // console.log('All companies ', res?.data?.data);
       if (res.data.success) {
         setCompanies(res.data.data.companies)
       } else {
@@ -497,7 +495,6 @@ function ProductModal({
 
   useEffect(() => {
     if (editData) {
-      console.log('UOF 3 :', editData?.thirdLayer_unit_of_measurement)
       reset({
         productId: editData?.product_id || '',
         productName: editData?.product_name || '',
@@ -538,11 +535,6 @@ function ProductModal({
         unit_of_measurement: editData?.unit_of_measurement || false,
         schedule_drug: editData?.schedule_drug || false
       })
-      console.log(
-        editData?.product_image &&
-          editData?.product_image !== '/images/avatars/p.png' &&
-          productImage != '/images/avatars/p.png'
-      )
       if (
         editData?.product_image &&
         editData?.product_image !== '/images/avatars/p.png' &&
@@ -589,8 +581,6 @@ function ProductModal({
       getPrefixData()
     }
   }, [prefixs?.length])
-
-  console.log(prefixs)
 
   const CountryData = countries?.map(item => ({
     id: item.id,
@@ -688,16 +678,22 @@ function ProductModal({
                     color='error'
                     variant='outlined'
                     onClick={async () => {
-                      const img = editData.product_image.split(BaseUrl)
-                      console.log(editData?.id, editData?.product_image != '/images/avatars/p.png')
-                      if (
-                        img[img?.length - 1] !== '/' &&
-                        editData?.id &&
-                        editData?.product_image != '/images/avatars/p.png'
-                      ) {
-                        setProductImage('/images/avatars/p.png')
-                        setValue('productImage', '/images/avatars/p.png') // Clear form value
-                      }
+                      // const img = editData.product_image.split(BaseUrl)
+                      // console.log(editData?.id, editData?.product_image != '/images/avatars/p.png')
+                      // if (
+                      //   img[img?.length - 1] !== '/' &&
+                      //   editData?.id &&
+                      //   editData?.product_image != '/images/avatars/p.png'
+                      // ) {
+                      //   setProductImage('/images/avatars/p.png')
+                      //   setValue('productImage', '/images/avatars/p.png') // Clear form value
+                      // }
+
+                       if (editData?.product_image) {
+                          convertImageToBase64(editData?.product_image, setProductImage)
+                        } else {
+                          setProductImage('/images/avatars/p.png')
+                        }
                     }}
                   >
                     Reset
@@ -724,14 +720,14 @@ function ProductModal({
               <CustomTextField
                 fullWidth
                 control={control}
-                label='Product ID'
+                label='Product ID *'
                 placeholder='Product ID'
                 name={'productId'}
                 disabled={!!editData?.id}
               />
             </Grid2>
             <Grid2 size={4}>
-              <CustomTextField label='Product Name' placeholder='Product Name' name={'productName'} control={control} />
+              <CustomTextField label='Product Name *' placeholder='Product Name' name={'productName'} control={control} />
             </Grid2>
             <Grid2 size={4}>
               <Controller
@@ -750,7 +746,7 @@ function ProductModal({
                     fullWidth
                     type='number'
                     id='gtin'
-                    label='GTIN'
+                    label='GTIN *'
                     placeholder='GTIN'
                     onBlur={e => calculateGtinCheckDigit(e.target.value)}
                     onChange={e => {
@@ -846,7 +842,7 @@ function ProductModal({
             <Grid2 size={4}>
               <CustomTextField
                 control={control}
-                label='Product Strength'
+                label='Product Strength *'
                 placeholder='Product Strength'
                 name={'packagingSize'}
               />
@@ -854,7 +850,7 @@ function ProductModal({
             <Grid2 size={4}>
               <CustomTextField
                 control={control}
-                label='No. Of Units in Primary Level'
+                label='No. Of Units in Primary Level *'
                 placeholder='No. Of Units in Primary Level'
                 name={'no_of_units_in_primary_level'}
               />
@@ -1769,16 +1765,16 @@ function ProductModal({
               </Typography>
             </Grid2>
             <Grid2 size={5}>
-              <CustomTextField label='Generic Salt' control={control} name={'generic_salt'} />
+              <CustomTextField label='Generic Salt *' control={control} name={'generic_salt'} />
             </Grid2>
             <Grid2 size={5}>
-              <CustomTextField label='Composition' name={'composition'} control={control} />
+              <CustomTextField label='Composition *' name={'composition'} control={control} />
             </Grid2>
             <Grid2 size={5}>
-              <CustomTextField control={control} label='Dosage' name={'dosage'} />
+              <CustomTextField control={control} label='Dosage *' name={'dosage'} />
             </Grid2>
             <Grid2 size={5}>
-              <CustomTextField label='Remarks' name={'remarks'} control={control} />
+              <CustomTextField label='Remarks *' name={'remarks'} control={control} />
             </Grid2>
             <Grid2 size={6}>
               <Controller
