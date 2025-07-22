@@ -245,9 +245,6 @@ const Index = () => {
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-    console.log('handleAuthResult 02', config?.userId, user.user_id)
-
     const resetState = () => {
       setApproveAPI({
         approveAPIName: '',

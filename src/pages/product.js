@@ -26,6 +26,7 @@ import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import ProductModal from 'src/components/Modal/productModal'
 import { getTokenValues } from 'src/utils/tokenUtils'
+import { convertImageToBase64 } from 'src/utils/UrlToBase64'
 
 const Index = () => {
   const router = useRouter()
@@ -187,11 +188,12 @@ const Index = () => {
       let url = ''
       const formData = new FormData()
       formData.append('photo', file)
-      const res = await api(endpoint, formData, 'upload', true)
+      const res = await api(endpoint, formData, 'upload', true);
+      console.log('upload prod res ', res.data);
+      
       if (res?.data?.success) {
         const decryptUrl = await decrypt(res.data.data.path)
-        url = `${mainUrl}/${decryptUrl}`
-        console.log(url)
+        url = `${mainUrl}/${decryptUrl}`.replace(/\\/g, '/')
         return { url, success: true }
       } else if (res?.data?.code === 401) {
         removeAuthToken()
@@ -205,9 +207,6 @@ const Index = () => {
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-    console.log('handleAuthResult 02', config?.userId, user.user_id)
-
     const resetState = () => {
       setApproveAPI({ approveAPIEndPoint: '', approveAPImethod: '', approveAPIName: '' })
       setEsignDownloadPdf(false)
@@ -334,7 +333,7 @@ const Index = () => {
         ...formData,
         mrp: formData?.mrp === '' ? null : formData?.mrp,
         pallet_size: formData?.pallet_size?.toString(),
-        productImage: uploadRes?.url.split('/').pop()
+        productImage: uploadRes?.url != '' ? new URL(uploadRes.url).pathname : ''
       }
       if (config?.config?.audit_logs) {
         data.audit_log = {
@@ -379,7 +378,7 @@ const Index = () => {
         ...formData,
         mrp: formData.mrp === '' ? null : formData.mrp,
         pallet_size: formData?.pallet_size?.toString(),
-        productImage: productImage !== editData.product_image ? productImageUrl?.split('/').pop() : productImageUrl
+        productImage: productImageUrl ? new URL(productImageUrl).pathname : ''
       }
       if (config?.config?.audit_logs) {
         data.audit_log = {
@@ -422,32 +421,10 @@ const Index = () => {
       setESignStatusId(item.id)
     }
 
-    const img = item.product_image.split(BaseUrl)
-    const defaultImage = '/images/avatars/p.png'
-    if (img[img?.length - 1] !== '/' && img[img?.length - 1] !== defaultImage) {
+    if (item.product_image.trim() !== '' && item.product_image !== '/images/avatars/p.png') {
       convertImageToBase64(item.product_image, setProductImage)
     } else {
-      setProductImage(defaultImage)
-    }
-  }
-  const convertImageToBase64 = async (imageUrl, setImageState) => {
-    try {
-      console.log('imageUrl ', imageUrl)
-      const response = await fetch(imageUrl)
-      console.log(response)
-      const blob = await response.blob()
-      console.log(blob)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        console.log(reader.result)
-        setImageState(reader.result)
-      }
-      reader.onerror = error => {
-        console.error('Error reading the image blob:', error)
-      }
-      reader.readAsDataURL(blob)
-    } catch (error) {
-      console.error('Error fetching the image:', error)
+      setProductImage('/images/avatars/p.png')
     }
   }
 
@@ -502,7 +479,7 @@ const Index = () => {
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
                   {apiAccess.addApiAccess && (
                     <Box className='mx-2'>
-                      <Button variant='contained' sx={{py:2}} onClick={handleOpenModal} >
+                      <Button variant='contained' sx={{ py: 2 }} onClick={handleOpenModal}>
                         <span>
                           <IoMdAdd />
                         </span>
@@ -521,7 +498,7 @@ const Index = () => {
                 <TableProduct
                   tableHeaderData={tableHeaderData}
                   setProduct={setProductData}
-                  pendingAction={pendingAction}s
+                  pendingAction={pendingAction}
                   handleUpdate={handleUpdate}
                   editable={apiAccess.editApiAccess}
                   handleAuthCheck={handleAuthCheck}
@@ -542,7 +519,6 @@ const Index = () => {
         productImage={productImage}
         setProductImage={setProductImage}
         tableHeaderData={tableHeaderData}
-        convertImageToBase64={convertImageToBase64}
       />
       <AuthModal
         open={authModalOpen}

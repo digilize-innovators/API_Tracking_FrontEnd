@@ -33,6 +33,8 @@ const CustomTable = ({ children, page, rowsPerPage, totalRecords, handleChangePa
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        showFirstButton
+        showLastButton
       />
       <TableContainer component={Paper}>
         <Table aria-label='collapsible table' stickyHeader>

@@ -104,8 +104,6 @@ const Index = () => {
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult', { isAuthenticated, isApprover, esignStatus, user })
-
     const resetState = () => {
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
       setAuthModalOpen(false)

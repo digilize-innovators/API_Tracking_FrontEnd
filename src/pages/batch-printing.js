@@ -560,7 +560,7 @@ const Index = ({ userId, ip }) => {
   const [config, setConfig] = useState(null);
 
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       await getLinesByPcIp()
       const decodedToken = getTokenValues()
       setConfig(decodedToken)

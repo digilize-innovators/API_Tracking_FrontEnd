@@ -35,6 +35,7 @@ import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import downloadPdf from 'src/utils/DownloadPdf'
 import UserModel from 'src/components/Modal/UserModel'
+import { convertImageToBase64 } from 'src/utils/UrlToBase64'
 
 const mainUrl = BaseUrl
 const Index = () => {
@@ -129,7 +130,7 @@ const Index = () => {
   const getDepartments = async () => {
     try {
       setIsLoading(true)
-      const res = await api(`/department?limit=-1`, {}, 'get', true)
+      const res = await api(`/department?limit=-1&history_latest=true`, {}, 'get', true)
       if (res.data.success) {
         setAllDepartment(res.data.data.departments)
       } else if (res.data.code === 401) {
@@ -206,7 +207,7 @@ const Index = () => {
       setIsLoading(true)
       const data = {
         ...userFormData,
-        profilePhoto: uploadRes?.url || '',
+        profilePhoto: uploadRes?.url != '' ? new URL(uploadRes.url).pathname : '',
         is_active: true,
         role: 'user'
       }
@@ -227,7 +228,7 @@ const Index = () => {
         setOpenModal(false)
       } else {
         console.log('error to add User ', res.data)
-        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.error?.details?.message || res.data.message })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
@@ -260,7 +261,7 @@ const Index = () => {
     try {
       const data = {
         ...userFormData,
-        profilePhoto: url,
+        profilePhoto: url ? new URL(url).pathname : '',
         is_active: userFormData.isEnabled
       }
       delete data.isEnabled
@@ -284,7 +285,7 @@ const Index = () => {
         setOpenModal(false)
       } else {
         console.log('error to edit User ', res.data)
-        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.error?.details?.message || res.data.message })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
@@ -305,8 +306,6 @@ const Index = () => {
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-    console.log('handleAuthResult 02', config.userId, user.user_id)
     const handleAuthenticationError = () => {
       setAlertData({ openSnackbar: true, type: 'error', message: 'Authentication failed, Please try again.' })
     }
@@ -445,9 +444,8 @@ const Index = () => {
     setOpenModal(true)
     setEditData(item)
     const { profile_photo } = item
-
     if (profile_photo.trim() !== '' && profile_photo !== '/images/avatars/1.png') {
-      convertImageToBase64(profile_photo)
+      convertImageToBase64(profile_photo, setProfilePhoto)
     } else {
       setProfilePhoto('/images/avatars/1.png')
     }
@@ -468,23 +466,6 @@ const Index = () => {
     setTableHeaderData({ ...tableHeaderData, searchVal: '', esignStatus: '' })
     setDepartmentFilter('')
     setStatusFilter(null)
-  }
-
-  const convertImageToBase64 = async imageUrl => {
-    try {
-      const response = await fetch(imageUrl)
-      const blob = await response.blob()
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setProfilePhoto(reader.result)
-      }
-      reader.onerror = error => {
-        console.error('Error reading the image blob:', error)
-      }
-      reader.readAsDataURL(blob)
-    } catch (error) {
-      console.error('Error fetching the image:', error)
-    }
   }
 
   const onChange = event => {
@@ -515,8 +496,8 @@ const Index = () => {
       formData.append('photo', file)
       const res = await api('/upload/userProfile', formData, 'upload', true)
       if (res?.data.success) {
-        const decryptUrl = await decrypt(res?.data.data.path)
-        url = `${mainUrl}/${decryptUrl}`
+        const decryptUrl = await decrypt(res?.data.data.path);
+        url = `${mainUrl}/${decryptUrl}`.replace(/\\/g, '/');
         return { url, success: true }
       } else if (res?.data.code === 401) {
         removeAuthToken()

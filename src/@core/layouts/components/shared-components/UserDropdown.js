@@ -4,6 +4,7 @@ import {Box,Menu,Badge,Avatar,Divider,MenuItem,Typography} from '@mui/material';
 import { styled } from '@mui/material/styles';
 import LogoutVariant from 'mdi-material-ui/LogoutVariant';
 import { useAuth } from 'src/Context/AuthContext';
+import { convertImageToBase64 } from 'src/utils/UrlToBase64';
 
 const BadgeContentSpan = styled('span')(({ theme }) => ({
   width: 8,
@@ -26,27 +27,7 @@ const UserDropdown = () => {
   }, [getUserData]);
 
   useEffect(() => {
-    const convertImageToBase64 = async (imageUrl) => {
-      if (!imageUrl) return; // Avoid unnecessary fetch if the image URL is not present
-      try {
-        const response = await fetch(imageUrl);
-        if (!response.ok) throw new Error('Image not found');
-        const blob = await response.blob();
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setProfilePhoto(reader.result);
-        };
-        reader.onerror = (error) => {
-          console.error('Error reading the image blob:', error);
-        };
-        reader.readAsDataURL(blob);
-      } catch (error) {
-        console.error('Error fetching the image:', error);
-        setProfilePhoto('/images/avatars/1.png'); // Fallback to default avatar
-      }
-    };
-
-    convertImageToBase64(userData?.profileImage);
+    convertImageToBase64(userData?.profileImage, setProfilePhoto);
   }, [userData?.profileImage]);
 
   const handleDropdownOpen = (event) => {
