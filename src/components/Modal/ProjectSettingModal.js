@@ -1,437 +1,533 @@
-import * as yup from 'yup'
-import { api } from 'src/utils/Rest-API';
-import { useLoading } from 'src/@core/hooks/useLoading';
-import { useAuth } from 'src/Context/AuthContext';
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
-import SnackbarAlert from '../SnackbarAlert';
-import { style } from 'src/configs/generalConfig'
-import {
-    Button,
-    Box,
-    Grid2,
-    Modal,
-    Typography,
-    FormHelperText,
-    Select,
-    MenuItem,
-    InputLabel,
-    FormControl,
-    Checkbox,
-    ListItemText,
-    OutlinedInput
-} from '@mui/material'
-import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import CustomDropdown from '../CustomDropdown';
-import PropTypes from 'prop-types';
 
-const validationSchema = yup.object().shape({
-    label: yup.string().required('Label is required'),
-    dateFormat: yup.string().required('DateFormat is required'),
-    selectedVariables: yup.array()
-        .min(1, 'At least one variable must be selected')
-        .required('No of Variable is requred'),
-});
+'use-client'
+import {
+  Button,
+  Box,
+  Grid2,
+  Modal,
+  Typography,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  Checkbox,
+  ListItemText,
+  OutlinedInput
+} from '@mui/material'
+import { useEffect, useState } from 'react'
+import { useLoading } from 'src/@core/hooks/useLoading'
+import SnackbarAlert from 'src/components/SnackbarAlert'
+import { api } from 'src/utils/Rest-API'
+import { useAuth } from 'src/Context/AuthContext'
+import { useRouter } from 'next/router'
+import { style } from 'src/configs/generalConfig'
+import { getTokenValues } from 'src/utils/tokenUtils'
+import AuthModal from 'src/components/authModal'
+import PropTypes from 'prop-types'
+
 
 const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAccess, ip }) => {
-    const { setValue, reset ,control, handleSubmit, watch, formState: { errors } } = useForm({
-        resolver: yupResolver(validationSchema),
-        defaultValues: {
-            label: "",
-            dateFormat: "",
-            noOfGroups: "",
-            printPerGroup: "",
-            selectedVariables: [],
-        },
-    });
-    const [formData, setFormData] = useState()
-    const [pendingAction, setPendingAction] = useState(null);
-    const selectedVariables = watch('selectedVariables')
-    const { setIsLoading } = useLoading()
-    const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-    const [editId, setEditId] = useState(null);
-    const { removeAuthToken } = useAuth();
-    const router = useRouter();
-    const [labels, setLabels] = useState([]);
-    const [settingData, setSettingData] = useState({
-        variables: [
-            {
-                label: 'MRP',
-                value: 'MRP',
-                checked: false
-            },
-            {
-                label: 'NDC',
-                value: 'NDC',
-                checked: false
-            },
-            {
-                label: 'GTIN',
-                value: 'GTIN',
-                checked: false
-            },
-            {
-                label: 'Batch No',
-                value: 'BatchNo',
-                checked: false
-            },
-            {
-                label: 'Manufacturing Date',
-                value: 'ManufacturingDate',
-                checked: false
-            },
-            {
-                label: 'Expiry Date',
-                value: 'ExpiryDate',
-                checked: false
-            },
-            {
-                label: 'Batch Size',
-                value: 'BatchSize',
-                checked: false
-            },
-            {
-                label: 'USP',
-                value: 'USP',
-                checked: false
-            },
-            {
-                label: 'Unique Code',
-                value: 'UniqueCode',
-                checked: false
-            },
-            {
-                label: 'Country Code',
-                value: 'CountryCode',
-                checked: false
+  const { setIsLoading } = useLoading()
+  const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
+  const [editId, setEditId] = useState(null)
+  const { removeAuthToken } = useAuth()
+  const router = useRouter()
+  const [labels, setLabels] = useState([])
+  const [settingData, setSettingData] = useState({
+    label: '',
+    dateFormat: '',
+    noOfGroups: '',
+    printPerGroup: '',
+    selectedVariables: [],
+    variables: [
+      {
+        label: 'MRP',
+        value: 'MRP',
+        checked: false
+      },
+      {
+        label: 'NDC',
+        value: 'NDC',
+        checked: false
+      },
+      {
+        label: 'GTIN',
+        value: 'GTIN',
+        checked: false
+      },
+      {
+        label: 'Batch No',
+        value: 'BatchNo',
+        checked: false
+      },
+      {
+        label: 'Manufacturing Date',
+        value: 'ManufacturingDate',
+        checked: false
+      },
+      {
+        label: 'Expiry Date',
+        value: 'ExpiryDate',
+        checked: false
+      },
+      {
+        label: 'Batch Size',
+        value: 'BatchSize',
+        checked: false
+      },
+      {
+        label: 'USP',
+        value: 'USP',
+        checked: false
+      },
+      {
+        label: 'Unique Code',
+        value: 'UniqueCode',
+        checked: false
+      },
+      {
+        label: 'Country Code',
+        value: 'CountryCode',
+        checked: false
+      }
+    ]
+  })
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [openModalApprove, setOpenModalApprove] = useState(false)
+  const [approveData, setApproveData] = useState({
+    approveAPIName: '',
+    approveAPImethod: '',
+    approveAPIEndPoint: '',
+    session: '',
+    authUser: {}
+  })
+  const [config, setConfig] = useState(null)
+
+  useEffect(() => {
+    getPrintlineSetting()
+    const decodedToken = getTokenValues()
+    setConfig(decodedToken)
+    return () => {}
+  }, [])
+
+  const getPrintlineSetting = async () => {
+    try {
+      setIsLoading(true)
+      const res = await api(`/printLineSetting/${projectSettingData.lineId}`, {}, 'get', true, true, ip)
+      console.log('GET printline setting data ', res.data)
+      if (res.data.success && res.data.data) {
+        setEditId(res.data.data.id)
+        setSettingData({
+          label: res.data.data.label,
+          dateFormat: res.data.data.date_format,
+          noOfGroups: res.data.data.no_of_groups,
+          printPerGroup: res.data.data.print_per_group,
+          selectedVariables: res.data.data.variables,
+          variables: settingData.variables?.map(item => {
+            return {
+              ...item,
+              checked: res.data.data.variables?.includes(item.value)
             }
-        ]
-    });
+          })
+        })
+      } else {
+        setSettingData({
+          ...settingData
+        })
+      }
+      setIsLoading(false)
+    } catch (error) {
+      console.log('Error to get printline setting ', error)
+      setIsLoading(false)
+    }
+  }
 
-    console.log("selected variable ", selectedVariables)
-
-    useEffect(() => {
-        getPrintlineSetting();
-        return () => {
-        }
-    }, []);
-
-    useEffect(()=>{
-        if(editId){
-            reset({
-            label: settingData?.label||"",
-            dateFormat:settingData?.date_format|| "",
-            noOfGroups:settingData?.no_of_groups|| "",
-            printPerGroup:settingData?.print_per_group|| "",
-            selectedVariables: settingData?.variables||[],
-            })
-        }
-    },[editId,settingData])
-
-    useEffect(() => {
-        if (formData && pendingAction) {
-            if (pendingAction === "edit") {
-                editSetting();
-            } else {
-                addSetting();
-            }
-            setPendingAction(null);
-        }
-    }, [formData, pendingAction]);
-
-    const getPrintlineSetting = async () => {
-        try {
-            setIsLoading(true);
-            console.log("Product Setting Line ", projectSettingData.lineId)
-            const res = await api(`/printLineSetting/${projectSettingData.lineId}?limit=-1`, {}, 'get', true, true, ip);
-            if (res.data.success && res.data.data) {
-                setEditId(res.data.data.id);
-                setSettingData({
-                    ...res.data.data
-                })
-                
-
-            } else {
-                setSettingData({
-                    ...settingData,
-                })
-            }
-            setIsLoading(false);
-        } catch (error) {
-            console.log('Error to get printline setting ', error);
-            setIsLoading(false);
-        }
+  const addSetting = async () => {
+    const data = {
+      printerLineId: projectSettingData.lineId,
+      label: settingData.label,
+      dateFormat: settingData.dateFormat,
+      noOfGroups: settingData.noOfGroups.toString(),
+      printPerGroup: settingData.printPerGroup.toString(),
+      variables: settingData.selectedVariables
     }
 
-    const addSetting = async () => {
-        const data = {
-            printerLineId: projectSettingData.lineId,
-            label: formData?.label,
-            dateFormat: formData?.dateFormat,
-            noOfGroups: formData?.noOfGroups.toString(),
-            printPerGroup: formData?.printPerGroup.toString(),
-            variables: formData?.selectedVariables
-        };
+    console.log('add setting data ', data)
 
-        console.log('add setting data ', data)
-
-        try {
-            setIsLoading(true);
-            const res = await api('/printLineSetting/', data, 'post', true, true, ip)
-            console.log('Response add printLineSetting:', res.data);
-            if (res.data.success) {
-                setAlertData({ type: 'success', message: 'Printline setting added successfully', variant: 'filled', openSnackbar: true })
-                setOpenModal(false)
-            } else if (res.data.code === 401) {
-                removeAuthToken();
-                router.push('/401');
-            } else {
-                setAlertData({ type: 'error', message: res.data.error.details.message, variant: 'filled', openSnackbar: true })
-            }
-        } catch (error) {
-            setOpenModal(false)
-            console.error('Error applying settings:', error)
-        } finally {
-            setIsLoading(false);
-        }
+    try {
+      setIsLoading(true)
+      const res = await api('/printLineSetting/', data, 'post', true, true, ip)
+      console.log('Response add printLineSetting:', res.data)
+      if (res.data.success) {
+        setAlertData({
+          openSnackbar: true,
+          type: 'success',
+          message: 'Printline setting added successfully',
+          variant: 'filled'
+        })
+      } else if (res.data.code === 401) {
+        removeAuthToken()
+        router.push('/401')
+      } else {
+        setAlertData({ openSnackbar: true, type: 'error', message: res.data.error.details.message, variant: 'filled' })
+      }
+    } catch (error) {
+      console.error('Error applying settings:', error)
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    const editSetting = async () => {
-        const data = {
-            printerLineId: projectSettingData.lineId,
-            label: formData?.label,
-            dateFormat: formData?.dateFormat,
-            noOfGroups: formData?.noOfGroups.toString(),
-            printPerGroup: formData?.printPerGroup.toString(),
-            variables: formData?.selectedVariables
-        };
-        try {
-            setIsLoading(true);
-            const res = await api('/printLineSetting/', data, 'put', true, true, ip)
-            console.log('Response update printLineSetting:', res.data);
-            if (res.data.success) {
-                setOpenModal(false)
-                setAlertData({ type: 'success', message: 'Printline setting updated successfully', variant: 'filled', openSnackbar: true })
-            }
-            else if (res.data.code === 401) {
-                removeAuthToken();
-                router.push('/401');
-            } else {
-                setAlertData({ type: 'error', message: res.data.error.details.message, variant: 'filled', openSnackbar: true })
-            }
-        } catch (error) {
-            setOpenModal(false)
-            console.error('Error applying settings:', error)
-        } finally {
-            setIsLoading(false);
-        }
+  const editSetting = async () => {
+    const data = {
+      printerLineId: projectSettingData.lineId,
+      label: settingData.label,
+      dateFormat: settingData.dateFormat,
+      noOfGroups: settingData.noOfGroups.toString(),
+      printPerGroup: settingData.printPerGroup.toString(),
+      variables: settingData.selectedVariables
     }
+    console.log('edit setting data', data)
 
-    const applySettings = async (data) => {
-        console.log("Data :", data)
-        setFormData(data)
-        setPendingAction(editId ? "edit" : "add");
+    try {
+      setIsLoading(true)
+      const res = await api('/printLineSetting/', data, 'put', true, true, ip)
+      console.log('Response update printLineSetting:', res.data)
+      if (res.data.success) {
+        setAlertData({
+          openSnackbar: true,
+          type: 'success',
+          message: 'Printline setting updated successfully',
+          variant: 'filled'
+        })
+      }
+    } catch (error) {
+      console.error('Error applying settings:', error)
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    const closeModal = () => {
-        setOpenModal(false)
-    };
-
-
-    const closeSnackbar = () => {
-        setAlertData({ openSnackbar: false, type: '', message: '', variant: 'filled' })
+  const applySettings = async () => {
+    if (config?.config?.esign_status) {
+      setApproveData({
+        approveAPIName: 'batch-printing-create',
+        approveAPImethod: 'POST',
+        approveAPIEndPoint: '/api/v1/batch-printing',
+        session: 'start',
+        authUser: {}
+      })
+      setAuthModalOpen(true)
+    } else {
+      editId ? await editSetting() : await addSetting()
     }
+  }
 
-    const getLabels = async () => {
-        console.log("getting lables");
-        try {
-            setIsLoading(true);
-            setTimeout(() => { setIsLoading(false) }, 5000);
-            const res = await api(`/batchprinting/getPrinterLabels/${projectSettingData.printerId}`, {}, 'get', true, true, ip);
-            console.log('Get labels ', res?.data?.data)
-            setIsLoading(false);
-            console.log("Response :", res.data)
-            if (res?.data.success) {
-                setLabels(res.data?.data?.projectNames);
-            }
-        } catch (error) {
-            console.error("Error to get print line setting",error)
-            setIsLoading(false)
-        }
-    }
+  const closeModal = () => {
+    setOpenModal(false)
+  }
 
-    const DateFormatsData = [
-        'DD/MM/YYYY',
-        'MM-DD-YY',
-        'DD-MM-YY',
-        'DD/MM/YY',
-        'MM/YYYY',
-        'MM-YYYY',
-        'MMM.YYYY',
-    ].map((dateFormat) => ({
-        id: dateFormat,
-        value: dateFormat,
-        label: dateFormat
+  const handleInput = e => {
+    setSettingData(prevSetting => ({
+      ...prevSetting,
+      [e.target.name]: e.target.value
     }))
+  }
 
-    const PrintPerGroupData = [1, 2, 3, 4, 5, 6].map((el) => ({
-        id: el,
-        value: el,
-        label: el
-    }))
+  const closeSnackbar = () => {
+    setAlertData({ ...alertData, openSnackbar: false })
+  }
 
+  const getLabels = async () => {
+    console.log('getting lables')
+    try {
+      setIsLoading(true)
+      setTimeout(() => {
+        setIsLoading(false)
+      }, 5000)
+      const res = await api(
+        `/batchprinting/getPrinterLabels/${projectSettingData.printerId}`,
+        {},
+        'get',
+        true,
+        true,
+        ip
+      )
+      console.log('Get labels ', res?.data?.data)
+      setIsLoading(false)
+      if (res?.data.success) {
+        setLabels(res.data?.data?.projectNames)
+      }
+    } catch (error) {
+      console.log("getting while fetching label",error)
+      console.error('Error to get print line setting')
+      setIsLoading(false)
+    }
+  }
 
-    const GroupData = [1, 2, 3, 4].map((el) => ({
-        id: el, value: el, label: el
-    }))
+  const handleAuthModalClose = () => {
+    setAuthModalOpen(false)
+    setOpenModalApprove(false)
+  }
 
-    return (
-        <>
-            <Modal open={openModal} onClose={closeModal}>
-                <Box sx={{ ...style, width: '40%' }}>
-                    <Typography variant='h4' gutterBottom>
-                        Project Settings
-                    </Typography>
-                    <Typography variant='h6'>Adjust the settings to customize.</Typography>
-                    <form onSubmit={handleSubmit(applySettings)}>
-                        <Grid2 container spacing={2} margin={'1rem 0rem'}>
-                            <Grid2 size={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel id="label">Label</InputLabel>
-                                    <Controller
-                                        name="label"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select
-                                                {...field}
-                                                labelId="label"
-                                                id="label"
-                                                fullWidth
-                                                onOpen={getLabels} // Fetch labels when dropdown opens
-                                            >
-                                                {labels?.map((item, index) => (
-                                                    <MenuItem key={item} value={item}>
-                                                        {item}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        )}
-                                    />
-                                </FormControl>
-                            </Grid2>
+  const handleAuthModalOpen = user => {
+    console.log('Open auth model again')
+    setApproveData({
+      ...approveData,
+      approveAPIName: 'batch-printing-approve',
+      approveAPImethod: 'PATCH',
+      approveAPIEndPoint: '/api/v1/batch-printing',
+      authUser: user
+    })
+    setAuthModalOpen(true)
+  }
 
-                            <Grid2 size={6}>
-                                <CustomDropdown
-                                    label={"Date Format"}
-                                    control={control}
-                                    name={"dateFormat"}
-                                    options={DateFormatsData}
-                                />
-                            </Grid2>
-                        </Grid2>
+  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+    const resetState = () => {
+      setApproveData({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '', authUser: {} })
+      setAuthModalOpen(false)
+    }
+    if (!isAuthenticated) {
+      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
+      return
+    }
+    const prepareData = () => ({
+      esignStatus: esignStatus,
+      audit_log: config?.config?.audit_logs
+        ? {
+            user_id: user.userId,
+            user_name: user.userName,
+            performed_action: 'approved',
+            remarks: remarks.length > 0 ? remarks : `Batch printing session start approved`
+          }
+        : {}
+    })
+    const handleEsignApproved = async () => {
+      console.log('esign is approved for creator.')
+      const data = {
+        esignStatus: 'approved',
+        audit_log: config?.config?.audit_logs
+          ? {
+              user_id: user.userId,
+              user_name: user.userName,
+              performed_action: 'approved',
+              remarks: remarks.length > 0 ? remarks : `Batch printing session start requested`
+            }
+          : {}
+      }
+      await api('/esign-status/double-esign', data, 'patch', true)
+      handleAuthModalOpen(user)
+    }
+    const handleApproverActions = async () => {
+      console.log('esign approve by approver.')
+      const data = prepareData()
+      await api('/esign-status/double-esign', data, 'patch', true)
+    }
+    if (isApprover && esignStatus === 'approved') {
+      await handleApproverActions()
+      if (approveData.authUser.userId === user.userId) {
+        setAlertData({ ...alertData, openSnackbar: true, message: 'Same user cannot Approved', type: 'error' })
+        return
+      }
+      editId ? await editSetting() : await addSetting()
+    } else if (esignStatus === 'rejected') {
+        console.log('esign is rejected.')
+        setAuthModalOpen(false)
+        setOpenModalApprove(false)
+      } else if (esignStatus === 'approved') {
+        handleEsignApproved()
+      }
+    
+    resetState()
+  }
 
-                        <Grid2 container spacing={3} sx={{ marginTop: '1rem' }}>
-                            <Grid2 size={6}>
-                                <CustomDropdown
-                                    label="No. of group"
-                                    name="noOfGroups"
-                                    control={control}
-                                    options={GroupData}
-                                />
-                            </Grid2>
-                            <Grid2 size={6}>
-                                <CustomDropdown
-                                    label="Print Per Group"
-                                    name={"printPerGroup"}
-                                    control={control}
-                                    options={PrintPerGroupData}
-                                />
+  return (
+    <>
+      <Modal open={openModal} onClose={closeModal}>
+        <Box sx={{ ...style, width: '40%' }}>
+          <Typography variant='h4' gutterBottom>
+            Project Settings
+          </Typography>
+          <Typography variant='h6'>Adjust the settings to customize.</Typography>
+          <Grid2 container spacing={2} margin={'1rem 0rem'}>
+            <Grid2 size={6}>
+              <FormControl fullWidth>
+                <InputLabel id='label'>Label</InputLabel>
+                <Select
+                  labelId='label'
+                  id='label'
+                  label='Label'
+                  fullWidth
+                  onChange={handleInput}
+                  name='label'
+                  value={settingData.label}
+                  onOpen={getLabels}
+                >
+                  {labels?.map((item, index) => (
+                    <MenuItem key={item} value={item}>
+                      {item}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid2>
 
-                            </Grid2>
-                        </Grid2>
+            <Grid2 size={6}>
+              <FormControl fullWidth>
+                <InputLabel id='date'>Date Format</InputLabel>
+                <Select
+                  labelId='date'
+                  id='date'
+                  label='DateFormat'
+                  fullWidth
+                  onChange={handleInput}
+                  name='dateFormat'
+                  value={settingData.dateFormat}
+                >
+                  <MenuItem value='DD/MM/YYYY'>DD/MM/YYYY</MenuItem>
+                  <MenuItem value='MM-DD-YY'>MM-DD-YY</MenuItem>
+                  <MenuItem value='DD-MM-YY'>DD-MM-YY</MenuItem>
+                  <MenuItem value='DD/MM/YY'>DD/MM/YY</MenuItem>
+                  <MenuItem value='MM/YYYY'>MM/YYYY</MenuItem>
+                  <MenuItem value='MM-YYYY'>MM-YYYY</MenuItem>
+                  <MenuItem value='MMM.YYYY'>MMM.YYYY</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid2>
+          </Grid2>
 
-                        <Grid2 container spacing={1} sx={{ marginTop: '1rem' }}>
-                            <Grid2 size={12}>
-                                <FormControl sx={{ width: "100%" }} error={!!errors.selectedVariables}>
-                                    <InputLabel id="no-of-variable">No of Variable</InputLabel>
-                                    <Controller
-                                        name="selectedVariables"
-                                        control={control}
-                                        rules={{ required: "No of Variable is required" }} // Validation Rule
-                                        render={({ field }) => (
-                                            <Select
-                                                {...field}
-                                                labelId="no-of-variable"
-                                                id="no-of-variable"
-                                                multiple
-                                                MenuProps={{
-                                                    PaperProps: {
-                                                        style: {
-                                                            maxHeight: 48 * 4.5 + 8,
-                                                            width: 250
-                                                        }
-                                                    }
-                                                }}
-                                                renderValue={(selected) => selected.join(", ")}
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    setValue("selectedVariables", value, {
-                                                        shouldValidate: true,
-                                                        shouldDirty: true,
-                                                        shouldTouch: true
-                                                    });
-                                                }}
-                                                input={<OutlinedInput label="No of Variable" />}
-                                            >
-                                                {settingData.variables?.map((item, index) => (
-                                                    <MenuItem key={index} value={item.value}>
-                                                        <Checkbox checked={field.value.includes(item.value)} />
-                                                        <ListItemText primary={item.label} />
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        )}
-                                    />
-                                    {errors.selectedVariables && (
-                                        <FormHelperText>{errors.selectedVariables.message}</FormHelperText>
-                                    )}
-                                </FormControl>
-                            </Grid2>
-                        </Grid2>
-                        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                            {
-                                apiAccess?.addApiAccess && (
-                                    <Button variant='contained' type="submit" sx={{ minWidth: 100 }}>
-                                        Apply
-                                    </Button>
-                                )
-                            }
-                            <Button
-                                variant='outlined'
-                                color='error'
-                                onClick={() => {
-                                    setOpenModal(!openModal)
-                                }}
-                                sx={{ minWidth: 100 }}
-                            >
-                                Close
-                            </Button>
-                        </Box>
-                    </form>
+          <Grid2 container spacing={3} sx={{ marginTop: '1rem' }}>
+            <Grid2 size={6}>
+              <FormControl fullWidth>
+                <InputLabel id='no_of_groups_lbl'>No. of Groups</InputLabel>
+                <Select
+                  labelId='no_of_groups_lbl'
+                  id='no_of_groups'
+                  label='No. of Groups'
+                  fullWidth
+                  onChange={handleInput}
+                  name='noOfGroups'
+                  value={settingData.noOfGroups}
+                >
+                  <MenuItem value='1'>1</MenuItem>
+                  <MenuItem value='2'>2</MenuItem>
+                  <MenuItem value='3'>3</MenuItem>
+                  <MenuItem value='4'>4</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid2>
+            <Grid2 size={6}>
+              <FormControl fullWidth>
+                <InputLabel id='group_prnt_lbl'>Print per group</InputLabel>
+                <Select
+                  labelId='group_prnt_lbl'
+                  id='group_prnt'
+                  label='Print per group'
+                  fullWidth
+                  onChange={handleInput}
+                  name='printPerGroup'
+                  value={settingData.printPerGroup}
+                >
+                  <MenuItem value='1'>1</MenuItem>
+                  <MenuItem value='2'>2</MenuItem>
+                  <MenuItem value='3'>3</MenuItem>
+                  <MenuItem value='4'>4</MenuItem>
+                  <MenuItem value='5'>5</MenuItem>
+                  <MenuItem value='6'>6</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid2>
+          </Grid2>
 
-                </Box>
-            </Modal >
-            <SnackbarAlert openSnackbar={alert.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-        </>
-    )
+          <Grid2 container spacing={1} sx={{ marginTop: '1rem' }}>
+            <Grid2 size={12}>
+              <FormControl sx={{ width: '100%' }}>
+                <InputLabel id='no-of-variable'>No of Variable</InputLabel>
+                <Select
+                  labelId='no-of-variable'
+                  id='no-of-variable'
+                  multiple
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 48 * 4.5 + 8,
+                        width: 250
+                      }
+                    }
+                  }}
+                  // onChange={handleInput} name='noOfGroups'
+                  value={settingData.selectedVariables}
+                  renderValue={selected => selected.join(', ')}
+                  onChange={e => {
+                    // const value = ...e.target.value;
+                    console.log('Event value ', e.target.value)
+                    setSettingData(prevData => {
+                      const data = { ...prevData }
+                      data.variables.forEach(i => {
+                        if (e.target.value.includes(i.value)) {
+                          i.checked = true
+                        } else {
+                          i.checked = false
+                        }
+                       
+                      })
+                      data.selectedVariables = e.target.value
+                      return data
+                    })
+                  }}
+                  input={<OutlinedInput label='None' />}
+                >
+                  {settingData.variables?.map((item, index) => (
+                    <MenuItem key={item.value} value={item.value}>
+                      <Checkbox checked={item.checked} />
+                      <ListItemText primary={item.label} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid2>
+          </Grid2>
+
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            {apiAccess.addApiAccess && (
+              <Button variant='contained' onClick={applySettings} sx={{ minWidth: 100 }}>
+                Apply
+              </Button>
+            )}
+            <Button
+              variant='outlined'
+              color='error'
+              onClick={() => {
+                setOpenModal(!openModal)
+              }}
+              sx={{ minWidth: 100 }}
+            >
+              Close
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+      <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+      <AuthModal
+        open={authModalOpen}
+        handleClose={handleAuthModalClose}
+        approveAPIName={approveData.approveAPIName}
+        approveAPImethod={approveData.approveAPImethod}
+        approveAPIEndPoint={approveData.approveAPIEndPoint}
+        handleAuthResult={handleAuthResult}
+        config={config}
+        handleAuthModalOpen={handleAuthModalOpen}
+        openModalApprove={openModalApprove}
+      />
+    </>
+  )
 }
 
 ProjectSettings.propTypes={
-     openModal:PropTypes.any,
-      setOpenModal:PropTypes.any,
-       projectSettingData:PropTypes.any,
-        apiAccess:PropTypes.any, 
-        ip:PropTypes.any 
+   openModal:PropTypes.any,
+    setOpenModal:PropTypes.any,
+     projectSettingData:PropTypes.any, 
+     apiAccess:PropTypes.any,
+      ip:PropTypes.any
 }
 export default ProjectSettings

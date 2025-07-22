@@ -117,12 +117,12 @@ function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
         <form onSubmit={handleSubmit(handleSubmitForm)}>
           <Grid2 container spacing={2}>
             <Grid2 size={6}>
-              <CustomTextField name='printerId' disabled={!!editData.id} label='Printer ID' control={control} />
+              <CustomTextField name='printerId' disabled={!!editData.id} label='Printer ID *' control={control} />
             </Grid2>
             <Grid2 size={6}>
               <CustomDropdown
                 name='printerCategoryId'
-                label='Printer Category'
+                label='Printer Category *'
                 control={control}
                 options={allPrinterCategory}
               />
@@ -131,10 +131,10 @@ function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
 
           <Grid2 container spacing={2}>
             <Grid2 size={6}>
-              <CustomTextField name='printerPort' label='Printer Port' control={control} />
+              <CustomTextField name='printerPort' label='Printer Port *' control={control} />
             </Grid2>
             <Grid2 size={6}>
-              <CustomTextField name='printerIp' label='Printer IP' control={control} />
+              <CustomTextField name='printerIp' label='Printer IP *' control={control} />
             </Grid2>
           </Grid2>
           <Grid2 item xs={12} className='mt-3'>

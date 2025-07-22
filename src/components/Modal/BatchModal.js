@@ -138,14 +138,14 @@ function BatchModal({ openModal, handleCloseModal, editData, allProductData, all
           <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
             <Grid2 size={6}>
               <CustomTextField
-                label='Batch No.'
+                label='Batch No. *'
                 name={'batchNo'}
                 control={control}
                 disabled={editData?.code_generated}
               />
             </Grid2>
             <Grid2 size={6}>
-              <CustomTextField name='qty' label='Quantity (Basis Primary Level)' control={control} />
+              <CustomTextField name='qty' label='Quantity (Basis Primary Level) *' control={control} />
             </Grid2>
           </Grid2>
 

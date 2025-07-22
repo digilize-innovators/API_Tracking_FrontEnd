@@ -207,7 +207,7 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
                 }
             } catch (error) {
                 console.log('Error in get products ', error)
-                setIsLoading(true); ``
+                setIsLoading(true); 
             }
         }
         getAllProducts()

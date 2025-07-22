@@ -12,10 +12,22 @@ import isValidIPv4 from "src/@core/utils/isValidIPv4";
 
 const validationSchema = yup.object().shape({
     name: yup.string()
-        .trim()
-        .matches(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/, "Control Panel Name cannot contain any special symbols")
-        .max(256, "Camera Name length should be less than 256")
-        .required("Camera Name can't be empty"),
+  .trim()
+  .max(256, "Camera Name length should be less than 256")
+  .required("Camera Name can't be empty")
+  .test(
+    'valid-camera-name',
+    'Control Panel Name cannot contain any special symbols',
+    (value) => {
+      if (!value) return false;
+
+      const validChars = /^[a-zA-Z0-9 ]+$/.test(value);  // only letters, numbers, and spaces
+      const noDoubleSpaces = !/\s{2,}/.test(value);      // disallow consecutive spaces
+      const noEdgeSpaces = value === value.trim();       // disallow leading/trailing space
+
+      return validChars && noDoubleSpaces && noEdgeSpaces;
+    }
+  ),
 
     ip: yup.string()
         .trim()
@@ -75,16 +87,16 @@ function CameraModal({ openModal, handleClose, editData, handleSubmitForm }) {
                 <form onSubmit={handleSubmit(handleSubmitForm)}>
                     <Grid2 container spacing={2}>
                         <Grid2 size={6}>
-                            <CustomTextField label='Camera Name' name="name" control={control} />
+                            <CustomTextField label='Camera Name *' name="name" control={control} />
                         </Grid2>
                         <Grid2 size={6}>
-                            <CustomTextField label='IP Address' name="ip" control={control} />
+                            <CustomTextField label='IP Address *' name="ip" control={control} />
                         </Grid2>
                     </Grid2>
 
                     <Grid2 container spacing={2}>
                         <Grid2 size={6}>
-                            <CustomTextField control={control} label='Port No.' name="port" />
+                            <CustomTextField control={control} label='Port No. *' name="port" />
                         </Grid2>
                     </Grid2>
                     <Grid2 item xs={12} className='my-3 '>

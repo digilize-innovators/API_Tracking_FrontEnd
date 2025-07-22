@@ -8,15 +8,25 @@ import CustomTextField from 'src/components/CustomTextField';
 import PropTypes from 'prop-types'
 
 const AreaCategorySchema = yup.object().shape({
-  areaCategoryName: yup
-    .string()
-    .trim()
-    .required("Area category name can't be empty")
-    .max(101, 'Area category name must be 101 characters or less')
-    .matches(
-      /^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/,
-      'Area category name must contain only letters, numbers, and spaces'
-    ),
+ areaCategoryName: yup
+  .string()
+  .trim()
+  .required("Area category name can't be empty")
+  .max(101, 'Area category name must be 101 characters or less')
+  .test(
+    'valid-area-category-name',
+    'Area category name must contain only letters, numbers, and single spaces',
+    (value) => {
+      if (!value) return false;
+
+      const validChars = /^[a-zA-Z0-9 ]+$/.test(value); // only alphanumeric and space
+      const noDoubleSpaces = !/\s{2,}/.test(value);     // no multiple consecutive spaces
+      const noEdgeSpaces = value === value.trim();      // no leading/trailing space
+
+      return validChars && noDoubleSpaces && noEdgeSpaces;
+    },
+  )
+
 });
 
 const AreaCategoryModal = ({ open, onClose, editData, handleSubmitForm }) => {
@@ -45,7 +55,7 @@ const AreaCategoryModal = ({ open, onClose, editData, handleSubmitForm }) => {
         <form onSubmit={handleSubmit(handleSubmitForm)}>
           <Grid2 container spacing={2}>
             <Grid2 xs={12} sm={6}>
-              <CustomTextField name="areaCategoryName"  label="Area Category"   control={control}   />
+              <CustomTextField name="areaCategoryName"  label="Area Category *"    control={control} />
             </Grid2>
             
           </Grid2>

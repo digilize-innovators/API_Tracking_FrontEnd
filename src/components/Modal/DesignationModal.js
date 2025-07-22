@@ -17,9 +17,20 @@ const designationSchema = yup.object().shape({
 
   designationName: yup.string()
   .required("Designation Name can't be empty")
-    .max(50, 'Designation Name length should be <= 50')
-    .matches(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/, 'Designation Name cannot contain any special symbols')
-    ,
+  .max(50, 'Designation Name length should be <= 50')
+  .test(
+    'valid-designation-name',
+    'Designation Name cannot contain any special symbols',
+    (value) => {
+      if (!value) return false;
+
+      const validChars = /^[a-zA-Z0-9 ]+$/.test(value);  // only letters, numbers, and spaces
+      const noDoubleSpaces = !/\s{2,}/.test(value);      // no multiple spaces in a row
+      const noEdgeSpaces = value === value.trim();       // no leading/trailing spaces
+
+      return validChars && noDoubleSpaces && noEdgeSpaces;
+    }
+  ),
 });
 
 const DesignationModal = ({ open, onClose, editData, handleSubmitForm, departmentData, depData }) => {
@@ -70,7 +81,7 @@ const DesignationModal = ({ open, onClose, editData, handleSubmitForm, departmen
             <Grid2 size={6}>
               <CustomTextField
                 name='designationId'
-                label='Designation ID'
+                label='Designation ID *'
                 disabled={!!editData?.id}
                 control={control}
               />
@@ -78,7 +89,7 @@ const DesignationModal = ({ open, onClose, editData, handleSubmitForm, departmen
             <Grid2 size={6}>
               <CustomTextField
                 name='designationName'
-                label='Designation Name'
+                label='Designation Name *'
                 control={control}
               />
             </Grid2>

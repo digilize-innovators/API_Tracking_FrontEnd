@@ -17,7 +17,6 @@ import 'react-chatbot-kit/build/main.css';
 import Cookies from 'js-cookie';
 import PropTypes from 'prop-types';
 
-
 const clientSideEmotionCache = createEmotionCache();
 if (global.window) {
   global.addEventListener('load', () => {
@@ -40,7 +39,6 @@ const App = props => {
   useEffect(() => {
     setClient(true);
     const storedShowBot = Cookies.get('showBot');
-    // console.log('Show Bot: ', storedShowBot);
     setShowBot(storedShowBot == 'true');
     setShowBot(storedShowBot === 'true');
     console.warn = () => { };

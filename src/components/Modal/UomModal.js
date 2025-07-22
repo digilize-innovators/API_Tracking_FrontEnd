@@ -47,8 +47,9 @@ const UomModal = ({ open, onClose, editData, handleSubmitForm }) => {
                         <Grid2 xs={12} sm={6}>
                             <CustomTextField
                                 name="unitName"
-                                label="Unit Of Measurement"
+                                label="Unit Of Measurement *"
                                 control={control}
+                                
                             />
                         </Grid2>
                     </Grid2>

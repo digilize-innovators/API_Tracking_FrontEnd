@@ -16,12 +16,23 @@ const locationSchema = yup.object().shape({
     .required("Location ID can't be empty"),
 
   locationType:yup.string().required('Select Location Type'),
-  locationName: yup
-    .string()
-    .required("Location Name can't be empty")
-    .max(255, 'Location name length should be less than 256')
-    .matches(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/, 'Location Name can only contain letters and numbers')
-    ,
+ locationName: yup
+  .string()
+  .required("Location Name can't be empty")
+  .max(255, 'Location name length should be less than 256')
+  .test(
+    'valid-location-name',
+    'Location Name can only contain letters, numbers, and single spaces',
+    (value) => {
+      if (!value) return false;
+
+      const validChars = /^[a-zA-Z0-9 ]+$/.test(value);  // allow alphanumerics and spaces
+      const noDoubleSpaces = !/\s{2,}/.test(value);      // prevent multiple spaces
+      const noEdgeSpaces = value === value.trim();       // no leading/trailing spaces
+
+      return validChars && noDoubleSpaces && noEdgeSpaces;
+    }
+  ) ,
 
   mfgLicenceNo: yup
     .string()
@@ -91,7 +102,7 @@ const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
             <Grid2 size={6}>
               <CustomTextField
                 name='locationId'
-                label='Location ID'
+                label='Location ID *'
                 control={control}
                 disabled={!!editData?.location_id}
               />
@@ -99,7 +110,7 @@ const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
             <Grid2 size={6}>
               <CustomDropdown
                               name='locationType'
-                              label='Location Type'
+                              label='Location Type *'
                               control={control}
                               options={locationData}
                                 />
@@ -112,7 +123,7 @@ const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
             <Grid2 size={6}>
             <CustomTextField
                 name='locationName'
-                label='Location Name'
+                label='Location Name *'
                 control={control}
               />
              
@@ -120,7 +131,7 @@ const LocationModal = ({ open, handleClose, editData, handleSubmitForm }) => {
             <Grid2 size={6}>
             <CustomTextField
                 name='mfgLicenceNo'
-                label='Mfg Licence No.'
+                label='Mfg Licence No. *'
                 control={control}
               />
             

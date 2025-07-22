@@ -20,12 +20,21 @@ const AreaSchema = yup.object().shape({
         .trim()
         .max(50, 'Area ID length should be less than 51')
         .required("Area ID can't be empty"),
-    areaName: yup
-        .string()
-        .trim()
-        .max(255, 'Area name length should be less than 256')
-        .required("Area name can't be empty")
-        .matches(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/, "Area name cannot contain any special symbols"),
+   areaName: yup
+  .string()
+  .trim()
+  .max(255, 'Area name length should be less than 256')
+  .required("Area name can't be empty")
+  .test(
+    'no-special-chars',
+    'Area name cannot contain any special symbols',
+    (value) => value != null && /^[a-zA-Z0-9 ]+$/.test(value)
+  )
+  .test(
+    'no-leading-trailing-multiple-spaces',
+    'Area name should not have multiple spaces in a row',
+    (value) => value != null && !/\s{2,}/.test(value)
+  ),
     areaCategoryId: yup.string().required("Area category can't be empty"),
     location_uuid: yup.string().required("location can't be empty")
 });
@@ -133,7 +142,7 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
                         <Grid2 size={6}>
                             <CustomTextField
                                 name="areaId"
-                                label="Area ID"
+                                label="Area ID *"
                                 control={control}
                                 disabled={!!editData?.id}
                             />
@@ -141,7 +150,7 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
                         <Grid2 size={6}>
                             <CustomTextField
                                 name="areaName"
-                                label="Area Name"
+                                label="Area Name *"
                                 control={control}
                             />
                         </Grid2>

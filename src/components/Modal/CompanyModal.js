@@ -8,19 +8,39 @@ import CustomTextField from 'src/components/CustomTextField';
 import PropTypes from 'prop-types'
 
 const CompanySchema = yup.object().shape({
-  companyId: yup
-    .string()
-    .trim()
-    .max(20, 'Company ID should not exceed 20 characters')
-    .required("Company ID can't be empty")
-    .matches(/^[a-zA-Z0-9]+\s*$/, 'Company ID should not contain any special symbols'),
+ companyId: yup
+  .string()
+  .trim()
+  .max(20, 'Company ID should not exceed 20 characters')
+  .required("Company ID can't be empty")
+  .test(
+    'valid-company-id',
+    'Company ID should only contain letters, numbers, and optional trailing space',
+    (value) => {
+      if (!value) return false;
+      // Only alphanumeric characters and single optional space at the end
+      return /^[a-zA-Z0-9]+ ?$/.test(value);
+    }
+  ),
 
   companyName: yup
-    .string()
-    .trim()
-    .max(50, 'Company Name should not exceed 50 characters')
-    .required("Company Name can't be empty")
-    .matches(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/, 'Company Name should not contain any special symbols'),
+  .string()
+  .trim()
+  .max(50, 'Company Name should not exceed 50 characters')
+  .required("Company Name can't be empty")
+  .test(
+    'valid-company-name',
+    'Company Name should not contain any special symbols',
+    (value) => {
+      if (!value) return false;
+
+      const validChars = /^[a-zA-Z0-9 ]+$/.test(value); // only letters, digits, and spaces
+      const noDoubleSpaces = !/\s{2,}/.test(value);     // no consecutive spaces
+      const noEdgeSpaces = value === value.trim();      // no leading or trailing spaces
+
+      return validChars && noDoubleSpaces && noEdgeSpaces;
+    }
+  ),
 
   mfgLicenceNo: yup
     .string()
@@ -117,7 +137,7 @@ function CompanyModal({ open, onClose, editData, handleSubmitForm }) {
                         <Grid2 size={6}>
                             <CustomTextField
                                 name="companyId"
-                                label="Company ID"
+                                label="Company ID *"
                                 control={control}
                                 disabled={!!editData?.id}
                             />
@@ -125,7 +145,7 @@ function CompanyModal({ open, onClose, editData, handleSubmitForm }) {
                         <Grid2 size={6}>
                             <CustomTextField
                                 name="companyName"
-                                label="Company Name"
+                                label="Company Name *"
                                 control={control}
                             />
                         </Grid2>
@@ -135,14 +155,14 @@ function CompanyModal({ open, onClose, editData, handleSubmitForm }) {
                         <Grid2 size={6}>
                             <CustomTextField
                                 name="mfgLicenceNo"
-                                label="Manufacturing License No."
+                                label="Manufacturing License No. *"
                                 control={control}
                             />
                         </Grid2>
                         <Grid2 size={6}>
                             <CustomTextField
                                 name="address"
-                                label="Address"
+                                label="Address *"
                                 control={control}
                             />
                         </Grid2>
@@ -151,14 +171,14 @@ function CompanyModal({ open, onClose, editData, handleSubmitForm }) {
                         <Grid2 size={6}>
                             <CustomTextField
                                 name="contactNo"
-                                label="Contact No"
+                                label="Contact No *"
                                 control={control}
                             />
                         </Grid2>
                         <Grid2 size={6}>
                             <CustomTextField
                                 name="email"
-                                label="Email"
+                                label="Email *"
                                 control={control}
                             />
                         </Grid2>
@@ -168,7 +188,7 @@ function CompanyModal({ open, onClose, editData, handleSubmitForm }) {
                         <Grid2 size={4}>
                             <CustomTextField
                                 name="gs1_prefix"
-                                label="GS1 Prefix"
+                                label="GS1 Prefix *"
                                 type="number"
                                 control={control}
                             />

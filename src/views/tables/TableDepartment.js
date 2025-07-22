@@ -126,6 +126,7 @@ const Row = ({
     setState({ ...state, [anchor]: open })
   }
   const handleAuthModalClose = () => {
+   setEsignDownloadPdf(false)
     setAuthModalOpen(false)
     setOpenModalApprove(false)
   }

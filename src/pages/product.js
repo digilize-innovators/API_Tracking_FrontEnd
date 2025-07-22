@@ -145,6 +145,7 @@ const Index = () => {
   }
 
   const handleAuthModalClose = () => {
+    setEsignDownloadPdf(false)
     setAuthModalOpen(false)
     setOpenModalApprove(false)
   }

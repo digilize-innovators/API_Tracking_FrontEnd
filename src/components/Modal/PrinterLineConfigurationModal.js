@@ -365,39 +365,39 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
         <form onSubmit={handleSubmit(handleSubmitForm)}>
           <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
             <Grid2 size={6}>
-              <CustomTextField name='printerLineName' label='Printer Line Name' control={control} />
+              <CustomTextField name='printerLineName' label='Printer Line Name *' control={control} />
             </Grid2>
             <Grid2 size={6}>
-              <CustomDropdown name='locationId' label='Location ' control={control} options={locationId} />
+              <CustomDropdown name='locationId' label='Location * ' control={control} options={locationId} />
             </Grid2>
           </Grid2>
           <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
             <Grid2 size={6}>
-              <CustomDropdown name='areaCategoryId' label='AreaCategory' control={control} options={AreaCategory} />
+              <CustomDropdown name='areaCategoryId' label='AreaCategory *' control={control} options={AreaCategory} />
             </Grid2>
             <Grid2 size={6}>
-              <CustomDropdown name='areaId' label='Area' control={control} options={areaName} />
+              <CustomDropdown name='areaId' label='Area *' control={control} options={areaName} />
             </Grid2>
           </Grid2>
           <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
             <Grid2 size={6}>
               <CustomDropdown
                 name='printerCategoryId'
-                label='Printer Category*'
+                label='Printer Category *'
                 control={control}
                 options={printerCategories}
               />
             </Grid2>
             <Grid2 size={6}>
-              <CustomDropdown name='printer' label='printer' control={control} options={printers} />
+              <CustomDropdown name='printer' label='printer *' control={control} options={printers} />
             </Grid2>
           </Grid2>
           <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
             <Grid2 size={6}>
-              <CustomDropdown name='controlpanelId' label='controlpanel' control={control} options={controlPanelData} />
+              <CustomDropdown name='controlpanelId' label='controlpanel *' control={control} options={controlPanelData} />
             </Grid2>
             <Grid2 size={6}>
-              <CustomTextField name='lineNo' label='Line No' control={control} />
+              <CustomTextField name='lineNo' label='Line No *' control={control} />
             </Grid2>
           </Grid2>
           <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
@@ -414,7 +414,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
               </Typography>
             </Grid2>
             <Grid2 size={6}>
-              <CustomTextField name='linePcAddress' label='Line Pc Address' control={control} />
+              <CustomTextField name='linePcAddress' label='Line Pc Address *' control={control} />
             </Grid2>
           </Grid2>
           <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
@@ -433,7 +433,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
             </Grid2>
             {camera_enable && (
               <Grid2 size={6}>
-                <CustomDropdown name='cameraId' label='Camera Name' control={control} options={cameraData} />
+                <CustomDropdown name='cameraId' label='Camera Name *' control={control} options={cameraData} />
               </Grid2>
             )}
           </Grid2>

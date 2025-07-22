@@ -240,7 +240,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                 }
             } catch (error) {
                 console.log('Error in get products ', error)
-                setIsLoading(true); ``
+                setIsLoading(true); 
             }
         }
         getAllProducts()

@@ -115,6 +115,7 @@ const Index = () => {
     setOpenModal(true)
   }
   const handleAuthModalClose = () => {
+    setEsignDownloadPdf(false)
     setAuthModalOpen(false)
     setOpenModalApprove(false)
   }
@@ -157,8 +158,6 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
 
   resetState();
 };
-
-// ----------------- Helper Functions -----------------
 
 const resetState = () => {
   setApproveAPI({ approveAPIName: '', approveAPIEndPoint: '', approveAPImethod: '' });

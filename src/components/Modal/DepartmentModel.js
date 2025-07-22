@@ -14,12 +14,24 @@ const departmentSchema = yup.object().shape({
     .required("Department ID can't be empty")
     .matches(/^[a-zA-Z0-9]+$/, "Department ID cannot contain any special symbols")
     .max(20, "Department ID length should be <= 20"),
-  departmentName: yup
-    .string()
-    .trim()
-    .required("Department name can't be empty")
-    .matches(/^[a-zA-Z0-9]+(\s*[a-zA-Z0-9]+)*$/, "Department name cannot contain any special symbols")
-    .max(50, "Department name length should be <= 50"),
+ departmentName: yup
+  .string()
+  .trim()
+  .required("Department name can't be empty")
+  .max(50, "Department name length should be <= 50")
+  .test(
+    'valid-department-name',
+    'Department name cannot contain any special symbols',
+    (value) => {
+      if (!value) return false;
+
+      const validChars = /^[a-zA-Z0-9 ]+$/.test(value); 
+      const noDoubleSpaces = !/\s{2,}/.test(value);      
+      const noEdgeSpaces = value === value.trim();     
+
+      return validChars && noDoubleSpaces && noEdgeSpaces;
+    }
+  ),
 });
 
 const DepartmentModel = ({ open, onClose, editData, handleSubmitForm }) => {
@@ -65,7 +77,7 @@ const DepartmentModel = ({ open, onClose, editData, handleSubmitForm }) => {
             <Grid2 size={6}>
               <CustomTextField
                 name="departmentId"
-                label="Department ID"
+                label="Department ID *"
                 control={control}
                 disabled={!!editData?.id}
               />
@@ -73,7 +85,7 @@ const DepartmentModel = ({ open, onClose, editData, handleSubmitForm }) => {
             <Grid2 size={6}>
               <CustomTextField
                 name="departmentName"
-                label="Department Name"
+                label="Department Name *"
                 control={control}
               />
             </Grid2>
