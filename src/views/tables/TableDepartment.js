@@ -166,7 +166,8 @@ const buildAuditLog = (user, remarks, action) => {
         user_id: user.userId,
         user_name: user.userName,
         remarks: remarks?.length > 0 ? remarks : `designation ${action} - ${auditLogMark}`,
-        authUser: user.user_id
+        authUser: user.user_id,
+        department: depData?.department_name
       }
     : {};
 };

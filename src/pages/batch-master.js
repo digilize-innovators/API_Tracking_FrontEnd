@@ -277,7 +277,8 @@ const buildAuditLog = (user, remarks, action) => {
         user_id: user.userId,
         user_name: user.userName,
         remarks: remarks?.length > 0 ? remarks : `batch ${action} - ${auditLogMark}`,
-        authUser: user.user_id
+        authUser: user.user_id,
+        product: eSignStatusId.product.product_history[0]?.product_name
       }
     : {};
 };
