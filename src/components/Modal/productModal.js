@@ -60,6 +60,7 @@ const validationSchema = yup.object().shape({
     .required('GTIN is required'),
   ndc: yup
     .string()
+    .trim()
     .transform(value => {
       // If the value is an empty string, null, or undefined, return empty string
       if (value === '' || value == null) {

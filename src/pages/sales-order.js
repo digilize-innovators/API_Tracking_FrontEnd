@@ -161,7 +161,7 @@ const Index = () => {
       setIsLoading(false)
     }
   }
-  const editSaleOrder = async (esign_status, remarks) => {
+  const editSaleOrder = async () => {
     try {
       const data = { ...formData }
       delete data.type

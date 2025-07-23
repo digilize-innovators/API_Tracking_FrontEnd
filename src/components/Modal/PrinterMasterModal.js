@@ -35,8 +35,9 @@ const PrinterMasterSchema = yup.object().shape({
     .max(65535, 'Port number must be less than or equal to 65535'),
   printerIp: yup
     .string()
-    .trim().required("IP Address can't be empty")
-        .test("is-valid-ipv4", "Invalid IPv4 address", (value) => isValidIPv4(value)),
+    .trim()
+    .required("IP Address can't be empty")
+    .test('is-valid-ipv4', 'Invalid IPv4 address', value => isValidIPv4(value))
 })
 
 function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
@@ -53,14 +54,11 @@ function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
         setIsLoading(false)
 
         if (res.data.success) {
-          console.log('res', res)
-
           const data = res.data.data.printerCategories?.map(item => ({
             id: item.printer_category_uuid,
             value: item.printer_category_uuid,
             label: item.printer_category_name
           }))
-          console.log('data', data)
           setAllPrinterCategory(data)
         } else {
           console.log('Error in get printer category ', res.data)
@@ -78,11 +76,7 @@ function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
     return () => {}
   }, [])
 
-  const {
-    control,
-    handleSubmit,
-    reset
-  } = useForm({
+  const { control, handleSubmit, reset } = useForm({
     resolver: yupResolver(PrinterMasterSchema),
     defaultValues: {
       printerId: editData?.printer_id || '',
@@ -104,12 +98,7 @@ function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
   }, [editData])
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      aria-labelledby='modal-modal-title'
-      aria-describedby='modal-modal-description'
-    >
+    <Modal open={open} onClose={onClose} aria-labelledby='modal-modal-title' aria-describedby='modal-modal-description'>
       <Box sx={style}>
         <Typography variant='h4' className='my-2'>
           {editData?.id ? 'Edit Printer Master' : 'Add Printer Master'}
@@ -153,10 +142,10 @@ function PrinterMasterModal({ open, onClose, editData, handleSubmitForm }) {
     </Modal>
   )
 }
-PrinterMasterModal.propTypes={
-  open:PropTypes.any,
-  onClose:PropTypes.any,
-  editData:PropTypes.any,
-  handleSubmitForm:PropTypes.any
+PrinterMasterModal.propTypes = {
+  open: PropTypes.any,
+  onClose: PropTypes.any,
+  editData: PropTypes.any,
+  handleSubmitForm: PropTypes.any
 }
 export default PrinterMasterModal

@@ -137,135 +137,133 @@ const Index = () => {
     }
   }
 
-const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user);
-  console.log('handleAuthResult 02', config?.userId, user.user_id);
+  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
+    console.log('handleAuthResult 02', config?.userId, user.user_id)
 
-  if (!isAuthenticated) {
-    setAlertData({
-      type: 'error',
-      openSnackbar: true,
-      message: 'Authentication failed, Please try again.'
-    });
-    resetState();
-    return;
-  }
-
-  if (isApprover) {
-    await handleApproverActions(user, esignStatus, remarks);
-  } else {
-    handleCreatorActions(user, esignStatus, remarks,isApprover);
-  }
-
-  resetState();
-};
-
-const resetState = () => {
-  setApproveAPI({ approveAPIName: '', approveAPIEndPoint: '', approveAPImethod: '' });
-  setEsignDownloadPdf(false);
-  setAuthModalOpen(false);
-};
-
-const buildAuditLog = (user, remarks, action) => {
-  return config?.config?.audit_logs
-    ? {
-        user_id: user.userId,
-        user_name: user.userName,
-        remarks: remarks?.length > 0 ? remarks : `department ${action} - ${auditLogMark}`,
-        authUser: user.user_id
-      }
-    : {};
-};
-
-const handleApproverActions = async (user, esignStatus, remarks) => {
-  const payload = {
-    modelName: 'department',
-    esignStatus,
-    id: eSignStatusId,
-    name: auditLogMark,
-    audit_log: buildAuditLog(user, remarks, esignStatus)
-  };
-
-  if (esignStatus === 'approved' && esignDownloadPdf) {
-    setOpenModalApprove(false);
-
-    downloadPdf(tableData, tableHeaderData, tableBody, departmentData?.data, user);
-
-    if (config?.config?.audit_logs) {
-      const auditPayload = {
-        audit_log: {
-          audit_log: true,
-         performed_action: 'Export report of department',
-         remarks: remarks || 'Department export report',
-          authUser: user
-        }
-      };
-      await api('/auditlog/', auditPayload, 'post', true);
+    if (!isAuthenticated) {
+      setAlertData({
+        type: 'error',
+        openSnackbar: true,
+        message: 'Authentication failed, Please try again.'
+      })
+      resetState()
+      return
     }
 
-    return;
-  }
-
-  const res = await api('/esign-status/update-esign-status', payload, 'patch', true);
-
-  if (res?.data) {
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: res.data.code === 200 ? 'success' : 'error',
-      message: res.data.message
-    });
-  }
-
-  setPendingAction(true);
-
-  if (esignStatus === 'rejected' && esignDownloadPdf) {
-    console.log('approver rejected');
-    setOpenModalApprove(false);
-  }
-};
-
-const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
-  if (esignStatus === 'rejected') {
-    setAuthModalOpen(false);
-    setOpenModalApprove(false);
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: 'error',
-      message: 'Access denied for this user.'
-    });
-    return;
-  }
-
-  if (!isApprover && esignDownloadPdf) {
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: 'error',
-      message: 'Access denied: Download pdf disabled for this user.'
-    });
-    resetState();
-    return;
-  }
-
-  if (esignStatus === 'approved') {
-    console.log('Esign Download pdf', esignDownloadPdf);
-
-    if (esignDownloadPdf) {
-      console.log('esign is approved for creator to download');
-      setEsignDownloadPdf(false);
-      setOpenModalApprove(true);
+    if (isApprover) {
+      await handleApproverActions(user, esignStatus, remarks)
     } else {
-      console.log('esign is approved for creator');
-      setAuthUser(user);
-      setEsignRemark(remarks);
-      setPendingAction(editData?.id ? 'edit' : 'add');
+      handleCreatorActions(user, esignStatus, remarks, isApprover)
+    }
+
+    resetState()
+  }
+
+  const resetState = () => {
+    setApproveAPI({ approveAPIName: '', approveAPIEndPoint: '', approveAPImethod: '' })
+    setEsignDownloadPdf(false)
+    setAuthModalOpen(false)
+  }
+
+  const buildAuditLog = (user, remarks, action) => {
+    return config?.config?.audit_logs
+      ? {
+          user_id: user.userId,
+          user_name: user.userName,
+          remarks: remarks?.length > 0 ? remarks : `department ${action} - ${auditLogMark}`,
+          authUser: user.user_id
+        }
+      : {}
+  }
+
+  const handleApproverActions = async (user, esignStatus, remarks) => {
+    const payload = {
+      modelName: 'department',
+      esignStatus,
+      id: eSignStatusId,
+      name: auditLogMark,
+      audit_log: buildAuditLog(user, remarks, esignStatus)
+    }
+
+    if (esignStatus === 'approved' && esignDownloadPdf) {
+      setOpenModalApprove(false)
+
+      downloadPdf(tableData, tableHeaderData, tableBody, departmentData?.data, user)
+
+      if (config?.config?.audit_logs) {
+        const auditPayload = {
+          audit_log: {
+            audit_log: true,
+            performed_action: 'Export report of department',
+            remarks: remarks || 'Department export report',
+            authUser: user
+          }
+        }
+        await api('/auditlog/', auditPayload, 'post', true)
+      }
+
+      return
+    }
+
+    const res = await api('/esign-status/update-esign-status', payload, 'patch', true)
+
+    if (res?.data) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: res.data.code === 200 ? 'success' : 'error',
+        message: res.data.message
+      })
+    }
+
+    setPendingAction(true)
+
+    if (esignStatus === 'rejected' && esignDownloadPdf) {
+      console.log('approver rejected')
+      setOpenModalApprove(false)
     }
   }
-};
 
+  const handleCreatorActions = (user, esignStatus, remarks, isApprover) => {
+    if (esignStatus === 'rejected') {
+      setAuthModalOpen(false)
+      setOpenModalApprove(false)
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied for this user.'
+      })
+      return
+    }
 
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied: Download pdf disabled for this user.'
+      })
+      resetState()
+      return
+    }
+
+    if (esignStatus === 'approved') {
+      console.log('Esign Download pdf', esignDownloadPdf)
+
+      if (esignDownloadPdf) {
+        console.log('esign is approved for creator to download')
+        setEsignDownloadPdf(false)
+        setOpenModalApprove(true)
+      } else {
+        console.log('esign is approved for creator')
+        setAuthUser(user)
+        setEsignRemark(remarks)
+        setPendingAction(editData?.id ? 'edit' : 'add')
+      }
+    }
+  }
 
   const handleAuthCheck = async row => {
     console.log('handleAuthCheck', row)
@@ -329,7 +327,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
         }
       }
     } catch (error) {
-      console.err("Internal error while adding",error)
+      console.err('Internal error while adding', error)
       router.push('/500')
       setOpenModal(false)
     } finally {

@@ -238,7 +238,6 @@ const Index = () => {
   }
 
   const handleUpdate = item => {
-    console.log('item', item)
     resetForm()
     setEditData(item)
     console.log('edit controlpanel master', item)

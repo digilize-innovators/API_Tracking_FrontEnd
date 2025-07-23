@@ -294,7 +294,7 @@ const TableCompany = ({
     setSortBy(path)
   }
 
-  const getData = async (pageNumber, rowsNumber, status, search) => {
+  const getData = async () => {
     try {
       setIsLoading(true)
       const params = new URLSearchParams({

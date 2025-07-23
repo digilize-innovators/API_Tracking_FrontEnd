@@ -105,9 +105,9 @@ function updatePrintedCounts(prevLines, panelName, lineId, printCount) {
 function handleDataScanned(data) {
   const { lineId, scanned, panelName } = data;
   console.log('dataScanned', data);
-
   setPrinterLines(prevLines => updateScannedLines(prevLines, panelName, lineId, scanned));
-};
+}
+
 const updateScannedLines = (prevLines, panelName, lineId, scanned) => {
   const panels = [...prevLines];
   const panel = panels.find(p => p.panelName === panelName);
@@ -136,7 +136,7 @@ function handlePrintStarted (data)  {
     message: 'Printer started',
     variant: 'filled'
   });
-};
+}
 
 const updatePrintStartState = (prevLines, data) => {
   const panels = [...prevLines];
@@ -175,7 +175,8 @@ socket.current.on('printStoped', handlePrintStopped);
     message: 'Printer stopped Successfully',
     variant: 'filled'
   });
-};
+}
+
 const updatePrintStopState = (prevLines, data) => {
   const panels = [...prevLines];
   const panel = panels.find(p => p.panelName === data.panelName);

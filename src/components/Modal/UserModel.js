@@ -45,17 +45,20 @@ const MIN_PASSWORD_LENGTH = 8
 const UserSchema = yup.object().shape({
   userId: yup
     .string()
+    .trim()
     .max(MAX_LENGTH, `User ID length should be less than ${MAX_LENGTH} characters`)
     .matches(/^[a-zA-Z0-9]+$/, 'User ID cannot contain special symbols')
     .required("User ID can't be empty"),
   userName: yup
     .string()
+    .trim()
     .max(MAX_LENGTH, `User name length should be less than ${MAX_LENGTH} characters`)
     .matches(/^[a-zA-Z0-9]+(?:\s[a-zA-Z0-9]+)*$/, 'Username cannot contain special symbols')
     .required("User Name can't be empty"),
-  email: yup.string().email('Email is not valid').required('Email is required'),
+  email: yup.string().trim().email('Email is not valid').required('Email is required'),
   password: yup
     .string()
+    .trim()
     .min(MIN_PASSWORD_LENGTH, `Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
     .matches(
       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@#$%^&*])[A-Za-z\d@#$%^&*()\-_=+]{8,}$/,
@@ -64,6 +67,7 @@ const UserSchema = yup.object().shape({
     .required('Password is required'),
   phoneNumber: yup
     .string()
+    .trim()
     .length(PHONE_LENGTH, `Phone number must be ${PHONE_LENGTH} digits`)
     .matches(/^\d+$/, 'Phone number cannot contain alphabets')
     .required('Phone is required'),

@@ -10,7 +10,6 @@ import { useAuth } from 'src/Context/AuthContext'
 import Head from 'next/head'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { useRouter } from 'next/router'
-import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { getTokenValues } from 'src/utils/tokenUtils'
@@ -18,7 +17,6 @@ import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import { validateToken } from 'src/utils/ValidateToken'
 import CustomSearchBar from 'src/components/CustomSearchBar'
-import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import downloadPdf from 'src/utils/DownloadPdf'
 import StockTrasferModel from 'src/components/Modal/StockTrasferModel'
 import TableStocktransfer from 'src/views/tables/TableStocktransfer'
@@ -36,12 +34,6 @@ const Index = () => {
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData, removeAuthToken } = useAuth()
   const [config, setConfig] = useState(null)
-  const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-  const [eSignStatusId, setESignStatusId] = useState('')
-  const [auditLogMark, setAuditLogMark] = useState('')
-  const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
-  const [openModalApprove, setOpenModalApprove] = useState(false)
   const [formData, setFormData] = useState({})
   const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''})
   const [stocktransferDetail,setStocktranferDetail]=useState([])
@@ -114,11 +106,6 @@ const Index = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
   const handleOpenModal = () => {
-    setApproveAPI({
-      approveAPIName: 'stocktransfer-order-create',
-      approveAPImethod: 'POST',
-      approveAPIEndPoint: '/api/v1/stocktransfer-order'
-    })
     setEditData({})
     setFormData({})
     setOpenModal(true)
@@ -128,11 +115,6 @@ const Index = () => {
     setFormData({})
     setEditData({})
     setStocktranferDetail([])
-  }
-
-  const handleAuthModalClose = () => {
-    setAuthModalOpen(false)
-    setOpenModalApprove(false)
   }
 
   const handleSubmitForm = async data => {
