@@ -84,7 +84,7 @@ const Index = () => {
   const getAllProducts = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/product/', {}, 'get', true)
+      const res = await api('/product?limit=-1&history_latest=true', {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
         setAllProductData(res.data.data.products)

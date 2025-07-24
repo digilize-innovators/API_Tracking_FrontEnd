@@ -76,16 +76,16 @@ const CodeReGenerationModal = ({
       }))
     }
   }
-
-  const handleSubmit = () => {
-    console.log('Selected rows:', availableCodeData.packagingHierarchyData);
-   const hasGenerated = availableCodeData.packagingHierarchyData.some(
+ const hasGenerated = availableCodeData.packagingHierarchyData?.some(
   row =>
     row.selected &&
     row.generate &&
     /^\d+$/.test(row.generate) &&
     parseInt(row.generate) > 0
 )
+  const handleSubmit = () => {
+    console.log('Selected rows:', availableCodeData.packagingHierarchyData);
+  
     if(!hasGenerated)
     {
       setErrorData({ error: true, message: 'Enter number code to generate ' })
@@ -259,7 +259,7 @@ const CodeReGenerationModal = ({
           <Button
             variant='contained'
             sx={{ marginRight: 3.5 }}
-            disabled={availableCodeData?.batch?.isBatchEnd || !isCodeAvailable}
+            disabled={availableCodeData?.batch?.isBatchEnd || !isCodeAvailable || !hasGenerated}
             onClick={handleSubmit}
           >
             Generate
