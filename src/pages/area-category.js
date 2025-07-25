@@ -1,5 +1,5 @@
 'use-client'
-import { Button, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
+import { Button, Box, Grid2, Typography } from '@mui/material'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -266,6 +266,8 @@ const resetState = () => {
 const handleApproverActions = async (user, esignStatus, remarks) => {
   if (esignStatus === 'approved' && esignDownloadPdf) {
     setOpenModalApprove(false);
+    console.log({tableData, tableHeaderData, tableBody, data: allAreaCategoryData.data, user});
+    
     downloadPdf(tableData, tableHeaderData, tableBody, allAreaCategoryData.data, user);
     await logAuditAction(user, remarks);
     return;
@@ -430,17 +432,15 @@ const handleApprovalForCreator = (user, remarks,isApprover) => {
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Area Category Data
               </Typography>
-              <TableContainer component={Paper}>
                 <TableAreaCategory
                   pendingAction={pendingAction}
                   handleUpdate={handleUpdate}
-                  setAreaCat={setAllAreaCategoryData}
+                  setDataCallback={setAllAreaCategoryData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}
                   tableHeaderData={tableHeaderData}
                 />
-              </TableContainer>
             </Grid2>
           </Box>
         </Grid2>

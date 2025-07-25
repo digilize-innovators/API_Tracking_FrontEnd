@@ -1,5 +1,5 @@
 'use-client'
-import { Button, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
+import { Button, Box, Grid2, Typography } from '@mui/material'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -48,7 +48,7 @@ const Index = () => {
   )
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
   const searchBarRef = useRef()
-  const [allPrinterLineConfigurationData, setAllPrinterLineConfigurationData] = useState({ data: [], index: 0 })
+  const [printerLineConfigData, setPrinterLineConfigData] = useState({ data: [], index: 0 })
   const [formData, setFormData] = useState()
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
@@ -78,8 +78,8 @@ const Index = () => {
     handleUserAction()
   }, [formData, pendingAction])
 
-  const tableBody = allPrinterLineConfigurationData?.data?.map((item, index) => [
-    index + allPrinterLineConfigurationData.index,
+  const tableBody = printerLineConfigData?.data?.map((item, index) => [
+    index + printerLineConfigData.index,
     item?.printer_line_name,
     item?.PrinterMaster.PrinterMasterHistory[0]?.printer_id,
     item?.cameraMaster?.CameraMasterHistory[0]?.name || 'Disabled',
@@ -298,7 +298,7 @@ const Index = () => {
     if (esignStatus === 'approved' && esignDownloadPdf) {
       setOpenModalApprove(false)
 
-      downloadPdf(tableData, tableHeaderData, tableBody, allPrinterLineConfigurationData?.data, user)
+      downloadPdf(tableData, tableHeaderData, tableBody, printerLineConfigData?.data, user)
 
       if (config?.config?.audit_logs) {
         const auditPayload = {
@@ -419,7 +419,7 @@ const Index = () => {
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, allPrinterLineConfigurationData?.data, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, printerLineConfigData?.data, userDataPdf)
   }
 
   return (
@@ -463,18 +463,15 @@ const Index = () => {
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Printer Line Configuration Data
               </Typography>
-              <TableContainer component={Paper}>
-                <TablePrinterLineConfiguration
-                  handleUpdate={handleUpdate}
-                  tableHeaderData={tableHeaderData}
-                  pendingAction={pendingAction}
-                  editable={apiAccess.editApiAccess}
-                  setAllPrinterLineConfiguration={setAllPrinterLineConfigurationData}
-                  handleAuthCheck={handleAuthCheck}
-                  apiAccess={apiAccess}
-                  config={config}
-                />
-              </TableContainer>
+              <TablePrinterLineConfiguration
+                handleUpdate={handleUpdate}
+                tableHeaderData={tableHeaderData}
+                pendingAction={pendingAction}
+                setDataCallback={setPrinterLineConfigData}
+                handleAuthCheck={handleAuthCheck}
+                apiAccess={apiAccess}
+                config={config}
+              />
             </Grid2>
           </Box>
         </Grid2>

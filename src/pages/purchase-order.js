@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Box, Grid2, Typography, Button, TableContainer, Paper } from '@mui/material'
+import { Box, Grid2, Typography, Button } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -29,7 +29,7 @@ const Index = () => {
   const [pendingAction, setPendingAction] = useState(null)
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [purchaseOrder, setPurchaseOrder] = useState([])
+  const [purchaseOrder, setPurchaseOrder] = useState({ data: [], index: 0 })
   const { setIsLoading } = useLoading()
   const [editData, setEditData] = useState({})
   const [userDataPdf, setUserDataPdf] = useState()
@@ -63,7 +63,7 @@ const Index = () => {
     }, [formData, pendingAction]);
   
 
-  const tableBody = purchaseOrder?.map((item, index) => [
+  const tableBody = purchaseOrder.data?.map((item, index) => [
     index + 1,
     item.order_no,
     item.status,
@@ -211,7 +211,7 @@ const Index = () => {
   const handleDownloadPdf = () => {
     let data = getUserData()
     setUserDataPdf(data)
-    downloadPdf(tableData, tableHeaderData, tableBody, purchaseOrder, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, purchaseOrder?.data, userDataPdf)
   }
   return (
     <Box padding={4}>
@@ -256,17 +256,16 @@ const Index = () => {
               <Typography variant='h4' className='mx-4 mt-3'>
                 Purchase Order Data
               </Typography>
-              <TableContainer component={Paper}>
-                <TablePurchaseOrder
-                  handleUpdate={handleUpdate}
-                  tableHeaderData={tableHeaderData}
-                  pendingAction={pendingAction}
-                  setPurchaseOrder={setPurchaseOrder}
-                  apiAccess={apiAccess}
-                  purchaseDetail={purchaseDetail}
-                  handleView={handleView}
-                />
-              </TableContainer>
+              <TablePurchaseOrder
+                handleUpdate={handleUpdate}
+                tableHeaderData={tableHeaderData}
+                pendingAction={pendingAction}
+                setDataCallback={setPurchaseOrder}
+                apiAccess={apiAccess}
+                handleAuthCheck={()=> {}}
+                purchaseDetail={purchaseDetail}
+                handleView={handleView}
+              />
             </Grid2>
           </Box>
         </Grid2>

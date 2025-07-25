@@ -37,7 +37,7 @@ const Row = ({
   historyData,
   config,
   handleAuthCheck,
-  handleOpenModal2,
+  handleReopenModal,
   apiAccess
 }) => {
   const serialNumber = getSerialNumber(index, page, rowsPerPage)
@@ -74,7 +74,9 @@ const Row = ({
           {row.no_of_codes}
         </TableCell>
         {config?.config?.esign_status === true && (
-          <StatusChip label={row?.esign_status} color={statusObj[row?.esign_status]?.color || 'default'} />
+          <TableCell align="center">
+            <StatusChip label={row?.esign_status} color={statusObj[row?.esign_status]?.color || 'default'} />
+          </TableCell>
         )}
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           <StatusChip label={row.status} color={statusObj[row.status]?.color || 'default'} />
@@ -97,7 +99,7 @@ const Row = ({
                 <IoMdEye
                   fontSize={20}
                   data-testid={`edit-icon-${index + 1}`}
-                  onClick={apiAccess.editApiAccess ? () => handleOpenModal2(row) : null}
+                  onClick={apiAccess.editApiAccess ? () => handleReopenModal(row) : null}
                   style={{
                     cursor: apiAccess.editApiAccess ? 'pointer' : 'not-allowed',
                     opacity: apiAccess.editApiAccess ? 1 : 0.5
@@ -201,7 +203,7 @@ Row.propTypes = {
   config: PropTypes.any,
   handleAuthCheck: PropTypes.any,
   apiAccess: PropTypes.any,
-  handleOpenModal2:PropTypes.any
+  handleReopenModal:PropTypes.any
   
 }
 
@@ -211,7 +213,7 @@ const TableCodeGeneration = ({
   apiAccess,
   config,
   handleAuthCheck,
-  handleOpenModal2,
+  handleReopenModal,
   isCodeReGeneration
 }) => {
   const [sortBy, setSortBy] = useState('')
@@ -463,7 +465,7 @@ const TableCodeGeneration = ({
                 config={config}
                 handleAuthCheck={handleAuthCheck}
                 apiAccess={apiAccess}
-                handleOpenModal2={handleOpenModal2}
+                handleReopenModal={handleReopenModal}
               />
             ))}
             {codeRequestData.data?.length === 0 && (
@@ -485,7 +487,7 @@ TableCodeGeneration.propTypes = {
   config: PropTypes.any,
   tableHeaderData: PropTypes.any,
   handleAuthCheck: PropTypes.any,
-  handleOpenModal2: PropTypes.any,
+  handleReopenModal: PropTypes.any,
   isCodeReGeneration: PropTypes.any
 }
 export default TableCodeGeneration

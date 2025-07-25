@@ -1,6 +1,5 @@
 'use-client'
 import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react'
-import TableCollapsibleuser from 'src/views/tables/TableCollapsibleuser.js'
 import {
   InputLabel,
   FormControl,
@@ -9,8 +8,6 @@ import {
   Button,
   Box,
   MenuItem,
-  TableContainer,
-  Paper,
   Grid2
 } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
@@ -36,6 +33,7 @@ import CustomSearchBar from 'src/components/CustomSearchBar'
 import downloadPdf from 'src/utils/DownloadPdf'
 import UserModel from 'src/components/Modal/UserModel'
 import { convertImageToBase64 } from 'src/utils/UrlToBase64'
+import TableUser from 'src/views/tables/TableUser'
 
 const mainUrl = BaseUrl
 const Index = () => {
@@ -44,8 +42,6 @@ const Index = () => {
   const [userData, setUserData] = useState({ data: [], index: 0 })
   const [allDepartment, setAllDepartment] = useState([])
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [departmentFilter, setDepartmentFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState(null)
   const [openModal, setOpenModal] = useState(false)
   const [editData, setEditData] = useState({})
   const [profilePhoto, setProfilePhoto] = useState('/images/avatars/1.png')
@@ -56,7 +52,7 @@ const Index = () => {
   const [config, setConfig] = useState(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
+  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '', userStatus: null, departmentFilter: '' })
   const [eSignStatusId, setESignStatusId] = useState('')
   const [auditLogMark, setAuditLogMark] = useState('')
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
@@ -93,7 +89,7 @@ const Index = () => {
 
   useEffect(() => {
     getDepartments()
-  }, [departmentFilter, tableHeaderData, statusFilter])
+  }, [tableHeaderData])
 
   const tableBody = userData?.data?.map((item, index) => [
     index + userData.index,
@@ -124,11 +120,11 @@ const Index = () => {
       ],
       tableHeaderText: 'User Master Report',
       tableBodyText: 'User Data',
-      Filter: ['department', departmentFilter],
-     statusFilter: statusMap[statusFilter] ?? '',
+      Filter: ['department', tableHeaderData.departmentFilter],
+     statusFilter: statusMap[tableHeaderData.userStatus] ?? '',
     filename: 'UserMaster'
     }),
-    [departmentFilter, statusFilter]
+    [tableHeaderData.departmentFilter, tableHeaderData.userStatus]
   )
 
   const getDepartments = async () => {
@@ -463,8 +459,8 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
     if (val === '') {
-      setDepartmentFilter('')
-      setStatusFilter(null)
+      setTableHeaderData({ ...tableHeaderData, departmentFilter: '' });
+      setTableHeaderData({ ...tableHeaderData, userStatus: null });
     }
   }
 
@@ -472,9 +468,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     if (searchBarRef.current) {
       searchBarRef.current.resetSearch()
     }
-    setTableHeaderData({ ...tableHeaderData, searchVal: '', esignStatus: '' })
-    setDepartmentFilter('')
-    setStatusFilter(null)
+    setTableHeaderData({ ...tableHeaderData, searchVal: '', esignStatus: '', departmentFilter: '', userStatus: null })
   }
 
   const onChange = event => {
@@ -566,9 +560,9 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                   <Select
                     labelId='department-label'
                     id='department-select'
-                    value={departmentFilter}
+                    value={tableHeaderData.departmentFilter}
                     label='Department'
-                    onChange={e => setDepartmentFilter(e.target.value)}
+                    onChange={e => setTableHeaderData({ ...tableHeaderData, departmentFilter: e.target.value })}
                   >
                     {allDepartment.map(d => (
                       <MenuItem value={d.department_name} key={d.id}>
@@ -582,9 +576,9 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                   <Select
                     labelId='status-label'
                     id='status-select'
-                    value={statusFilter}
+                    value={tableHeaderData.userStatus}
                     label='Status'
-                    onChange={e => setStatusFilter(e.target.value)}
+                    onChange={e => setTableHeaderData({ ...tableHeaderData, userStatus: e.target.value })}
                   >
                     <MenuItem value={null}>None</MenuItem>
                     <MenuItem value={true}>enabled</MenuItem>
@@ -612,19 +606,15 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 User Data
               </Typography>
-              <TableContainer component={Paper}>
-                <TableCollapsibleuser
+                <TableUser
                   pendingAction={pendingAction}
                   handleUpdate={handleUpdate}
-                  setUser={setUserData}
+                  setDataCallback={setUserData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}
                   tableHeaderData={tableHeaderData}
-                  departmentFilter={departmentFilter}
-                  statusFilter={statusFilter}
                 />
-              </TableContainer>
             </Grid2>
           </Box>
         </Grid2>

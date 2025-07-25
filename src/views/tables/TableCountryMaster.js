@@ -45,9 +45,11 @@ const Row = ({
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>{row.codeStructure}</TableCell>
 
                 {config?.config?.esign_status === true && (
-                    <StatusChip
-                        label={row.esign_status}
-                        color={statusObj[row.esign_status]?.color || 'default'} />
+                    <TableCell align="center">
+                        <StatusChip
+                            label={row.esign_status}
+                            color={statusObj[row.esign_status]?.color || 'default'} />
+                    </TableCell>
                 )}
                 <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                     {moment(row?.created_at).format('DD/MM/YYYY, hh:mm:ss')}

@@ -1,8 +1,8 @@
 'use-client'
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Box, Grid2, Typography, Button, TableContainer, Paper } from '@mui/material'
+import { Box, Grid2, Typography, Button } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
-import TableCollapsiblelocation from 'src/views/tables/TableCollapsiblelocation'
+import TableLocation from 'src/views/tables/TableLocation'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
@@ -457,17 +457,15 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
               <Typography variant='h4' className='mx-4 mt-3'>
                 Location Data
               </Typography>
-              <TableContainer component={Paper}>
-                <TableCollapsiblelocation
+                <TableLocation
                   handleUpdate={handleUpdate}
                   tableHeaderData={tableHeaderData}
                   pendingAction={pendingAction}
-                  setLocation={setLocationData}
+                  setDataCallback={setLocationData}
                   apiAccess={apiAccess}
                   handleAuthCheck={handleAuthCheck}
                   config={config}
                 />
-              </TableContainer>
             </Grid2>
           </Box>
         </Grid2>

@@ -1,6 +1,6 @@
 'use-client'
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Button, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
+import { Button, Box, Grid2, Typography } from '@mui/material'
 import Head from 'next/head'
 import { IoMdAdd } from 'react-icons/io'
 import { useSettings } from 'src/@core/hooks/useSettings'
@@ -447,17 +447,15 @@ const Index = () => {
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Printer Master Data
               </Typography>
-              <TableContainer component={Paper}>
-                <TablePrinterMaster
-                  pendingAction={pendingAction}
-                  tableHeaderData={tableHeaderData}
-                  handleAuthCheck={handleAuthCheck}
-                  apiAccess={apiAccess}
-                  config={config}
-                  handleUpdate={handleUpdate}
-                  setAllPrinterMaster={setAllPrinterMasterData}
-                />
-              </TableContainer>
+              <TablePrinterMaster
+                pendingAction={pendingAction}
+                tableHeaderData={tableHeaderData}
+                handleAuthCheck={handleAuthCheck}
+                apiAccess={apiAccess}
+                config={config}
+                handleUpdate={handleUpdate}
+                setDataCallback={setAllPrinterMasterData}
+              />
             </Grid2>
           </Box>
         </Grid2>

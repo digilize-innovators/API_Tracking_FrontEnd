@@ -176,8 +176,8 @@ const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf,
     setPage(0)
   }
   useEffect(() => {
-    setData(saleDetail?.orders)
-    setOrderDetail(saleDetail?.orders?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage))
+    setData(saleDetail)
+    setOrderDetail(saleDetail?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage))
   }, [saleDetail, page, rowsPerPage])
 
   const handleSort = (path) => {
@@ -193,7 +193,7 @@ const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf,
       data={data}
       page={page}
       rowsPerPage={rowsPerPage}
-      totalRecords={saleDetail?.orders?.length}
+      totalRecords={data.length}
       handleChangePage={handleChangePage}
       handleChangeRowsPerPage={handleChangeRowsPerPage}
     >

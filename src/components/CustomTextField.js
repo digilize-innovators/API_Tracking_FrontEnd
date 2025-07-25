@@ -25,6 +25,13 @@ const CustomTextField = ({ name, label, control, rules, disabled, type }) => {
           helperText={error ? error.message : ''}
           disabled={disabled}
           type={showPassword ? 'text' : type}
+          onInput={
+            type === 'number'
+              ? (e) => {
+                  e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                }
+              : undefined
+          }
           InputProps={
             type === 'password'
               ? {

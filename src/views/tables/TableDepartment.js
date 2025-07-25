@@ -555,7 +555,9 @@ const Row = ({
             {row.is_location_required ? 'True' : 'False'}
           </TableCell>
           {config?.config?.esign_status === true && config?.role !== 'admin' && (
-            <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
+            <TableCell align="center">
+              <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
+            </TableCell>
           )}
           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
             {moment(row.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
@@ -638,10 +640,12 @@ const Row = ({
                               {historyRow.is_location_required ? 'True' : 'False'}
                             </TableCell>
                             {config?.config?.esign_status === true && config?.role !== 'admin' && (
-                              <StatusChip
-                                label={historyRow.esign_status}
-                                color={statusObj[historyRow.esign_status]?.color || 'default'}
-                              />
+                              <TableCell align="center">
+                                <StatusChip
+                                  label={historyRow.esign_status}
+                                  color={statusObj[historyRow.esign_status]?.color || 'default'}
+                                />
+                              </TableCell>
                             )}
 
                             <TableCell align='center'>

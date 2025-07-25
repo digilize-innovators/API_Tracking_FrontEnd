@@ -52,7 +52,9 @@ const Row = ({
           {row.designation_name}
         </TableCell>
         {config_dept?.config?.esign_status === true && config_dept?.role !== 'admin' && (
-          <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
+          <TableCell align="center">
+            <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
+          </TableCell>
         )}
         <TableCell sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} align='center' className='p-2'>
           {row.esign_status === 'pending' &&
@@ -154,10 +156,12 @@ const Row = ({
                             {historyRow.designation_name}
                           </TableCell>
                           {config_dept?.config?.esign_status === true && config_dept?.role !== 'admin' && (
-                            <StatusChip
-                              label={historyRow.esign_status}
-                              color={statusObj[historyRow.esign_status]?.color || 'default'}
-                            />
+                            <TableCell align="center">
+                              <StatusChip
+                                label={historyRow.esign_status}
+                                color={statusObj[historyRow.esign_status]?.color || 'default'}
+                              />
+                            </TableCell>
                           )}
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             {moment(historyRow.created_at).format('DD/MM/YYYY, hh:mm:ss a')}

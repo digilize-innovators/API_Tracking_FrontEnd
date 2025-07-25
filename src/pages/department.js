@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react'
-import { Button, TableContainer, Paper, Grid2, Typography, Box } from '@mui/material'
+import { Button, Grid2, Typography, Box } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -450,7 +450,6 @@ const Index = () => {
               <Typography variant='h4' className='mx-4 mt-3'>
                 Department Data
               </Typography>
-              <TableContainer component={Paper}>
                 <TableDepartment
                   pendingAction={pendingAction}
                   alertData={alertData}
@@ -462,7 +461,6 @@ const Index = () => {
                   config_dept={config}
                   tableHeaderData={tableHeaderData}
                 />
-              </TableContainer>
             </Grid2>
           </Box>
         </Grid2>

@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react'
-import { Button, TableContainer, Paper, Box, Grid2, Typography } from '@mui/material'
+import { Button, Box, Grid2, Typography } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import TableProduct from 'src/views/tables/TableProduct'
 import { api } from 'src/utils/Rest-API'
@@ -152,14 +152,15 @@ const Index = () => {
     setEsignDownloadPdf(false)
   }
   const handleSubmitForm = async data => {
-    console.log('submit form')
-    console.log(data)
+    console.log('submit form', data )
     setFormData({
       ...data,
       productNumber_print: data.productNumber_print ? data.productNumber_print : data.productNumber_aggregation,
       firstLayer_print: data.firstlayer_print ? data.firstlayer_print : data.firstLayer_aggregation,
       secondLayer_print: data.secondLayer_print ? data.secondLayer_print : data.secondLayer_aggregation,
-      thirdLayer_print: data.thirdLayer_print ? data.thirdLayer_print : data.thirdLayer_aggregation
+      thirdLayer_print: data.thirdLayer_print ? data.thirdLayer_print : data.thirdLayer_aggregation,
+      pallet_size: data.palletisation_applicable ? data.pallet_size : '',
+      pallet_size_unit_of_measurement: data.palletisation_applicable ? data.pallet_size_unit_of_measurement : '',
     })
     if (editData?.id) {
       setApproveAPI({
@@ -378,7 +379,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
         setOpenModal(false)
       } else {
         console.log('error to add product ', res.data)
-        setAlertData({ ...alertData, type: 'error', message: res.data?.message, openSnackbar: true })
+        setAlertData({ ...alertData, type: 'error', message: res.data?.error?.details?.message ||res.data?.message, openSnackbar: true })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
@@ -425,7 +426,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
         resetForm()
       } else {
         console.log('error to edit product ', res.data)
-        setAlertData({ ...alertData, type: 'error', message: res.data.message, openSnackbar: true })
+        setAlertData({ ...alertData, type: 'error', message:  res.data?.error?.details?.message ||res.data.message, openSnackbar: true })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
@@ -520,18 +521,15 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Product Data
               </Typography>
-              <TableContainer component={Paper}>
                 <TableProduct
                   tableHeaderData={tableHeaderData}
-                  setProduct={setProductData}
+                  setDataCallback={setProductData}
                   pendingAction={pendingAction}
                   handleUpdate={handleUpdate}
-                  editable={apiAccess.editApiAccess}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}
                 />
-              </TableContainer>
             </Grid2>
           </Box>
         </Grid2>

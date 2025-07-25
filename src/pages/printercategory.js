@@ -1,6 +1,6 @@
 'use-client'
 import { useLayoutEffect, useMemo, useRef, useEffect, useState } from 'react'
-import { Button, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
+import { Button, Box, Grid2, Typography } from '@mui/material'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { IoMdAdd } from 'react-icons/io'
@@ -452,9 +452,8 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Printer Category Data
               </Typography>
-              <TableContainer component={Paper}>
                 <TablePrinterCategory
-                  setAllPrinterCategory={setAllPrinterCategoryData}
+                  setDataCallback={setAllPrinterCategoryData}
                   handleUpdate={handleUpdate}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
@@ -462,7 +461,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                   pendingAction={pendingAction}
                   tableHeaderData={tableHeaderData}
                 />
-              </TableContainer>
             </Grid2>
           </Box>
         </Grid2>
