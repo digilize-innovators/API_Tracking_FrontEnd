@@ -14,11 +14,12 @@ import PropTypes from 'prop-types'
 import isValidIPv4 from 'src/@core/utils/isValidIPv4'
 
 const PrinterMasterSchema = yup.object().shape({
-  printerId: yup
-    .string()
-    .trim()
-    .max(50, 'Printer ID length should be less than 51')
-    .required("Printer ID can't be empty"),
+ printerId: yup
+  .string()
+  .trim()
+  .max(50, 'Printer ID length should be less than 51')
+  .matches(/^[\w-]+$/, 'Printer ID must only contain letters, numbers, underscores, or hyphens')
+  .required("Printer ID can't be empty"),
   printerCategoryId: yup.string().required('Printer category is required'),
   printerPort: yup
     .number()

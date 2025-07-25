@@ -231,8 +231,8 @@ function updatePanelConnection(prevLines, data) {
       },
       'post',
       true,
-      true,
-      ip
+      ip,
+      true
     );
 
     setPrinterLines(prev => updatePrintCompleted(prev, data));
@@ -320,7 +320,7 @@ function updatePrintCompleted(prevLines, data) {
           // Process all lines asynchronously
           panel.lines = await Promise.all(
             panel.lines.map(async line => {
-              const res = await api(`/printLineSetting/restore/${line.id}`, {}, 'get', true, true, ip)
+              const res = await api(`/printLineSetting/restore/${line.id}`, {}, 'get', true,ip,true)
               console.log('Response of restore ', res.data)
 
               if (res?.data?.success && res?.data?.data) {
@@ -403,7 +403,7 @@ function updatePrintCompleted(prevLines, data) {
   const getLinesByPcIp = async () => {
     setIsLoading(true)
     try {
-      const res = await api(`/batchprinting/getLinesByPcIp/${ip}`, {}, 'get', true, true, ip)
+      const res = await api(`/batchprinting/getLinesByPcIp/${ip}`, {}, 'get', true,ip,true)
       if (!res) {
         setAlertData({
           openSnackbar: true,
@@ -465,7 +465,7 @@ function updatePrintCompleted(prevLines, data) {
   const getProducts = async (panelIndex, lineIndex) => {
     console.log('calling ..')
     try {
-      const res = await api('/batchprinting/getAllProducts', {}, 'get', true, true, ip)
+      const res = await api('/batchprinting/getAllProducts', {}, 'get', true,ip, true)
       console.log('Res of getProducts ', res.data)
       if (res.data.success) {
         const products = res.data.data.products
@@ -485,7 +485,7 @@ function updatePrintCompleted(prevLines, data) {
   const handleProductChange = async (panelIndex, lineIndex, productId) => {
     setIsLoading(true)
     try {
-      const res = await api(`/batchprinting/getBatchesByProduct/${productId}`, {}, 'get', true, true, ip)
+      const res = await api(`/batchprinting/getBatchesByProduct/${productId}`, {}, 'get', true,ip, true)
       if (res.data.success) {
         const batches = res.data.data.batches
         setPrinterLines(prevLines => {
@@ -521,8 +521,8 @@ function updatePrintCompleted(prevLines, data) {
         {},
         'get',
         true,
-        true,
-        ip
+        ip,
+        true
       )
       if (res.data.success) {
         console.log('handleBatchChange', res.data.data)
@@ -636,8 +636,8 @@ function updatePrintCompleted(prevLines, data) {
         {},
         'get',
         true,
-        true,
-        ip
+        ip,
+        true
       )
       console.log('Res of submit form ', res.data)
       if (res.data.success) {
@@ -677,7 +677,7 @@ function updatePrintCompleted(prevLines, data) {
     }
     console.log('LIne send ', line)
     try {
-      const res = await api(`/batchprinting/sendCodesToPrinter`, { line, socketId }, 'post', true, true, ip)
+      const res = await api(`/batchprinting/sendCodesToPrinter`, { line, socketId }, 'post', true,ip, true)
       console.log('res of handlestart printing ', res.data)
 
       if (res.data.success) {
@@ -765,8 +765,8 @@ function updatePrintCompleted(prevLines, data) {
         { redisKey, lineId: line.id },
         'delete',
         true,
-        true,
-        ip
+        ip,
+        true
       )
       console.log('res of reset ', res.data)
       setIsLoading(false)

@@ -113,7 +113,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
   const getPrintlineSetting = async () => {
     try {
       setIsLoading(true)
-      const res = await api(`/printLineSetting/${projectSettingData.lineId}`, {}, 'get', true, true, ip)
+      const res = await api(`/printLineSetting/${projectSettingData.lineId}`, {}, 'get', true,ip,true)
       console.log('GET printline setting data ', res.data)
       if (res.data.success && res.data.data) {
         setEditId(res.data.data.id)
@@ -156,7 +156,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
 
     try {
       setIsLoading(true)
-      const res = await api('/printLineSetting/', data, 'post', true, true, ip)
+      const res = await api('/printLineSetting/', data, 'post', true,ip,true)
       console.log('Response add printLineSetting:', res.data)
       if (res.data.success) {
         setAlertData({
@@ -191,7 +191,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
 
     try {
       setIsLoading(true)
-      const res = await api('/printLineSetting/', data, 'put', true, true, ip)
+      const res = await api('/printLineSetting/', data, 'put', true,ip,true)
       console.log('Response update printLineSetting:', res.data)
       if (res.data.success) {
         setAlertData({
@@ -250,8 +250,8 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         {},
         'get',
         true,
-        true,
-        ip
+        ip,
+        true
       )
       console.log('Get labels ', res?.data?.data)
       setIsLoading(false)

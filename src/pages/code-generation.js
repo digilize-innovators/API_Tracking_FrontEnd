@@ -336,7 +336,7 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
   }
   const getAvailableData = async (productId, batchId) => {
     try {
-      const res = await api(`/codegeneration/available?productId=${productId}&batchId=${batchId}`, {}, 'get', 'token')
+      const res = await api(`/codegeneration/available?productId=${productId}&batchId=${batchId}`, {}, 'get', true)
       console.log('Available code ', res.data)
       if (res?.data.success) return res.data.data
     } catch (error) {

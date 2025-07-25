@@ -8,7 +8,7 @@ const getCorsHeaders = (origin) => {
   }
   return {};
 };
-export const api = async (endpoint, data, type, token, isPrint = false, ip) => {
+export const api = async (endpoint, data, type, token, ip,isPrint = false) => {
   let mainUrl = config.BaseUrl + '/api/v1';
   if (isPrint && isPrint === true) {
     mainUrl = `http://${ip}:4000/api/v1`;
