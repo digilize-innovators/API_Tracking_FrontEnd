@@ -6,6 +6,7 @@ import { statusObj } from "src/configs/statusConfig";
 import moment from "moment";
 import { MdModeEdit, MdOutlineDomainVerification } from "react-icons/md";
 import { getFieldValue } from "src/utils/rowUtils";
+import PropTypes from "prop-types";
 
 const CommonRow = ({
   row,
@@ -139,3 +140,20 @@ const CommonRow = ({
 };
 
 export { CommonRow }
+CommonRow.propTypes={
+ row:PropTypes.any,
+  index:PropTypes.any,
+  isOpen:PropTypes.any,
+  handleRowToggle:PropTypes.any,
+  page:PropTypes.any,
+  rowsPerPage:PropTypes.any,
+  columns:PropTypes.any,
+  historyColumns:PropTypes.any,
+  historyData:PropTypes.any,
+  config:PropTypes.any,
+  handleAuthCheck:PropTypes.any,
+  handleUpdate:PropTypes.any,
+  apiAccess:PropTypes.any,
+  customActions:PropTypes.any
+
+}

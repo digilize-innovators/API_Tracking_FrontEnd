@@ -3,6 +3,7 @@ import { Tooltip } from '@mui/material'
 import moment from 'moment'
 import { MdOutlineCloudUpload } from 'react-icons/md'
 import CommonTableWrapper from 'src/components/CommonTableWrapper'
+import PropTypes from 'prop-types'
 
 const TableBatchCloud = props => {
   const customActions = row => {
@@ -22,7 +23,7 @@ const TableBatchCloud = props => {
       </Tooltip>
     )
   }
-
+ 
   return (
     <CommonTableWrapper
       {...props}
@@ -76,3 +77,11 @@ const TableBatchCloud = props => {
 }
 
 export default TableBatchCloud
+TableBatchCloud.propTypes = {
+  handleUpdate:PropTypes.any,
+  config: PropTypes.shape({
+    config: PropTypes.shape({
+      esign_status: PropTypes.bool
+    })
+  })
+}

@@ -125,7 +125,7 @@ const CommonTableWrapper = ({
                 const label = col.label || col
                 return (
                   <TableCell
-                    key={idx}
+                    key={label}
                     align='center'
                     sx={{ cursor: 'pointer' }}
                     onClick={() => handleSort(path)}
