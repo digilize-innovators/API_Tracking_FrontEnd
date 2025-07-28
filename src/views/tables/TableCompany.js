@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import React from 'react'
 import CommonTableWrapper from 'src/components/CommonTableWrapper'
 
@@ -31,3 +32,10 @@ const TableCompany = props => {
 
 export default TableCompany
 
+TableCompany.propTypes = {
+  config: PropTypes.shape({
+    config: PropTypes.shape({
+      esign_status: PropTypes.bool
+    })
+  })
+}

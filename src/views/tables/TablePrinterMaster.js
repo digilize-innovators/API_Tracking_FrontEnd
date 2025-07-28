@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import React from 'react'
 import CommonTableWrapper from 'src/components/CommonTableWrapper'
 
@@ -25,3 +26,10 @@ const TablePrinterMaster = props => {
 
 export default TablePrinterMaster
 
+TablePrinterMaster.propTypes = {
+  config: PropTypes.shape({
+    config: PropTypes.shape({
+      esign_status: PropTypes.bool
+    })
+  })
+}

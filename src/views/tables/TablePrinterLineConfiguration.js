@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import React from 'react'
 import CommonTableWrapper from 'src/components/CommonTableWrapper'
 import StatusChip from 'src/components/StatusChip'
@@ -58,3 +59,10 @@ const TablePrinterLineConfiguration = props => {
 
 export default TablePrinterLineConfiguration
 
+TablePrinterLineConfiguration.propTypes = {
+  config: PropTypes.shape({
+    config: PropTypes.shape({
+      esign_status: PropTypes.bool
+    })
+  })
+}

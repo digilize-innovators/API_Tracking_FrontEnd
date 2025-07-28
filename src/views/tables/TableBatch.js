@@ -1,4 +1,5 @@
 import moment from 'moment'
+import PropTypes from 'prop-types'
 import React from 'react'
 import CommonTableWrapper from 'src/components/CommonTableWrapper'
 
@@ -53,3 +54,10 @@ const TableBatch = props => {
 }
 
 export default TableBatch
+TableBatch.propTypes = {
+  config: PropTypes.shape({
+    config: PropTypes.shape({
+      esign_status: PropTypes.bool
+    })
+  })
+}

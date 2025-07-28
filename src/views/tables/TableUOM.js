@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import React from 'react'
 import CommonTableWrapper from 'src/components/CommonTableWrapper'
 
@@ -19,3 +20,10 @@ const TableUom = props => {
 
 export default TableUom
 
+TableUom.propTypes = {
+  config: PropTypes.shape({
+    config: PropTypes.shape({
+      esign_status: PropTypes.bool
+    })
+  })
+}
