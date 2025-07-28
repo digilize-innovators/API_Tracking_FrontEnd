@@ -344,8 +344,8 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
     }
   }
 
-  const handleOpenModal2 = async row => {
-    console.log('clicked on handleOpenModal2', row)
+  const handleReopenModal = async row => {
+    console.log('clicked on handleReopenModal', row)
     const levelWiseData = await getAvailableData(row.product_id, row.batch_id)
     const packagingHierarchyLevel = row.product.product_history[0].packagingHierarchy
     const batchSize = row.batch.qty
@@ -432,17 +432,15 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Code Generation Data
               </Typography>
-              <TableContainer component={Paper}>
-                <TableCodeGeneration
-                  setCodeRequest={setCodeRequestData}
-                  tableHeaderData={tableHeaderData}
-                  handleAuthCheck={handleAuthCheck}
-                  apiAccess={apiAccess}
-                  config={config}
-                  handleOpenModal2={handleOpenModal2}
-                  isCodeReGeneration={isCodeReGeneration}
-                />
-              </TableContainer>
+              <TableCodeGeneration
+                setCodeRequest={setCodeRequestData}
+                tableHeaderData={tableHeaderData}
+                handleAuthCheck={handleAuthCheck}
+                apiAccess={apiAccess}
+                config={config}
+                handleReopenModal={handleReopenModal}
+                isCodeReGeneration={isCodeReGeneration}
+              />
             </Grid2>
           </Box>
         </Grid2>

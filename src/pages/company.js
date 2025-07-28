@@ -459,7 +459,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                 apiAccess={apiAccess}
                 config={config}
                 handleUpdate={handleUpdate}
-                setCompany={setCompanyData}
+                setDataCallback={setCompanyData}
               />
             </Grid2>
           </Box>

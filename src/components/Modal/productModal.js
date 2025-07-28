@@ -60,6 +60,7 @@ const validationSchema = yup.object().shape({
     .required('GTIN is required'),
   ndc: yup
     .string()
+    .trim()
     .transform(value => {
       // If the value is an empty string, null, or undefined, return empty string
       if (value === '' || value == null) {
@@ -334,7 +335,7 @@ function ProductModal({
       unit_of_measurement: '',
       no_of_units_in_primary_level: '',
       packagingHierarchy: '',
-      productNumber: '',
+      productNumber: 0,
       productNumber_unit_of_measurement: '',
       firstLayer: 0,
       firstLayer_unit_of_measurement: '',
@@ -343,7 +344,7 @@ function ProductModal({
       thirdLayer: 0,
       thirdLayer_unit_of_measurement: '',
       palletisation_applicable: false,
-      pallet_size: '0',
+      pallet_size: 0,
       pallet_size_unit_of_measurement: '',
       productImage: '/images/avatars/p.png',
       productNumber_aggregation: false,
@@ -377,13 +378,13 @@ function ProductModal({
 
   const getPrefixData = () => {
     if (companyUuid) {
-      const prefix_data = companies.find(company => company.company_uuid === companyUuid)
-      if (prefix_data) {
-        let prefixs = [prefix_data.gs1_prefix].filter(Boolean) // Ensure no undefined values
-        if (prefix_data.gs2_prefix) prefixs.push(prefix_data.gs2_prefix)
-        // console.log(prefixs)
-        if (prefix_data.gs3_prefix) prefixs.push(prefix_data.gs3_prefix)
-        return prefixs
+      const company = companies.find(company => company.company_uuid === companyUuid);
+      if (company) {
+        let prefixs = [];
+        if(company.gs1_prefix) prefixs.push({ id: 1, label: company.gs1_prefix, value: company.gs1_prefix })
+        if (company.gs2_prefix) prefixs.push({ id: 2, label: company.gs2_prefix, value: company.gs2_prefix })
+        if (company.gs3_prefix) prefixs.push({ id: 3, label: company.gs3_prefix, value: company.gs3_prefix })
+        return prefixs;
       } else {
         return []
       }
@@ -393,7 +394,8 @@ function ProductModal({
   useEffect(() => {
     if (!companyUuid) return // Ensure companyUuid exists before running the logic
     if (companyUuid) {
-      getPrefixData()
+      getPrefixData();
+      setValue('prefix', '');
     }
     if (editData?.prefix) setValue('prefix', editData.prefix.split(',')) // Restore edit data if available
   }, [editData, companyUuid, companies]) // Ensure companies is a dependency
@@ -402,6 +404,7 @@ function ProductModal({
     getCompanies()
     getCountries()
   }, [tableHeaderData.esignStatus])
+
   const getUomData = async () => {
     try {
       const res = await api(`/uom?limit=-1&history_latest=true`, {}, 'get', true)
@@ -502,7 +505,6 @@ function ProductModal({
         ndc: editData?.ndc || '',
         mrp: editData?.mrp || '',
         genericName: editData?.generic_name || '',
-        // productImage: editData?.product_image || '/images/avatars/p.png',
         packagingSize: editData?.packaging_size || '',
         companyUuid: editData?.company_uuid || '',
         country: editData?.country_id || '',
@@ -532,7 +534,7 @@ function ProductModal({
         pallet_size_unit_of_measurement: editData?.pallet_size_unit_of_measurement || '',
         no_of_units_in_primary_level: editData?.no_of_units_in_primary_level || '',
         prefix: editData.prefix?.split(','),
-        unit_of_measurement: editData?.unit_of_measurement || false,
+        unit_of_measurement: editData?.unit_of_measurement || '',
         schedule_drug: editData?.schedule_drug || false
       })
       if (
@@ -588,7 +590,7 @@ function ProductModal({
     label: item.country
   }))
 
-  const UOMSData = uoms?.map(item => ({
+  const UomData = uoms?.map(item => ({
     id: item.uom_uuid,
     value: item.uom_uuid,
     label: item.uom_name
@@ -636,7 +638,6 @@ function ProductModal({
           <Grid2 item xs={12} className='d-flex justify-content-between align-items-center'>
             <Box>
               <Grid2 container xs={12} sx={{ marginTop: 4.8, marginBottom: 3 }}>
-                {/* {console.log("Image :",productImage)} */}
                 <ImgStyled src={productImage} alt='Profile Pic' />
                 <Box>
                   <ButtonStyled component='label' variant='contained' htmlFor='account-settings-upload-image'>
@@ -678,17 +679,6 @@ function ProductModal({
                     color='error'
                     variant='outlined'
                     onClick={async () => {
-                      // const img = editData.product_image.split(BaseUrl)
-                      // console.log(editData?.id, editData?.product_image != '/images/avatars/p.png')
-                      // if (
-                      //   img[img?.length - 1] !== '/' &&
-                      //   editData?.id &&
-                      //   editData?.product_image != '/images/avatars/p.png'
-                      // ) {
-                      //   setProductImage('/images/avatars/p.png')
-                      //   setValue('productImage', '/images/avatars/p.png') // Clear form value
-                      // }
-
                        if (editData?.product_image) {
                           convertImageToBase64(editData?.product_image, setProductImage)
                         } else {
@@ -804,35 +794,7 @@ function ProductModal({
               <CustomDropdown options={CompanyData} label='Company *' name={'companyUuid'} control={control} />
             </Grid2>
             <Grid2 size={4}>
-              <FormControl fullWidth error={!!errors.prefix} sx={{ mb: 2 }}>
-                <InputLabel id='label-prefixs'>Prefix *</InputLabel>
-                <Controller
-                  name='prefix'
-                  control={control}
-                  rules={{ required: 'Prefix is required' }}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      labelId='label-prefixs'
-                      label='Prefix *'
-                      onChange={e => {
-                        const selected = e.target.value
-                        console.log('User selected:', selected)
-                        field.onChange(selected)
-                        clearErrors('prefix')
-                      }}
-                      value={field.value} // must be a string in prefixs array or ''
-                    >
-                      {prefixs.map(item => (
-                        <MenuItem key={item} value={item}>
-                          {item}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
-                />
-                {errors.prefix && <FormHelperText>{errors.prefix.message}</FormHelperText>}
-              </FormControl>
+              <CustomDropdown options={prefixs} label='Prefix *' name={'prefix'} control={control} />
             </Grid2>
             <Grid2 size={4}>
               <CustomDropdown label='Country *' name={'country'} control={control} options={CountryData} />
@@ -856,7 +818,7 @@ function ProductModal({
               />
             </Grid2>
             <Grid2 size={4}>
-              <CustomDropdown control={control} label='UOM *' name={'unit_of_measurement'} options={UOMSData} />
+              <CustomDropdown label='UOM *' name={'unit_of_measurement'} control={control} options={UomData} />
             </Grid2>
           </Grid2>
           <Grid2 container spacing={2}>
@@ -1013,7 +975,7 @@ function ProductModal({
                             control={control}
                             label='0th Level Uom'
                             name={'productNumber_unit_of_measurement'}
-                            options={UOMSData}
+                            options={UomData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
@@ -1075,7 +1037,7 @@ function ProductModal({
                             control={control}
                             label='0th Level Uom'
                             name={'productNumber_unit_of_measurement'}
-                            options={UOMSData}
+                            options={UomData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
@@ -1141,7 +1103,7 @@ function ProductModal({
                             label='First Level Uom'
                             labelId='packaging-hierarchy-1st-layer'
                             name={'firstLayer_unit_of_measurement'}
-                            options={UOMSData}
+                            options={UomData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
@@ -1154,7 +1116,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumber_print'
+                                    name='firstLayer_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1181,7 +1143,7 @@ function ProductModal({
                                       }
                                       field.onChange(isChecked)
                                     }}
-                                    name='productNumber_aggregation'
+                                    name='firstLayer_aggregation'
                                     color='primary'
                                     role='button'
                                   />
@@ -1214,7 +1176,7 @@ function ProductModal({
                             control={control}
                             label='0th Level Uom'
                             name={'productNumber_unit_of_measurement'}
-                            options={UOMSData}
+                            options={UomData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
@@ -1279,7 +1241,7 @@ function ProductModal({
                             control={control}
                             label='First Level Uom'
                             name={'firstLayer_unit_of_measurement'}
-                            options={UOMSData}
+                            options={UomData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
@@ -1292,7 +1254,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumber_print'
+                                    name='firstLayer_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1344,7 +1306,7 @@ function ProductModal({
                             control={control}
                             label='Second Level Uom'
                             name={'secondLayer_unit_of_measurement'}
-                            options={UOMSData}
+                            options={UomData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
@@ -1357,7 +1319,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumber_print'
+                                    name='secondLayer_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1378,7 +1340,7 @@ function ProductModal({
                                 control={
                                   <Switch
                                     {...field}
-                                    name='productNumber_aggregation'
+                                    name='secondLayer_aggregation'
                                     onChange={e => {
                                       const isChecked = e.target.checked
                                       // Update the form state
@@ -1419,7 +1381,7 @@ function ProductModal({
                             control={control}
                             label='0th Level Uom'
                             name={'productNumber_unit_of_measurement'}
-                            options={UOMSData}
+                            options={UomData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
@@ -1484,7 +1446,7 @@ function ProductModal({
                             control={control}
                             label='First Level Uom'
                             name={'firstLayer_unit_of_measurement'}
-                            options={UOMSData}
+                            options={UomData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
@@ -1497,15 +1459,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    onChange={e => {
-                                      const isChecked = e.target.checked
-                                      // Update the form state
-                                      if (isChecked) {
-                                        setValue('productNumber_print', isChecked)
-                                      }
-                                      field.onChange(isChecked)
-                                    }}
-                                    name='productNumber_print'
+                                    name='firstLayer_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1557,7 +1511,7 @@ function ProductModal({
                             control={control}
                             label='Second Level Uom'
                             name={'secondLayer_unit_of_measurement'}
-                            options={UOMSData}
+                            options={UomData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
@@ -1570,7 +1524,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumber_print'
+                                    name='secondLayer_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1591,13 +1545,13 @@ function ProductModal({
                                 control={
                                   <Switch
                                     checked={field.value}
-                                    name='productNumber_aggregation'
+                                    name='secondLayer_aggregation'
                                     color='primary'
                                     onChange={e => {
                                       const isChecked = e.target.checked
                                       // Update the form state
                                       if (isChecked) {
-                                        setValue('productNumber_print', isChecked)
+                                        setValue('secondLayer_print', isChecked)
                                       }
                                       field.onChange(isChecked)
                                     }}
@@ -1621,7 +1575,7 @@ function ProductModal({
                             control={control}
                             label='Third Level Uom'
                             name={'thirdLayer_unit_of_measurement'}
-                            options={UOMSData}
+                            options={UomData}
                           />
                         </Grid2>
                         <Grid2 size={2}>
@@ -1634,7 +1588,7 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumber_print'
+                                    name='thirdLayer_print'
                                     color='primary'
                                     role='button'
                                   />
@@ -1656,13 +1610,13 @@ function ProductModal({
                                   <Switch
                                     {...field}
                                     checked={field.value}
-                                    name='productNumber_aggregation'
+                                    name='thirdLayer_aggregation'
                                     color='primary'
                                     onChange={e => {
                                       const isChecked = e.target.checked
                                       // Update the form state
                                       if (isChecked) {
-                                        setValue('productNumber_print', isChecked)
+                                        setValue('thirdLayer_print', isChecked)
                                       }
                                       field.onChange(isChecked)
                                     }}
@@ -1711,14 +1665,14 @@ function ProductModal({
                   {palletisation_applicable && (
                     <Grid2 container spacing={5} size={12} className='d-flex align-items-center mb-3'>
                       <Grid2 size={7}>
-                        <CustomTextField control={control} id='pallet_size' label='Pallet size' name={'pallet_size'} />
+                        <CustomTextField control={control} id='pallet_size' label='Pallet size' name={'pallet_size'} type='number' />
                       </Grid2>
                       <Grid2 size={4}>
                         <CustomDropdown
                           control={control}
                           label='Pallet size Uom'
                           name={'pallet_size_unit_of_measurement'}
-                          options={UOMSData}
+                          options={UomData}
                         />
                       </Grid2>
                     </Grid2>

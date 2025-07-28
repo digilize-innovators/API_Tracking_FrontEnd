@@ -8,7 +8,6 @@ import {
   FormControl,
   FormLabel,
   styled,
-  TextField,
   Button,
   Box,  CardContent
 } from '@mui/material'
@@ -42,27 +41,6 @@ import { validateToken } from 'src/utils/ValidateToken'
 const ChatbotComponent = dynamic(() => import('src/components/ChatbotComponent'), {
   ssr: false
 });
-
-const StyledTextField = styled(TextField)(({ theme }) => ({
-  '& .MuiInputBase-root': {
-    padding: theme.spacing(0.5),
-    fontSize: theme.typography.h5.fontSize
-  },
-  '& .MuiInputLabel-root': {
-    fontSize: theme.typography.h4.fontSize,
-    fontWeight: theme.typography.fontWeightBold,
-    marginBottom: theme.spacing(0.5)
-  },
-  '& .MuiSelect-select': {
-    fontSize: theme.typography.h5.fontSize,
-    paddingRight: theme.spacing(3)
-  },
-  '& .MuiNativeSelect-select': {
-    paddingRight: '225px !important',
-    fontSize: theme.typography.h5.fontSize,
-    lineHeight: 1
-  },
-}));
 
 const StyledRadio = styled(props => <Radio color='primary' {...props} />)(({ theme }) => ({
   '& .MuiSvgIcon-root': {

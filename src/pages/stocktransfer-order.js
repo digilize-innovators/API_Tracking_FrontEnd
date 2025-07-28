@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Box, Grid2, Typography, Button, TableContainer, Paper } from '@mui/material'
+import { Box, Grid2, Typography, Button } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -10,7 +10,6 @@ import { useAuth } from 'src/Context/AuthContext'
 import Head from 'next/head'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { useRouter } from 'next/router'
-import AuthModal from 'src/components/authModal'
 import ChatbotComponent from 'src/components/ChatbotComponent'
 import AccessibilitySettings from 'src/components/AccessibilitySettings'
 import { getTokenValues } from 'src/utils/tokenUtils'
@@ -18,7 +17,6 @@ import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import { validateToken } from 'src/utils/ValidateToken'
 import CustomSearchBar from 'src/components/CustomSearchBar'
-import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import downloadPdf from 'src/utils/DownloadPdf'
 import StockTrasferModel from 'src/components/Modal/StockTrasferModel'
 import TableStocktransfer from 'src/views/tables/TableStocktransfer'
@@ -30,23 +28,21 @@ const Index = () => {
   const [pendingAction, setPendingAction] = useState(null)
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [stocktransfer,setStocktransfer] = useState([])
+  const [stocktransfer, setStocktransfer] = useState({ data: [], index: 0 })
   const { setIsLoading } = useLoading()
   const [editData, setEditData] = useState({})
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData, removeAuthToken } = useAuth()
   const [config, setConfig] = useState(null)
-  const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-  const [eSignStatusId, setESignStatusId] = useState('')
-  const [auditLogMark, setAuditLogMark] = useState('')
-  const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
-  const [openModalApprove, setOpenModalApprove] = useState(false)
   const [formData, setFormData] = useState({})
-  const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''})
-  const [stocktransferDetail,setStocktranferDetail]=useState([])
+  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '' })
+  const [stocktransferDetail, setStocktranferDetail] = useState([])
 
-  const apiAccess = useApiAccess('stocktransfer-order-create', 'stocktransfer-order-update','stocktransfer-order-approve')
+  const apiAccess = useApiAccess(
+    'stocktransfer-order-create',
+    'stocktransfer-order-update',
+    'stocktransfer-order-approve'
+  )
 
   useLayoutEffect(() => {
     const data = getUserData()
@@ -57,68 +53,62 @@ const Index = () => {
   }, [])
 
   useEffect(() => {
-      const handleUserAction = async () => {
-        if (formData && pendingAction) {
-          if (pendingAction === "edit") {
-            await editStockTrasfer(); 
-          } else if (pendingAction === "add") {
-            await addStockTransfer();  
-          }
-          setPendingAction(null);
+    const handleUserAction = async () => {
+      if (formData && pendingAction) {
+        if (pendingAction === 'edit') {
+          await editStockTrasfer()
+        } else if (pendingAction === 'add') {
+          await addStockTransfer()
         }
-      };
-      handleUserAction();
-    }, [formData, pendingAction]);
-  
+        setPendingAction(null)
+      }
+    }
+    handleUserAction()
+  }, [formData, pendingAction])
 
-  const tableBody = stocktransfer?.map((item, index) => [
-        index + 1,
-        item.order_no,
-        item.status,
-        item.order_from_location.location_name,
-        item.order_to_location.location_name,
-        moment(item.order_date ).format('DD/MM/YYYY, hh:mm:ss a')   
+  const tableBody = stocktransfer.data?.map((item, index) => [
+    index + 1,
+    item.order_no,
+    item.status,
+    item.order_from_location.location_name,
+    item.order_to_location.location_name,
+    moment(item.order_date).format('DD/MM/YYYY, hh:mm:ss a')
   ])
 
   const tableData = useMemo(
     () => ({
-      tableHeader: ['Sr.No.', 'Order No','Status', 'From', 'To',  'Order Date'],
+      tableHeader: ['Sr.No.', 'Order No', 'Status', 'From', 'To', 'Order Date'],
       tableHeaderText: 'stock Transfer Order Report',
       tableBodyText: 'stock Transfer Order Data',
       filename: 'stocktransfer'
-    }),[])
-   const getStockTransferDetail = async (id) => {
-            setIsLoading(true);
-            try {
-                const res = await api(`/stocktransfer-order/details/${id}`, {}, 'get', true);
-                if (res.data.success) {
-                    const fetchedOrders = res.data.data.orders || [];
-        
-                    // Set raw detail (if needed elsewhere)
-                    setStocktranferDetail(fetchedOrders);
-        
-                       
-                } else if (res.data.code === 401) {
-                    removeAuthToken();
-                    router.push('/401');
-                } else {
-                    console.log('Error: Unexpected response', res.data);
-                }
-            } catch (error) {
-                console.log('Error in getPurchaseDetail', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    }),
+    []
+  )
+  const getStockTransferDetail = async id => {
+    setIsLoading(true)
+    try {
+      const res = await api(`/stocktransfer-order/details/${id}`, {}, 'get', true)
+      if (res.data.success) {
+        const fetchedOrders = res.data.data.orders || []
+
+        // Set raw detail (if needed elsewhere)
+        setStocktranferDetail(fetchedOrders)
+      } else if (res.data.code === 401) {
+        removeAuthToken()
+        router.push('/401')
+      } else {
+        console.log('Error: Unexpected response', res.data)
+      }
+    } catch (error) {
+      console.log('Error in getPurchaseDetail', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
   const handleOpenModal = () => {
-    setApproveAPI({
-      approveAPIName: 'stocktransfer-order-create',
-      approveAPImethod: 'POST',
-      approveAPIEndPoint: '/api/v1/stocktransfer-order'
-    })
     setEditData({})
     setFormData({})
     setOpenModal(true)
@@ -130,17 +120,12 @@ const Index = () => {
     setStocktranferDetail([])
   }
 
-  const handleAuthModalClose = () => {
-    setAuthModalOpen(false)
-    setOpenModalApprove(false)
-  }
-
   const handleSubmitForm = async data => {
     console.log('handle submit form data : ', data)
     setFormData(data)
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
- 
+
   const addStockTransfer = async () => {
     try {
       const data = { ...formData }
@@ -175,10 +160,10 @@ const Index = () => {
   const editStockTrasfer = async () => {
     try {
       const data = { ...formData }
-      const filteredOrders = data.orders.filter(order =>
-        !stocktransferDetail.some(purchase => purchase.product_id === order.productId)
-      );
-      filteredOrders.length>0?data.orders=filteredOrders:delete data.orders
+      const filteredOrders = data.orders.filter(
+        order => !stocktransferDetail.some(purchase => purchase.product_id === order.productId)
+      )
+      filteredOrders.length > 0 ? (data.orders = filteredOrders) : delete data.orders
       setIsLoading(true)
       const res = await api(`/stocktransfer-order/${editData.id}`, data, 'put', true)
       setIsLoading(false)
@@ -210,7 +195,7 @@ const Index = () => {
     setEditData(item)
     setOpenModal(true)
   }
-  const updateView= async item =>{
+  const handleView = async item => {
     await getStockTransferDetail(item.id)
   }
 
@@ -221,11 +206,10 @@ const Index = () => {
     setTableHeaderData({ ...tableHeaderData, searchVal: '' })
   }
 
- 
-  const handleDownloadPdf = () => { 
+  const handleDownloadPdf = () => {
     let data = getUserData()
     setUserDataPdf(data)
-    downloadPdf(tableData, tableHeaderData, tableBody, stocktransfer, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, stocktransfer.data, userDataPdf)
   }
   return (
     <Box padding={4}>
@@ -245,8 +229,7 @@ const Index = () => {
                 </Typography>
               )}
               <Grid2 item xs={12}>
-                <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                </Box>
+                <Box className='d-flex justify-content-between align-items-center my-3 mx-4'></Box>
                 <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                   <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                   <Box className='d-flex justify-content-between align-items-center '>
@@ -268,25 +251,24 @@ const Index = () => {
             </Grid2>
             <Grid2 item xs={12}>
               <Typography variant='h4' className='mx-4 mt-3'>
-              Stock Transfer Order Data
+                Stock Transfer Order Data
               </Typography>
-              <TableContainer component={Paper}>
-                <TableStocktransfer
-                  handleUpdate={handleUpdate}
-                  tableHeaderData={tableHeaderData}
-                  pendingAction={pendingAction}
-                  setStocktransfer={setStocktransfer}
-                  apiAccess={apiAccess}
-                  updateView={updateView}
-                  stocktransferDetail={stocktransferDetail}
-                />
-              </TableContainer>
+              <TableStocktransfer
+                handleUpdate={handleUpdate}
+                tableHeaderData={tableHeaderData}
+                pendingAction={pendingAction}
+                setDataCallback={setStocktransfer}
+                apiAccess={apiAccess}
+                stocktransferDetail={stocktransferDetail}
+                handleAuthCheck={()=> {}}
+                handleView={handleView}
+              />
             </Grid2>
           </Box>
         </Grid2>
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-     
+
       <StockTrasferModel
         open={openModal}
         handleClose={handleCloseModal}

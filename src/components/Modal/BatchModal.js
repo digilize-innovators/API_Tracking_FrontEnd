@@ -11,6 +11,7 @@ import PropTypes from 'prop-types'
 const validationSchema = yup.object().shape({
   batchNo: yup
     .string()
+    .trim()
     .required("Batch number can't be empty")
     .min(5, 'Batch number should not be less than 5')
     .max(8, 'Batch number should not be greater than 8')

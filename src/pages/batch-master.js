@@ -42,13 +42,11 @@ const Index = () => {
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const apiAccess = useApiAccess('batch-create', 'batch-update', 'batch-approve')
-  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
+  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '', filterProductVal: '', filterLocationVal: '' })
   const searchBarRef = useRef('')
   const [allProductData, setAllProductData] = useState([])
   const [allLocationData, setAllLocationData] = useState([])
   const [formData, setFormData] = useState({})
-  const [filterLocationVal, setFilterLocationVal] = useState('')
-  const [filterProductVal, setFilterProductVal] = useState('')
   const [batchData, setBatchData] = useState({ data: [], index: 0 })
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
@@ -100,9 +98,9 @@ const Index = () => {
       tableHeaderText: 'Batch Master Report',
       tableBodyText: 'Batch Master Data',
       filename: 'BatchMaster',
-      Filter: ['location', filterLocationVal]
+      Filter: ['location', tableHeaderData.filterLocationVal]
     }),
-    [filterLocationVal]
+    [tableHeaderData]
   )
 
   const closeSnackbar = () => {
@@ -239,7 +237,7 @@ const Index = () => {
   }
 
   const handleLocationFilter = e => {
-    setFilterLocationVal(e.target.value)
+    setTableHeaderData({ ...tableHeaderData, filterLocationVal: e.target.value })
   }
 
    const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
@@ -385,9 +383,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     if (searchBarRef.current) {
       searchBarRef.current.resetSearch()
     }
-    setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '' })
-    setFilterLocationVal('')
-    setFilterProductVal('')
+    setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '', filterProductVal: '', filterLocationVal: '' });
   }
 
   const handleAuthModalOpen = () => {
@@ -480,7 +476,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                   <Select
                     labelId='batch-select-by-location'
                     id='product-select-by-location'
-                    value={filterLocationVal}
+                    value={tableHeaderData.filterLocationVal}
                     label='Location'
                     onChange={handleLocationFilter}
                   >
@@ -499,9 +495,9 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                   <Select
                     labelId='batch-select-by-product'
                     id='product-select-by-product'
-                    value={filterProductVal}
+                    value={tableHeaderData.filterProductVal}
                     label='Product'
-                    onChange={e => setFilterProductVal(e.target.value)}
+                    onChange={e => setTableHeaderData({ ...tableHeaderData, filterProductVal: e.target.value})}
                   >
                     {allProductData?.map(item => {
                       return (
@@ -533,12 +529,9 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                 Batch Data
               </Typography>
               <TableBatch
-                isBatchCloud={false}
                 handleUpdate={handleUpdate}
-                filterProductVal={filterProductVal}
-                filterLocationVal={filterLocationVal}
                 tableHeaderData={tableHeaderData}
-                setBatch={setBatchData}
+                setDataCallback={setBatchData}
                 handleAuthCheck={handleAuthCheck}
                 apiAccess={apiAccess}
                 config={config}

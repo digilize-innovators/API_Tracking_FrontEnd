@@ -13,7 +13,6 @@ import { useRouter } from 'next/router'
 import PropTypes from 'prop-types'
 import isValidIPv4 from 'src/@core/utils/isValidIPv4'
 
-
 const PrinterLineCongSchema = yup.object().shape({
   printerLineName: yup
     .string()
@@ -61,17 +60,12 @@ const PrinterLineCongSchema = yup.object().shape({
 
   linePcAddress: yup
     .string()
-    .test("is-valid-ipv4", "Invalid IPv4 address", (value) => isValidIPv4(value)),
+    .trim()
+    .test('is-valid-ipv4', 'Invalid IPv4 address', value => isValidIPv4(value))
 })
 
 function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubmitForm }) {
-  const {
-    handleSubmit,
-    control,
-    setValue,
-    watch,
-    reset,
-  } = useForm({
+  const { handleSubmit, control, setValue, watch, reset } = useForm({
     resolver: yupResolver(PrinterLineCongSchema),
     defaultValues: {
       printerLineName: '',
@@ -354,7 +348,6 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
       open={open}
       onClose={handleClose}
       data-testid='modal'
-
       aria-labelledby='modal-modal-title'
       aria-describedby='modal-modal-description'
     >
@@ -394,7 +387,12 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
           </Grid2>
           <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
             <Grid2 size={6}>
-              <CustomDropdown name='controlpanelId' label='controlpanel *' control={control} options={controlPanelData} />
+              <CustomDropdown
+                name='controlpanelId'
+                label='controlpanel *'
+                control={control}
+                options={controlPanelData}
+              />
             </Grid2>
             <Grid2 size={6}>
               <CustomTextField name='lineNo' label='Line No *' control={control} />
@@ -453,11 +451,11 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     </Modal>
   )
 }
-PrinterLineConfigurationModal.propTypes={
-  open:PropTypes.any,
-  handleClose:PropTypes.any,
-  editData:PropTypes.any,
-  handleSubmitForm:PropTypes.any
+PrinterLineConfigurationModal.propTypes = {
+  open: PropTypes.any,
+  handleClose: PropTypes.any,
+  editData: PropTypes.any,
+  handleSubmitForm: PropTypes.any
 }
 
 export default PrinterLineConfigurationModal

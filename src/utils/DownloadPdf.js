@@ -63,7 +63,7 @@ if (tableData.Filter[0] === 'department') {
         body: body,
         columnWidth: 'wrap',
         margin: { bottom: 20 }, // Add margin to prevent footer overlap
-        didDrawPage: function (data) {
+        didDrawPage: function () {
           footerContent(currentPage, totalPages, userDataPdf, doc)
         }
       })

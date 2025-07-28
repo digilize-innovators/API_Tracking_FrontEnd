@@ -32,12 +32,8 @@ const printerValidationSchema = yup.object().shape({
     .max(50, 'Printer Name length should be less than 50')
     .required("Printer Name can't be empty"),
 
-  printerType: yup
-    .string()
-    .trim()
-    .required('Printing Technology is required')
-});
-
+  printerType: yup.string().trim().required('Printing Technology is required')
+})
 
 const PrintingCategoryModal = ({ open, onClose, editData, handleSubmitForm }) => {
   const {
@@ -89,8 +85,16 @@ const PrintingCategoryModal = ({ open, onClose, editData, handleSubmitForm }) =>
               render={({ field }) => (
                 <>
                   <RadioGroup row {...field}>
-                    <FormControlLabel value='inkBased' control={<Radio disabled={!!editData?.id} />} label='Ink Based' />
-                    <FormControlLabel value='ribbonBased' control={<Radio disabled={!!editData?.id} />} label='Ribbon Based' />
+                    <FormControlLabel
+                      value='inkBased'
+                      control={<Radio disabled={!!editData?.id} />}
+                      label='Ink Based'
+                    />
+                    <FormControlLabel
+                      value='ribbonBased'
+                      control={<Radio disabled={!!editData?.id} />}
+                      label='Ribbon Based'
+                    />
                   </RadioGroup>
                   {errors.printerType && (
                     <FormHelperText error>{errors.printerType.message}</FormHelperText> // Display validation error
@@ -122,10 +126,10 @@ const PrintingCategoryModal = ({ open, onClose, editData, handleSubmitForm }) =>
     </Modal>
   )
 }
-PrintingCategoryModal.propTypes={
-  open:PropTypes.any,
-  onClose:PropTypes.any,
-  editData:PropTypes.any,
-  handleSubmitForm:PropTypes.any
+PrintingCategoryModal.propTypes = {
+  open: PropTypes.any,
+  onClose: PropTypes.any,
+  editData: PropTypes.any,
+  handleSubmitForm: PropTypes.any
 }
 export default PrintingCategoryModal

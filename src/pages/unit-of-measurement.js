@@ -354,7 +354,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
   const handleUpdate = item => {
     setEditData(item)
-    setFormData({ ...FormData, unitName: item.uom_name })
+    setFormData({ ...formData, unitName: item.uom_name })
     setOpenModal(true)
   }
 
@@ -433,7 +433,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                 Unit Of Measurement Data
               </Typography>
               <TableUOM
-                setAllUOM={setAllUOMData}
+                setDataCallback={setAllUOMData}
                 handleUpdate={handleUpdate}
                 tableHeaderData={tableHeaderData}
                 handleAuthCheck={handleAuthCheck}

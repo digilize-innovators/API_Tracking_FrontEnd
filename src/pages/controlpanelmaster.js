@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
-import { Button, TableContainer, Paper, Typography, Grid2, Box } from '@mui/material'
+import { Button, Typography, Grid2, Box } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -238,7 +238,6 @@ const Index = () => {
   }
 
   const handleUpdate = item => {
-    console.log('item', item)
     resetForm()
     setEditData(item)
     console.log('edit controlpanel master', item)
@@ -462,18 +461,15 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
               <Typography variant='h4' className='mx-4 mt-3'>
                 Control Panel Master Data
               </Typography>
-              <TableContainer component={Paper}>
                 <TableControlPanelMaster
                   handleUpdate={handleUpdate}
                   tableHeaderData={tableHeaderData}
                   pendingAction={pendingAction}
-                  controlPanelData={controlPanelData}
-                  setControlPanel={setControlPanelData}
+                  setDataCallback={setControlPanelData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}
                 />
-              </TableContainer>
             </Grid2>
           </Box>
         </Grid2>

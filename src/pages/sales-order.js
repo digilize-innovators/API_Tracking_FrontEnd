@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Box, Grid2, Typography, Button, TableContainer, Paper, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
+import { Box, Grid2, Typography, Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
@@ -28,18 +28,17 @@ const Index = () => {
   const [pendingAction, setPendingAction] = useState(null)
   const [openModal, setOpenModal] = useState(false)
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
-  const [saleOrder,setSaleOrder] = useState([])
+  const [saleOrder, setSaleOrder] = useState({ data: [], index: 0 })
   const { setIsLoading } = useLoading()
   const [editData, setEditData] = useState({})
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData, removeAuthToken } = useAuth()
   const [config, setConfig] = useState(null)
   const [formData, setFormData] = useState({})
-  const [tableHeaderData, setTableHeaderData] = useState({esignStatus: '',searchVal: ''})
-  const [orderTypeFilter,setOrderTypeFilter]=useState('')
-  const [saleDetail,setSaleDetail]=useState([])
+  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '', orderTypeFilter: '' })
+  const [saleDetail, setSaleDetail] = useState([])
 
-  const apiAccess = useApiAccess('sales-order-create', 'sales-order-update','sales-order-approve')
+  const apiAccess = useApiAccess('sales-order-create', 'sales-order-update', 'sales-order-approve')
 
   useLayoutEffect(() => {
     const data = getUserData()
@@ -50,62 +49,65 @@ const Index = () => {
   }, [])
 
   useEffect(() => {
-      const handleUserAction = async () => {
-        if (formData && pendingAction) {
-          if (pendingAction === "edit") {
-            await editSaleOrder(); 
-          } else if (pendingAction === "add") {
-            await addSaleOrder();  
-          }
-          setPendingAction(null);
+    const handleUserAction = async () => {
+      if (formData && pendingAction) {
+        if (pendingAction === 'edit') {
+          await editSaleOrder()
+        } else if (pendingAction === 'add') {
+          await addSaleOrder()
         }
-      };
-      handleUserAction();
-    }, [formData, pendingAction]);
-  
+        setPendingAction(null)
+      }
+    }
+    handleUserAction()
+  }, [formData, pendingAction])
 
-  const tableBody = saleOrder?.map((item, index) => [
+  const tableBody = saleOrder.data?.map((item, index) => [
     index + 1,
     item.order_type,
     item.order_no,
     item.status,
     item.order_from_location.location_name,
     item.order_to_location.location_name,
-    moment(item.order_date ).format('DD/MM/YYYY, hh:mm:ss a')  
+    moment(item.order_date).format('DD/MM/YYYY, hh:mm:ss a')
   ])
 
-  
   const tableData = useMemo(
     () => ({
-      tableHeader: ['Sr.No.','Order Type', 'Order No','Status', 'From', 'To',  'Order Date'],
+      tableHeader: ['Sr.No.', 'Order Type', 'Order No', 'Status', 'From', 'To', 'Order Date'],
       tableHeaderText: 'Sale Order Report',
       tableBodyText: 'Sale  Order Data',
       filename: 'saleOrder',
-      Filter:['Order Type',orderTypeFilter],
-    }),[])
-    const getSaleDetail = async (id) => {
-              console.log('hello aaa')
-              setIsLoading(true);
-              try {
-                  const res = await api(`/sales-order/details/${id}`, {}, 'get', true);
-                  if (res.data.success) {
-                     console.log(res.data.data.orders)
-                      const fetchedOrders = res.data.data.orders || [];
-                      // Set raw detail (if needed elsewhere)
-                      setSaleDetail(fetchedOrders);
-                         
-                  } else if (res.data.code === 401) {
-                      removeAuthToken();
-                      router.push('/401');
-                  } else {
-                      console.log('Error: Unexpected response', res.data);
-                  }
-              } catch (error) {
-                  console.log('Error in getPurchaseDetail', error);
-              } finally {
-                  setIsLoading(false);
-              }
-          };
+      Filter: ['Order Type', tableHeaderData.orderTypeFilter]
+    }),
+    []
+  )
+
+  const handleView = async item => {
+    await getSaleDetail(item.id)
+  }
+
+  const getSaleDetail = async id => {
+    setIsLoading(true)
+    try {
+      const res = await api(`/sales-order/details/${id}`, {}, 'get', true)
+      if (res.data.success) {
+        console.log(res.data.data.orders)
+        const fetchedOrders = res.data.data.orders || []
+        // Set raw detail (if needed elsewhere)
+        setSaleDetail(fetchedOrders)
+      } else if (res.data.code === 401) {
+        removeAuthToken()
+        router.push('/401')
+      } else {
+        console.log('Error: Unexpected response', res.data)
+      }
+    } catch (error) {
+      console.log('Error in getPurchaseDetail', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
@@ -127,8 +129,8 @@ const Index = () => {
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
 
-  const handleOrderTypeChange = (e) => {
-    setOrderTypeFilter(e.target.value);
+  const handleOrderTypeChange = e => {
+    setTableHeaderData({ ...tableHeaderData, orderTypeFilter: e.target.value })
   }
   const addSaleOrder = async () => {
     try {
@@ -161,21 +163,20 @@ const Index = () => {
       setIsLoading(false)
     }
   }
-  const editSaleOrder = async (esign_status, remarks) => {
+  const editSaleOrder = async () => {
     try {
       const data = { ...formData }
       delete data.type
 
       console.log('EDIT FORM DATA :->', data)
-      const filteredOrders = data.orders.filter(order =>
-        !saleDetail.some(purchase => purchase.product_id === order.productId)
-      );
-     if (filteredOrders.length > 0) {
-       data.orders = filteredOrders;
-         }
-          else {
-            delete data.orders;
-               }
+      const filteredOrders = data.orders.filter(
+        order => !saleDetail.some(purchase => purchase.product_id === order.productId)
+      )
+      if (filteredOrders.length > 0) {
+        data.orders = filteredOrders
+      } else {
+        delete data.orders
+      }
       // filteredOrders.length>0 ? data.orders=filteredOrders : delete data.orders
 
       setIsLoading(true)
@@ -194,7 +195,7 @@ const Index = () => {
         }
       }
     } catch (error) {
-      console.log('error while updating the sale order',error)
+      console.log('error while updating the sale order', error)
       setOpenModal(false)
       router.push('/500')
     } finally {
@@ -210,22 +211,18 @@ const Index = () => {
 
     setEditData(item)
     setOpenModal(true)
-   
   }
-    const resetFilter = () => {
+  const resetFilter = () => {
     if (searchRef.current) {
       searchRef.current.resetSearch() // Call the reset method in the child
     }
-    setOrderTypeFilter('')
-    setTableHeaderData({ ...tableHeaderData, searchVal: '' })
+    setTableHeaderData({ ...tableHeaderData, searchVal: '', orderTypeFilter: '' })
   }
 
- 
   const handleDownloadPdf = () => {
- 
     let data = getUserData()
     setUserDataPdf(data)
-    downloadPdf(tableData, tableHeaderData, tableBody, saleOrder, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, saleOrder.data, userDataPdf)
   }
   return (
     <Box padding={4}>
@@ -247,23 +244,22 @@ const Index = () => {
               <Grid2 item xs={12}>
                 <Box className='d-flex-row justify-content-start align-items-center mx-4 my-3'>
                   <FormControl className='w-25 mx-2'>
-                  <InputLabel id='Order-Filter-By-OrderType'>Order Type</InputLabel>
-                  <Select
-                    labelId='Order-select-by-OrderType'
-                    id='Order-select-by-OrderType'
-                    value={orderTypeFilter}
-                    label='Order Type'
-                    onChange={handleOrderTypeChange}
-                  >
-              <MenuItem key='salesOrder' value='SALES_ORDER'>
-                Sale Order
-              </MenuItem>
-              <MenuItem key='salesReturn' value='SALES_RETURN'>
-                Sale Return
-              </MenuItem>
-                   
-                  </Select>
-                </FormControl>
+                    <InputLabel id='Order-Filter-By-OrderType'>Order Type</InputLabel>
+                    <Select
+                      labelId='Order-select-by-OrderType'
+                      id='Order-select-by-OrderType'
+                      value={tableHeaderData.orderTypeFilter}
+                      label='Order Type'
+                      onChange={handleOrderTypeChange}
+                    >
+                      <MenuItem key='salesOrder' value='SALES_ORDER'>
+                        Sale Order
+                      </MenuItem>
+                      <MenuItem key='salesReturn' value='SALES_RETURN'>
+                        Sale Return
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
                 </Box>
                 <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                   <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
@@ -272,7 +268,7 @@ const Index = () => {
 
                     {apiAccess.addApiAccess && (
                       <Box className='mx-2'>
-                        <Button variant='contained' sx={{py:2}} onClick={handleOpenModal} >
+                        <Button variant='contained' sx={{ py: 2 }} onClick={handleOpenModal}>
                           <span>
                             <IoMdAdd />
                           </span>
@@ -286,26 +282,24 @@ const Index = () => {
             </Grid2>
             <Grid2 item xs={12}>
               <Typography variant='h4' className='mx-4 mt-3'>
-              Sale Order Data
+                Sale Order Data
               </Typography>
-              <TableContainer component={Paper}>
-                <TableSaleOrder
-                  handleUpdate={handleUpdate}
-                  tableHeaderData={tableHeaderData}
-                  pendingAction={pendingAction}
-                  orderTypeFilter={orderTypeFilter}
-                  setSaleOrder={setSaleOrder}
-                  apiAccess={apiAccess}
-                  config={config}
-                />
-              </TableContainer>
+              <TableSaleOrder
+                handleUpdate={handleUpdate}
+                tableHeaderData={tableHeaderData}
+                pendingAction={pendingAction}
+                setDataCallback={setSaleOrder}
+                apiAccess={apiAccess}
+                saleDetail={saleDetail}
+                handleAuthCheck={() => {}}
+                handleView={handleView}
+              />
             </Grid2>
           </Box>
         </Grid2>
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
-     
-    
+
       <SalesOrderModel
         open={openModal}
         handleClose={handleCloseModal}

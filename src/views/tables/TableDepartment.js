@@ -13,8 +13,7 @@ import {
   Tooltip
 } from '@mui/material'
 import { MdModeEdit, MdOutlineDomainVerification } from 'react-icons/md'
-import ChevronUp from 'mdi-material-ui/ChevronUp'
-import ChevronDown from 'mdi-material-ui/ChevronDown'
+import { ChevronDown, ChevronUp } from 'mdi-material-ui'
 import CustomTable from 'src/components/CustomTable'
 import SwipeableDrawer from '@mui/material/SwipeableDrawer'
 import { api } from 'src/utils/Rest-API'
@@ -55,7 +54,6 @@ const Row = ({
   config_dept,
   setAlertData,
   alertData,
-  departmentData,
   historyData
 }) => {
   const [state, setState] = useState({ addDrawer: false })
@@ -77,6 +75,8 @@ const Row = ({
   const [formData, setFormData] = useState({})
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
+  const { removeAuthToken } = useAuth()
+  const router = useRouter()
 
   useLayoutEffect(() => {
     let data = getUserData()
@@ -126,142 +126,132 @@ const Row = ({
     setState({ ...state, [anchor]: open })
   }
   const handleAuthModalClose = () => {
-   setEsignDownloadPdf(false)
+    setEsignDownloadPdf(false)
     setAuthModalOpen(false)
     setOpenModalApprove(false)
   }
 
-const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user);
-  console.log('handleAuthResult 02', config?.userId, user.user_id);
-
-  if (!isAuthenticated) {
-    setAlertData({
-      type: 'error',
-      openSnackbar: true,
-      message: 'Authentication failed, Please try again.'
-    });
-    resetState();
-    return;
-  }
-
-  if (isApprover) {
-    await handleApproverActions(user, esignStatus, remarks);
-  } else {
-    handleCreatorActions(user, esignStatus, remarks,isApprover);
-  }
-
-  resetState();
-};
-
-const resetState = () => {
-  setApproveAPI({ approveAPIName: '', approveAPIEndPoint: '', approveAPImethod: '' });
-  setEsignDownloadPdf(false);
-  setAuthModalOpen(false);
-};
-
-const buildAuditLog = (user, remarks, action) => {
-  return config?.config?.audit_logs
-    ? {
-        user_id: user.userId,
-        user_name: user.userName,
-        remarks: remarks?.length > 0 ? remarks : `designation ${action} - ${auditLogMark}`,
-        authUser: user.user_id,
-        department: depData?.department_name
-      }
-    : {};
-};
-
-const handleApproverActions = async (user, esignStatus, remarks) => {
-  const payload = {
-    modelName: 'designation',
-    esignStatus,
-    id: eSignStatusId,
-    name: auditLogMark,
-    audit_log: buildAuditLog(user, remarks, esignStatus)
-  };
-
-  if (esignStatus === 'approved' && esignDownloadPdf) {
-    setOpenModalApprove(false);
-
-    downloadPdf(tableData, null, tableBody, arrayDesignation, user);
-
-    if (config?.config?.audit_logs) {
-      const auditPayload = {
-        audit_log: {
-          audit_log: true,
-          performed_action: `Export report of designation of department=${depData?.department_name} `,
-          remarks:
-            remarks?.length > 0
-              ? remarks
-              : `Designation of Department=${depData?.department_name} export report`,
-          authUser: user
-        }
-      };
-      await api('/auditlog/', auditPayload, 'post', true);
+  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+    if (!isAuthenticated) {
+      setAlertData({
+        type: 'error',
+        openSnackbar: true,
+        message: 'Authentication failed, Please try again.'
+      })
+      resetState()
+      return
     }
 
-    return;
-  }
-
-  const res = await api('/esign-status/update-esign-status', payload, 'patch', true);
-
-  if (res?.data) {
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: res.data.code === 200 ? 'success' : 'error',
-      message: res.data.message
-    });
-  }
-
-  setPendingAction(true);
-
-  if (esignStatus === 'rejected' && esignDownloadPdf) {
-    console.log('approver rejected');
-    setOpenModalApprove(false);
-  }
-};
-
-const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
-  if (esignStatus === 'rejected') {
-    setAuthModalOpen(false);
-    setOpenModalApprove(false);
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: 'error',
-      message: 'Access denied for this user.'
-    });
-    return;
-  }
-
-  if (!isApprover && esignDownloadPdf) {
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: 'error',
-      message: 'Access denied: Download pdf disabled for this user.'
-    });
-    resetState();
-    return;
-  }
-
-  if (esignStatus === 'approved') {
-    console.log('Esign Download pdf', esignDownloadPdf);
-
-    if (esignDownloadPdf) {
-      console.log('esign is approved for creator to download');
-      setEsignDownloadPdf(false);
-      setOpenModalApprove(true);
+    if (isApprover) {
+      await handleApproverActions(user, esignStatus, remarks)
     } else {
-      console.log('esign is approved for creator');
-      setAuthUser(user);
-      setEsignRemark(remarks);
-      setPendingAction(editData?.id ? 'edit' : 'add');
+      handleCreatorActions(user, esignStatus, remarks, isApprover)
+    }
+
+    resetState()
+  }
+
+  const resetState = () => {
+    setApproveAPI({ approveAPIName: '', approveAPIEndPoint: '', approveAPImethod: '' })
+    setEsignDownloadPdf(false)
+    setAuthModalOpen(false)
+  }
+
+  const buildAuditLog = (user, remarks, action) => {
+    return config?.config?.audit_logs
+      ? {
+          user_id: user.userId,
+          user_name: user.userName,
+          remarks: remarks?.length > 0 ? remarks : `designation ${action} - ${auditLogMark}`,
+          authUser: user.user_id
+        }
+      : {}
+  }
+
+  const handleApproverActions = async (user, esignStatus, remarks) => {
+    const payload = {
+      modelName: 'designation',
+      esignStatus,
+      id: eSignStatusId,
+      name: auditLogMark,
+      audit_log: buildAuditLog(user, remarks, esignStatus)
+    }
+
+    if (esignStatus === 'approved' && esignDownloadPdf) {
+      setOpenModalApprove(false)
+      downloadPdf(tableData, null, tableBody, arrayDesignation, user)
+      if (config?.config?.audit_logs) {
+        const auditPayload = {
+          audit_log: {
+            audit_log: true,
+            performed_action: `Export report of designation of department=${depData?.department_name} `,
+            remarks:
+              remarks?.length > 0 ? remarks : `Designation of Department=${depData?.department_name} export report`,
+            authUser: user
+          }
+        }
+        await api('/auditlog/', auditPayload, 'post', true)
+      }
+      return
+    }
+
+    const res = await api('/esign-status/update-esign-status', payload, 'patch', true)
+
+    if (res?.data) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: res.data.code === 200 ? 'success' : 'error',
+        message: res?.data?.message || `Error during user approval.`
+      })
+    }
+    setPendingAction(true)
+    if (esignStatus === 'rejected' && esignDownloadPdf) {
+      console.log('approver rejected')
+      setOpenModalApprove(false)
     }
   }
-};
+
+  const handleCreatorActions = (user, esignStatus, remarks, isApprover) => {
+    if (esignStatus === 'rejected') {
+      setAuthModalOpen(false)
+      setOpenModalApprove(false)
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied for this user.'
+      })
+      return
+    }
+
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied: Download pdf disabled for this user.'
+      })
+      resetState()
+      return
+    }
+
+    if (esignStatus === 'approved') {
+      console.log('Esign Download pdf', esignDownloadPdf)
+
+      if (esignDownloadPdf) {
+        console.log('esign is approved for creator to download')
+        setEsignDownloadPdf(false)
+        setOpenModalApprove(true)
+      } else {
+        console.log('esign is approved for creator')
+        setAuthUser(user)
+        setEsignRemark(remarks)
+        setPendingAction(editData?.id ? 'edit' : 'add')
+      }
+    }
+  }
+
   const handleDesigAuthCheck = async row => {
     setApproveAPI({
       approveAPIName: 'designation-approve',
@@ -272,9 +262,44 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     setESignStatusId(row.id)
     setAuditLogMark(row.designation_id)
   }
-  const handleDesignationDrawerOpen = row => {
-    setDepData(row)
+
+  const getDepartmentsHistory = async rowId => {
+    try {
+      setIsLoading(true)
+      const res = await api(`/department/history/${rowId}`, null, 'get', true)
+      if (res.data.success) {
+        return res.data.data
+      } else if (res.data.code === 401) {
+        removeAuthToken()
+        router.push('/401')
+      }
+      return null
+    } catch (error) {
+      setAlertData({ ...alertData, type: 'error', message: error?.message, openSnackbar: true })
+    } finally {
+      setIsLoading(false)
+    }
   }
+
+  const handleDesignationDrawerOpen = async row => {
+    const tempData = await getDepartmentsHistory(row?.id)
+    if (Array.isArray(tempData)) {
+      const approvedRecord = tempData.filter(el => el.esign_status === 'approved')
+      console.log('last approved record ', approvedRecord)
+
+      if (approvedRecord?.length < 1) {
+        setAlertData({
+          ...alertData,
+          type: 'error',
+          message: `Department ${tempData[0].esign_status == 'pending' ? 'approval is pending!' : 'is Rejected!'}`,
+          openSnackbar: true
+        })
+      } else {
+        setDepData({ ...approvedRecord[0], id: approvedRecord[0].department_uuid })
+      }
+    }
+  }
+
   const resetFormDes = () => {
     setEditData({})
   }
@@ -288,6 +313,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     resetFormDes()
     setOpenModalDes(true)
   }
+
   const handleCloseModalDes = () => {
     resetFormDes()
     setOpenModalDes(false)
@@ -315,6 +341,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     }
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
+
   const addDesignation = async esign_status => {
     try {
       const data = { ...formData }
@@ -352,6 +379,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
       })
     }
   }
+
   const editDesignation = async esign_status => {
     try {
       const data = { ...formData }
@@ -389,6 +417,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
       })
     }
   }
+
   const handleUpdateDes = item => {
     resetFormDes()
     setOpenModalDes(true)
@@ -403,6 +432,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     })
     setAuthModalOpen(true)
   }
+
   const handleDownloadPdf = () => {
     setApproveAPI({
       approveAPIName: 'designation-approve',
@@ -416,6 +446,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     }
     downloadPdf(tableData, null, tableBody, arrayDesignation, userDataPdf)
   }
+
   const list = anchor => (
     <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }}>
       <Grid2 item xs={12}>
@@ -523,7 +554,9 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
             {row.is_location_required ? 'True' : 'False'}
           </TableCell>
           {config?.config?.esign_status === true && config?.role !== 'admin' && (
-            <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
+            <TableCell align="center">
+              <StatusChip label={row.esign_status} color={statusObj[row.esign_status]?.color || 'default'} />
+            </TableCell>
           )}
           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
             {moment(row.updated_at).format('DD/MM/YYYY, hh:mm:ss a')}
@@ -540,7 +573,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
               />
             </Button>
           </TableCell>
-          {depData.id && (
+          {depData.id && depData.esign_status == 'approved' && (
             <SwipeableDrawer
               anchor={'right'}
               open={state['addDrawer']}
@@ -606,10 +639,12 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                               {historyRow.is_location_required ? 'True' : 'False'}
                             </TableCell>
                             {config?.config?.esign_status === true && config?.role !== 'admin' && (
-                              <StatusChip
-                                label={historyRow.esign_status}
-                                color={statusObj[historyRow.esign_status]?.color || 'default'}
-                              />
+                              <TableCell align="center">
+                                <StatusChip
+                                  label={historyRow.esign_status}
+                                  color={statusObj[historyRow.esign_status]?.color || 'default'}
+                                />
+                              </TableCell>
                             )}
 
                             <TableCell align='center'>
@@ -632,7 +667,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
           onClose={handleCloseModalDes}
           editData={editData}
           handleSubmitForm={handleSubmitFormDes}
-          departmentData={departmentData}
           depData={depData}
         />
       )}
@@ -709,25 +743,29 @@ const TableDepartment = ({
         router.push('/401')
       }
     } catch (error) {
-      console.log('error whilt get api of department',error)
+      console.log('error whilt get api of department', error)
       setIsLoading(false)
     }
   }
- const handleSort = (path) => {
-   const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-   const data = departmentData?.data || [];
-   const sortedData = sortData(data, path, newSortDirection);
-    setDepartmentData(prev => ({ ...prev, data: sortedData }));
+
+  const handleSort = path => {
+    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+    const data = departmentData?.data || []
+    const sortedData = sortData(data, path, newSortDirection)
+    setDepartmentData(prev => ({ ...prev, data: sortedData }))
     setSortDirection(newSortDirection)
     setSortBy(path)
   }
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
   }
+
   const handleChangeRowsPerPage = event => {
     setRowsPerPage(parseInt(event.target.value, 10))
     setPage(0)
   }
+
   return (
     <CustomTable
       data={departmentData.data}

@@ -4,7 +4,6 @@ import { Box, Select, Grid2, Typography, FormControl, InputLabel, Button, MenuIt
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
-import TableBatch from 'src/views/tables/TableBatch'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import Head from 'next/head'
 import { useSettings } from 'src/@core/hooks/useSettings'
@@ -22,11 +21,10 @@ import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import downloadPdf from 'src/utils/DownloadPdf'
 import moment from 'moment'
+import TableBatchCloud from 'src/views/tables/TableBatchCloud'
 
 const Index = () => {
   const router = useRouter()
-  const [filterLocationVal, setFilterLocationVal] = useState('')
-  const [filterProductVal, setFilterProductVal] = useState('')
   const [openModal, setOpenModal] = useState(false)
   const [batchData, setBatchData] = useState([])
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
@@ -46,7 +44,9 @@ const Index = () => {
 
   const [tableHeaderData, setTableHeaderData] = useState({
     esignStatus: '',
-    searchVal: ''
+    searchVal: '',
+    filterLocationVal: '',
+    filterProductVal: ''
   })
 
   const apiAccess = useApiAccess('batch-cloud-upload-create', 'batch-cloud-upload-update', 'batch-cloud-upload-approve')
@@ -67,9 +67,9 @@ const Index = () => {
       tableHeaderText: 'Batch Master Report',
       tableBodyText: 'Batch Master Data',
       filename: 'BatchMaster',
-      Filter: ['location', filterLocationVal]
+      Filter: ['location', tableHeaderData.filterLocationVal]
     }),
-    [filterLocationVal]
+    [tableHeaderData]
   )
 
   useLayoutEffect(() => {
@@ -221,8 +221,8 @@ const Index = () => {
           const data = {}
           data.audit_log = {
             audit_log: true,
-            performed_action: `Export report of batchClould of product= ${filterProductVal}`,
-            remarks: remarks?.length > 0 ? remarks : `Batch clould export report of product =${filterProductVal} `,
+            performed_action: `Export report of batchClould of product= ${tableHeaderData.filterProductVal}`,
+            remarks: remarks?.length > 0 ? remarks : `Batch clould export report of product =${tableHeaderData.filterProductVal} `,
             authUser: user
           }
           await api(`/auditlog/`, data, 'post', true)
@@ -271,11 +271,6 @@ const Index = () => {
     }
     resetState()
   }
-  const handleAuthCheck = async row => {
-    return
-
-  
-  }
 
   const handleUpdate = row => {
     setBatchDetail(row)
@@ -286,16 +281,14 @@ const Index = () => {
     if (searchBarRef.current) {
       searchBarRef.current.resetSearch()
     }
-    setTableHeaderData({ esignStatus: '', searchVal: '' })
-    setFilterLocationVal('')
-    setFilterProductVal('')
+    setTableHeaderData({ esignStatus: '', searchVal: '', filterLocationVal: '', filterProductVal: '' })
   }
 
   const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.toLowerCase() })
   }
   const handleLocationFilter = e => {
-    setFilterLocationVal(e.target.value)
+    setTableHeaderData({ ...tableHeaderData, filterLocationVal: e.target.value })
   }
   const handleAuthModalOpen = () => {
     console.log('OPen auth model')
@@ -346,7 +339,7 @@ const Index = () => {
                   <Select
                     labelId='batch-select-by-location'
                     id='product-select-by-location'
-                    value={filterLocationVal}
+                    value={tableHeaderData.filterLocationVal}
                     label='Location'
                     onChange={handleLocationFilter}
                   >
@@ -364,9 +357,9 @@ const Index = () => {
                   <Select
                     labelId='batch-select-by-product'
                     id='product-select-by-product'
-                    value={filterProductVal}
+                    value={tableHeaderData.filterProductVal}
                     label='Product'
-                    onChange={e => setFilterProductVal(e.target.value)}
+                    onChange={e => setTableHeaderData({ ...tableHeaderData, filterProductVal: e.target.value })}
                   >
                     {allProductData?.map(item => {
                       return (
@@ -386,14 +379,11 @@ const Index = () => {
               </Box>
             </Grid2>
             <Grid2 item xs={12}>
-              {filterProductVal != '' && (
-                <TableBatch
-                  isBatchCloud={true}
+              {tableHeaderData != '' && (
+                <TableBatchCloud
                   handleUpdate={handleUpdate}
-                  filterProductVal={filterProductVal}
-                  filterLocationVal={filterLocationVal}
                   tableHeaderData={tableHeaderData}
-                  setBatch={setBatchData}
+                  setDataCallback={setBatchData}
                   handleAuthCheck={()=> {}}
                   apiAccess={apiAccess}
                   config={config}

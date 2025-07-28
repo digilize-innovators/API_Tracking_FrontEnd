@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
-import { Button, TableContainer, Paper, Box, Grid2, Typography } from '@mui/material'
+import { Button, Box, Grid2, Typography } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import TableArea from 'src/views/tables/TableArea'
 import { api } from 'src/utils/Rest-API'
@@ -421,17 +421,15 @@ const handleCreatorApproval = (remarks, user,isApprover) => {
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Area Data
               </Typography>
-              <TableContainer component={Paper}>
                 <TableArea
                   handleUpdate={handleUpdate}
                   tableHeaderData={tableHeaderData}
                   pendingAction={pendingAction}
-                  setArea={setAreaData}
+                  setDataCallback={setAreaData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}
                 />
-              </TableContainer>
             </Grid2>
           </Box>
         </Grid2>
