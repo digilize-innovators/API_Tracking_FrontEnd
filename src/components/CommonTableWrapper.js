@@ -61,6 +61,11 @@ const CommonTableWrapper = ({
         limit: rowsPerPage === -1 ? -1 : rowsPerPage,
         search: tableHeaderData?.searchVal,
         esign_status: tableHeaderData?.esignStatus,
+        locationName: tableHeaderData?.filterLocationVal,
+        productName: tableHeaderData?.filterProductVal,
+        type: tableHeaderData?.orderTypeFilter,
+        status: tableHeaderData?.userStatus,
+        department_name: tableHeaderData?.departmentFilter,
       })
 
       const { api } = require('src/utils/Rest-API')

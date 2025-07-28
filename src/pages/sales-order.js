@@ -288,11 +288,9 @@ const Index = () => {
                 handleUpdate={handleUpdate}
                 tableHeaderData={tableHeaderData}
                 pendingAction={pendingAction}
-                setDataCallback={setSaleOrder}
+                setSaleOrder={setSaleOrder}
                 apiAccess={apiAccess}
-                saleDetail={saleDetail}
-                handleAuthCheck={() => {}}
-                handleView={handleView}
+                config={config}
               />
             </Grid2>
           </Box>

@@ -10,6 +10,7 @@ import { api } from 'src/utils/Rest-API'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
 import { sortData } from 'src/utils/sortData'
+
 const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAlertData }) => {
   const [page, setPage] = useState(0)
   const { settings } = useSettings()
@@ -64,20 +65,24 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
     setSortDirection(newSortDirection)
     setSortBy(path)
   }
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
   }
+
   const handleChangeRowsPerPage = event => {
     const newRowsPerPage = parseInt(event.target.value, 10)
     setRowsPerPage(newRowsPerPage)
     setPage(0)
   }
+
   const getSortIcon = column => {
     if (sortBy === column) {
       return sortDirection === 'asc' ? <ChevronDown /> : <ChevronUp />
     }
     return null
   }
+  
   return (
     <CustomTable
       page={page}

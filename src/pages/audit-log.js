@@ -34,15 +34,12 @@ const Index = () => {
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [approveAPI, setApproveAPI] = useState({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
-
   const [userDataPdf, setUserDataPdf] = useState()
   const { getUserData } = useAuth()
- 
   const [config, setConfig] = useState(null)
- 
   const searchBarRef = useRef(null)
-   const maxDate = moment(); // today
-   const minDate = moment().subtract(3, 'months');
+  const maxDate = moment(); // today
+  const minDate = moment().subtract(3, 'months');
   const tableBody = auditLogData?.data?.map((item, index) => [
     index + 1,
     item.performed_action,
@@ -65,7 +62,7 @@ const Index = () => {
     const decodedToken = getTokenValues()
     setConfig(decodedToken)
     setUserDataPdf(data)
-    return () => {}
+    return () => { }
   }, [])
 
   const closeSnackbar = () => {
@@ -149,7 +146,6 @@ const Index = () => {
         message: 'Access denied: Download pdf disabled for this user.'
       })
       resetState()
-      
     }
   }
   return (
@@ -169,48 +165,45 @@ const Index = () => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-3'>
-            <LocalizationProvider dateAdapter={AdapterMoment}>
-  <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-    {/* Start Date */}
-    <DesktopDateTimePicker
-      label="Start Date"
-      value={startDate}
-      onChange={(newValue) => setStartDate(newValue)}
-      inputFormat="DD/MM/YYYY"
-      minDate={minDate}
-      maxDate={maxDate}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          fullWidth
-          size="small"
-          readOnly
-        />
-      )}
-    />
+                <LocalizationProvider dateAdapter={AdapterMoment}>
+                  <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                    {/* Start Date */}
+                    <DesktopDateTimePicker
+                      label="Start Date"
+                      value={startDate}
+                      onChange={(newValue) => setStartDate(newValue)}
+                      inputFormat="DD/MM/YYYY"
+                      minDate={minDate}
+                      maxDate={maxDate}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          fullWidth
+                          size="small"
+                          readOnly
+                        />
+                      )}
+                    />
 
-    {/* End Date */}
-    <DesktopDateTimePicker
-      label="End Date"
-      value={endDate}
-      onChange={(newValue) => setEndDate(newValue)}
-      inputFormat="DD/MM/YYYY"
-      minDate={minDate}
-      maxDate={maxDate}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          fullWidth
-          size="small"
-          readOnly
-        />
-      )}
-    />
-  </Box>
-</LocalizationProvider>
-
-
-
+                    {/* End Date */}
+                    <DesktopDateTimePicker
+                      label="End Date"
+                      value={endDate}
+                      onChange={(newValue) => setEndDate(newValue)}
+                      inputFormat="DD/MM/YYYY"
+                      minDate={minDate}
+                      maxDate={maxDate}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          fullWidth
+                          size="small"
+                          readOnly
+                        />
+                      )}
+                    />
+                  </Box>
+                </LocalizationProvider>
               </Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
@@ -224,15 +217,13 @@ const Index = () => {
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Audit log Data
               </Typography>
-              <TableContainer component={Paper}>
-                <TableAuditLog
-                  setAuditLog={setAuditLogData}
-                  tableHeaderData={tableHeaderData}
-                  startDate={startDate}
-                  endDate={endDate}
-                  setAlertData={setAlertData}
-                />
-              </TableContainer>
+              <TableAuditLog
+                setAuditLog={setAuditLogData}
+                tableHeaderData={tableHeaderData}
+                startDate={startDate}
+                endDate={endDate}
+                setAlertData={setAlertData}
+              />
             </Grid2>
           </Box>
         </Grid2>
