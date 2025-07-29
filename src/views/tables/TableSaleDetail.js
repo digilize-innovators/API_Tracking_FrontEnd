@@ -84,7 +84,6 @@ const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlert
 
       setIsLoading(true)
       const res = await api(query, {}, 'get', true)
-      console.log('get scanned code', res.data)
       setIsLoading(false)
       if (res.data.success && orderDetail.status == 'INVOICE_GENERATED') {
         setAlertData({ openSnackbar: true, type: 'success', message: 'Code Export Successfully', variant: 'filled' })
@@ -93,7 +92,6 @@ const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlert
         setAlertData({ openSnackbar: true, type: 'error', message: 'Invoice is not generated yet', variant: 'filled' })
       } else {
         setAlertData({ openSnackbar: true, type: 'error', message: 'Something went wrong', variant: 'filled' })
-        console.log('Error to get scanned code', res.data)
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
@@ -104,7 +102,6 @@ const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlert
       setIsLoading(false)
     }
   }
-
   return (
       <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
         <TableCell
@@ -116,15 +113,16 @@ const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlert
         >
           {index + 1 + page * rowsPerPage}
         </TableCell>
+        
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.product_name}
+          {row?.product_name}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.batch_no}
+          {row?.batch_no}
         </TableCell>
 
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.qty}
+          {row?.qty}
         </TableCell>
         <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {/* {row.} */} {row.o_scan_qty}
@@ -197,6 +195,7 @@ const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf,
       handleChangePage={handleChangePage}
       handleChangeRowsPerPage={handleChangeRowsPerPage}
     >
+   
       <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', width: '100%' }}>
         <Table stickyHeader sx={{ width: '100%' }}>
           <TableHead style={{ backgroundColor: '#fff', height: '60px' }}>
@@ -260,7 +259,7 @@ const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf,
           <TableBody>
             {data?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((item, index) => (
               <Row
-                key={item?.id}
+                key={item.id}
                 orderDetail={orderDetail}
                 userDataPdf={userDataPdf}
                 row={item}

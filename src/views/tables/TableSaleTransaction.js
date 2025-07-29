@@ -1,4 +1,3 @@
-import { useState, Fragment, useEffect } from 'react'
 import{Box,Table,TableRow,TableHead,TableBody,TableCell} from '@mui/material'
 import moment from 'moment'
 import PropTypes from 'prop-types';
@@ -8,7 +7,6 @@ const Row = ({
   index,
 }) => {
   return (
-    <Fragment>
       <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
         <TableCell
           align='center'
@@ -59,19 +57,11 @@ const Row = ({
           {moment(row?.order.created_at).format('DD/MM/YYYY')}
         </TableCell>
       </TableRow>
-    </Fragment>
   );
 };
 Row.propTypes = {
   row: PropTypes.any,
-  index: PropTypes.any,
-  openRows: PropTypes.any,
-  handleRowToggle: PropTypes.any,
-  historyData: PropTypes.any,
-  handleAuthCheck: PropTypes.any,
-  apiAccess: PropTypes.any,
-  handleUpdateDes: PropTypes.any,
-  config_dept: PropTypes.any
+  index: PropTypes.any
 };
 const TableSaleTransaction = ({
 saleDetail

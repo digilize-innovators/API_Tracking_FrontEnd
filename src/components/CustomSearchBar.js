@@ -22,15 +22,18 @@ const CustomSearchBar = forwardRef(({ handleSearchClick }, ref) => {
     return (
         <Box display="flex" alignItems="center">
             <Box className='mx-2'>
-                <TextField
-                    inputRef={searchInputRef}
-                    type='search'
-                    size='small'
-                    style={{ height: '40px' }}
-                    id='outlined-basic'
-                    label='Search'
-                    variant='outlined'
-                />
+              <TextField
+  inputRef={searchInputRef}
+  type="search"
+  size="small"
+  style={{ height: '40px' }}
+  id="outlined-basic"
+  label="Search"
+  variant="outlined"
+  inputProps={{
+    maxLength: 20, 
+  }}
+/>
             </Box>
             <Box className='mx-2'>
                 <Button variant='contained' className='py-2' onClick={handleClick}>

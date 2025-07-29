@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Box,
   Table,
@@ -48,10 +48,11 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
       const res = await api(`/sales-order/transaction-details/${id}`, {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
-        setSaleDetail(res.data.data)
+        
+        setSaleDetail(res?.data.data)
 
         setStatus(
-          res.data.data.transactions.every(item => item.status === 'COMPLETED') && row.status !== 'INVOICE_GENERATED'
+         res.data.data.transactions.length>0 && res.data.data.transactions.every(item => item.status === 'COMPLETED') && row.status !== 'INVOICE_GENERATED'
         )
       } else if (res.data.code === 401) {
         removeAuthToken()
@@ -110,15 +111,15 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Invoice Generated successfully' })
         setStatus(false)
-      } else {
-        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
-        if (res.data.code === 401) {
+      }
+        else if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
         } else if (res.data.code === 409) {
           setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
-          console.log('409 :', res.data.message)
         }
+       else {
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
       }
     } catch (error) {
       console.log('Error in add locaiton ', error)
@@ -165,22 +166,22 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
               </Typography>
               <Typography variant='body1' sx={{ fontSize: 16 }}>
                 <Box component='span' sx={{ fontWeight: 'bold' }}>
-                  {' '}
+                  
                   From:
-                </Box>{' '}
+                </Box>
                 {row.order_from_location.location_name}
               </Typography>
               <Typography variant='body1' sx={{ fontSize: 16 }}>
                 <Box component='span' sx={{ fontWeight: 'bold' }}>
-                  {' '}
-                  To:{' '}
+                
+                  To:
                 </Box>
                 {row.order_to_location.location_name}
               </Typography>
               <Typography variant='body1' sx={{ fontSize: 16 }}>
                 <Box component='span' sx={{ fontWeight: 'bold' }}>
-                  {' '}
-                  Status:{' '}
+                
+                  Status:
                 </Box>
                 {row.status}
               </Typography>
@@ -208,18 +209,16 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
           my: 6
         }}
         disabled={!status}
+         onClick={handleGenerate}
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ marginLeft: 6 }} onClick={handleGenerate}>
-           
-            Generate Invoice
-          </span>
+          <span style={{ marginLeft: 6 }}> Generate Invoice </span>
         </Box>
       </Button>
 
       <Grid2 item xs={12}>
         <Typography variant='h4' className='mx-4 mt-3' sx={{ mb: 3 }}>
-          {' '}
+         
           Transaction Detail
         </Typography>
         <TableSaleTransaction saleDetail={saleDetail} />
@@ -238,7 +237,7 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
   )
 
   return (
-    <Fragment>
+   
       <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
         <TableCell
           sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
@@ -292,7 +291,6 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
             <MdVisibility
               fontSize={24}
               onClick={() => {
-                console.log('Add button clicked')
                 handleDrawerOpen(row)
                 getTractionDetail(row.id)
               }}
@@ -311,7 +309,6 @@ const Row = ({ row, index, page, rowsPerPage, handleUpdate, apiAccess }) => {
           </SwipeableDrawer>
         )}
       </TableRow>
-    </Fragment>
   )
 }
 Row.propTypes = {
@@ -319,11 +316,6 @@ Row.propTypes = {
   index: PropTypes.any,
   page: PropTypes.any,
   rowsPerPage: PropTypes.any,
-  openRows: PropTypes.any,
-  handleRowToggle: PropTypes.any,
-  historyData: PropTypes.any,
-  config: PropTypes.any,
-  handleAuthCheck: PropTypes.any,
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any
 }
@@ -372,19 +364,16 @@ const TableSaleOrder = ({ handleUpdate, apiAccess, setSaleOrder, pendingAction, 
         type: tableHeaderData.orderTypeFilter
       });
       const response = await api(`/sales-order/?${params.toString()}`, {}, 'get', true)
-      console.log('GET sale order response :- ', response.data)
       if (response?.data?.success) {
         setOrderSaleData({ data: response.data.data.orders, total: response.data.data.total })
         setSaleOrder(response.data.data.orders)
       } else {
-        console.log('Error to get all purchase-order  ', response.data)
         if (response.data.code === 401) {
           removeAuthToken()
           router.push('/401')
         }
       }
     } catch (error) {
-      console.log(error)
       console.log('Error in get locations ', error)
     } finally {
       setIsLoading(false)
@@ -520,10 +509,7 @@ TableSaleOrder.propTypes = {
   tableHeaderData: PropTypes.any,
   handleUpdate: PropTypes.any,
   apiAccess: PropTypes.any,
-  handleAuthCheck: PropTypes.any,
-  pendingAction: PropTypes.any,
-  saleDetail: PropTypes.any,
-  handleView: PropTypes.any
+  pendingAction:PropTypes.any
 }
 
 export default TableSaleOrder
