@@ -83,18 +83,14 @@ const Index = () => {
     []
   )
 
-  const handleView = async item => {
-    await getSaleDetail(item.id)
-  }
+  
 
   const getSaleDetail = async id => {
     setIsLoading(true)
     try {
       const res = await api(`/sales-order/details/${id}`, {}, 'get', true)
       if (res.data.success) {
-        console.log(res.data.data.orders)
         const fetchedOrders = res.data.data.orders || []
-        // Set raw detail (if needed elsewhere)
         setSaleDetail(fetchedOrders)
       } else if (res.data.code === 401) {
         removeAuthToken()
@@ -124,7 +120,6 @@ const Index = () => {
     setSaleDetail([])
   }
   const handleSubmitForm = async data => {
-    console.log('handle submit form data : ', data)
     setFormData(data)
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
@@ -140,7 +135,6 @@ const Index = () => {
       setIsLoading(false)
       if (res?.data?.success) {
         setOpenModal(false)
-        console.log('Add purchase order :-', res?.data)
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Added successfully' })
         setEditData({})
       } else {
@@ -150,7 +144,6 @@ const Index = () => {
           router.push('/401')
         } else if (res.data.code === 409) {
           setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
-          console.log('409 :', res.data.message)
         } else if (res.data.code == 500) {
           setOpenModal(false)
         }
@@ -168,9 +161,8 @@ const Index = () => {
       const data = { ...formData }
       delete data.type
 
-      console.log('EDIT FORM DATA :->', data)
       const filteredOrders = data.orders.filter(
-        order => !saleDetail.some(purchase => purchase.product_id === order.productId)
+        order => !saleDetail.some(item => item.batch_id === order.batchId)
       )
       if (filteredOrders.length > 0) {
         data.orders = filteredOrders

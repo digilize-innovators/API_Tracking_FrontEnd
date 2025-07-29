@@ -367,12 +367,11 @@ const TableSaleOrder = ({ handleUpdate, apiAccess, setSaleOrder, pendingAction, 
       if (response?.data?.success) {
         setOrderSaleData({ data: response.data.data.orders, total: response.data.data.total })
         setSaleOrder(response.data.data.orders)
-      } else {
-        if (response.data.code === 401) {
+      } else if (response.data.code === 401) {
           removeAuthToken()
           router.push('/401')
         }
-      }
+      
     } catch (error) {
       console.log('Error in get locations ', error)
     } finally {
