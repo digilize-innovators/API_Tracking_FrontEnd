@@ -43,6 +43,7 @@ const validationSchema = yup.object().shape({
     .trim()
     .max(20, 'Product ID length should be <= 20')
     .required("Product ID can't be empty"),
+
   productName: yup
     .string()
     .nullable()
@@ -51,6 +52,7 @@ const validationSchema = yup.object().shape({
     .max(50, 'Product Name length should be <= 50')
     .matches(/^[a-zA-Z0-9]+\s*(?:[a-zA-Z0-9]+\s*)*$/, 'Product name cannot contain special symbols')
     .required("Product Name can't be empty"),
+
   gtin: yup
     .string()
     .nullable()
@@ -58,33 +60,31 @@ const validationSchema = yup.object().shape({
     .trim()
     .length(12, 'GTIN length should be 12')
     .required('GTIN is required'),
+
   ndc: yup
     .string()
     .trim()
     .transform(value => {
-      // If the value is an empty string, null, or undefined, return empty string
       if (value === '' || value == null) {
-        return '' // Return empty string if it's null or empty
+        return '' 
       }
-      // If the value can be converted to a valid number, return it as string, else return ''
       return isNaN(Number(value)) ? '' : value
     })
     .test('length', 'NDC length should be 10', value => {
-      // Only apply the length check if the value is not an empty string
       return value === '' || value?.length === 10
     })
     .optional(),
   mrp: yup
     .number()
     .transform(value => {
-      // Check if the value is an empty string, null, or undefined
       if (value === '' || value == null) {
         return 0
       }
-      // If the value is a valid number, return it, else return the original value
       return isNaN(value) ? 0 : value
     })
-    .min(0, 'MRP cannot be negative'),
+    .min(0, 'MRP cannot be negative')
+    .max(100000, 'Level 1 value shoulde be less than 1 lakh'),
+
   genericName: yup
     .string()
     .optional()
@@ -93,70 +93,77 @@ const validationSchema = yup.object().shape({
     .trim()
     .max(50, 'Generic Name length should be <= 50')
     .notRequired(),
+
   packagingSize: yup
-    .string()
+    .number()
     .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .max(10, 'Packaging Size length should be <= 10')
+    .transform((value, originalValue) => (originalValue === '' ? null : value))
+    .max(100000, 'Packaging Size length should be <= 100000')
     .required('Packaging Size is required'),
+
   generic_salt: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
     .trim()
     .required('Generic Salt is required'),
+
   composition: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
     .trim()
     .required('Composition is required'),
+
   dosage: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
     .trim()
     .required('Dosage is required'),
+
   remarks: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
     .trim()
     .required('Remarks is required'),
+
   companyUuid: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
     .trim()
     .required('Company is required'),
+
   prefix: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
     .trim()
     .required('Prefix is required'),
+
   country: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
     .trim()
     .required('Country is required'),
+
   unit_of_measurement: yup
     .string()
     .nullable()
     .transform(value => (value == null ? '' : String(value)))
     .trim()
     .required('Uom is required'),
+
   no_of_units_in_primary_level: yup
-    .string()
+    .number()
     .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .max(50, 'No Of Units In Primary Level length should be <= 50')
+    .transform((value, originalValue) => (originalValue === '' ? null : value))
+    .max(100000, 'No Of Units In Primary Level length should be <= 100000')
     .required('No Of Units In Primary Level is required'),
 
-  // productImage: yup.mixed().required('Product Image is required'),
   packagingHierarchy: yup
     .number()
     .transform((value, originalValue) => {
@@ -169,15 +176,15 @@ const validationSchema = yup.object().shape({
   productNumber: yup
     .number()
     .transform(value => {
-      // Check if the value is an empty string, null, or undefined
       if (value === '' || value == null) {
         return 0
       }
-      // If the value is a valid number, return it, else return the original value
       return isNaN(value) ? 0 : value
     })
     .required('Level 0 value should be greater than 0')
-    .min(1, 'Level 0 value should be greater than 0'),
+    .min(1, 'Level 0 value should be greater than 0')
+    .max(100000, 'Level 0 value shoulde be less than 1 lakh'),
+
   firstLayer: yup
     .number()
     .nullable()
@@ -198,7 +205,9 @@ const validationSchema = yup.object().shape({
     })
     .test('divisible-level0', 'Level 1 value should be divisible with level 0 value', function (value) {
       return !this.parent.productNumber || !value || this.parent.productNumber % value === 0
-    }),
+    })
+    .max(100000, 'Level 1 value shoulde be less than 1 lakh'),
+
   firstLayer_unit_of_measurement: yup.string().when('packagingHierarchy', {
     is: val => val >= 2,
     then: schema => schema.required('Please Select Level 1 UOM')
@@ -226,7 +235,8 @@ const validationSchema = yup.object().shape({
       } else {
         return schema
       }
-    }),
+    })
+    .max(100000, 'Level 2 value shoulde be less than 1 lakh'),
 
   secondLayer_unit_of_measurement: yup.string().when('packagingHierarchy', {
     is: val => val >= 3,
@@ -255,7 +265,9 @@ const validationSchema = yup.object().shape({
       } else {
         return schema
       }
-    }),
+    })
+    .max(100000, 'Level 1 value shoulde be less than 1 lakh'),
+
   thirdLayer_unit_of_measurement: yup.string().when('packagingHierarchy', {
     is: val => val >= 4,
     then: schema => schema.required('Please Select Level 3 UOM')
@@ -295,7 +307,7 @@ const validationSchema = yup.object().shape({
   secondLayer_aggregation: yup.boolean().optional(),
   thirdLayer_aggregation: yup.boolean().optional(),
   schedule_drug: yup.boolean().optional()
-})
+});
 
 function ProductModal({
   openModal,
@@ -381,7 +393,7 @@ function ProductModal({
       const company = companies.find(company => company.company_uuid === companyUuid);
       if (company) {
         let prefixs = [];
-        if(company.gs1_prefix) prefixs.push({ id: 1, label: company.gs1_prefix, value: company.gs1_prefix })
+        if (company.gs1_prefix) prefixs.push({ id: 1, label: company.gs1_prefix, value: company.gs1_prefix })
         if (company.gs2_prefix) prefixs.push({ id: 2, label: company.gs2_prefix, value: company.gs2_prefix })
         if (company.gs3_prefix) prefixs.push({ id: 3, label: company.gs3_prefix, value: company.gs3_prefix })
         return prefixs;
@@ -679,11 +691,11 @@ function ProductModal({
                     color='error'
                     variant='outlined'
                     onClick={async () => {
-                       if (editData?.product_image) {
-                          convertImageToBase64(editData?.product_image, setProductImage)
-                        } else {
-                          setProductImage('/images/avatars/p.png')
-                        }
+                      if (editData?.product_image) {
+                        convertImageToBase64(editData?.product_image, setProductImage)
+                      } else {
+                        setProductImage('/images/avatars/p.png')
+                      }
                     }}
                   >
                     Reset
@@ -897,9 +909,9 @@ function ProductModal({
                 <Box sx={modalStyle}>
                   <h2 id='modal-title'>
                     {packagingHierarchy !== 1 &&
-                    packagingHierarchy !== 2 &&
-                    packagingHierarchy !== 3 &&
-                    packagingHierarchy !== 4 ? (
+                      packagingHierarchy !== 2 &&
+                      packagingHierarchy !== 3 &&
+                      packagingHierarchy !== 4 ? (
                       <>
                         <div>
                           <Typography variant='h3' gutterBottom>
@@ -1679,9 +1691,9 @@ function ProductModal({
                   )}
 
                   {packagingHierarchy !== 1 &&
-                  packagingHierarchy !== 2 &&
-                  packagingHierarchy !== 3 &&
-                  packagingHierarchy !== 4 ? (
+                    packagingHierarchy !== 2 &&
+                    packagingHierarchy !== 3 &&
+                    packagingHierarchy !== 4 ? (
                     ''
                   ) : (
                     <>

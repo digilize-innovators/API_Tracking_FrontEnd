@@ -61,12 +61,21 @@ const CommonTableWrapper = ({
         limit: rowsPerPage === -1 ? -1 : rowsPerPage,
         search: tableHeaderData?.searchVal,
         esign_status: tableHeaderData?.esignStatus,
+      });
+
+      const optionalFields = {
         locationName: tableHeaderData?.filterLocationVal,
         productName: tableHeaderData?.filterProductVal,
         type: tableHeaderData?.orderTypeFilter,
         status: tableHeaderData?.userStatus,
         department_name: tableHeaderData?.departmentFilter,
-      })
+      };
+
+      for (const [key, value] of Object.entries(optionalFields)) {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, value);
+        }
+      }
 
       const { api } = require('src/utils/Rest-API')
       const res = await api(`${endpoint}?${params.toString()}`, {}, 'get', true)
