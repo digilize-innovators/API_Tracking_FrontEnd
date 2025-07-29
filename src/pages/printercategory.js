@@ -240,8 +240,7 @@ const Index = () => {
   }
 
 const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user);
-  console.log('handleAuthResult 02', config?.userId, user.user_id);
+
 
   if (!isAuthenticated) {
     setAlertData({
@@ -322,7 +321,7 @@ const handleApproverActions = async (user, esignStatus, remarks) => {
   setPendingAction(true);
 
   if (esignStatus === 'rejected' && esignDownloadPdf) {
-    console.log('approver rejected');
+  
     setOpenModalApprove(false);
   }
 };
@@ -352,14 +351,12 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   if (esignStatus === 'approved') {
-    console.log('Esign Download pdf', esignDownloadPdf);
 
     if (esignDownloadPdf) {
-      console.log('esign is approved for creator to download');
       setEsignDownloadPdf(false);
       setOpenModalApprove(true);
     } else {
-      console.log('esign is approved for creator');
+    
       setAuthUser(user);
       setEsignRemark(remarks);
       setPendingAction(editData?.id ? 'edit' : 'add');

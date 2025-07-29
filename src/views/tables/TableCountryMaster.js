@@ -27,7 +27,6 @@ const Row = ({
     handleUpdate,
     apiAccess
 }) => {
-    console.log(index);
     const getSerialNumber = (index) => {
         return index + 1 ;
     };

@@ -208,7 +208,6 @@ const Index = () => {
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api(`/printerlineconfiguration/${editData.id}`, data, 'put', true)
-      console.log('Response of update Printer Line Configuration ', res.data)
       setIsLoading(false)
       if (res.data.success) {
         setAlertData({
@@ -242,14 +241,11 @@ const Index = () => {
   const handleUpdate = item => {
     resetForm()
     setEditData(item)
-    console.log('edit Printer Line Configuration', item)
     setOpenModal(true)
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-    console.log('handleAuthResult 02', config?.userId, user.user_id)
-
+  
     if (!isAuthenticated) {
       setAlertData({
         type: 'error',
@@ -329,7 +325,6 @@ const Index = () => {
     setPendingAction(true)
 
     if (esignStatus === 'rejected' && esignDownloadPdf) {
-      console.log('approver rejected')
       setOpenModalApprove(false)
     }
   }
@@ -359,14 +354,11 @@ const Index = () => {
     }
 
     if (esignStatus === 'approved') {
-      console.log('Esign Download pdf', esignDownloadPdf)
 
       if (esignDownloadPdf) {
-        console.log('esign is approved for creator to download')
         setEsignDownloadPdf(false)
         setOpenModalApprove(true)
       } else {
-        console.log('esign is approved for creator')
         setAuthUser(user)
         setEsignRemark(remarks)
         setPendingAction(editData?.id ? 'edit' : 'add')
@@ -374,7 +366,6 @@ const Index = () => {
     }
   }
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
     setApproveAPI({
       approveAPIName: 'printerlineconfiguration-approve',
       approveAPImethod: 'PATCH',
@@ -383,7 +374,6 @@ const Index = () => {
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.printer_line_name)
-    console.log('row', row)
   }
 
   const resetFilter = () => {
@@ -398,7 +388,6 @@ const Index = () => {
   }
 
   const handleAuthModalOpen = () => {
-    console.log('OPen auth model')
     setApproveAPI({
       approveAPIName: 'printerlineconfiguration-approve',
       approveAPImethod: 'PATCH',
@@ -414,7 +403,6 @@ const Index = () => {
       approveAPIEndPoint: '/api/v1/printerlineconfiguration'
     })
     if (config?.config?.esign_status) {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return

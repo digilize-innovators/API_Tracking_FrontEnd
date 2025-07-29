@@ -98,7 +98,6 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
   const camera_enable = watch('cameraEnable')
-  console.log(camera_enable)
 
   useEffect(() => {
     if (editData) {
@@ -128,7 +127,6 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   }, [])
 
   useEffect(() => {
-    console.log('camera is ', camera_enable ? 'no' : 'off')
     if (camera_enable) {
       getAllCameraMaster()
     } else if (allCameraMasterData.length && !camera_enable) {
@@ -139,7 +137,6 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
 
   useEffect(() => {
     if (areaCategoryId !== '') {
-      console.log('area cate changed')
       getAllArea()
     }
   }, [areaCategoryId])
@@ -171,7 +168,6 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   }
   const getAllArea = async () => {
     if (areaCategoryId) {
-      console.log('areaCategoryId', areaCategoryId)
       try {
         setIsLoading(true)
         const res = await api(`/area/byAreaCategory/${areaCategoryId}?limit=-1`, {}, 'get', true)
@@ -316,7 +312,6 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     value: item.id,
     label: item.area_name
   }))
-  console.log('areaName', areaName)
   const printerCategories = allPrinterCategory?.map(item => ({
     id: item.printer_category_uuid,
     value: item.printer_category_uuid,
@@ -328,7 +323,6 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     value: item.printermaster_uuid,
     label: item.printer_id
   }))
-  console.log('allPrinter', allPrinter)
 
   const controlPanelData = allControlPanelData?.map(item => ({
     id: item.controlpanelmaster_uuid,
@@ -342,7 +336,6 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     label: item.name
   }))
 
-  console.log()
   return (
     <Modal
       open={open}

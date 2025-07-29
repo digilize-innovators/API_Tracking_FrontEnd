@@ -7,7 +7,6 @@ import Link from 'next/link';
 import PropTypes from 'prop-types';
 
 const Widget = ({ data }) => {
-  console.log("data", data)
   const metrics = [
     {
       title: 'Total Users',

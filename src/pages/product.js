@@ -114,7 +114,6 @@ const Index = () => {
   }, [formData, pendingAction])
 
   const handleAuthModalOpen = () => {
-    console.log('OPen auth model')
     setApproveAPI({
       approveAPIName: 'product-approve',
       approveAPImethod: 'PATCH',
@@ -151,7 +150,6 @@ const Index = () => {
     setOpenModalApprove(false)
   }
   const handleSubmitForm = async data => {
-    console.log('submit form', data )
     setFormData({
       ...data,
       productNumber_print: data.productNumber_print ? data.productNumber_print : data.productNumber_aggregation,
@@ -190,7 +188,6 @@ const Index = () => {
       const formData = new FormData()
       formData.append('photo', file)
       const res = await api(endpoint, formData, 'upload', true);
-      console.log('upload prod res ', res.data);
       
       if (res?.data?.success) {
         const decryptUrl = await decrypt(res.data.data.path)
@@ -209,8 +206,7 @@ const Index = () => {
 
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user);
-  console.log('handleAuthResult 02', config?.userId, user.user_id);
+  
 
   if (!isAuthenticated) {
     setAlertData({
@@ -291,7 +287,6 @@ const handleApproverActions = async (user, esignStatus, remarks) => {
   setPendingAction(true);
 
   if (esignStatus === 'rejected' && esignDownloadPdf) {
-    console.log('approver rejected');
     setOpenModalApprove(false);
   }
 };
@@ -321,14 +316,11 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   if (esignStatus === 'approved') {
-    console.log('Esign Download pdf', esignDownloadPdf);
 
     if (esignDownloadPdf) {
-      console.log('esign is approved for creator to download');
       setEsignDownloadPdf(false);
       setOpenModalApprove(true);
     } else {
-      console.log('esign is approved for creator');
       setAuthUser(user);
       setEsignRemark(remarks);
       setPendingAction(editData?.id ? 'edit' : 'add');
@@ -336,7 +328,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 };
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
     setApproveAPI({
       approveAPIName: 'product-approve',
       approveAPImethod: 'PATCH',
@@ -345,7 +336,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.product_id)
-    console.log('row', row)
   }
   const addProduct = async esign_status => {
     const uploadRes = await uploadFile(formData?.file, '/upload/productImage')
@@ -379,7 +369,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
         resetForm()
         setOpenModal(false)
       } else {
-        console.log('error to add product ', res.data)
         setAlertData({ ...alertData, type: 'error', message: res.data?.error?.details?.message ||res.data?.message, openSnackbar: true })
         if (res.data.code === 401) {
           removeAuthToken()
@@ -394,7 +383,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     }
   }
   const editProduct = async esign_status => {
-    console.log('Check Image is new pic is upload ')
     let productImageUrl =
       productImage !== editData.product_image
         ? (await uploadFile(formData?.file, '/upload/productImage'))?.url
@@ -421,7 +409,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
       setIsLoading(false)
       if (res?.data?.success) {
         setProductImage('/images/avatars/p.png')
-        console.log('res of edit product ', res?.data)
         setAlertData({ ...alertData, type: 'success', message: 'Product updated successfully', openSnackbar: true })
         setOpenModal(false)
         resetForm()
@@ -444,7 +431,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     resetForm()
     setOpenModal(true)
     setEditData(item)
-    console.log('edit product', item)
     if (config?.config?.esign_status) {
       setESignStatusId(item.id)
     }
@@ -470,7 +456,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
       approveAPIEndPoint: '/api/v1/product'
     })
     if (config?.config?.esign_status) {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return

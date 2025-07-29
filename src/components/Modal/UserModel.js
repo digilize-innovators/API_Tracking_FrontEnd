@@ -180,7 +180,6 @@ function UserModel({
         setIsLoading(true)
         const res = await api(`/location/type-so-sto`, {}, 'get', true)
         setIsLoading(false)
-        console.log('All location ', res.data)
         if (res.data.success) {
           const data = res.data.data?.map(item => ({
             id: item.location_uuid,

@@ -44,7 +44,6 @@ const Index = () => {
     const filteredScreen = allScreens.filter(screen =>
       screen.screen_name.toLowerCase().includes(filterScreenVal.toLowerCase())
     )
-    console.log('Filtered screen ', filteredScreen, filterScreenVal)
     setScreens(filteredScreen)
     return () => {}
   }, [filterScreenVal])
@@ -67,7 +66,6 @@ const Index = () => {
         console.log('Error: Unexpected response', res.data)
       }
       setIsLoading(false)
-      console.log('All screens ', res.data)
     } catch (error) {
       console.log('Error in get screens ', error)
     }
@@ -86,7 +84,6 @@ const Index = () => {
         console.log('Error: Unexpected response', res.data)
       }
       setIsLoading(false)
-      console.log('All apis ', res.data)
     } catch (error) {
       console.log('Error in get apis ', error)
     }
@@ -105,7 +102,6 @@ const Index = () => {
         console.log('Error: Unexpected response', res.data)
       }
       setIsLoading(false)
-      console.log('All api-screen relation', res.data)
     } catch (error) {
       console.log('Error in get api screen relation ', error)
     }
@@ -122,7 +118,6 @@ const Index = () => {
     })
   }, [])
   const handleSaveChanges = async () => {
-    console.log('Changes saved!')
     const getKey = r => `${r.api_id}|${r.screen_id}`
 
     // Create a Set of keys from allRelation for fast lookup
@@ -133,7 +128,6 @@ const Index = () => {
       checked: relations.filter(r => !allRelationKeys.has(getKey(r))),
       unchecked: allRelation.filter(r => !relationsKeys.has(getKey(r)))
     }
-    console.log('Unchecked array ', result)
     try {
       const token = Cookies.get('token')
       const decodedToken = jwtDecode(token)
@@ -158,9 +152,7 @@ const Index = () => {
         'post',
         true
       )
-      console.log('Res of api screen relation ', res.data)
       if (res.data.success) {
-        console.log('res ', res.data)
         setAlertData({
           ...alertData,
           type: 'success',
@@ -189,7 +181,6 @@ const Index = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
   const handleChange = (event, newValue) => {
-    console.log('Selected Value:', newValue)
     if (newValue) {
       setSelectedValue(newValue)
       const filteredApis = allApis.filter(api => api.name.toLowerCase().includes(newValue.name.toLowerCase()))
@@ -199,7 +190,6 @@ const Index = () => {
     }
   }
   const handleScreenChange = (event, newValue) => {
-    console.log('Selected Value:', newValue)
     if (newValue) {
       setSelectedScreenValue(newValue)
       const filteredScreen = allScreens.filter(screen =>

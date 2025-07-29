@@ -118,12 +118,10 @@ const Index = () => {
   }
 
   const handleSubmitForm = async data => {
-    console.log('handle submit form data : ', data)
     setFormData(prevData => {
       const updatedData = { ...prevData, ...data }
       return updatedData
     })
-    console.log('afterSubmit', formData)
     if (editData?.location_id) {
       setApproveAPI({
         approveAPIName: 'location-update',
@@ -145,8 +143,6 @@ const Index = () => {
   }
 
 const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user);
-  console.log('handleAuthResult 02', config?.userId, user.user_id);
 
   if (!isAuthenticated) {
     setAlertData({
@@ -227,7 +223,6 @@ const handleApproverActions = async (user, esignStatus, remarks) => {
   setPendingAction(true);
 
   if (esignStatus === 'rejected' && esignDownloadPdf) {
-    console.log('approver rejected');
     setOpenModalApprove(false);
   }
 };
@@ -257,14 +252,11 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   if (esignStatus === 'approved') {
-    console.log('Esign Download pdf', esignDownloadPdf);
 
     if (esignDownloadPdf) {
-      console.log('esign is approved for creator to download');
       setEsignDownloadPdf(false);
       setOpenModalApprove(true);
     } else {
-      console.log('esign is approved for creator');
       setAuthUser(user);
       setEsignRemark(remarks);
       setPendingAction(editData?.id ? 'edit' : 'add');
@@ -274,7 +266,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
 
 
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
     setApproveAPI({
       approveAPIName: 'location-approve',
       approveAPImethod: 'PATCH',
@@ -283,7 +274,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.location_id)
-    console.log('row', row)
   }
   const addLocation = async esign_status => {
     try {
@@ -311,7 +301,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
           router.push('/401')
         } else if (res.data.code === 409) {
           setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
-          console.log('409 :', res.data.message)
         } else if (res.data.code == 500) {
           setOpenModal(false)
         }
@@ -333,7 +322,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   const editLocation = async esign_status => {
     try {
       const data = { ...formData }
-      console.log('EDIT FORM DATA :->', data)
       delete data.locationId
       if (config?.config?.audit_logs) {
         data.audit_log = {
@@ -387,7 +375,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   const handleAuthModalOpen = () => {
-    console.log('OPen auth model')
     setApproveAPI({
       approveAPIName: 'location-approve',
       approveAPImethod: 'PATCH',
@@ -404,7 +391,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     let data = getUserData()
     setUserDataPdf(data)
     if (config?.config?.esign_status && config?.role !== 'admin') {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return

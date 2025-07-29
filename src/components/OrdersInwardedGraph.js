@@ -11,9 +11,7 @@ import {
 } from 'recharts';
 
 const OrdersInwarded = ({ data }) => {
-  console.log("Orders Inwarded data :===>>", data);
   const xAxisKey = data?.[0]?.year ? 'year' : 'month';
-  console.log(xAxisKey);
 
   return (
     <div

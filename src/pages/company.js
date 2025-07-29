@@ -125,7 +125,6 @@ const Index = () => {
   }
 
   const handleSubmitForm = async data => {
-    console.log('data', data)
     setFormData(data)
     if (editData?.id) {
       setApproveAPI({
@@ -223,9 +222,7 @@ const Index = () => {
   // In your React component or a utilities file (if you want to export it)
 
 const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user);
-  console.log('handleAuthResult 02', config?.userId, user.user_id);
-
+ 
   if (!isAuthenticated) {
     setAlertData({
       type: 'error',
@@ -307,7 +304,6 @@ const handleApproverActions = async (user, esignStatus, remarks) => {
   setPendingAction(true);
 
   if (esignStatus === 'rejected' && esignDownloadPdf) {
-    console.log('approver rejected');
     setOpenModalApprove(false);
   }
 };
@@ -337,14 +333,11 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   if (esignStatus === 'approved') {
-    console.log('Esign Download pdf', esignDownloadPdf);
 
     if (esignDownloadPdf) {
-      console.log('esign is approved for creator to download');
       setEsignDownloadPdf(false);
       setOpenModalApprove(true);
     } else {
-      console.log('esign is approved for creator');
       setAuthUser(user);
       setEsignRemark(remarks);
       setPendingAction(editData?.id ? 'edit' : 'add');
@@ -354,7 +347,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
 
 
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
     setApproveAPI({
       approveAPIName: 'company-approve',
       approveAPIEndPoint: '/api/v1/company',
@@ -363,13 +355,11 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.company_id)
-    console.log('row', row)
   }
 
   const handleUpdate = item => {
     resetForm()
     setEditData(item)
-    console.log('edit company ', item)
     setOpenModal(true)
   }
 
@@ -385,7 +375,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   const handleAuthModalOpen = () => {
-    console.log('open auth model')
     setApproveAPI({
       approveAPIName: 'company-approve',
       approveAPIEndPoint: '/api/v1/company',
@@ -401,7 +390,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
       approveAPImethod: 'PATCH'
     })
     if (config?.config?.esign_status) {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return

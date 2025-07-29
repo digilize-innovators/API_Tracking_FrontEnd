@@ -41,7 +41,6 @@ const Index = () => {
     setIsLoading(true)
     try {
       const response = await api(`/superadmin-configuration`, {}, 'get', true)
-      console.log('REsonse ', response.data)
 
       if (response.data.success) {
         const config = response.data.data
@@ -181,11 +180,6 @@ const Index = () => {
         setGenerateCode({ ...generateCode, errorMessageProduct: '', isErrorProduct: false })
       }
       setIsLoading(true)
-      console.log('data ', {
-        type: generateCode.type,
-        codeLength: generateCode.length,
-        productCodeLength: generateCode.productCodeLength
-      })
       const response = await api(
         `/superadmin-configuration/generate`,
         {
@@ -196,7 +190,6 @@ const Index = () => {
         'post',
         true
       )
-      console.log('Response of code generate ', response.data)
       if (response?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Codes generated successfully' })
         setCodesGenerated(true)

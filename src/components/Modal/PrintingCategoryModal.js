@@ -59,7 +59,6 @@ const PrintingCategoryModal = ({ open, onClose, editData, handleSubmitForm }) =>
   return (
     <Modal open={open} onClose={onClose} data-testid='modal'>
       <Box sx={style}>
-        {console.log(editData)}{' '}
         <Typography variant='h4' className='my-2'>
           {editData?.id ? 'Edit Printer Category' : 'Add Printer Category'}
         </Typography>

@@ -128,7 +128,6 @@ const Index = () => {
   }
 
   const handleUpdate = item => {
-    console.log(item.id)
     setOpenModal(true)
     setEditData(item)
     if (config?.config?.esign_status && config?.role !== 'admin') {
@@ -137,9 +136,7 @@ const Index = () => {
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-    console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user)
-    console.log('handleAuthResult 02', config?.userId, user.user_id)
-
+  
     if (!isAuthenticated) {
       setAlertData({
         type: 'error',
@@ -219,7 +216,6 @@ const Index = () => {
     setPendingAction(true)
 
     if (esignStatus === 'rejected' && esignDownloadPdf) {
-      console.log('approver rejected')
       setOpenModalApprove(false)
     }
   }
@@ -249,14 +245,11 @@ const Index = () => {
     }
 
     if (esignStatus === 'approved') {
-      console.log('Esign Download pdf', esignDownloadPdf)
 
       if (esignDownloadPdf) {
-        console.log('esign is approved for creator to download')
         setEsignDownloadPdf(false)
         setOpenModalApprove(true)
       } else {
-        console.log('esign is approved for creator')
         setAuthUser(user)
         setEsignRemark(remarks)
         setPendingAction(editData?.id ? 'edit' : 'add')
@@ -265,7 +258,6 @@ const Index = () => {
   }
 
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
     setApproveAPI({
       approveAPIName: 'department-approve',
       approveAPImethod: 'PATCH',
@@ -274,7 +266,6 @@ const Index = () => {
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.department_id)
-    console.log('row', row)
   }
 
   const handleSubmitForm = async data => {
@@ -312,7 +303,6 @@ const Index = () => {
       data.esign_status = esign_status
       setIsLoading(true)
       const res = await api('/department/', data, 'post', true)
-      console.log('Add department res ', res.data)
       setIsLoading(false)
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Department added successfully' })
@@ -385,7 +375,6 @@ const Index = () => {
   }
 
   const handleAuthModalOpen = () => {
-    console.log('OPen auth model')
     setApproveAPI({
       approveAPIName: 'department-approve',
       approveAPImethod: 'PATCH',
@@ -400,7 +389,6 @@ const Index = () => {
       approveAPIEndPoint: '/api/v1/department'
     })
     if (config?.config?.esign_status && config?.role !== 'admin') {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return

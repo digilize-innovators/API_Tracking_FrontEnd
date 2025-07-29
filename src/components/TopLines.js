@@ -16,7 +16,6 @@ import PropTypes from "prop-types";
 
 const TopLineShow = ({ data }) => {
   const { settings } = useSettings();
-  console.log(settings.themeColor)
   const lineData = data?.topLines;
 
   return (

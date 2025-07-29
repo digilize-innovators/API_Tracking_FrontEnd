@@ -266,7 +266,6 @@ const resetState = () => {
 const handleApproverActions = async (user, esignStatus, remarks) => {
   if (esignStatus === 'approved' && esignDownloadPdf) {
     setOpenModalApprove(false);
-    console.log({tableData, tableHeaderData, tableBody, data: allAreaCategoryData.data, user});
     
     downloadPdf(tableData, tableHeaderData, tableBody, allAreaCategoryData.data, user);
     await logAuditAction(user, remarks);

@@ -3,7 +3,6 @@ import React from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 const CasesInwarded = ({ data }) => {
-  console.log('DATA CasesInwarded =>', data?.data)
   const chartData = data?.data
   const xAxisKey = data?.data?.[0]?.year ? 'year' : 'month'
   return (

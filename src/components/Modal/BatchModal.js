@@ -79,8 +79,6 @@ function BatchModal({ openModal, handleCloseModal, editData, allProductData, all
       return ''
     }
     if (editData) {
-      console.log('Editd data ', editData)
-
       reset({
         batchNo: editData?.batch_no || '',
         productId: editData?.product?.product_history[0]?.product_uuid || '',

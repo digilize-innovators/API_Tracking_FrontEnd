@@ -119,9 +119,7 @@ const Index = () => {
   }
 
   const handleSubmitForm = async UomData => {
-    console.log('UomData :-', UomData)
     setFormData(UomData)
-    console.log('edit data', editData)
     if (editData?.id) {
       setApproveAPI({
         approveAPIName: 'uom-update',
@@ -143,9 +141,7 @@ const Index = () => {
   }
   
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user);
-  console.log('handleAuthResult 02', config?.userId, user.user_id);
-
+ 
   if (!isAuthenticated) {
     setAlertData({
       type: 'error',
@@ -224,7 +220,6 @@ const handleApproverActions = async (user, esignStatus, remarks) => {
   setPendingAction(true);
 
   if (esignStatus === 'rejected' && esignDownloadPdf) {
-    console.log('approver rejected');
     setOpenModalApprove(false);
   }
 };
@@ -253,14 +248,11 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   if (esignStatus === 'approved') {
-    console.log('Esign Download pdf', esignDownloadPdf);
 
     if (esignDownloadPdf) {
-      console.log('esign is approved for creator to download');
       setEsignDownloadPdf(false);
       setOpenModalApprove(true);
     } else {
-      console.log('esign is approved for creator');
       setAuthUser(user);
       setEsignRemark(remarks);
       setPendingAction(editData?.id ? 'edit' : 'add');
@@ -268,7 +260,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 };
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
     setApproveAPI({
       approveAPIName: 'uom-approve',
       approveAPIEndPoint: '/api/v1/uom',
@@ -289,11 +280,9 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
         }
       }
       data.esign_status = esign_status
-      console.log('data add uom ', data)
       setIsLoading(true)
       const res = await api('/uom/', data, 'post', true)
       setIsLoading(false)
-      console.log('add res uom', res)
       if (res?.data?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Unit added successfully' })
         setOpenModal(false)
@@ -319,7 +308,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
   const editUOM = async esign_status => {
     try {
-      console.log(formData, 'edit')
       const data = { UOMName: formData.unitName }
       if (config?.config?.audit_logs) {
         data.audit_log = {
@@ -332,7 +320,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
       setIsLoading(true)
       const res = await api(`/uom/${editData.id}`, data, 'put', true)
       setIsLoading(false)
-      console.log(res, 'editdata')
       if (res.data.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Unit updated successfully' })
         resetForm()
@@ -369,7 +356,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   const handleAuthModalOpen = () => {
-    console.log('OPen auth model')
     setApproveAPI({
       approveAPIName: 'uom-approve',
       approveAPImethod: 'PATCH',
@@ -384,7 +370,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
       approveAPIEndPoint: '/api/v1/uom'
     })
     if (config?.config?.esign_status) {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return

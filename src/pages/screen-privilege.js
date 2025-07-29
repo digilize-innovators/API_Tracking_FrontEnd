@@ -53,7 +53,6 @@ const Index = () => {
     try {
       setIsLoading(true)
       const res = await api('/designation/designationByDeps/', {}, 'get', true)
-      console.log('All deps ', res.data.data)
       if (res.data.success) {
         setDepartments(res.data.data.departments)
         setFilteredDepartments(res.data.data.departments)
@@ -71,7 +70,6 @@ const Index = () => {
       setIsLoading(true)
       const res = await api('/feature/screen-access/', {}, 'get', true)
       setIsLoading(false)
-      console.log('All screen-access ', res.data)
       if (res.data.success) {
         const data = res.data.data.filter(
           item =>
@@ -102,8 +100,6 @@ const Index = () => {
     })
   }
   const handleSaveChanges = () => {
-    console.log('Changes saved!')
-    console.log('checkboxes ', allCheckboxes)
     let onlyChecked = []
     allCheckboxes.forEach(item => {
       item.checkboxes.forEach(row => {
@@ -117,9 +113,7 @@ const Index = () => {
         }
       })
     })
-    console.log('Checked data ', onlyChecked)
     const screenIdsByDesignation = groupByDesignation(onlyChecked)
-    console.log('Final data ', screenIdsByDesignation)
     saveChanges(screenIdsByDesignation)
   }
   const saveChanges = async screenIdsByDesignation => {
@@ -144,7 +138,6 @@ const Index = () => {
       setIsLoading(true)
       const res = await api('/feature/screen-access/', { audit_log, screenIdsByDesignation }, 'put', true)
       setIsLoading(false)
-      console.log('All screens after update ', res.data)
       if (res.data.success) {
         setAlertData({
           ...alertData,
@@ -181,7 +174,6 @@ const Index = () => {
     setFilteredDepartments(departments)
   }
   const handleScreenName = (event, newValue) => {
-    console.log('Selected Value:', newValue)
     if (newValue) {
       setCheckboxes(
         allCheckboxes.filter(checkboxRow =>
@@ -194,7 +186,6 @@ const Index = () => {
     }
   }
   const handleDeptChange = (event, newValue) => {
-    console.log('Selected Value:', newValue)
     if (newValue) {
       setFilteredDepartments(
         departments.filter(dept => dept.department.toLowerCase() === newValue.department.toLowerCase())

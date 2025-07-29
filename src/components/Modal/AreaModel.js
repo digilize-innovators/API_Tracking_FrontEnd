@@ -74,9 +74,7 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
         } else if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
-        } else {
-          console.log('Error: Unexpected response', res.data)
-        }
+        } 
       } catch (error) {
         console.log('Error in get area categories ', error)
       } finally {
@@ -90,7 +88,6 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
         setIsLoading(true)
         const res = await api('/location?limit=-1&history_latest=true', {}, 'get', true)
         setIsLoading(false)
-        console.log('All locations ', res.data)
         if (res.data.success) {
           const data = res.data.data.locations?.map(item => ({
             id: item.location_uuid,
@@ -98,12 +95,9 @@ function AreaModel({ open, onClose, editData, handleSubmitForm }) {
             label: item.location_name
           }))
           setAllLocationsData(data)
-        } else {
-          console.log('Error to get all locations ', res.data)
-          if (res.data.code === 401) {
+        } else if (res.data.code === 401) {
             removeAuthToken()
             router.push('/401')
-          }
         }
       } catch (error) {
         console.log('Error in get locations ', error)

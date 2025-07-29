@@ -47,8 +47,7 @@ export const AuthProvider = ({ children }) => {
       data.audit_log = audit_log;
 
       try {
-        const response = await api('/auth/logout', data, 'post', true);
-        console.log("logout response", response.data);
+       await api('/auth/logout', data, 'post', true);
 
       } catch (error) {
         console.error("Error during logout:", error);

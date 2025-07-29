@@ -36,7 +36,6 @@ const Index = () => {
   const handleUpdate = async item => {
     setOpenModal(true)
     setEditData(item)
-    console.log('edit country', item)
   }
 
   return (

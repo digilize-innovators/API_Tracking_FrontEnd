@@ -207,7 +207,6 @@ const Row = ({
     }
     setPendingAction(true)
     if (esignStatus === 'rejected' && esignDownloadPdf) {
-      console.log('approver rejected')
       setOpenModalApprove(false)
     }
   }
@@ -237,14 +236,11 @@ const Row = ({
     }
 
     if (esignStatus === 'approved') {
-      console.log('Esign Download pdf', esignDownloadPdf)
 
       if (esignDownloadPdf) {
-        console.log('esign is approved for creator to download')
         setEsignDownloadPdf(false)
         setOpenModalApprove(true)
       } else {
-        console.log('esign is approved for creator')
         setAuthUser(user)
         setEsignRemark(remarks)
         setPendingAction(editData?.id ? 'edit' : 'add')
@@ -285,7 +281,6 @@ const Row = ({
     const tempData = await getDepartmentsHistory(row?.id)
     if (Array.isArray(tempData)) {
       const approvedRecord = tempData.filter(el => el.esign_status === 'approved')
-      console.log('last approved record ', approvedRecord)
 
       if (approvedRecord?.length < 1) {
         setAlertData({

@@ -15,7 +15,6 @@ export const handleRowToggleHelper = async (rowId, openRows, setOpenRows, setHis
 export const fetchHistoryDataHelper = async (rowId, setHistoryData, fetchUrl) => {
     try {
         const res = await api(`${fetchUrl}/${rowId}`, {}, 'get', true);
-        console.log("Res of fetch history ", res.data)
         if (res.data.success) {
             setHistoryData((prev) => ({
                 ...prev,

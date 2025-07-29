@@ -416,7 +416,7 @@ const jsonData = constructProductionInfo(data, gtin, BatchNo, AggregationFile);
       }
 
       const xmlData = buildXMLData(jsonData)
-      const response = await api(
+      await api(
         '/batch/reportFormat',
         {
           fileName: ProductFile,
@@ -429,7 +429,6 @@ const jsonData = constructProductionInfo(data, gtin, BatchNo, AggregationFile);
         'post',
         true
       )
-      console.log(response)
       downloadXML(xmlData, `${ProductFile}.xml`)
     } catch (error) {
       console.error('Error generating product XML:', error)
@@ -587,7 +586,6 @@ const jsonData = constructProductionInfo(data, gtin, BatchNo, AggregationFile);
 
       
         if (data.length > 0) {
-          // console.log(data)
           doc.text(heading, 14, currentY)
         }
         autoTable(doc, {
@@ -920,35 +918,16 @@ const jsonData = constructProductionInfo(data, gtin, BatchNo, AggregationFile);
         resetState()
         return
       } else if (esignStatus === 'rejected') {
-        console.log('approver rejected')
         setOpenModalApprove(false)
         resetState()
         return
       }
-      const res = await api('/esign-status/update-esign-status', data, 'patch', true)
-      console.log('esign status update', res?.data)
+       await api('/esign-status/update-esign-status', data, 'patch', true)
     }
-    // else if (esignStatus === 'rejected') {
-    //   setAuthModalOpen(false)
-    //   setOpenModalApprove(false)
-    //   setAlertData({
-    //     ...alertData,
-    //     openSnackbar: true,
-    //     type: 'error',
-    //     message: 'Access denied for this user.'
-    //   })
-    // } else if (esignStatus === 'approved') {
-    //   console.log('esign is approved for creator to download')
-    //   setOpenModalApprove(true)
-    //   setExportedBy({ userId: user.user_id, userName: user.userName, exportedAt: new Date() })
-    // }
+ 
     resetState()
   }
 
-  const handleAuthModalOpen = () => {
-    console.log('OPen auth model')
- 
-  }
   return (
     <Box>
       <Head>
@@ -1023,7 +1002,7 @@ const jsonData = constructProductionInfo(data, gtin, BatchNo, AggregationFile);
         approveAPIEndPoint={approveAPI.approveAPIEndPoint}
         handleAuthResult={handleAuthResult}
         config={config}
-        handleAuthModalOpen={handleAuthModalOpen}
+        handleAuthModalOpen={()=>{}}
         openModalApprove={openModalApprove}
       />
       <AccessibilitySettings />

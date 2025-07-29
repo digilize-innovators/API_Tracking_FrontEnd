@@ -116,7 +116,6 @@ const AuthModal = ({
         return
       }
       const res = await api('/auth/security-check', authData, 'post', true)
-      console.log('Response of security check: ', res?.data)
       if (res.data.success && res.data.code === 401) {
         setError(res.data.message)
         return
@@ -126,7 +125,6 @@ const AuthModal = ({
         const user = { userId, userName, user_id, departmentName }
         const isAuthenticated = true
         const isApprover = approveAPIName.includes('approve')
-        console.log(approveAPIName.includes('approve'))
         //  && config.userId !== user.user_id;
 
         handleAuthResult(isAuthenticated, user, isApprover, esignStatus, remarks)

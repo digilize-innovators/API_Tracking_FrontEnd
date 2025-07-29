@@ -84,7 +84,6 @@ const CodeReGenerationModal = ({
     parseInt(row.generate) > 0
 )
   const handleSubmit = () => {
-    console.log('Selected rows:', availableCodeData.packagingHierarchyData);
   
     if(!hasGenerated)
     {

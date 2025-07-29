@@ -46,7 +46,6 @@ const DepartmentModel = ({ open, onClose, editData, handleSubmitForm }) => {
       })
     }
   }, [editData])
-  console.log('editData', editData)
 
   return (
     <Modal

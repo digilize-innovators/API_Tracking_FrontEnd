@@ -6,25 +6,20 @@ import PropTypes from 'prop-types'
 
 export default function ExcelLikeDashboard({ data }) {
   const currentPrintingStatus = data?.printerLineStatus || data || []
-  console.log('currentPrintingStatus:', currentPrintingStatus)
 
   const { settings } = useSettings()
-  console.log(settings.themeColor)
 
   // Safely extract line names with more detailed logging
   const lineNumbers = useMemo(() => {
     if (!currentPrintingStatus || !Array.isArray(currentPrintingStatus) || currentPrintingStatus.length === 0) {
-      console.log('No printing status data available')
       return []
     }
 
     // Extract line names, with fallback for missing properties
     const lines = currentPrintingStatus.map(item => item?.PrinterLineConfiguration?.printer_line_name || 'Unknown Line')
-    console.log('Extracted lines:', lines)
 
     // Remove duplicates
     const uniqueLines = [...new Set(lines)]
-    console.log('Unique lines:', uniqueLines)
 
     return uniqueLines
   }, [currentPrintingStatus])
@@ -35,7 +30,6 @@ export default function ExcelLikeDashboard({ data }) {
   // Set the default selected line when component mounts or when lineNumbers changes
   useEffect(() => {
     if (lineNumbers.length > 0 && !selectedLine) {
-      console.log('Setting default selected line:', lineNumbers[0])
       setSelectedLine(lineNumbers[0])
     }
   }, [lineNumbers, selectedLine])
@@ -43,7 +37,6 @@ export default function ExcelLikeDashboard({ data }) {
   // Filter items for the selected line
   const lineOrders = useMemo(() => {
     if (!selectedLine || !currentPrintingStatus) {
-      console.log('No selected line or printing status')
       return []
     }
 
@@ -51,13 +44,9 @@ export default function ExcelLikeDashboard({ data }) {
       item => (item?.PrinterLineConfiguration?.printer_line_name || 'Unknown Line') === selectedLine
     )
 
-    console.log('Filtered items for line', selectedLine, ':', filtered)
     return filtered
   }, [selectedLine, currentPrintingStatus])
 
-  console.log('Selected line:-', selectedLine)
-  console.log('Line orders:-', lineOrders)
-  console.log('User pro img :', lineOrders.profile_photo)
 
   // If no data is available, show a message
   if (!currentPrintingStatus || currentPrintingStatus.length === 0) {
@@ -67,7 +56,6 @@ export default function ExcelLikeDashboard({ data }) {
       </Box>
     )
   }
-  console.log('Current User Profile Photo :->', lineOrders[0]?.profile_photo)
 
   return (
     <>
@@ -198,7 +186,6 @@ ExcelLikeDashboard.propTypes={
 }
 
 const CurrentOrder = ({ selectedLine }) => {
-  console.log('CurrentOrder received selectedLine:', selectedLine)
   const textColor = '#333333' // Dark color for values
   const subtitleColor = '#666666'
 
@@ -215,7 +202,6 @@ const CurrentOrder = ({ selectedLine }) => {
   }
 
   // Debug the current item to see what's available
-  console.log('Current item data:', currentItem)
 
   return (
       <Grid2 container spacing={2} sx={{ mb: 2, pl: 4, py: 3 }}>

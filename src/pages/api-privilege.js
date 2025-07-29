@@ -64,7 +64,6 @@ const Index = () => {
         console.log('Error: Unexpected response', res.data)
       }
       setIsLoading(false)
-      console.log('All deps ', res.data.data)
     } catch (error) {
       console.log('Error in get apis ', error)
     }
@@ -83,7 +82,6 @@ const Index = () => {
         console.log('Error: Unexpected response', res.data)
       }
       setIsLoading(false)
-      console.log('All api-access ', res.data)
     } catch (error) {
       console.log('Error in get api-access ', error)
     }
@@ -97,8 +95,6 @@ const Index = () => {
     })
   }
   const handleSaveChanges = () => {
-    console.log('Changes saved!')
-    console.log('checkboxes ', allCheckboxes)
     let onlyChecked = []
     allCheckboxes.forEach(item => {
       item.checkboxes.forEach(row => {
@@ -112,9 +108,7 @@ const Index = () => {
         }
       })
     })
-    console.log('Checked data ', onlyChecked)
     const apiIdsByDesignation = groupByDesignation(onlyChecked)
-    console.log('Final data ', apiIdsByDesignation)
     saveChanges(apiIdsByDesignation)
   }
   const saveChanges = async apiIdsByDesignation => {
@@ -148,7 +142,6 @@ const Index = () => {
         console.log('Error: Unexpected response', res.data)
       }
       setIsLoading(false)
-      console.log('All apis ', res.data)
     } catch (error) {
       setIsLoading(false)
       console.log('Error in get apis ', error)
@@ -174,7 +167,6 @@ const Index = () => {
     setFilteredDepartments(departments)
   }
   const handleApiName = (event, newValue) => {
-    console.log('Selected Value:', newValue)
     if (newValue) {
       setCheckboxes(
         allCheckboxes.filter(checkboxRow =>
@@ -187,7 +179,6 @@ const Index = () => {
     }
   }
   const handleDeptChange = (event, newValue) => {
-    console.log('Selected Value:', newValue)
     if (newValue) {
       setFilteredDepartments(
         departments.filter(dept => dept.department.toLowerCase() == newValue?.department?.toLowerCase())

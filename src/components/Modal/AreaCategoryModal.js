@@ -48,7 +48,6 @@ const AreaCategoryModal = ({ open, onClose, editData, handleSubmitForm }) => {
       aria-describedby='modal-modal-description'
     >
       <Box sx={style}>
-        {console.log(editData)}
         <Typography variant='h4' className='my-2'>
           {editData?.id ? 'Edit Area Category' : 'Add Area Category'}
         </Typography>

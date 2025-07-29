@@ -134,7 +134,6 @@ const LoginPage = () => {
           if (res.data.success) {
             setIsLoading(true)
             setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Login successful' })
-            console.log('screens', res.data.data.screens)
             login(`Bearer ${res.data.data.token}`)
             Cookies.set('token', res.data.data.token)
             Cookies.set('screens', JSON.stringify(res.data.data.screens))
@@ -171,7 +170,6 @@ const LoginPage = () => {
       setIsLoading(true)
       data.forceFully = true
       const res = await api('/auth/login', data, 'post', false)
-      console.log('login res data is ', res.data)
       if (res.data?.data?.accessibility) {
         saveSettings({
           mode: res.data.data.accessibility.mode,
@@ -217,7 +215,7 @@ const LoginPage = () => {
   return (
     <>
       <Head>
-        {console.log('hello')}
+        
         <title>Login</title>
       </Head>
       <Box className='content-center'>

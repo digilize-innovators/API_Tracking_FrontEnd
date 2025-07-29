@@ -12,7 +12,6 @@ import {
 } from 'recharts';
 
 const TopSellingProductsData = ({ data }) => {
-  console.log("DATA TOP SELLING...", data);
   
   const chartData = data?.map((item) => {
     const timeLabel = item.month || item.year || '';

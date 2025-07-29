@@ -128,7 +128,6 @@ const handleApproverActions = async (user, esignStatus, remarks) => {
 
   if (esignStatus === 'approved' && esignDownloadPdf) {
     setOpenModalApprove(false);
-    console.log('esign is approved for approver');
     downloadPdf(tableData, tableHeaderData, tableBody, codeRequestData.data, user);
 
     if (config?.config?.audit_logs) {
@@ -154,7 +153,6 @@ const handleApproverActions = async (user, esignStatus, remarks) => {
     }));
 
     if (res?.data.esign_status === 'rejected') {
-      console.log('approver rejected');
       setOpenModalApprove(false);
     }
 
@@ -177,10 +175,8 @@ const handleCreatorActions = (user, esignStatus, remarks) => {
 
   if (esignStatus === 'approved') {
     if (esignDownloadPdf) {
-      console.log('esign is approved for creator to download');
       setOpenModalApprove(true);
     } else {
-      console.log('esign is approved for creator ', user);
       isCodeReGeneration
         ? handleGenerateCode(true, null, user, remarks)
         : handleGenerateCode(false, formData, user, remarks);
@@ -189,7 +185,6 @@ const handleCreatorActions = (user, esignStatus, remarks) => {
 };
 
 const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  console.log('handleAuthResult', { isAuthenticated, isApprover, esignStatus, user });
 
   if (!isAuthenticated) {
     setAlertData({ type: 'error', message: 'Authentication failed, Please try again.' });
@@ -219,7 +214,6 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
 };
 
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
     setApproveAPI({
       approveAPIName: 'codegeneration-approve',
       approveAPImethod: 'PATCH',
@@ -241,7 +235,6 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
   }
 
   const handleAuthModalOpen = () => {
-    console.log('OPen auth model')
     setApproveAPI({
       approveAPIName: 'codegeneration-approve',
       approveAPImethod: 'PATCH',
@@ -256,7 +249,6 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
       approveAPIEndPoint: '/api/v1/codegeneration'
     })
     if (config?.config?.esign_status) {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return
@@ -272,7 +264,6 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
 
   const handleGenerateCode = async (regenerate, payload, user, remarks) => {
     try {
-      console.log('Handle code generation ', regenerate, user, remarks)
       let data = {}
       if (regenerate) {
         data = {
@@ -306,7 +297,6 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
       setIsLoading(true)
       const response = await api('/codegeneration', data, 'post', true)
       if (response.data.success) {
-        console.log('Code Generated Successfully', response.data)
         setAlertData({
           ...alertData,
           openSnackbar: true,
@@ -337,7 +327,6 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
   const getAvailableData = async (productId, batchId) => {
     try {
       const res = await api(`/codegeneration/available?productId=${productId}&batchId=${batchId}`, {}, 'get', true)
-      console.log('Available code ', res.data)
       if (res?.data.success) return res.data.data
     } catch (error) {
       console.log('Error in available codes gettting ', error)
@@ -345,7 +334,6 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
   }
 
   const handleReopenModal = async row => {
-    console.log('clicked on handleReopenModal', row)
     const levelWiseData = await getAvailableData(row.product_id, row.batch_id)
     const packagingHierarchyLevel = row.product.product_history[0].packagingHierarchy
     const batchSize = row.batch.qty

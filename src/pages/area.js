@@ -185,7 +185,6 @@ const Index = () => {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
         if (res.data.code === 401) {
           removeAuthToken()
-          console.log(res.data.message)
           router.push('/401')
         }
       }

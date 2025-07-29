@@ -125,7 +125,6 @@ const Index = () => {
 
   const handleSubmitForm = async data => {
     setFormData(data)
-    console.log('Data :', data)
     if (editData?.id) {
       setApproveAPI({
         approveAPIName: 'controlpanelmaster-update',
@@ -149,7 +148,6 @@ const Index = () => {
   const addControlPanelMaster = async esign_status => {
     try {
       const data = { ...formData }
-      console.log('Add data ', data)
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
@@ -240,14 +238,11 @@ const Index = () => {
   const handleUpdate = item => {
     resetForm()
     setEditData(item)
-    console.log('edit controlpanel master', item)
     setOpenModal(true)
   }
 
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user);
-  console.log('handleAuthResult 02', config?.userId, user.user_id);
 
   if (!isAuthenticated) {
     setAlertData({
@@ -327,7 +322,6 @@ const handleApproverActions = async (user, esignStatus, remarks) => {
   setPendingAction(true);
 
   if (esignStatus === 'rejected' && esignDownloadPdf) {
-    console.log('approver rejected');
     setOpenModalApprove(false);
   }
 };
@@ -357,14 +351,11 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   if (esignStatus === 'approved') {
-    console.log('Esign Download pdf', esignDownloadPdf);
 
     if (esignDownloadPdf) {
-      console.log('esign is approved for creator to download');
       setEsignDownloadPdf(false);
       setOpenModalApprove(true);
     } else {
-      console.log('esign is approved for creator');
       setAuthUser(user);
       setEsignRemark(remarks);
       setPendingAction(editData?.id ? 'edit' : 'add');
@@ -373,7 +364,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
 };
 
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
     setApproveAPI({
       approveAPIName: 'controlpanelmaster-approve',
       approveAPImethod: 'PATCH',
@@ -392,7 +382,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   const handleAuthModalOpen = () => {
-    console.log('open auth model')
     setApproveAPI({
       approveAPIName: 'controlpanelmaster-approve',
       approveAPImethod: 'PATCH',
@@ -409,7 +398,6 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     })
 
     if (config?.config?.esign_status) {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return

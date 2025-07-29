@@ -106,7 +106,6 @@ const VerticalNavLink = ({ item, navVisible, toggleNavVisibility, index }) => {
                 component={'a'}
                 {...(item.openInNewTab ? { target: '_blank' } : null)}
                 onClick={() => {
-                  console.log('Click on master');
                   setOpenMaster(!openMaster);
                 }}
                 sx={{

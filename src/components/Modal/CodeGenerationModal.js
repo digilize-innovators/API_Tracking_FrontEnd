@@ -51,13 +51,10 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
             label: item.product_name
           }))
           setProductData(data)
-        } else {
-          console.log('Error to get all products ', res.data)
-          if (res.data.code === 401) {
+        } else if (res.data.code === 401) {
             removeAuthToken()
             router.push('/401')
           }
-        }
       } catch (error) {
         console.log('Error in get products ', error)
         setIsLoading(false)
@@ -83,13 +80,11 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
               label: item.batch_no
             }))
             setBatches(data)
-          } else {
-            console.log('Error to get all batches ', res.data)
-            if (res.data.code === 401) {
+          } else if (res.data.code === 401) {
               removeAuthToken()
               router.push('/401')
             }
-          }
+          
         } catch (error) {
           console.log('Error in get batches ', error)
           setIsLoading(false)
@@ -116,10 +111,8 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
           setPackagingHierarchyData({})
           const res = await api(`/batch/getinfo/${formData.productId}/${formData.batchId}?limit=-1`, {}, 'get', true)
           setIsLoading(false)
-          console.log('batch from productId and batchNo', res.data)
           if (res.data.success) {
             setShowBox1Data(res.data.data)
-            console.log(res.data.data)
 
             setPackagingHierarchyData({
               packagingHierarchy: res.data.data?.productHistory?.packagingHierarchy,
@@ -154,7 +147,6 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
   }, [formData.batchId])
 
   useEffect(() => {
-    console.log('calculating....')
 
     if (formData.generateQuantity !== '') {
       const batchSize = showBox1Data?.qty
@@ -205,12 +197,10 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
       setAuthModalOpen(true)
       return
     }
-    console.log('on submit ', data)
     handleGenerateCode(false, data, 'approved')
   }
 
   const resetAll = () => {
-    console.log('reset alll...')
 
     setPackagingHierarchyData({})
     setShowBox1Data({})

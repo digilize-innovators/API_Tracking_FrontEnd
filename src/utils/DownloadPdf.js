@@ -4,7 +4,6 @@ import { headerContentFix } from 'src/utils/headerContentPdfFix'
 import { footerContent } from 'src/utils/footerContentPdf'
 
 const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) => {
-  console.log('Clicked on download button', tableBody)
 
   const head = tableData.tableHeader
   const doc = new jsPDF()
@@ -21,7 +20,6 @@ if (tableHeaderData !== null) {
     doc.text('Filters :\n', 15, 30)
 
     if (tableData.Filter) {
-      console.log('Table status Filter ', tableData.statusFilter)
       doc.text(`${tableData.Filter[0]} : ` + (tableData.Filter[1] || '__'), 20, 35)
       let labelText = '';
 if (tableData.Filter[0] === 'department') {

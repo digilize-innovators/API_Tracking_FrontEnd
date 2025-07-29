@@ -60,7 +60,6 @@ const Index = () => {
     const handleUserAction = async () => {
       if (formData && pendingAction) {
         const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
-        console.log(authUser)
         if (pendingAction === 'edit') {
           await editCamera(esign_status)
         } else if (pendingAction === 'add') {
@@ -126,7 +125,6 @@ const Index = () => {
 
   const handleSubmitForm = async data => {
     setFormData(data)
-    console.log('Data :', data)
     if (editData?.id) {
       setApproveAPI({
         approveAPIName: 'cameramaster-update',
@@ -150,7 +148,6 @@ const Index = () => {
   const addCamera = async esign_status => {
     try {
       const data = { ...formData }
-      console.log('Add data ', data)
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
@@ -242,13 +239,10 @@ const Index = () => {
   const handleUpdate = item => {
     resetForm()
     setEditData(item)
-    console.log('edit camera master', item)
     setOpenModal(true)
   }
 
  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  console.log('handleAuthResult 01', isAuthenticated, isApprover, esignStatus, user);
-  console.log('handleAuthResult 02', config?.userId, user.user_id);
 
   if (!isAuthenticated) {
     return handleUnauthenticated();
@@ -299,7 +293,6 @@ const handleModalActions = async (isApproved, user, remarks) => {
   setOpenModalApprove(!isApproved);
 
   if (isApproved && esignDownloadPdf) {
-    console.log('esign is approved for download');
 
     downloadPdf(tableData, tableHeaderData, tableBody, cameraData?.data, user);
 
@@ -381,10 +374,8 @@ const handleCreatorActions = (esignStatus, user, remarks) => {
 
   if (esignStatus === 'approved') {
     if (esignDownloadPdf) {
-      console.log('esign is approved for creator to download');
       setOpenModalApprove(true);
     } else {
-      console.log('esign is approved for creator');
       setAuthUser(user);
       setEsignRemark(remarks);
       setPendingAction(editData?.id ? 'edit' : 'add');
@@ -392,7 +383,6 @@ const handleCreatorActions = (esignStatus, user, remarks) => {
   }
 };
   const handleAuthCheck = async row => {
-    console.log('handleAuthCheck', row)
     setApproveAPI({
       approveAPIName: 'cameramaster-approve',
       approveAPImethod: 'PATCH',
@@ -411,7 +401,6 @@ const handleCreatorActions = (esignStatus, user, remarks) => {
   }
 
   const handleAuthModalOpen = () => {
-    console.log('open auth model')
     setApproveAPI({
       approveAPIName: 'cameramaster-approve',
       approveAPImethod: 'PATCH',
@@ -428,7 +417,6 @@ const handleCreatorActions = (esignStatus, user, remarks) => {
     })
 
     if (config?.config?.esign_status) {
-      console.log('Esign enabled for download pdf')
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return

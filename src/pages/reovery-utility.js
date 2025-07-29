@@ -34,7 +34,6 @@ const Index = () => {
     try {
       setIsLoading(true)
       const response = await api('/backup-files', null, 'get',true)
-      // console.log(response.data.success)
       setFiles(response?.data?.data?.files)
       setIsLoading(false)
 
@@ -69,7 +68,6 @@ const Index = () => {
       const data = { fileName: selectedFile }
       setIsLoading(true)
       const response = await api('/backup-files', data, 'post',true)
-      // console.log(response)
       setIsLoading(false)
       if (response?.data?.success) {
         setOpenSnackbar(true)

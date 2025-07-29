@@ -124,7 +124,6 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
   }
 
   const handleCheckboxChange = (value, outerLabel, label, check) => {
-    // console.log("click on ", value, outerLabel, label)
     let checked = !check
     const updatedData = urlMakerData.map(el => {
       if (el.label === outerLabel) {
@@ -155,7 +154,6 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
 
   const handleCRMURLChange = e => {
     setCrmURL({ ...crmURL, checked: !crmURL.checked })
-    console.log(codeStructure)
     if (codeStructure?.length) {
       const updatedCodeStructure = []
       if (e.target.checked) {
@@ -204,10 +202,8 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
   }, [editData])
 
   const resetEditForm = () => {
-    console.log('Reset edit field')
     setCodeStructure('')
     const newURLMakerData = editData?.codeStructure?.split('/')
-    console.log(newURLMakerData)
 
     // Create a Set for quick lookups of valid labels
     const validLabels = new Set(newURLMakerData.slice(newURLMakerData?.length)) // Only store labels after index 1 for efficient lookup
@@ -255,17 +251,13 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
       setIsLoading(true)
       const res = await api('/superadmin-configuration/', {}, 'get', true)
       setIsLoading(false)
-      console.log('All superadmin config ', res?.data?.data)
       if (res.data.success) {
-        console.log(res.data.data.crm_url)
-        console.log(editData)
+        
         setCrmURL({ value: res.data.data[0].crm_url, checked: false })
-      } else {
-        console.log('Error to get all super admin configuration ', res.data)
-        if (res.data.code === 401) {
+      } else if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
-        }
+        
       }
     } catch (error) {
       console.log('Error in get companies ', error)
@@ -302,7 +294,6 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
   const handleSubmitForm = async () => {
     applyValidation()
     const validate = checkValidate()
-    console.log('Validate ', validate)
     if (!validate) {
       return
     }
@@ -316,17 +307,13 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
         codeStructure: codeStructure.join(' ')
         // crmURL
       }
-      // console.log('Add country data ', data)
       setIsLoading(true)
       const res = await api('/country-master/', data, 'post', true)
       setIsLoading(false)
-      console.log('REs of Country ', res.data)
       if (res?.data?.success) {
-        console.log('res data of add country', res?.data)
         setAlertData({ ...alertData, type: 'success', message: 'Country added successfully', openSnackbar: true })
         resetForm()
       } else {
-        console.log('error to add country ', res.data)
         setAlertData({ ...alertData, type: 'error', message: res.data?.message, openSnackbar: true })
         if (res.data.code === 401) {
           removeAuthToken()
@@ -349,17 +336,13 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
         country,
         codeStructure: codeStructure.join(' ')
       }
-
-      console.log('Edit country data ', data)
       setIsLoading(true)
       const res = await api(`/country-master/${editData.id}`, data, 'put', true)
       setIsLoading(false)
       if (res?.data?.success) {
-        console.log('res of edit country ', res?.data)
         setAlertData({ ...alertData, type: 'success', message: 'Country updated successfully', openSnackbar: true })
         resetForm()
       } else {
-        console.log('error to edit country ', res.data)
 
         setAlertData({ ...alertData, type: 'error', message: res.data.message, openSnackbar: true })
         if (res.data.code === 401) {

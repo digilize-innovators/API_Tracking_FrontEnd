@@ -35,8 +35,7 @@ const AccessibilitySettings = () => {
     }, []);
 
     const applySettings = async () => {
-        console.log("settings", settings);
-        console.log("data", font, fontSize, color);
+       
 
         const data = {};
         data.AccessibilitySettings = {
@@ -46,12 +45,10 @@ const AccessibilitySettings = () => {
             mode: settings.mode,
         }
         data.userId = { userId }
-        console.log("data put accessibility", data)
 
         try {
-            const res = await api('/accessibility/', data, 'put', true);
-            console.log("Response from API:", res);
-
+             await api('/accessibility/', data, 'put', true);
+             
             saveSettings({
                 fontFamily: font,
                 fontSize: fontSize,

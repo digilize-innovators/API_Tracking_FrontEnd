@@ -6,7 +6,6 @@ import PropTypes from "prop-types";
 
 const Featured = ({ data }) => {
   const { settings } = useSettings();
-  console.log(settings.themeColor)
 
   const styles = {
     featured: {

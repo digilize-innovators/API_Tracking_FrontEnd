@@ -14,7 +14,6 @@ export const useApiAccess = (addApi, editApi, approveApi) => {
       try {
         setIsLoading(true);
         const res = await api("/feature/api-access-by-name/", { apiNames: [addApi, editApi, approveApi] }, 'post', true);
-        // console.log("api access", res.data);
 
         if (res.data.success) {
             const access = {
@@ -34,7 +33,6 @@ export const useApiAccess = (addApi, editApi, approveApi) => {
                 }
             });
             setApiAccess(access);
-            // console.log('Api access ', access);
           } else if (res.data.code === 401) {
             removeAuthToken();
             router.push('/401');

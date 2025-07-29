@@ -472,7 +472,6 @@ function ProductModal({
       setIsLoading(true)
       const res = await api('/company?limit=-1&history_latest=true', {}, 'get', true)
       setIsLoading(false)
-      // console.log('All companies ', res?.data?.data);
       if (res.data.success) {
         setCompanies(res.data.data.companies)
       } else {

@@ -217,7 +217,6 @@ const TableDesignation = ({
       setIsLoading(true)
       const res = await api(`/designation/${departmentId}/?esign_status=all`, {}, 'get', true)
       setIsLoading(false)
-      console.log('All designations ', res.data)
       if (res.data.success) {
         setDesignationData(res.data.data.designations)
         setArrayDesignation(res.data.data.designations)

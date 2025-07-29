@@ -11,7 +11,6 @@ import {
 } from 'recharts';
 
 const ScatterchartGraph = ({ data }) => {
-  console.log("ScatterchartGraph :=>>", data);
 
   const hasData = data && data.length > 0;
 

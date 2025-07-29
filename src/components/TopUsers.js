@@ -19,7 +19,6 @@ import PropTypes from "prop-types";
 
 const TopUserShow = ({ data }) => {
   const { settings } = useSettings();
-    console.log(settings.themeColor)
 
   const userData = data?.topUsers;
   const topUserData = data?.topUserDetails;

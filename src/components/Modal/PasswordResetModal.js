@@ -59,7 +59,6 @@ const PasswordResetModal = ({ openPasswordModal, onClose, userId, setAlertData }
       oldPassword: passwordData.oldPassword,
       newPassword: passwordData.newPassword
     }
-    console.log('password_data', password_data)
 
     const res = await api('/auth/reset-password', password_data, 'post', false)
     if (res.data.success) {

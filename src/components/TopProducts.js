@@ -32,7 +32,6 @@ CustomYAxisTick.propTypes={
   payload:PropTypes.any
 }
 const TopProductShow = ({ data }) => {
-  console.log("Top 10 Products :=>", data);
 
   const chartData = data?.map((item) => {
     const timeLabel = item.month || item.year || '';

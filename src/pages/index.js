@@ -74,7 +74,6 @@ const Dashboard = () => {
   const getData = async () => {
     try {
       const response = await api(`/dashboard`, {}, 'get', true)
-      // console.log('GET data :- ', response.data.data)
       if (response?.data?.success) {
         setData(response.data.data)
 
@@ -86,7 +85,6 @@ const Dashboard = () => {
         }
       }
     } catch (error) {
-      console.log(error)
       console.log('Error in get locations ', error)
     }
 
@@ -97,7 +95,6 @@ const Dashboard = () => {
   }, [])
 
   const getTopProductsData = async () => {
-    console.log("GET TOP 10 PRODUCTS APIs....");
 
     try {
       const params = new URLSearchParams();
@@ -108,7 +105,6 @@ const Dashboard = () => {
           break;
 
         case 'monthly':
-          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
           params.append('selectOption', 'month');
           if (monthlyDate?.start != '' && monthlyDate?.end != '') {
             params.append('start', monthlyDate.start);
@@ -120,9 +116,7 @@ const Dashboard = () => {
 
         case 'custom':
           params.append('selectOption', 'custom');
-          console.log(
-            (customDate?.customStartDate != '' && customDate?.customEndDate != '')
-          )
+         
           if (customDate?.customStartDate != '' && customDate?.customEndDate != '') {
             params.append('startDate', customDate.customStartDate);
             params.append('endDate', customDate.customEndDate);
@@ -147,7 +141,6 @@ const Dashboard = () => {
       }
       else {
         const res = await api(`/dashboard/topproduct?&${params.toString()}`, {}, 'get', true)
-        console.log("GET top Products APIs RESPONSE :->", res);
         setTopProductsData(res?.data.data)
 
         setAlertData({
@@ -167,17 +160,14 @@ const Dashboard = () => {
   const getCasesDispatched = async () => {
     try {
       const params = new URLSearchParams();
-      console.log("PARAMS ;->", params);
 
       let errorMessage = '';
       switch (timePeriod) {
         case 'yearly':
           params.append('selectOption', 'year');
-          console.log("params yearly :--<<", params);
           break;
 
         case 'monthly':
-          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
           params.append('selectOption', 'month');
           if (monthlyDate?.start != '' && monthlyDate?.end != '') {
             params.append('start', monthlyDate.start);
@@ -203,7 +193,6 @@ const Dashboard = () => {
       }
       else {
         const res = await api(`/dashboard/casesDispatched?&${params.toString()}`, {}, 'get', true)
-        console.log('RES of casesDispatched &&&&&&&&&&&&&&&&:', res.data.data);
         setCasesDispatchedData(res?.data?.data)
         setAlertData({
           ...alertData,
@@ -222,17 +211,14 @@ const Dashboard = () => {
   const getTopSellingProductsData = async () => {
     try {
       const params = new URLSearchParams();
-      console.log("PARAMS ;->", params);
 
       let errorMessage = '';
       switch (timePeriod) {
         case 'yearly':
           params.append('selectOption', 'year');
-          console.log("params yearly :--<<", params);
           break;
 
         case 'monthly':
-          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
           params.append('selectOption', 'month');
           if (monthlyDate?.start != '' && monthlyDate?.end != '') {
             params.append('start', monthlyDate.start);
@@ -258,7 +244,6 @@ const Dashboard = () => {
       }
       else {
         const res = await api(`/dashboard/topSellingProducts?&${params.toString()}`, {}, 'get', true)
-        console.log('RES of TOP Selling Products:', res.data);
         setTopSellingProductsData(res?.data?.data)
         setAlertData({
           ...alertData,
@@ -277,7 +262,6 @@ const Dashboard = () => {
   const getTopPerformingLocationsData = async () => {
     try {
       const params = new URLSearchParams();
-      console.log("TopPerformingLocations PARAMS", params);
 
       let errorMessage = '';
       switch (timePeriod) {
@@ -330,17 +314,14 @@ const Dashboard = () => {
   const getOrdersInwardedData = async () => {
     try {
       const params = new URLSearchParams();
-      console.log("PARAMS ;->", params);
 
       let errorMessage = '';
       switch (timePeriod) {
         case 'yearly':
           params.append('selectOption', 'year');
-          console.log("params yearly 12463576587:", params);
           break;
 
         case 'monthly':
-          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
           params.append('selectOption', 'month');
           if (monthlyDate?.start != '' && monthlyDate?.end != '') {
             params.append('start', monthlyDate.start);
@@ -366,9 +347,7 @@ const Dashboard = () => {
       }
       else {
         const res = await api(`/dashboard/ordersInwarded?&${params.toString()}`, {}, 'get', true)
-        console.log('res ORDERS INWARDED :', res?.data);
         const ordersInwardRes = res?.data?.data;
-        console.log("ordersInwardRes :::::->", ordersInwardRes);
 
         setInwardedOrdersData(ordersInwardRes)
 
@@ -389,17 +368,14 @@ const Dashboard = () => {
   const getCasesInwardedData = async () => {
     try {
       const params = new URLSearchParams();
-      console.log("PARAMS getCasesInwardedData->", params);
 
       let errorMessage = '';
       switch (timePeriod) {
         case 'yearly':
           params.append('selectOption', 'year');
-          console.log("params yearly getCasesInwardedData:", params);
           break;
 
         case 'monthly':
-          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
           params.append('selectOption', 'month');
           if (monthlyDate?.start != '' && monthlyDate?.end != '') {
             params.append('start', monthlyDate.start);
@@ -425,7 +401,6 @@ const Dashboard = () => {
       }
       else {
         const res = await api(`/dashboard/casesInwarded?&${params.toString()}`, {}, 'get', true)
-        console.log('res getCasesInwardedData :', res?.data);
         setCasesInwardedData(res?.data)
         setAlertData({
           ...alertData,
@@ -441,21 +416,17 @@ const Dashboard = () => {
   }
 
   const getTopUsersData = async () => {
-    console.log("AAAAA");
     try {
       const params = new URLSearchParams();
-      console.log("PARAMS ===>>", params);
 
       let errorMessage = '';
       switch (timePeriod) {
         case 'yearly':
           params.append('selectOption', 'year');
-          console.log("params yearly 12463576587:", params);
 
           break;
 
         case 'monthly':
-          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
           params.append('selectOption', 'month');
           if (monthlyDate?.start != '' && monthlyDate?.end != '') {
             params.append('start', monthlyDate.start);
@@ -480,9 +451,7 @@ const Dashboard = () => {
       }
       else {
         const res = await api(`/dashboard/topusers?&${params.toString()}`, {}, 'get', true)
-        console.log('res $$:', res);
 
-        console.log("GET top Users APIs RESPONSE #####:->", res.data.data);
         setTopUsersData(res?.data?.data)
 
         setAlertData({
@@ -500,7 +469,6 @@ const Dashboard = () => {
   }
 
   const getCodeGenerationData = async () => {
-    console.log("@@@@");
     try {
       const params = new URLSearchParams();
       let errorMessage = '';
@@ -510,7 +478,6 @@ const Dashboard = () => {
           break;
 
         case 'monthly':
-          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
           params.append('selectOption', 'month');
           if (monthlyDate?.start != '' && monthlyDate?.end != '') {
             params.append('start', monthlyDate.start);
@@ -522,9 +489,7 @@ const Dashboard = () => {
 
         case 'custom':
           params.append('selectOption', 'custom');
-          console.log(
-            (customDate?.customStartDate != '' && customDate?.customEndDate != '')
-          )
+          
           if (customDate?.customStartDate != '' && customDate?.customEndDate != '') {
             params.append('startDate', customDate.customStartDate);
             params.append('endDate', customDate.customEndDate);
@@ -549,7 +514,6 @@ const Dashboard = () => {
       }
       else {
         const res = await api(`/dashboard/codegeneration?&${params.toString()}`, {}, 'get', true)
-        console.log("codegeneration RESPONSE :->", res);
 
 
         setCodeGenerationData(res?.data.data)
@@ -578,7 +542,6 @@ const Dashboard = () => {
           break;
 
         case 'monthly':
-          console.log(monthlyDate?.start != '' && monthlyDate?.end != '')
           params.append('selectOption', 'month');
           if (monthlyDate?.start != '' && monthlyDate?.end != '') {
             params.append('start', monthlyDate.start);
@@ -590,9 +553,6 @@ const Dashboard = () => {
 
         case 'custom':
           params.append('selectOption', 'custom');
-          console.log(
-            (customDate?.customStartDate != '' && customDate?.customEndDate != '')
-          )
           if (customDate?.customStartDate != '' && customDate?.customEndDate != '') {
             params.append('startDate', customDate.customStartDate);
             params.append('endDate', customDate.customEndDate);
@@ -650,16 +610,12 @@ const Dashboard = () => {
 
 
   const handleMonthlyStartYearChange = event => {
-    console.log(new Date(event).getMonth())
     const startDate = moment(event).format('MM/YYYY').toString();
-    console.log('Monthly Start Year:', startDate)
     setMonthlyDate({ ...monthlyDate, start: startDate })
   }
 
   const handleMonthlyEndYearChange = event => {
-    console.log(new Date(event).getMonth())
     const endDate = moment(event).format('MM/YYYY').toString()
-    console.log('Monthly End Year:', endDate)
     setMonthlyDate({ ...monthlyDate, end: endDate });
   }
 
@@ -695,7 +651,6 @@ const Dashboard = () => {
     setAlertData({ ...alertData, openSnackbar: false })
   }
 
-  console.log(monthlyDate)
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>

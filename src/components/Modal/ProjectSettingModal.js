@@ -114,7 +114,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     try {
       setIsLoading(true)
       const res = await api(`/printLineSetting/${projectSettingData.lineId}`, {}, 'get', true,ip,true)
-      console.log('GET printline setting data ', res.data)
       if (res.data.success && res.data.data) {
         setEditId(res.data.data.id)
         setSettingData({
@@ -152,12 +151,10 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       variables: settingData.selectedVariables
     }
 
-    console.log('add setting data ', data)
 
     try {
       setIsLoading(true)
       const res = await api('/printLineSetting/', data, 'post', true,ip,true)
-      console.log('Response add printLineSetting:', res.data)
       if (res.data.success) {
         setAlertData({
           openSnackbar: true,
@@ -187,12 +184,10 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       printPerGroup: settingData.printPerGroup.toString(),
       variables: settingData.selectedVariables
     }
-    console.log('edit setting data', data)
 
     try {
       setIsLoading(true)
       const res = await api('/printLineSetting/', data, 'put', true,ip,true)
-      console.log('Response update printLineSetting:', res.data)
       if (res.data.success) {
         setAlertData({
           openSnackbar: true,
@@ -239,7 +234,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
   }
 
   const getLabels = async () => {
-    console.log('getting lables')
     try {
       setIsLoading(true)
       setTimeout(() => {
@@ -253,7 +247,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         ip,
         true
       )
-      console.log('Get labels ', res?.data?.data)
       setIsLoading(false)
       if (res?.data.success) {
         setLabels(res.data?.data?.projectNames)
@@ -271,7 +264,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
   }
 
   const handleAuthModalOpen = user => {
-    console.log('Open auth model again')
     setApproveData({
       ...approveData,
       approveAPIName: 'batch-printing-approve',
@@ -303,7 +295,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         : {}
     })
     const handleEsignApproved = async () => {
-      console.log('esign is approved for creator.')
       const data = {
         esignStatus: 'approved',
         audit_log: config?.config?.audit_logs
@@ -319,7 +310,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       handleAuthModalOpen(user)
     }
     const handleApproverActions = async () => {
-      console.log('esign approve by approver.')
       const data = prepareData()
       await api('/esign-status/double-esign', data, 'patch', true)
     }
@@ -331,7 +321,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       }
       editId ? await editSetting() : await addSetting()
     } else if (esignStatus === 'rejected') {
-        console.log('esign is rejected.')
         setAuthModalOpen(false)
         setOpenModalApprove(false)
       } else if (esignStatus === 'approved') {
@@ -460,7 +449,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                   renderValue={selected => selected.join(', ')}
                   onChange={e => {
                     // const value = ...e.target.value;
-                    console.log('Event value ', e.target.value)
                     setSettingData(prevData => {
                       const data = { ...prevData }
                       data.variables.forEach(i => {

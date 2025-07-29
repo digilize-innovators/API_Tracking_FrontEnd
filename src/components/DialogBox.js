@@ -3,7 +3,6 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, B
 import PropTypes from 'prop-types';
 
 const DialogBox = ({ open, onClose, onConfirm }) => {
-  console.log('DialogBox Rendered');
 
   return (
     <Dialog
