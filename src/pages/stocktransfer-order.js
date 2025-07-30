@@ -37,7 +37,7 @@ const Index = () => {
   const [config, setConfig] = useState(null)
   const [formData, setFormData] = useState({})
   const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '' })
-  const [stocktransferDetail, setStocktranferDetail] = useState([])
+  const [stocktransferDetail, setStocktransferDetail] = useState([])
 
   const apiAccess = useApiAccess(
     'stocktransfer-order-create',
@@ -93,7 +93,7 @@ const Index = () => {
         const fetchedOrders = res.data.data.orders || []
 
         // Set raw detail (if needed elsewhere)
-        setStocktranferDetail(fetchedOrders)
+        setStocktransferDetail(fetchedOrders)
       } else if (res.data.code === 401) {
         removeAuthToken()
         router.push('/401')
@@ -118,7 +118,7 @@ const Index = () => {
     setOpenModal(false)
     setFormData({})
     setEditData({})
-    setStocktranferDetail([])
+    setStocktransferDetail([])
   }
 
   const handleSubmitForm = async data => {
@@ -162,10 +162,15 @@ const Index = () => {
     try {
       const data = { ...formData }
       const filteredOrders = data.orders.filter(
-        order => !stocktransferDetail.some(purchase => purchase.product_id === order.productId)
+        order => !saleDetail.some(item => item.batch_id === order.batchId)
       )
-      filteredOrders.length > 0 ? (data.orders = filteredOrders) : delete data.orders
-      setIsLoading(true)
+  if (filteredOrders.length > 0) {
+        data.orders = filteredOrders
+      } 
+      else {
+        delete data.orders
+      }  
+          setIsLoading(true)
       const res = await api(`/stocktransfer-order/${editData.id}`, data, 'put', true)
       setIsLoading(false)
       if (res.data.success) {
@@ -181,6 +186,7 @@ const Index = () => {
         }
       }
     } catch (error) {
+      console.log('error while updating the orderTransfer',error)
       setOpenModal(false)
       router.push('/500')
     } finally {
@@ -196,9 +202,7 @@ const Index = () => {
     setEditData(item)
     setOpenModal(true)
   }
-  const handleView = async item => {
-    await getStockTransferDetail(item.id)
-  }
+  
 
   const resetFilter = () => {
     if (searchRef.current) {
@@ -238,7 +242,7 @@ const Index = () => {
 
                     {apiAccess.addApiAccess && (
                       <Box className='mx-2'>
-                        <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                        <Button variant='contained' className='py-2' onClick={handleOpenModal}>
                           <span>
                             <IoMdAdd />
                           </span>

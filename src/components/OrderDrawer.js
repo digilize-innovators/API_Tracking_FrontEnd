@@ -98,7 +98,7 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
                         <Box>
                             {/* Left side: Order No and Order Date */}
                             {details.map((col, idx) => (
-                                <Typography variant='body1' sx={{ fontSize: 16 }} key={idx}>
+                                <Typography variant='body1' sx={{ fontSize: 16 }} key={col.label}>
                                     <Box component='span' sx={{ fontWeight: 'bold' }}>
                                         {col.label} {': '}
                                     </Box>
@@ -156,10 +156,7 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
         </Box>
     )
 }
-
-export default OrderDrawer
-
-OrderDrawer.prototypes = {
+OrderDrawer.propTypes = {
     anchor: PropTypes.any.isRequired,
     title: PropTypes.string.isRequired,
     details: PropTypes.array, 
@@ -169,3 +166,6 @@ OrderDrawer.prototypes = {
     invoiceBtnDisable: PropTypes.bool.isRequired,
     setInvoiceBtnDisable: PropTypes.func.isRequired
 }
+
+export default OrderDrawer
+

@@ -36,9 +36,9 @@ const Index = () => {
   const { getUserData, removeAuthToken } = useAuth()
   const [config, setConfig] = useState(null)
   const [formData, setFormData] = useState({})
-  const [tableHeaderData, setTableHeaderData] = useState({searchVal: ''})
-  const [purchaseDetail,setPurchaseDetail]=useState([])
-  const apiAccess = useApiAccess('purchase-order-create', 'purchase-order-update','purchase-order-approve')
+  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '' })
+  const [purchaseDetail, setPurchaseDetail] = useState([])
+  const apiAccess = useApiAccess('purchase-order-create', 'purchase-order-update', 'purchase-order-approve')
 
   useLayoutEffect(() => {
     const data = getUserData()
@@ -49,19 +49,18 @@ const Index = () => {
   }, [])
 
   useEffect(() => {
-      const handleUserAction = async () => {
-        if (formData && pendingAction) {
-          if (pendingAction === "edit") {
-            await editPurchaseOrder(); 
-          } else if (pendingAction === "add") {
-            await addPurchaseOrder();  
-          }
-          setPendingAction(null);
+    const handleUserAction = async () => {
+      if (formData && pendingAction) {
+        if (pendingAction === 'edit') {
+          await editPurchaseOrder()
+        } else if (pendingAction === 'add') {
+          await addPurchaseOrder()
         }
-      };
-      handleUserAction();
-    }, [formData, pendingAction]);
-  
+        setPendingAction(null)
+      }
+    }
+    handleUserAction()
+  }, [formData, pendingAction])
 
   const tableBody = purchaseOrder.data?.map((item, index) => [
     index + 1,
@@ -69,16 +68,18 @@ const Index = () => {
     item.status,
     item.order_from_location.location_name,
     item.order_to_location.location_name,
-    moment(item.order_date ).format('DD/MM/YYYY, hh:mm:ss a')
+    moment(item.order_date).format('DD/MM/YYYY, hh:mm:ss a')
   ])
 
   const tableData = useMemo(
     () => ({
-      tableHeader: ['Sr.No.', 'Order No','Status', 'From', 'To',  'Order Date'],
+      tableHeader: ['Sr.No.', 'Order No', 'Status', 'From', 'To', 'Order Date'],
       tableHeaderText: 'Purchase Order Report',
       tableBodyText: 'Purchase Order Data',
       filename: 'PurchaseOrder'
-    }),[])
+    }),
+    []
+  )
 
   const closeSnackbar = () => {
     setAlertData({ ...alertData, openSnackbar: false })
@@ -88,25 +89,25 @@ const Index = () => {
     setFormData({})
     setOpenModal(true)
   }
-   const getPurchaseDetail = async (id) => {
-          setIsLoading(true);
-          try {
-              const res = await api(`/purchase-order/details/${id}`, {}, 'get', true);
-              if (res.data.success) {
-                  const fetchedOrders = res.data.data.orders || [];
-                  setPurchaseDetail(fetchedOrders);            
-              } else if (res.data.code === 401) {
-                  removeAuthToken();
-                  router.push('/401');
-              } else {
-                  console.log('Error: Unexpected response', res.data);
-              }
-          } catch (error) {
-              console.log('Error in getPurchaseDetail', error);
-          } finally {
-              setIsLoading(false);
-          }
-      };
+  const getPurchaseDetail = async id => {
+    setIsLoading(true)
+    try {
+      const res = await api(`/purchase-order/details/${id}`, {}, 'get', true)
+      if (res.data.success) {
+        const fetchedOrders = res.data.data.orders || []
+        setPurchaseDetail(fetchedOrders)
+      } else if (res.data.code === 401) {
+        removeAuthToken()
+        router.push('/401')
+      } else {
+        console.log('Error: Unexpected response', res.data)
+      }
+    } catch (error) {
+      console.log('Error in getPurchaseDetail', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
   const handleCloseModal = () => {
     setOpenModal(false)
     setFormData({})
@@ -124,12 +125,17 @@ const Index = () => {
     try {
       const data = { ...formData }
       setIsLoading(true)
-      const res = await api('/purchase-order/', data, 'post', true);
+      const res = await api('/purchase-order/', data, 'post', true)
       setIsLoading(false)
       if (res?.data?.success) {
         setOpenModal(false)
         console.log('Add purchase order :-', res?.data)
-        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Purchase order added successfully' })
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'success',
+          message: 'Purchase order added successfully'
+        })
         setEditData({})
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
@@ -148,18 +154,23 @@ const Index = () => {
       console.log('Error in add locaiton ', error)
       router.push('/500')
     } finally {
-        setIsLoading(false)
+      setIsLoading(false)
     }
   }
-  const editPurchaseOrder = async () => {   
+  const editPurchaseOrder = async () => {
     try {
       const data = { ...formData }
-      console.log("editPurchaseOrder editPurchaseOrder ", data);
+      console.log('editPurchaseOrder editPurchaseOrder ', data)
 
-      const filteredOrders = data.orders.filter(order =>
-        !purchaseDetail.some(purchase => purchase.product_id === order.productId)
-      );
-      filteredOrders.length>0 ? data.orders=filteredOrders : delete data.orders
+      const filteredOrders = data.orders.filter(
+        order => !saleDetail.some(item => item.batch_id === order.batchId)
+      )
+      if (filteredOrders.length > 0) {
+        data.orders = filteredOrders
+      } else {
+        delete data.orders
+      }
+
       delete data.to
       console.log('EDIT FORM DATA :->', data)
       setIsLoading(true)
@@ -168,7 +179,12 @@ const Index = () => {
       setIsLoading(false)
       if (res.data.success) {
         setOpenModal(false)
-        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Purchase Order updated successfully' })
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'success',
+          message: 'Purchase Order updated successfully'
+        })
       } else {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
         if (res.data.code === 401) {
@@ -179,6 +195,7 @@ const Index = () => {
         }
       }
     } catch (error) {
+      console.log('error while updating the purchase order', error)
       setOpenModal(false)
       router.push('/500')
     } finally {
@@ -186,15 +203,14 @@ const Index = () => {
     }
   }
   const handleSearch = val => {
-    setTableHeaderData({  searchVal: val.trim().toLowerCase() })
+    setTableHeaderData({ searchVal: val.trim().toLowerCase() })
   }
 
-  const handleUpdate =async item => {
+  const handleUpdate = async item => {
     await getPurchaseDetail(item.id)
     console.log(item)
     setEditData(item)
     setOpenModal(true)
-    
   }
 
   const resetFilter = () => {
@@ -203,10 +219,6 @@ const Index = () => {
     }
     setTableHeaderData({ ...tableHeaderData, searchVal: '' })
   }
-  const handleView=async item => {
-    await getPurchaseDetail(item.id)
-  }
-
   
   const handleDownloadPdf = () => {
     let data = getUserData()
@@ -231,8 +243,7 @@ const Index = () => {
                 </Typography>
               )}
               <Grid2 item xs={12}>
-                <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
-                </Box>
+                <Box className='d-flex justify-content-between align-items-center my-3 mx-4'></Box>
                 <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                   <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                   <Box className='d-flex justify-content-between align-items-center '>
@@ -240,7 +251,7 @@ const Index = () => {
 
                     {apiAccess.addApiAccess && (
                       <Box className='mx-2'>
-                        <Button variant='contained' className='py-2' onClick={handleOpenModal} role='button'>
+                        <Button variant='contained' className='py-2' onClick={handleOpenModal}>
                           <span>
                             <IoMdAdd />
                           </span>

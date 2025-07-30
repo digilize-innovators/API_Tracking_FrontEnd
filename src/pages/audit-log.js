@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useRef, useMemo, useLayoutEffect } from 'react'
-import { TextField, Paper, TableContainer, Box, Grid2, Typography } from '@mui/material'
+import { TextField, Box, Grid2, Typography } from '@mui/material'
 import TableAuditLog from 'src/views/tables/TableAuditLog'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
