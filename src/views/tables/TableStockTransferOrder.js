@@ -3,12 +3,12 @@ import PropTypes from 'prop-types'
 import React from 'react'
 import OrderTable from 'src/components/OrderTable'
 
-const TablePurchaseOrder = props => {
+const TableStockTransferOrder = props => {
   return (
     <OrderTable
       {...props}
-      title={'Purchase Order Detail'}
-      endpoint='/purchase-order/'
+      title={'StockTransfer Order Detail'}
+      endpoint='/stocktransfer-order/'
       columns={[
         { label: 'Order No.', path: 'order_no' },
         { label: 'From', path: 'order_from_location.location_name' },
@@ -26,12 +26,11 @@ const TablePurchaseOrder = props => {
   )
 }
 
-export default TablePurchaseOrder
+export default TableStockTransferOrder
 
-TablePurchaseOrder.propTypes = {
+TableStockTransferOrder.propTypes = {
   handleUpdate: PropTypes.func.isRequired,
   tableHeaderData: PropTypes.object.isRequired,
   apiAccess: PropTypes.object.isRequired,
   setDataCallback: PropTypes.func.isRequired,
 }
-

@@ -259,12 +259,8 @@ const Index = () => {
               <TablePurchaseOrder
                 handleUpdate={handleUpdate}
                 tableHeaderData={tableHeaderData}
-                pendingAction={pendingAction}
                 setDataCallback={setPurchaseOrder}
                 apiAccess={apiAccess}
-                handleAuthCheck={()=> {}}
-                purchaseDetail={purchaseDetail}
-                handleView={handleView}
               />
             </Grid2>
           </Box>
