@@ -138,38 +138,57 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
     name: 'orders'
   })
 
-  useEffect(() => {
-    watchedProducts?.forEach((purchase, index) => {
-      const productId = purchase?.productId
-      if (!productId) return
-      const existing = batchOptionsMap[index]
-      if (existing && existing.productId === productId) return
+  // Helper function to fetch batches for a single product
+const fetchProductBatches = async (productId) => {
+  try {
+    const res = await api(`/batch/${productId}?onlyended=true`, {}, 'get', true);
+    if (!res.data.success) return null;
+    
+    return res.data.data.batches?.map(batch => ({
+      id: batch.batch_uuid,
+      value: batch.batch_uuid,
+      label: batch.batch_no
+    }));
+  } catch (error) {
+    console.error(`Error fetching batches for product ${productId}`, error);
+    return null;
+  }
+};
 
-      const fetchBatches = async () => {
-        try {
-          const res = await api(`/batch/${productId}?onlyended=true`, {}, 'get', true)
-          if (res.data.success) {
-            const options = res.data.data.batches?.map(batch => ({
-              id: batch.batch_uuid,
-              value: batch.batch_uuid,
-              label: batch.batch_no
-            }))
-            setBatchOptionsMap(prev => ({
-              ...prev,
-              [index]: {
-                productId,
-                options
-              }
-            }))
-          }
-        } catch (error) {
-          console.error(`Error fetching batches for product ${productId}`, error)
-        }
+// Helper function to update batch options in state
+const updateBatchOptions = (index, productId, options) => {
+  setBatchOptionsMap(prev => ({
+    ...prev,
+    [index]: { productId, options }
+  }));
+};
+
+// Main effect with reduced nesting
+useEffect(() => {
+  const processProducts = async () => {
+    if (!watchedProducts) return;
+
+    const updatePromises = watchedProducts.map(async (purchase, index) => {
+      const productId = purchase?.productId;
+      if (!productId) return;
+      
+      const existing = batchOptionsMap[index];
+      if (existing?.productId === productId) return;
+
+      const options = await fetchProductBatches(productId);
+      if (options) {
+        return { index, productId, options };
       }
+    });
 
-      fetchBatches()
-    })
-  }, [watchedProducts])
+    const updates = (await Promise.all(updatePromises)).filter(Boolean);
+    updates.forEach(({ index, productId, options }) => {
+      updateBatchOptions(index, productId, options);
+    });
+  };
+
+  processProducts();
+}, [watchedProducts]);
 
   useEffect(() => {
     const getLocation = async () => {

@@ -348,8 +348,8 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
       const data = {
         ...formData,
         mrp: formData?.mrp === '' ? null : formData?.mrp,
-        no_of_units_in_primary_level: String(formData.no_of_units_in_primary_level),
-        packagingSize: String(formData.packagingSize),
+        no_of_units_in_primary_level: String(formData?.no_of_units_in_primary_level),
+        packagingSize: String(formData?.packagingSize),
         pallet_size: formData?.pallet_size?.toString(),
         productImage: uploadRes?.url != '' ? new URL(uploadRes.url).pathname : ''
       }
@@ -394,6 +394,8 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
         ...formData,
         mrp: formData?.mrp === '' ? null : formData?.mrp,
         pallet_size: formData?.pallet_size?.toString(),
+       no_of_units_in_primary_level: String(formData.no_of_units_in_primary_level),
+        packagingSize: String(formData.packagingSize),
         productImage: productImageUrl ? new URL(productImageUrl).pathname : ''
       }
       if (config?.config?.audit_logs) {
