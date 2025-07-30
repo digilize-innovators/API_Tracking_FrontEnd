@@ -1,4 +1,4 @@
-const BaseUrl = 'http://192.168.1.9:5000'
+const BaseUrl = 'http://192.168.1.55:5000'
 
 const jwt_secret = 'Equality@123'
 
