@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {Box,Table,TableRow,TableHead,TableBody,TableCell,IconButton} from '@mui/material'
+import { Box, Table, TableRow, TableHead, TableBody, TableCell, IconButton } from '@mui/material'
 import ChevronUp from 'mdi-material-ui/ChevronUp'
 import ChevronDown from 'mdi-material-ui/ChevronDown'
 import CustomTable from 'src/components/CustomTable'
@@ -11,6 +11,14 @@ import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
 import { sortData } from 'src/utils/sortData'
 
+const columns = [
+  { label: 'Action', path: 'performed_action' },
+  { label: 'Remarks', path: 'remarks' },
+  { label: 'User Name', path: 'user_name' },
+  { label: 'User ID', path: 'user_id' },
+  { label: 'Timestamp', path: "performed_at" },
+]
+
 const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAlertData }) => {
   const [page, setPage] = useState(0)
   const { settings } = useSettings()
@@ -21,12 +29,15 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
   const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
+
   useMemo(() => {
     setPage(0)
-  }, [tableHeaderData, rowsPerPage,startDate, endDate])
+  }, [tableHeaderData, rowsPerPage, startDate, endDate])
+
   useEffect(() => {
     getData()
   }, [tableHeaderData, startDate, endDate, page, rowsPerPage])
+
   const getData = async () => {
     setIsLoading(true)
     try {
@@ -39,7 +50,6 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
       });
       const response = await api(`/auditlog/?${params.toString()}`, {}, 'get', true)
       if (response.data.success) {
-        console.log('audit log', response.data.data.auditlogs)
         setAuditLogData({ data: response.data.data.auditlogs, total: response.data.data.total })
         setAuditLog({ data: response.data.data.auditlogs, index: response.data.data.offset })
       } else {
@@ -57,10 +67,10 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
     }
   }
 
-   const handleSort = (path) => {
-   const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-   const data = auditLogData?.data || [];
-   const sortedData = sortData(data, path, newSortDirection);
+  const handleSort = (path) => {
+    const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    const data = auditLogData?.data || [];
+    const sortedData = sortData(data, path, newSortDirection);
     setAuditLogData(prev => ({ ...prev, data: sortedData }));
     setSortDirection(newSortDirection)
     setSortBy(path)
@@ -82,7 +92,7 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
     }
     return null
   }
-  
+
   return (
     <CustomTable
       page={page}
@@ -98,61 +108,22 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
               <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 Sr.No.
               </TableCell>
-              <TableCell
-                align='center'
-                sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('performed_action')}
-              >
-                Action
-                <IconButton align='center' aria-label='sort' size='small'>
-                  {getSortIcon('performed_action')}
-                </IconButton>
-              </TableCell>
-              <TableCell
-                align='center'
-                sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('remarks')}
-              >
-                Remarks
-                <IconButton align='center' aria-label='sort' size='small'>
-                  {getSortIcon('remarks')}
-                </IconButton>
-              </TableCell>
-              <TableCell
-                align='center'
-                sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('user_name')}
-              >
-                User Name
-                <IconButton align='center' aria-label='sort' size='small'>
-                  {getSortIcon('user_name')}
-                </IconButton>
-              </TableCell>
-              <TableCell
-                align='center'
-                sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('user_id')}
-              >
-                User ID
-                <IconButton align='center' aria-label='sort' size='small'>
-                  {getSortIcon('user_id')}
-                </IconButton>
-              </TableCell>
-              <TableCell
-                align='center'
-                sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('performed_at')}
-              >
-                Timestamp
-                <IconButton align='center' aria-label='sort' size='small'>
-                  {getSortIcon('performed_at')}
-                </IconButton>
-              </TableCell>
+              {
+                columns.map((item, idx) => (
+                  <TableCell
+                    key={idx}
+                    align='center'
+                    sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleSort(item.path)}
+                  >
+                    {item.label}
+                    <IconButton align='center' aria-label='sort' size='small'>
+                      {getSortIcon(item.path)}
+                    </IconButton>
+                  </TableCell>
+                ))
+              }
             </TableRow>
           </TableHead>
           <TableBody>
@@ -161,21 +132,13 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
                 <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                   {index + 1 + page * rowsPerPage}
                 </TableCell>
-                <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                  {item.performed_action}
-                </TableCell>
-                <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                  {item.remarks}
-                </TableCell>
-                <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                  {item.user_name}
-                </TableCell>
-                <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                  {item.user_id}
-                </TableCell>
-                <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                  {item.performed_at.split('.')[0]}
-                </TableCell>
+                {
+                  columns.map((col, idx) => (
+                    <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} key={idx}>
+                      {item[col.path]}
+                    </TableCell>
+                  ))
+                }
               </TableRow>
             ))}
             {auditLogData?.data?.length === 0 && (

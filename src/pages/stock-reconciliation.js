@@ -61,9 +61,7 @@ const Index = () => {
               </Box>
             </Grid2>
             <Grid2 item xs={12}>
-              <TableContainer component={Paper}>
                 <TableStockReconciliation />
-              </TableContainer>
             </Grid2>
           </Box>
         </Grid2>
