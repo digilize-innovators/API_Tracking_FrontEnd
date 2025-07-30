@@ -78,9 +78,10 @@ const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlert
     const fileName = `Scanned_Detil_${formattedDate}_${formattedTime}.pdf`
     doc.save(fileName)
   }
+
   const getUniqueCode = async row => {
     try {
-      let query = `/sales-order/scanned-codes/${orderDetail.id}/${row.batch_id}`
+      let query = `${endpoint}scanned-codes/${orderDetail.id}/${row.batch_id}`
 
       setIsLoading(true)
       const res = await api(query, {}, 'get', true)
@@ -102,6 +103,7 @@ const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlert
       setIsLoading(false)
     }
   }
+  
   return (
       <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
         <TableCell
@@ -157,7 +159,8 @@ Row.propTypes = {
     setAlertData:PropTypes.any
 
 }
-const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf, setAlertData }) => {
+
+const TableOrderDetails = ({ transactionsDetail, setOrderDetail, orderDetail, userDataPdf, setAlertData, endpoint }) => {
   const [sortBy, setSortBy] = useState('')
   const [page, setPage] = useState(0)
   const { settings } = useSettings()
@@ -174,9 +177,9 @@ const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf,
     setPage(0)
   }
   useEffect(() => {
-    setData(saleDetail?.orders)
-    setOrderDetail(saleDetail?.orders?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage))
-  }, [saleDetail, page, rowsPerPage])
+    setData(transactionsDetail?.orders)
+    setOrderDetail(transactionsDetail?.orders?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage))
+  }, [transactionsDetail, page, rowsPerPage])
 
   const handleSort = (path) => {
     const newSortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
@@ -191,7 +194,7 @@ const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf,
       data={data}
       page={page}
       rowsPerPage={rowsPerPage}
-      totalRecords={saleDetail?.orders?.length}
+      totalRecords={transactionsDetail?.orders?.length}
       handleChangePage={handleChangePage}
       handleChangeRowsPerPage={handleChangeRowsPerPage}
     >
@@ -282,11 +285,13 @@ const TableSaleDetail = ({ saleDetail, setOrderDetail, orderDetail, userDataPdf,
     </CustomTable>
   )
 }
-TableSaleDetail.propTypes = {
-  saleDetail: PropTypes.any,
+
+TableOrderDetails.propTypes = {
+  transactionsDetail: PropTypes.any,
   setOrderDetail: PropTypes.any,
   orderDetail: PropTypes.any,
-  userDataPdf: PropTypes.any,
-  setAlertData:PropTypes.any
+  userDataPdf: PropTypes.object.isRequired,
+  setAlertData:PropTypes.func.isRequired,
+  endpoint: PropTypes.string.isRequired
 }
-export default TableSaleDetail
+export default TableOrderDetails

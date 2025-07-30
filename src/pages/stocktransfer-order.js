@@ -19,8 +19,9 @@ import { validateToken } from 'src/utils/ValidateToken'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import downloadPdf from 'src/utils/DownloadPdf'
 import StockTrasferModel from 'src/components/Modal/StockTrasferModel'
-import TableStocktransfer from 'src/views/tables/TableStocktransfer'
 import moment from 'moment/moment'
+import TableStockTransferOrder from 'src/views/tables/TableStockTransferOrder'
+
 const Index = () => {
   const router = useRouter()
   const { settings } = useSettings()
@@ -253,15 +254,11 @@ const Index = () => {
               <Typography variant='h4' className='mx-4 mt-3'>
                 Stock Transfer Order Data
               </Typography>
-              <TableStocktransfer
+              <TableStockTransferOrder
                 handleUpdate={handleUpdate}
                 tableHeaderData={tableHeaderData}
-                pendingAction={pendingAction}
                 setDataCallback={setStocktransfer}
                 apiAccess={apiAccess}
-                stocktransferDetail={stocktransferDetail}
-                handleAuthCheck={()=> {}}
-                handleView={handleView}
               />
             </Grid2>
           </Box>

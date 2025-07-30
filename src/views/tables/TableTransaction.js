@@ -63,13 +63,13 @@ Row.propTypes = {
   row: PropTypes.any,
   index: PropTypes.any
 };
-const TableSaleTransaction = ({
-saleDetail
+
+const TableTransaction = ({
+transactionsDetail
 }) => {
    
   return (
       <Box sx={{ position: 'relative', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', width: '100%' }}>
-      
         <Table stickyHeader sx={{ width: '100%' }}>
           <TableHead>
             <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
@@ -91,15 +91,14 @@ saleDetail
             </TableRow>
           </TableHead>
           <TableBody>
-             {saleDetail?.transactions?.map((item, index) => (
+             {transactionsDetail?.transactions?.map((item, index) => (
               <Row
                 key={index + 1}
                 row={item}
                 index={index}
-                
               />
             ))} 
-            {saleDetail?.transactions?.length === 0 && (
+            {transactionsDetail?.transactions?.length === 0 && (
               <TableRow sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                 <TableCell colSpan={12} align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                   No data
@@ -112,7 +111,9 @@ saleDetail
    
   );
 };
-TableSaleTransaction.propTypes = {
-  saleDetail:PropTypes.any
+
+TableTransaction.propTypes = {
+  transactionsDetail:PropTypes.array.isRequired
 };
-export default TableSaleTransaction;
+
+export default TableTransaction;
