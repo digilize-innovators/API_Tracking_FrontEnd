@@ -152,7 +152,12 @@ const CommonTableWrapper = ({
                 )
               })}
               {esignEnabled && <TableCell align='center'>E-Sign</TableCell>}
-              <TableCell align='center'>Updated At</TableCell>
+              <TableCell align='center' sx={{ cursor: 'pointer' }}
+                    onClick={() => handleSort('updated_at')} >Updated At
+                    <IconButton size='small'>
+                      {getSortIcon(sortBy, "updated_at", sortDirection)}
+                    </IconButton>
+                    </TableCell>
               <TableCell align='center'>Action</TableCell>
             </TableRow>
           </TableHead>

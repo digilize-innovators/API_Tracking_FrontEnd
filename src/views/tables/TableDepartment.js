@@ -681,7 +681,6 @@ Row.propTypes = {
   config_dept: PropTypes.any,
   setAlertData: PropTypes.any,
   alertData: PropTypes.any,
-  departmentData: PropTypes.any,
   historyData: PropTypes.any
 }
 
@@ -846,7 +845,6 @@ const TableDepartment = ({
                 config_dept={config_dept}
                 setAlertData={setAlertData}
                 alertData={alertData}
-                departmentData={departmentData.data}
                 historyData={historyData}
                 page={page}
                 rowsPerPage={rowsPerPage}
