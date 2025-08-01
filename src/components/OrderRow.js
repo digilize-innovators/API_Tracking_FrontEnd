@@ -157,6 +157,7 @@ OrderRow.propTypes = {
     index: PropTypes.any,
     page: PropTypes.any,
     rowsPerPage: PropTypes.any,
+    endpoint:PropTypes.any,
     columns: PropTypes.any,
     handleUpdate: PropTypes.any,
     apiAccess: PropTypes.any,

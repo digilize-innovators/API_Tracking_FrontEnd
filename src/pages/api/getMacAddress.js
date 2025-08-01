@@ -22,9 +22,10 @@ function getMacAddresses() {
 
 export default async function getMacAddress(req, res) {
     try {
-      const result = await getMacAddresses()
+      const result =await Promise.resolve(getMacAddresses())
       res.status(200).json({ message: "Got mac address sucessfully", data: result })
     } catch (err) {
+      console.log('error while fetch mac address',err)
       res.status(500).json({ error: 'Fail to get address' })
     }
   }

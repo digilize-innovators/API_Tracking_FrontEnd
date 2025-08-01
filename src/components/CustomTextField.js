@@ -28,7 +28,7 @@ const CustomTextField = ({ name, label, control, rules, disabled, type }) => {
           onInput={
             type === 'number'
               ? (e) => {
-                  e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                  e.target.value = e.target.value.replace(/\D/g, '');
                 }
               : undefined
           }

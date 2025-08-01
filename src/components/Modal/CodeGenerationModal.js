@@ -112,7 +112,9 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
           const res = await api(`/batch/getinfo/${formData.productId}/${formData.batchId}?limit=-1`, {}, 'get', true)
           setIsLoading(false)
           if (res.data.success) {
+           
             setShowBox1Data(res.data.data)
+
 
             setPackagingHierarchyData({
               packagingHierarchy: res.data.data?.productHistory?.packagingHierarchy,
@@ -364,7 +366,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
                           pattern: '[0-9]*' // Forces numeric input on mobile
                         }
                       }}
-                      disabled={!showBox1Data?.location}
+                      disabled={!showBox1Data?.location||showBox1Data?.isBatchEnd}
                       onChange={event => {
                         const value = event.target.value
                         // Check if empty string (allowing empty field)
@@ -406,7 +408,12 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
                     <FormHelperText>
                       {errorData.generateQuantityError.isError ? errorData.generateQuantityError.message : ''}
                     </FormHelperText>
-                  </FormControl>
+{                   showBox1Data?.isBatchEnd
+&&
+<FormHelperText sx={{color:'red'}}>
+                     Batch ended cannot generate code
+                    </FormHelperText>
+}                  </FormControl>
                 </Box>
                 <Box className='w-50' sx={{ ml: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <Box

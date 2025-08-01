@@ -1,15 +1,13 @@
 import React, { useState,useEffect } from 'react'
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import { Modal, Box, Typography, Button, Grid2 } from '@mui/material';
 import { style } from 'src/configs/generalConfig'
-import CustomTextField from 'src/components/CustomTextField';
 import CustomDropdown from 'src/components/CustomDropdown';
 import { useLoading } from 'src/@core/hooks/useLoading';
 import { useAuth } from 'src/Context/AuthContext';
 import { api } from 'src/utils/Rest-API';
 import { useRouter } from 'next/router';
+import PropTypes from 'prop-types';
 
 
 
@@ -22,7 +20,6 @@ function StockReconciliation({ open, onClose,  handleSubmitForm }) {
     const {
         control,
         handleSubmit,
-        formState: { errors },
         reset
     } = useForm({
         defaultValues: {
@@ -70,7 +67,6 @@ function StockReconciliation({ open, onClose,  handleSubmitForm }) {
         <Modal open={open}
 
             onClose={onClose}
-            role="dialog"
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description" >
             <Box sx={{...style,width:'30%'}}>
@@ -109,6 +105,9 @@ function StockReconciliation({ open, onClose,  handleSubmitForm }) {
 
 
 
-
-
+StockReconciliation.propTypes={
+    open:PropTypes.any,
+     onClose:PropTypes.any, 
+      handleSubmitForm:PropTypes.any
+}
 export default StockReconciliation

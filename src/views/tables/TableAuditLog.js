@@ -111,7 +111,7 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
               {
                 columns.map((item, idx) => (
                   <TableCell
-                    key={idx}
+                    key={item.label}
                     align='center'
                     sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                     style={{ cursor: 'pointer' }}
@@ -134,7 +134,7 @@ const TableAuditLog = ({ setAuditLog, tableHeaderData, startDate, endDate, setAl
                 </TableCell>
                 {
                   columns.map((col, idx) => (
-                    <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} key={idx}>
+                    <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }} key={item[col.path]}>
                       {item[col.path]}
                     </TableCell>
                   ))

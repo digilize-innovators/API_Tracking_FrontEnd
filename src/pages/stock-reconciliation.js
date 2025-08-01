@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useRef } from 'react'
-import { Button, TableContainer, Paper, Box, Grid2, Typography } from '@mui/material'
+import { Button,  Box, Grid2, Typography } from '@mui/material'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
 import Head from 'next/head'
@@ -29,7 +29,11 @@ const Index = () => {
       searchBarRef.current.resetSearch()
     }
   }
+   const handleSubmitForm =(data)=>{
+    console.log(data)
+    setOpenModel(false)
 
+   }
   const handleStart = () => {
     setOpenModel(true)
   }
@@ -55,7 +59,7 @@ const Index = () => {
               <Box className='d-flex justify-content-between align-items-center my-3 mx-4'></Box>
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={()=>{}} resetFilter={resetFilter} />
-                <Button variant='contained' className='mx-2' role='button' onClick={handleStart}>
+                <Button variant='contained' className='mx-2'  onClick={handleStart}>
                   <span>Start Reconciliation </span>
                 </Button>
               </Box>
@@ -68,7 +72,7 @@ const Index = () => {
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
 
-      <StockReconciliation open={openModel} onClose={handleCloseModal} handleSubmitForm={()=> {}} />
+      <StockReconciliation open={openModel} onClose={handleCloseModal} handleSubmitForm={handleSubmitForm} />
       <AccessibilitySettings />
       <ChatbotComponent />
     </Box>
