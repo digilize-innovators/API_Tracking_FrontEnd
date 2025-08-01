@@ -131,14 +131,14 @@ const validationSchema = yup.object().shape({
   companyUuid: yup
     .string()
     .nullable()
-    .transform(value => (value == null ? '' : String(value)))
+    .transform(value => (value == null ? '' : value))
     .trim()
     .required('Company is required'),
 
   prefix: yup
     .string()
     .nullable()
-    .transform(value => (value == null ? '' : String(value)))
+    .transform(value => (value == null ? '' : value))
     .trim()
     .required('Prefix is required'),
 
@@ -336,38 +336,38 @@ function ProductModal({
       ndc: '',
       mrp: '',
       genericName: '',
+      companyUuid: '',
+      prefix: '',
+      country: '',
       packagingSize: '',
+      no_of_units_in_primary_level: '',
+      unit_of_measurement: '',
+      packagingHierarchy: '',
+      productNumber: 0,
+      productNumber_unit_of_measurement: '',
+      productNumber_aggregation: false,
+      productNumber_print: false,
+      firstLayer: 0,
+      firstLayer_unit_of_measurement: '',
+      firstLayer_aggregation: false,
+      firstLayer_print: false,
+      secondLayer: 0,
+      secondLayer_unit_of_measurement: '',
+      secondLayer_aggregation: false,
+      secondLayer_print: false,
+      thirdLayer: 0,
+      thirdLayer_unit_of_measurement: '',
+      thirdLayer_aggregation: false,
+      thirdLayer_print: false,
+      palletisation_applicable: false,
+      pallet_size: 0,
+      pallet_size_unit_of_measurement: '',
       generic_salt: '',
       composition: '',
       dosage: '',
       remarks: '',
-      companyUuid: '',
-      prefix: '',
-      country: '',
-      unit_of_measurement: '',
-      no_of_units_in_primary_level: '',
-      packagingHierarchy: '',
-      productNumber: 0,
-      productNumber_unit_of_measurement: '',
-      firstLayer: 0,
-      firstLayer_unit_of_measurement: '',
-      secondLayer: 0,
-      secondLayer_unit_of_measurement: '',
-      thirdLayer: 0,
-      thirdLayer_unit_of_measurement: '',
-      palletisation_applicable: false,
-      pallet_size: 0,
-      pallet_size_unit_of_measurement: '',
+      schedule_drug: false,
       productImage: '/images/avatars/p.png',
-      productNumber_aggregation: false,
-      firstLayer_aggregation: false,
-      secondLayer_aggregation: false,
-      thirdLayer_aggregation: false,
-      productNumber_print: false,
-      firstLayer_print: false,
-      secondLayer_print: false,
-      thirdLayer_print: false,
-      schedule_drug: false
     }
   })
   const {
@@ -403,9 +403,9 @@ function ProductModal({
       const company = companies.find(company => company.company_uuid === companyUuid);
       if (company) {
         let prefixs = [];
-        if (company.gs1_prefix) prefixs.push({ id: 1, label: company.gs1_prefix, value: company.gs1_prefix })
-        if (company.gs2_prefix) prefixs.push({ id: 2, label: company.gs2_prefix, value: company.gs2_prefix })
-        if (company.gs3_prefix) prefixs.push({ id: 3, label: company.gs3_prefix, value: company.gs3_prefix })
+        if (company.gs1_prefix) prefixs.push({ label: company.gs1_prefix, id: company.gs1_prefix })
+        if (company.gs2_prefix) prefixs.push({ label: company.gs2_prefix, id: company.gs2_prefix })
+        if (company.gs3_prefix) prefixs.push({ label: company.gs3_prefix, id: company.gs3_prefix })
         return prefixs;
       } else {
         return []
@@ -419,7 +419,7 @@ function ProductModal({
       getPrefixData();
       setValue('prefix', '');
     }
-    if (editData?.prefix) setValue('prefix', editData.prefix.split(',')) // Restore edit data if available
+    if (editData?.prefix) setValue('prefix', editData.prefix) // Restore edit data if available
   }, [editData, companyUuid, companies]) // Ensure companies is a dependency
 
   useEffect(() => {
@@ -526,47 +526,46 @@ function ProductModal({
         ndc: editData?.ndc || '',
         mrp: editData?.mrp || '',
         genericName: editData?.generic_name || '',
-        packagingSize: editData?.packaging_size || '',
         companyUuid: editData?.company_uuid || '',
+        prefix: editData.prefix?.split(','),
         country: editData?.country_id || '',
-        firstLayer: editData?.firstLayer || '',
-        secondLayer: editData?.secondLayer || '',
-        thirdLayer: editData?.thirdLayer || '',
-        productNumber_unit_of_measurement: editData?.productNumber_unit_of_measurement || '',
-        firstLayer_unit_of_measurement: editData?.firstLayer_unit_of_measurement || '',
-        secondLayer_unit_of_measurement: editData?.secondLayer_unit_of_measurement || '',
-        thirdLayer_unit_of_measurement: editData?.thirdLayer_unit_of_measurement || '',
+        packagingSize: editData?.packaging_size || '',
+        no_of_units_in_primary_level: editData?.no_of_units_in_primary_level || '',
+        unit_of_measurement: editData?.unit_of_measurement || '',
         packagingHierarchy: editData?.packagingHierarchy || '',
         productNumber: editData?.productNumber || '',
-        productNumber_print: editData?.productNumber_print || false,
-        firstLayer_print: editData?.firstLayer_print || false,
-        secondLayer_print: editData?.secondLayer_print || false,
-        thirdLayer_print: editData?.thirdLayer_print || false,
+        productNumber_unit_of_measurement: editData?.productNumber_unit_of_measurement || '',
         productNumber_aggregation: editData?.productNumber_aggregation || false,
+        productNumber_print: editData?.productNumber_print || false,
+        firstLayer: editData?.firstLayer || '',
+        firstLayer_unit_of_measurement: editData?.firstLayer_unit_of_measurement || '',
         firstLayer_aggregation: editData?.firstLayer_aggregation || false,
+        firstLayer_print: editData?.firstLayer_print || false,
+        secondLayer: editData?.secondLayer || '',
+        secondLayer_unit_of_measurement: editData?.secondLayer_unit_of_measurement || '',
         secondLayer_aggregation: editData?.secondLayer_aggregation || false,
+        secondLayer_print: editData?.secondLayer_print || false,
+        thirdLayer: editData?.thirdLayer || '',
+        thirdLayer_unit_of_measurement: editData?.thirdLayer_unit_of_measurement || '',
         thirdLayer_aggregation: editData?.thirdLayer_aggregation || false,
+        thirdLayer_print: editData?.thirdLayer_print || false,
+        palletisation_applicable: editData?.palletisation_applicable || false,
+        pallet_size: editData?.pallet_size?.toString() || '',
+        pallet_size_unit_of_measurement: editData?.pallet_size_unit_of_measurement || '',
         generic_salt: editData?.generic_salt || '',
         composition: editData?.composition || '',
         dosage: editData?.dosage || '',
         remarks: editData?.remarks || '',
-        palletisation_applicable: editData?.palletisation_applicable || false,
-        pallet_size: editData?.pallet_size?.toString() || '',
-        pallet_size_unit_of_measurement: editData?.pallet_size_unit_of_measurement || '',
-        no_of_units_in_primary_level: editData?.no_of_units_in_primary_level || '',
-        prefix: editData.prefix?.split(','),
-        unit_of_measurement: editData?.unit_of_measurement || '',
         schedule_drug: editData?.schedule_drug || false
       })
       if (
         editData?.product_image &&
-        editData?.product_image !== '/images/avatars/p.png' &&
-        productImage != '/images/avatars/p.png'
+        editData?.product_image !== '/images/avatars/p.png'
       ) {
         convertImageToBase64(editData?.productImage, setProductImage)
         setValue('productImage', editData?.productImage)
       }
-      setValue('prefix', editData?.prefix?.split(',') || [])
+      setValue('prefix', editData?.prefix)
     }
   }, [editData])
 
@@ -603,7 +602,7 @@ function ProductModal({
     if (!prefixs?.length) {
       getPrefixData()
     }
-  }, [prefixs?.length])
+  }, [prefixs])
 
   const CountryData = countries?.map(item => ({
     id: item.id,
