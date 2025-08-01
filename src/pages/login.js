@@ -73,8 +73,7 @@ const LoginPage = () => {
     try {
       setData({ userId: data.userId, password: data.password })
       setIsLoading(true)
-      const res = await api('/auth/login', data, 'post', false)
-      console.log('Response of login: ', res.data)
+      const res = await api('/auth/login', data, 'post', false);
       if (!res.data) {
         setAlertData({ openSnackbar: true, type: 'error', message: 'Unknown error occurred', variant: 'filled' })
         setIsLoading(false)

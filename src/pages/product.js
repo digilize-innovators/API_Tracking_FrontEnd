@@ -157,7 +157,7 @@ const Index = () => {
       secondLayer_print: data.secondLayer_print ? data.secondLayer_print : data.secondLayer_aggregation,
       thirdLayer_print: data.thirdLayer_print ? data.thirdLayer_print : data.thirdLayer_aggregation,
       pallet_size: data.palletisation_applicable ? data.pallet_size : '',
-      pallet_size_unit_of_measurement: data.palletisation_applicable ? data.pallet_size_unit_of_measurement : '',
+      pallet_size_unit_of_measurement: data.palletisation_applicable ? data.pallet_size_unit_of_measurement : ''
     })
     if (editData?.id) {
       setApproveAPI({
@@ -187,8 +187,8 @@ const Index = () => {
       let url = ''
       const formData = new FormData()
       formData.append('photo', file)
-      const res = await api(endpoint, formData, 'upload', true);
-      
+      const res = await api(endpoint, formData, 'upload', true)
+
       if (res?.data?.success) {
         const decryptUrl = await decrypt(res.data.data.path)
         url = `${mainUrl}/${decryptUrl}`.replace(/\\/g, '/')
@@ -204,129 +204,125 @@ const Index = () => {
     }
   }
 
-
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  
-
-  if (!isAuthenticated) {
-    setAlertData({
-      type: 'error',
-      openSnackbar: true,
-      message: 'Authentication failed, Please try again.'
-    });
-    resetState();
-    return;
-  }
-
-  if (isApprover) {
-    await handleApproverActions(user, esignStatus, remarks);
-  } else {
-    handleCreatorActions(user, esignStatus, remarks,isApprover);
-  }
-
-  resetState();
-};
-
-const resetState = () => {
-  setApproveAPI({ approveAPIName: '', approveAPIEndPoint: '', approveAPImethod: '' });
-  setEsignDownloadPdf(false);
-  setAuthModalOpen(false);
-};
-
-const buildAuditLog = (user, remarks, action) => {
-  return config?.config?.audit_logs
-    ? {
-        user_id: user.userId,
-        user_name: user.userName,
-        remarks: remarks?.length > 0 ? remarks : `product master ${action} - ${auditLogMark}`,
-        authUser: user.user_id
-      }
-    : {};
-};
-
-const handleApproverActions = async (user, esignStatus, remarks) => {
-  const payload = {
-    modelName: 'product',
-    esignStatus,
-    id: eSignStatusId,
-    name: auditLogMark,
-    audit_log: buildAuditLog(user, remarks, esignStatus)
-  };
-
-  if (esignStatus === 'approved' && esignDownloadPdf) {
-    setOpenModalApprove(false);
-
-    downloadPdf(tableData, tableHeaderData, tableBody, productData?.data, user);
-
-    if (config?.config?.audit_logs) {
-      const auditPayload = {
-        audit_log: {
-          audit_log: true,
-          performed_action: 'Export report of productMaster ',
-          remarks: remarks?.length > 0 ? remarks : `Product master export report `,
-          authUser: user
-        }
-      };
-      await api('/auditlog/', auditPayload, 'post', true);
+    if (!isAuthenticated) {
+      setAlertData({
+        type: 'error',
+        openSnackbar: true,
+        message: 'Authentication failed, Please try again.'
+      })
+      resetState()
+      return
     }
 
-    return;
-  }
-
-  const res = await api('/esign-status/update-esign-status', payload, 'patch', true);
-
-  if (res?.data) {
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: res.data.code === 200 ? 'success' : 'error',
-      message: res.data.message
-    });
-  }
-
-  setPendingAction(true);
-
-  if (esignStatus === 'rejected' && esignDownloadPdf) {
-    setOpenModalApprove(false);
-  }
-};
-
-const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
-  if (esignStatus === 'rejected') {
-    setAuthModalOpen(false);
-    setOpenModalApprove(false);
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: 'error',
-      message: 'Access denied for this user.'
-    });
-    return;
-  }
-
-  if (!isApprover && esignDownloadPdf) {
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: 'error',
-      message: 'Access denied: Download pdf disabled for this user.'
-    });
-    resetState();
-    return;
-  }
-
-  if (esignStatus === 'approved') {
-
-    if (esignDownloadPdf) {
-      setEsignDownloadPdf(false);
-      setOpenModalApprove(true);
+    if (isApprover) {
+      await handleApproverActions(user, esignStatus, remarks)
     } else {
-      setAuthUser(user);
-      setEsignRemark(remarks);
-      setPendingAction(editData?.id ? 'edit' : 'add');
+      handleCreatorActions(user, esignStatus, remarks, isApprover)
+    }
+
+    resetState()
+  }
+
+  const resetState = () => {
+    setApproveAPI({ approveAPIName: '', approveAPIEndPoint: '', approveAPImethod: '' })
+    setEsignDownloadPdf(false)
+    setAuthModalOpen(false)
+  }
+
+  const buildAuditLog = (user, remarks, action) => {
+    return config?.config?.audit_logs
+      ? {
+          user_id: user.userId,
+          user_name: user.userName,
+          remarks: remarks?.length > 0 ? remarks : `product master ${action} - ${auditLogMark}`,
+          authUser: user.user_id
+        }
+      : {}
+  }
+
+  const handleApproverActions = async (user, esignStatus, remarks) => {
+    const payload = {
+      modelName: 'product',
+      esignStatus,
+      id: eSignStatusId,
+      name: auditLogMark,
+      audit_log: buildAuditLog(user, remarks, esignStatus)
+    }
+
+    if (esignStatus === 'approved' && esignDownloadPdf) {
+      setOpenModalApprove(false)
+
+      downloadPdf(tableData, tableHeaderData, tableBody, productData?.data, user)
+
+      if (config?.config?.audit_logs) {
+        const auditPayload = {
+          audit_log: {
+            audit_log: true,
+            performed_action: 'Export report of productMaster ',
+            remarks: remarks?.length > 0 ? remarks : `Product master export report `,
+            authUser: user
+          }
+        }
+        await api('/auditlog/', auditPayload, 'post', true)
+      }
+
+      return
+    }
+
+    const res = await api('/esign-status/update-esign-status', payload, 'patch', true)
+
+    if (res?.data) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: res.data.code === 200 ? 'success' : 'error',
+        message: res.data.message
+      })
+    }
+
+    setPendingAction(true)
+
+    if (esignStatus === 'rejected' && esignDownloadPdf) {
+      setOpenModalApprove(false)
     }
   }
-};
+
+  const handleCreatorActions = (user, esignStatus, remarks, isApprover) => {
+    if (esignStatus === 'rejected') {
+      setAuthModalOpen(false)
+      setOpenModalApprove(false)
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied for this user.'
+      })
+      return
+    }
+
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied: Download pdf disabled for this user.'
+      })
+      resetState()
+      return
+    }
+
+    if (esignStatus === 'approved') {
+      if (esignDownloadPdf) {
+        setEsignDownloadPdf(false)
+        setOpenModalApprove(true)
+      } else {
+        setAuthUser(user)
+        setEsignRemark(remarks)
+        setPendingAction(editData?.id ? 'edit' : 'add')
+      }
+    }
+  }
   const handleAuthCheck = async row => {
     setApproveAPI({
       approveAPIName: 'product-approve',
@@ -369,7 +365,12 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
         resetForm()
         setOpenModal(false)
       } else {
-        setAlertData({ ...alertData, type: 'error', message: res.data?.error?.details?.message ||res.data?.message, openSnackbar: true })
+        setAlertData({
+          ...alertData,
+          type: 'error',
+          message: res.data?.error?.details?.message || res.data?.message,
+          openSnackbar: true
+        })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
@@ -383,10 +384,12 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     }
   }
   const editProduct = async esign_status => {
+    const previousBase64 = await convertImageToBase64(editData.product_image)
     let productImageUrl =
-      productImage !== editData.product_image
+      productImage !== previousBase64
         ? (await uploadFile(formData?.file, '/upload/productImage'))?.url
-        : editData.product_image
+        : `${BaseUrl}${editData.product_image}`
+
     try {
       delete formData?.['productId']
       delete formData?.['file']
@@ -394,7 +397,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
         ...formData,
         mrp: formData?.mrp === '' ? null : formData?.mrp,
         pallet_size: formData?.pallet_size?.toString(),
-       no_of_units_in_primary_level: String(formData?.no_of_units_in_primary_level),
+        no_of_units_in_primary_level: String(formData?.no_of_units_in_primary_level),
         packagingSize: String(formData?.packagingSize),
         productImage: productImageUrl ? new URL(productImageUrl).pathname : ''
       }
@@ -416,7 +419,12 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
         resetForm()
       } else {
         console.log('error to edit product ', res.data)
-        setAlertData({ ...alertData, type: 'error', message:  res.data?.error?.details?.message ||res.data.message, openSnackbar: true })
+        setAlertData({
+          ...alertData,
+          type: 'error',
+          message: res.data?.error?.details?.message || res.data.message,
+          openSnackbar: true
+        })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
@@ -509,15 +517,15 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Product Data
               </Typography>
-                <TableProduct
-                  tableHeaderData={tableHeaderData}
-                  setDataCallback={setProductData}
-                  pendingAction={pendingAction}
-                  handleUpdate={handleUpdate}
-                  handleAuthCheck={handleAuthCheck}
-                  apiAccess={apiAccess}
-                  config={config}
-                />
+              <TableProduct
+                tableHeaderData={tableHeaderData}
+                setDataCallback={setProductData}
+                pendingAction={pendingAction}
+                handleUpdate={handleUpdate}
+                handleAuthCheck={handleAuthCheck}
+                apiAccess={apiAccess}
+                config={config}
+              />
             </Grid2>
           </Box>
         </Grid2>

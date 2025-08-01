@@ -249,14 +249,18 @@ const Index = () => {
   }
 
   const editUser = async esign_status => {
+    const previousBase64 = await convertImageToBase64(editData.profile_photo)
+    
     let url = ''
-    if (profilePhoto !== editData.profile_photo || editData.profile_photo === '') {
+    if (profilePhoto !== previousBase64) {
       const uploadRes = await uploadUserImage()
       if (!uploadRes?.success) {
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: uploadRes?.message })
         return
       }
       url = uploadRes?.url
+    }else {
+      url = `${BaseUrl}${editData.profile_photo}`
     }
     try {
       const data = {
