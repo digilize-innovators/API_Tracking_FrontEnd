@@ -79,25 +79,27 @@ const Index = ({ userId, ip }) => {
   const { lineId, printCount, panelName } = data;
   setPrinterLines(prevLines => updatePrintedCounts(prevLines, panelName, lineId, printCount));
 }
+function updateLineIfMatches(line, lineId, printCount) {
+  if (line.id !== lineId) return line;
+  return {
+    ...line,
+    printCount,
+    pendingCount: Number(line.codeToPrint) - printCount
+  };
+}
+function updateLinesInPanel(lines, lineId, printCount) {
+  return lines.map(line => updateLineIfMatches(line, lineId, printCount));
+}
+function updatePanelIfMatches(panel, panelName, lineId, printCount) {
+  if (panel.panelName !== panelName) return panel;
+  return {
+    ...panel,
+    lines: updateLinesInPanel(panel.lines, lineId, printCount)
+  };
+}
 function updatePrintedCounts(prevLines, panelName, lineId, printCount) {
-  return prevLines.map(panel => {
-    if (panel.panelName !== panelName) return panel;
-
-    const updatedLines = panel.lines.map(line => {
-      if (line.id !== lineId) return line;
-
-      return {
-        ...line,
-        printCount,
-        pendingCount: Number(line.codeToPrint) - printCount
-      };
-    });
-
-    return {
-      ...panel,
-      lines: updatedLines
-    };
-  });
+  return prevLines.map(panel => updatePanelIfMatches(panel, panelName, lineId, printCount));
+  
 }
 
  socket.current.on('dataScanned', handleDataScanned);
@@ -969,6 +971,17 @@ const finalRemarks = remarks.length > 0 ? remarks : `Batch printing session ${se
       }
     
   }
+   const renderHierarchyOptions = (ph) => (
+  getLayerOptions(ph).map((option, idx) => 
+    renderHierarchyOption(ph, option, idx)
+  )
+)
+
+const renderHierarchyOption = (ph, option, idx) => (
+  <MenuItem key={`${ph.id}-${idx}`} value={option.value}>
+    {option.label}
+  </MenuItem>
+);
 
   return (
     <Box padding={4}>
@@ -1113,13 +1126,7 @@ const finalRemarks = remarks.length > 0 ? remarks : `Batch printing session ${se
                           value={line.packagingHierarchy}
                           onChange={e => handleInputChange(panelIndex, lineIndex, 'packagingHierarchy', e.target.value)}
                         >
-                          {line.packagingHierarchies.map(ph =>
-                            getLayerOptions(ph).map((option, idx) => (
-                              <MenuItem key={`${ph.id}-${idx}`} value={option.value}>
-                                {option.label}
-                              </MenuItem>
-                            ))
-                          )}
+                        {line.packagingHierarchies.map(ph => renderHierarchyOptions(ph))}
                         </Select>
                       </FormControl>
                     </Grid2>

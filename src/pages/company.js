@@ -148,7 +148,13 @@ const Index = () => {
 
   const addCompany = async esign_status => {
     try {
-      const data = { ...formData, contact: formData.contactNo }
+     const data = {
+  ...formData,
+  gs1_prefix: String(formData.gs1_prefix),
+  gs2_prefix: String(formData.gs2_prefix),
+  gs3_prefix: String(formData.gs3_prefix),
+  contact: formData.contactNo,
+};
       delete data.contactNo
       if (config?.config?.audit_logs) {
         data.audit_log = {
@@ -184,7 +190,14 @@ const Index = () => {
 
   const editCompany = async esign_status => {
     try {
-      const data = { ...formData, contact: formData.contactNo }
+      const data = {
+  ...formData,
+  gs1_prefix: String(formData.gs1_prefix),
+  gs2_prefix: String(formData.gs2_prefix),
+  gs3_prefix: String(formData.gs3_prefix),
+  contact: formData.contactNo,
+};
+console.log(data)
       delete data.companyId
       delete data.contactNo
       if (config?.config?.audit_logs) {
@@ -241,8 +254,6 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
 
   resetState();
 };
-
-// ----------------- Helper Functions -----------------
 
 const resetState = () => {
   setApproveAPI({ approveAPIName: '', approveAPIEndPoint: '', approveAPImethod: '' });

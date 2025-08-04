@@ -196,6 +196,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
     }
     if (config?.config?.esign_status) {
       setForm(data)
+       resetAll()
       setAuthModalOpen(true)
       return
     }
