@@ -163,7 +163,7 @@ const Index = () => {
       console.log('editPurchaseOrder editPurchaseOrder ', data)
 
       const filteredOrders = data.orders.filter(
-        order => !saleDetail.some(item => item.batch_id === order.batchId)
+        order => !purchaseDetail.some(item => item.batch_id === order.batchId)
       )
       if (filteredOrders.length > 0) {
         data.orders = filteredOrders

@@ -162,7 +162,7 @@ const Index = () => {
     try {
       const data = { ...formData }
       const filteredOrders = data.orders.filter(
-        order => !saleDetail.some(item => item.batch_id === order.batchId)
+        order => !stocktransferDetail.some(item => item.batch_id === order.batchId)
       )
   if (filteredOrders.length > 0) {
         data.orders = filteredOrders

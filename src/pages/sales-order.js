@@ -35,7 +35,7 @@ const Index = () => {
   const { getUserData, removeAuthToken } = useAuth()
   const [config, setConfig] = useState(null)
   const [formData, setFormData] = useState({})
-  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '', orderTypeFilter: '' })
+  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '', orderTypeFilter: '',tableUpdate:false })
   const [saleDetail, setSaleDetail] = useState([])
 
   const apiAccess = useApiAccess('sales-order-create', 'sales-order-update', 'sales-order-approve')
@@ -153,6 +153,7 @@ const Index = () => {
       console.log('Error in add locaiton ', error)
       router.push('/500')
     } finally {
+      setTableHeaderData({...tableHeaderData,tableUpdate:true})
       setIsLoading(false)
     }
   }
@@ -191,6 +192,7 @@ const Index = () => {
       setOpenModal(false)
       router.push('/500')
     } finally {
+      setTableHeaderData({...tableHeaderData,tableUpdate:true})
       setIsLoading(false)
     }
   }
