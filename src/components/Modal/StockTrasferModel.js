@@ -70,6 +70,8 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
   const [editableIndex, setEditableIndex] = useState(null)
   const [openConfirm, setOpenConfirm] = useState(false)
   const [deleteIndex, setDeleteIndex] = useState(null)
+    const [deleteBatch, setDeleteBatch] = useState('')
+
   const { settings } = useSettings()
 
   const {
@@ -258,21 +260,39 @@ useEffect(() => {
   const handleDeleteOrder = async (orderId, index) => {
     try {
       setIsLoading(true)
-      const res = await api(`/stocktransfer-order/details/${orderId}`, { orderId: editData.id }, 'delete', true)
-      if (res.data.success) {
-        remove(index) // remove from form UI
-      } else {
-        console.error('Failed to delete item:', res.data)
-        // optionally show a toast or snackbar here
+      if (orderId) {
+        const res = await api(`/stocktransfer-order/details/${orderId}`, { orderId: editData.id }, 'delete', true)
+        if (!res.data.success) {
+          console.error('Failed to delete item:', res.data)
+          return
+        }
       }
+      remove(index)
+      setEditableIndex(prev => {
+        const newState = { ...prev }
+        delete newState[index]
+        const updatedState = {}
+        Object.keys(newState).forEach(key => {
+          const numKey = parseInt(key)
+          if (numKey > index) {
+            updatedState[numKey - 1] = newState[numKey]
+          } else if (numKey < index) {
+            updatedState[numKey] = newState[numKey]
+          }
+        })
+        return updatedState
+      })
     } catch (error) {
       console.error('Error deleting order item:', error)
     } finally {
       setIsLoading(false)
       setOpenConfirm(false)
+      setDeleteBatch('')
       setDeleteIndex(null)
     }
   }
+
+
 
   const handleEditOrSave = async index => {
     const isEditing = editableIndex?.[index]
@@ -376,7 +396,10 @@ useEffect(() => {
                 </Button>
               </Grid2>
               <Grid2 style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: 1 }}>
-                {fields.map((field, index) => (
+                {fields.map((field, index) => 
+                {
+                       const  existOrder= stocktransferDetail.find((item)=>item.batch_id===field.batchId)
+                               return (
                   <Grid2 container spacing={2} key={field.id}>
                     <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>{index + 1}</Typography>{' '}
@@ -387,7 +410,7 @@ useEffect(() => {
                         label='Product'
                         control={control}
                         options={productData}
-                        disabled={!!editData.id && !!stocktransferDetail?.[index]?.id && !editableIndex?.[index]}
+                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                       />
                     </Grid2>
                     <Grid2 size={3}>
@@ -396,7 +419,7 @@ useEffect(() => {
                         label='Batch'
                         control={control}
                         options={batchOptionsMap[index]?.options || []}
-                        disabled={!!editData.id && !!stocktransferDetail?.[index]?.id && !editableIndex?.[index]}
+                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                       />
                     </Grid2>
                     <Grid2 size={3.5}>
@@ -405,7 +428,7 @@ useEffect(() => {
                         name={`orders.${index}.qty`}
                         label='Quantity'
                         control={control}
-                        disabled={!!editData.id && !!stocktransferDetail?.[index]?.id && !editableIndex?.[index]}
+                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                       />
                     </Grid2>
                     <Grid2
@@ -418,6 +441,7 @@ useEffect(() => {
                       <Box sx={{ marginTop: 2 }}>
                         <IconButton
                           onClick={() => {
+                            setDeleteBatch(existOrder)
                             setDeleteIndex(index)
                             setOpenConfirm(true)
                           }}
@@ -443,7 +467,7 @@ useEffect(() => {
                         // Move slightly upward
                       }}
                     >
-                      {stocktransferDetail?.[index]?.id && (
+                      {existOrder && (
                         <Tooltip title={editableIndex?.[index] ? 'Save' : 'Edit'}>
                           <IconButton
                             onClick={() => handleEditOrSave(index)}
@@ -458,7 +482,7 @@ useEffect(() => {
                       )}
                     </Grid2>
                   </Grid2>
-                ))}
+                )})}
               </Grid2>
               {errors.orders?.root?.message && (
                 <Grid2>
@@ -496,15 +520,8 @@ useEffect(() => {
               variant='contained'
               color='error'
               onClick={() => {
-                const orderItem = stocktransferDetail?.[deleteIndex]
-                if (orderItem?.id) {
-                  handleDeleteOrder(orderItem.id, deleteIndex)
-                } else {
-                  remove(deleteIndex)
-                  setOpenConfirm(false)
-                  setDeleteIndex(null)
-                }
-              }}
+                  handleDeleteOrder(deleteBatch?.id, deleteIndex)
+                } }
             >
               Delete
             </Button>

@@ -36,7 +36,7 @@ const Index = () => {
   const { getUserData, removeAuthToken } = useAuth()
   const [config, setConfig] = useState(null)
   const [formData, setFormData] = useState({})
-  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '' })
+  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '' ,tableUpdate:false})
   const [purchaseDetail, setPurchaseDetail] = useState([])
   const apiAccess = useApiAccess('purchase-order-create', 'purchase-order-update', 'purchase-order-approve')
 
@@ -154,6 +154,7 @@ const Index = () => {
       console.log('Error in add locaiton ', error)
       router.push('/500')
     } finally {
+     setTableHeaderData({...tableHeaderData,tableUpdate:true})
       setIsLoading(false)
     }
   }
@@ -199,6 +200,7 @@ const Index = () => {
       setOpenModal(false)
       router.push('/500')
     } finally {
+      setTableHeaderData({...tableHeaderData,tableUpdate:true})
       setIsLoading(false)
     }
   }
@@ -284,6 +286,7 @@ const Index = () => {
         editData={editData}
         purchaseDetail={purchaseDetail}
         handleSubmitForm={handleSubmitForm}
+        
       />
       <AccessibilitySettings />
       <ChatbotComponent />

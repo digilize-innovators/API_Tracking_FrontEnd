@@ -73,7 +73,8 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
   const [editableIndex, setEditableIndex] = useState(null)
   const [openConfirm, setOpenConfirm] = useState(false)
   const [error,setError]=useState('')
-  const [deleteIndex, setDeleteIndex] = useState(null)
+  const [deleteBatch, setDeleteBatch] = useState('')
+  const [deleteIndex,setDeleteIndex]=useState(null)
   const [initialHeaderValues, setInitialHeaderValues] = useState(null)
   const { settings } = useSettings()
 
@@ -364,6 +365,7 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
     } finally {
       setIsLoading(false)
       setOpenConfirm(false)
+      setDeleteBatch('')
       setDeleteIndex(null)
     }
   }
@@ -501,13 +503,16 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
                   type='button'
                   variant='contained'
                   sx={{ marginRight: 3.5 }}
-                  onClick={() => append({ productId: '', batchId: '', qty: '' })}
+                  onClick={() => append({productId: '', batchId: '', qty: '' })}
                 >
                   Add
                 </Button>
               </Grid2>
-              <Grid2 style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: 1 }}>
-                {fields.map((field, index) => (
+              <Grid2 style={{ maxHeight: '250px', overflowY: 'auto', paddingRight: 1 }}>
+                <Grid2 style={{marginTop: 6 }}>
+                {fields.map((field, index)=> {
+                  const existOrder=saleDetail.find(item=>item.batch_id===field?.batchId)
+                  return(
                   <Grid2 container spacing={2} key={field.id}>
                     <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>{index + 1}</Typography>
@@ -518,7 +523,7 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
                         label='Product'
                         control={control}
                         options={productData}
-                        disabled={!!editData.id && !!saleDetail?.[index]?.id && !editableIndex?.[index]}
+                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                       />
                     </Grid2>
                     <Grid2 size={3}>
@@ -527,7 +532,7 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
                         label='Batch'
                         control={control}
                         options={batchOptionsMap[index]?.options || []}
-                        disabled={!!editData.id && !!saleDetail?.[index]?.id && !editableIndex?.[index]}
+                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                       />
                     </Grid2>
                     <Grid2 size={3.5}>
@@ -536,7 +541,7 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
                         name={`orders.${index}.qty`}
                         label='Quantity'
                         control={control}
-                        disabled={!!editData.id && !!saleDetail?.[index]?.id && !editableIndex?.[index]}
+                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                         
                       />
                     </Grid2>
@@ -551,6 +556,7 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
                         <IconButton
                           onClick={() => {
                             setDeleteIndex(index)
+                            setDeleteBatch(existOrder)
                             setOpenConfirm(true)
                           }}
                           disabled={fields.length === 1}
@@ -574,7 +580,7 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
                         justifyContent: 'center'
                       }}
                     >
-                      {saleDetail?.[index]?.id && (
+                      {existOrder && (
                         <Tooltip title={editableIndex?.[index] ? 'Save' : 'Edit'}>
                           <IconButton
                             onClick={() => handleEditOrSave(index)}
@@ -591,7 +597,8 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
                     
                   </Grid2>
                   
-                ))}
+                )})}
+                </Grid2>
               </Grid2>
               {
                       error.length>0 && (
@@ -644,8 +651,7 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
               variant='contained'
               color='error'
               onClick={() => {
-                const orderItem = saleDetail?.[deleteIndex]
-                handleDeleteOrder(orderItem?.id, deleteIndex)
+                handleDeleteOrder(deleteBatch?.id, deleteIndex)
               }}
             >
               Delete

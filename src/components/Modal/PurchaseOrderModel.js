@@ -76,6 +76,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
   const [batchOptionsMap, setBatchOptionsMap] = useState({})
   const [editableIndex, setEditableIndex] = useState(null)
   const [openConfirm, setOpenConfirm] = useState(false)
+  const [deleteBatch,setDeleteBatch]=useState('')
   const [deleteIndex, setDeleteIndex] = useState(null)
   const { settings } = useSettings()
   const { setIsLoading } = useLoading()
@@ -301,24 +302,41 @@ const updateBatchOptions = (updates) => {
     }
   }, [open, editData])
 
-  const handleDeleteOrder = async (orderId, index) => {
-    try {
-      setIsLoading(true)
-      const res = await api(`/purchase-order/details/${orderId}`, { orderId: editData.id }, 'delete', true)
-      if (res.data.success) {
-        remove(index) // remove from form UI
-      } else {
-        console.error('Failed to delete item:', res.data)
-        // optionally show a toast or snackbar here
-      }
-    } catch (error) {
-      console.error('Error deleting order item:', error)
-    } finally {
-      setIsLoading(false)
-      setOpenConfirm(false)
-      setDeleteIndex(null)
-    }
-  }
+ const handleDeleteOrder = async (orderId, index) => {
+     try {
+       setIsLoading(true)
+       if (orderId) {
+        const res = await api(`/purchase-order/details/${orderId}`, { orderId: editData.id }, 'delete', true)
+         if (!res.data.success) {
+           console.error('Failed to delete item:', res.data)
+           return
+         }
+       }
+       remove(index)
+       setEditableIndex(prev => {
+         const newState = { ...prev }
+         delete newState[index]
+         const updatedState = {}
+         Object.keys(newState).forEach(key => {
+           const numKey = parseInt(key)
+           if (numKey > index) {
+             updatedState[numKey - 1] = newState[numKey]
+           } else if (numKey < index) {
+             updatedState[numKey] = newState[numKey]
+           }
+         })
+         return updatedState
+       })
+     } catch (error) {
+       console.error('Error deleting order item:', error)
+     } finally {
+       setIsLoading(false)
+       setOpenConfirm(false)
+       setDeleteBatch('')
+       setDeleteIndex(null)
+     }
+   }
+
 
   const handleEditOrSave = async index => {
     const isEditing = editableIndex?.[index]
@@ -435,7 +453,10 @@ const updateBatchOptions = (updates) => {
               </Grid2>
 
               <Grid2 style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: 1 }}>
-                {fields.map((field, index) => (
+                {fields.map((field, index) =>
+                {
+                 const existOrder = purchaseDetail?.find(item=>item.batch_id===field.batchId)
+               return (
                   <Grid2 container spacing={2} key={field.id}>
                     <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>{index + 1}</Typography>{' '}
@@ -446,7 +467,7 @@ const updateBatchOptions = (updates) => {
                         label='Product'
                         control={control}
                         options={productData}
-                        disabled={!!editData.id && !!purchaseDetail?.[index]?.id && !editableIndex?.[index]}
+                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                       />
                     </Grid2>
                     <Grid2 size={3}>
@@ -455,7 +476,7 @@ const updateBatchOptions = (updates) => {
                         label='Batch'
                         control={control}
                         options={batchOptionsMap[index]?.options || []}
-                        disabled={!!editData.id && !!purchaseDetail?.[index]?.id && !editableIndex?.[index]}
+                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                       />
                     </Grid2>
                     <Grid2 size={3.5}>
@@ -464,7 +485,7 @@ const updateBatchOptions = (updates) => {
                         name={`orders.${index}.qty`}
                         label='Quantity'
                         control={control}
-                        disabled={!!editData.id && !!purchaseDetail?.[index]?.id && !editableIndex?.[index]}
+                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                       />
                     </Grid2>
                     <Grid2
@@ -477,6 +498,7 @@ const updateBatchOptions = (updates) => {
                       <Box sx={{ marginTop: 2 }}>
                         <IconButton
                           onClick={() => {
+                            setDeleteBatch(existOrder)
                             setDeleteIndex(index)
                             setOpenConfirm(true)
                           }}
@@ -502,7 +524,7 @@ const updateBatchOptions = (updates) => {
                         // Move slightly upward
                       }}
                     >
-                      {purchaseDetail?.[index]?.id && (
+                      {existOrder && (
                         <Tooltip title={editableIndex?.[index] ? 'Save' : 'Edit'}>
                           <IconButton
                             onClick={() => handleEditOrSave(index)}
@@ -518,7 +540,7 @@ const updateBatchOptions = (updates) => {
                       )}
                     </Grid2>
                   </Grid2>
-                ))}
+                )})}
               </Grid2>
               {errors.orders?.root?.message && (
                 <Grid2>
@@ -555,14 +577,8 @@ const updateBatchOptions = (updates) => {
               variant='contained'
               color='error'
               onClick={() => {
-                const orderItem = purchaseDetail?.[deleteIndex]
-                if (orderItem?.id) {
-                  handleDeleteOrder(orderItem.id, deleteIndex)
-                } else {
-                  remove(deleteIndex)
-                  setOpenConfirm(false)
-                  setDeleteIndex(null)
-                }
+                console.log(deleteBatch)
+                handleDeleteOrder(deleteBatch?.id, deleteIndex)
               }}
             >
               Delete

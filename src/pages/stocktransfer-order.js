@@ -36,7 +36,7 @@ const Index = () => {
   const { getUserData, removeAuthToken } = useAuth()
   const [config, setConfig] = useState(null)
   const [formData, setFormData] = useState({})
-  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '' })
+  const [tableHeaderData, setTableHeaderData] = useState({ searchVal: '',tableUpdate:false })
   const [stocktransferDetail, setStocktransferDetail] = useState([])
 
   const apiAccess = useApiAccess(
@@ -155,6 +155,7 @@ const Index = () => {
       console.log('Error in add locaiton ', error)
       router.push('/500')
     } finally {
+     setTableHeaderData({...tableHeaderData,tableUpdate:true})
       setIsLoading(false)
     }
   }
@@ -190,6 +191,7 @@ const Index = () => {
       setOpenModal(false)
       router.push('/500')
     } finally {
+      setTableHeaderData({...tableHeaderData,tableUpdate:true})
       setIsLoading(false)
     }
   }
