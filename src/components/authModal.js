@@ -45,9 +45,7 @@ const AuthModal = ({
   open,
   handleClose,
   handleAuthResult,
-  approveAPIName,
-  approveAPImethod,
-  approveAPIEndPoint,
+  approveAPI,
   config,
   handleAuthModalOpen,
   openModalApprove
@@ -80,7 +78,7 @@ const AuthModal = ({
   }
 
   const fetchDesignations = async () => {
-    const params = { endpoint: approveAPIEndPoint, method: approveAPImethod }
+    const params = { endpoint: approveAPI.approveAPIEndPoint, method: approveAPI.approveAPImethod }
     try {
       const res = await api(
         `/designation/designationbyapis/${encodeURIComponent(params.method)}?endpoint=${encodeURIComponent(params.endpoint)}`,
@@ -110,8 +108,8 @@ const AuthModal = ({
         setError('Please enter username and password.')
         return
       }
-      const authData = { userId: username, password, securityCheck: true, approveAPIName, approveAPImethod }
-      if (esignStatus === 'rejected' && approveAPIName.includes('create')) {
+      const authData = { userId: username, password, securityCheck: true, approveAPIName: approveAPI.approveAPIName, approveAPImethod: approveAPI.approveAPImethod }
+      if (esignStatus === 'rejected' && approveAPI.approveAPIName.includes('create')) {
         handleClose()
         return
       }
@@ -124,7 +122,7 @@ const AuthModal = ({
         const { userId, userName, user_id, departmentName } = res.data.data
         const user = { userId, userName, user_id, departmentName }
         const isAuthenticated = true
-        const isApprover = approveAPIName.includes('approve')
+        const isApprover = approveAPI.approveAPIName.includes('approve')
         //  && config.userId !== user.user_id;
 
         handleAuthResult(isAuthenticated, user, isApprover, esignStatus, remarks)
@@ -169,12 +167,12 @@ const AuthModal = ({
               Security Check
             </Typography>
             <Typography variant='body1' sx={{ mt: 2 }}>
-              Action: {approveAPImethod === 'POST' && 'Add'}
-              {approveAPImethod === 'PUT' && 'Edit'}
-              {approveAPImethod === 'PATCH' && 'Approve'}
+              Action: {approveAPI.approveAPImethod === 'POST' && 'Add'}
+              {approveAPI.approveAPImethod === 'PUT' && 'Edit'}
+              {approveAPI.approveAPImethod === 'PATCH' && 'Approve'}
             </Typography>
             <Typography variant='body1' sx={{ mt: 2 }}>
-              Feature: {approveAPIName}
+              Feature: {approveAPI.approveAPIName}
             </Typography>
             <Typography
               variant='body1'
@@ -287,9 +285,7 @@ AuthModal.propTypes = {
   open: PropTypes.any,
   handleClose: PropTypes.any,
   handleAuthResult: PropTypes.any,
-  approveAPIName: PropTypes.any,
-  approveAPImethod: PropTypes.any,
-  approveAPIEndPoint: PropTypes.any,
+  approveAPI: PropTypes.object,
   config: PropTypes.any,
   handleAuthModalOpen: PropTypes.any,
   openModalApprove: PropTypes.any

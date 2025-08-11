@@ -94,7 +94,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
   })
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
-  const [approveData, setApproveData] = useState({
+  const [approveAPI, setApproveAPI] = useState({
     approveAPIName: '',
     approveAPImethod: '',
     approveAPIEndPoint: '',
@@ -205,7 +205,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
 
   const applySettings = async () => {
     if (config?.config?.esign_status) {
-      setApproveData({
+      setApproveAPI({
         approveAPIName: 'batch-printing-create',
         approveAPImethod: 'POST',
         approveAPIEndPoint: '/api/v1/batch-printing',
@@ -264,8 +264,8 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
   }
 
   const handleAuthModalOpen = user => {
-    setApproveData({
-      ...approveData,
+    setApproveAPI({
+      ...approveAPI,
       approveAPIName: 'batch-printing-approve',
       approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/batch-printing',
@@ -276,7 +276,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     const resetState = () => {
-      setApproveData({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '', authUser: {} })
+      setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '', authUser: {} })
       setAuthModalOpen(false)
     }
     if (!isAuthenticated) {
@@ -315,7 +315,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     }
     if (isApprover && esignStatus === 'approved') {
       await handleApproverActions()
-      if (approveData.authUser.userId === user.userId) {
+      if (approveAPI.authUser.userId === user.userId) {
         setAlertData({ ...alertData, openSnackbar: true, message: 'Same user cannot Approved', type: 'error' })
         return
       }
@@ -499,9 +499,11 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}
-        approveAPIName={approveData.approveAPIName}
-        approveAPImethod={approveData.approveAPImethod}
-        approveAPIEndPoint={approveData.approveAPIEndPoint}
+        approveAPI={{
+           approveAPIName: approveAPI.approveAPIName,
+            approveAPImethod: approveAPI.approveAPImethod,
+            approveAPIEndPoint: approveAPI.approveAPIEndPoint,
+        }}
         handleAuthResult={handleAuthResult}
         config={config}
         handleAuthModalOpen={handleAuthModalOpen}

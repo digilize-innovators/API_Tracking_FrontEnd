@@ -475,9 +475,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
         open={authModalOpen}
         handleClose={handleAuthModalClose}
         handleAuthResult={handleAuthResult}
-        approveAPIName={approveAPI.approveAPIName}
-        approveAPImethod={approveAPI.approveAPImethod}
-        approveAPIEndPoint={approveAPI.approveAPIEndPoint}
+        approveAPI={approveAPI}
         config={config}
         handleAuthModalOpen={handleAuthModalOpen}
         openModalApprove={openModalApprove}

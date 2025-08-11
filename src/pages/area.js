@@ -440,9 +440,7 @@ const handleCreatorApproval = (remarks, user,isApprover) => {
         open={authModalOpen}
         handleClose={handleAuthModalClose}
         handleAuthResult={handleAuthResult}
-        approveAPIName={approveAPI.approveAPIName}
-        approveAPIEndPoint={approveAPI.approveAPIEndPoint}
-        approveAPImethod={approveAPI.approveAPImethod}
+        approveAPI={approveAPI}
         config={config}
         handleAuthModalOpen={handleAuthModalOpen}
         openModalApprove={openModalApprove}

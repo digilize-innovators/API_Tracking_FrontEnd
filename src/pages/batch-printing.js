@@ -47,7 +47,7 @@ const Index = ({ userId, ip }) => {
   const apiAccess = useApiAccess('batch-printing-create', 'batch-printing-update', 'batch-printing-approve')
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
-  const [approveData, setApproveData] = useState({
+  const [approveAPI, setApproveAPI] = useState({
     approveAPIName: '',
     approveAPImethod: '',
     approveAPIEndPoint: '',
@@ -853,7 +853,7 @@ function updatePrintCompleted(prevLines, data) {
 
   const handleSessionStart = async (data) => {
     if (config?.config?.esign_status) {
-      setApproveData({
+      setApproveAPI({
         approveAPIName: 'batch-printing-create',
         approveAPImethod: 'POST',
         approveAPIEndPoint: '/api/v1/batch-printing',
@@ -869,7 +869,7 @@ function updatePrintCompleted(prevLines, data) {
 
   const handleSessionStop = async (data) => {
     if (config?.config?.esign_status) {
-      setApproveData({
+      setApproveAPI({
         approveAPIName: 'batch-printing-create',
         approveAPImethod: 'POST',
         approveAPIEndPoint: '/api/v1/batch-printing',
@@ -890,8 +890,8 @@ function updatePrintCompleted(prevLines, data) {
 
   const handleAuthModalOpen = user => {
     console.log('Open auth model again')
-    setApproveData({
-      ...approveData,
+    setApproveAPI({
+      ...approveAPI,
       approveAPIName: 'batch-printing-approve',
       approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/batch-printing',
@@ -902,19 +902,19 @@ function updatePrintCompleted(prevLines, data) {
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
     const resetState = () => {
-      setApproveData({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '', authUser: {}, lineId: null })
+      setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '', authUser: {}, lineId: null })
       setAuthModalOpen(false)
     }
     if (!isAuthenticated) {
       setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
       return
     }
- const sessionType = approveData.session === 'start' ? 'start' : 'stop';
+ const sessionType = approveAPI.session === 'start' ? 'start' : 'stop';
 const finalRemarks = remarks.length > 0 ? remarks : `Batch printing session ${sessionType} requested`;
     const prepareData = () => ({
       esignStatus: esignStatus,
-      session: approveData.session,
-      lineId: approveData.lineId,
+      session: approveAPI.session,
+      lineId: approveAPI.lineId,
       audit_log: config?.config?.audit_logs
         ? {
             user_id: user.userId,
@@ -926,7 +926,7 @@ const finalRemarks = remarks.length > 0 ? remarks : `Batch printing session ${se
         : {}
     })
     const handleEsignApproved = async () => {
-      const sessionType = approveData.session === 'start' ? 'start' : 'stop';
+      const sessionType = approveAPI.session === 'start' ? 'start' : 'stop';
       const finalRemarks = remarks.length > 0 ? remarks : `Batch printing session ${sessionType} requested`;
       console.log('esign is approved for creator.')
       const data = {
@@ -951,11 +951,11 @@ const finalRemarks = remarks.length > 0 ? remarks : `Batch printing session ${se
     }
     if (isApprover && esignStatus === 'approved') {
       await handleApproverActions()
-      if (approveData.authUser.userId === user.userId) {
+      if (approveAPI.authUser.userId === user.userId) {
         setAlertData({ ...alertData, openSnackbar: true, message: 'Same user cannot Approved', type: 'error' })
         return
       }
-      if (approveData.session === 'start') {
+      if (approveAPI.session === 'start') {
         handleAfterStartSession()
       } else {
         handleAfterStopSession()
@@ -1290,9 +1290,11 @@ const renderHierarchyOption = (ph, option, idx) => (
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}
-        approveAPIName={approveData.approveAPIName}
-        approveAPImethod={approveData.approveAPImethod}
-        approveAPIEndPoint={approveData.approveAPIEndPoint}
+        approveAPI={{
+          approveAPIName: approveAPI.approveAPIName,
+          approveAPImethod: approveAPI.approveAPImethod,
+          approveAPIEndPoint: approveAPI.approveAPIEndPoint,
+        }}
         handleAuthResult={handleAuthResult}
         config={config}
         handleAuthModalOpen={handleAuthModalOpen}
