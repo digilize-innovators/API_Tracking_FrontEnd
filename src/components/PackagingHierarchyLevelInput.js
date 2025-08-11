@@ -37,47 +37,60 @@ function PackagingHierarchyLevelInput({ level, label, uomOptions }) {
         />
       </Grid2>
       <Grid2 size={2}>
-        <Controller
+       <Controller
+  name={levelPrintName}
+  control={control}
+  render={({ field: printField }) => (
+    <FormControlLabel
+      control={
+        <Switch
+          {...printField}
+          checked={!!printField.value}
+          onChange={e => {
+            const isPrintChecked = e.target.checked;
+            printField.onChange(isPrintChecked);
+
+            // Rule 2: if print turned off, aggregation must turn off too
+            if (!isPrintChecked) {
+              setValue(levelAggregationName, false);
+            }
+          }}
           name={levelPrintName}
-          control={control}
-          render={({ field }) => (
-            <FormControlLabel
-              control={
-                <Switch
-                  {...field}
-                  checked={field.value}
-                  name={levelPrintName}
-                  color='primary'
-                />
-              }
-            />
-          )}
+          color="primary"
         />
+      }
+    />
+  )}
+/>
+
+
       </Grid2>
       <Grid2 size={2}>
-        <Controller
+    <Controller
+  name={levelAggregationName}
+  control={control}
+  render={({ field: aggregationField }) => (
+    <FormControlLabel
+      control={
+        <Switch
+          {...aggregationField}
+          checked={!!aggregationField.value}
+          onChange={e => {
+            const isAggregationChecked = e.target.checked;
+            aggregationField.onChange(isAggregationChecked);
+
+            // Rule 1: if aggregation turned on, print must turn on too
+            if (isAggregationChecked) {
+              setValue(levelPrintName, true);
+            }
+          }}
           name={levelAggregationName}
-          control={control}
-          render={({ field }) => (
-            <FormControlLabel
-              control={
-                <Switch
-                  {...field}
-                  checked={field.value}
-                  onChange={e => {
-                    const isChecked = e.target.checked;
-                    if (isChecked) {
-                      setValue(levelPrintName, isChecked);
-                    }
-                    field.onChange(isChecked);
-                  }}
-                  name={levelAggregationName}
-                  color='primary'
-                />
-              }
-            />
-          )}
+          color="primary"
         />
+      }
+    />
+  )}
+/>
       </Grid2>
     </Grid2>
   );

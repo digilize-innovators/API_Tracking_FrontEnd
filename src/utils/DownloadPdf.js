@@ -17,7 +17,11 @@ const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) =
 if (tableHeaderData !== null) {
   doc.text('Search : ' + (tableHeaderData?.searchVal || '__'), 15, 25);
 }
-    doc.text('Filters :\n', 15, 30)
+   if(tableData.tableHeaderText!=='Stock Summary')
+   {
+        doc.text('Filters :\n', 15, 30)
+
+   }
 
     if (tableData.Filter) {
       doc.text(`${tableData.Filter[0]} : ` + (tableData.Filter[1] || '__'), 20, 35)

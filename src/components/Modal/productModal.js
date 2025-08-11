@@ -379,7 +379,7 @@ function ProductModal({
     setValue,
     clearErrors,
     formState: { errors }
-  } = methods; // Destructure from methods
+  } = methods; 
   const router = useRouter()
   const [gtinLastDigit, setGtinLastDigit] = useState()
   const { removeAuthToken } = useAuth()
@@ -445,37 +445,58 @@ function ProductModal({
     getUomData()
   }, [])
 
-  const applyPackagingHierarchy = async () => {
-    const fieldsToValidate = [
-      'productNumber',
-      'firstLayer',
-      'secondLayer',
-      'thirdLayer',
-      'productNumber_unit_of_measurement',
-      'firstLayer_unit_of_measurement',
-      'secondLayer_unit_of_measurement',
-      'thirdLayer_unit_of_measurement',
-      'palletisation_applicable',
-      'pallet_size',
-      'pallet_size_unit_of_measurement',
-      'productImage',
-      'productNumber_aggregation',
-      'firstLayer_aggregation',
-      'secondLayer_aggregation',
-      'thirdLayer_aggregation',
-      'productNumber_print',
-      'firstLayer_print',
-      'secondLayer_print'
-    ]
+const applyPackagingHierarchy = async () => {
+  const fieldsToValidate = [
+    'productNumber',
+    'firstLayer',
+    'secondLayer',
+    'thirdLayer',
+    'productNumber_unit_of_measurement',
+    'firstLayer_unit_of_measurement',
+    'secondLayer_unit_of_measurement',
+    'thirdLayer_unit_of_measurement',
+    'palletisation_applicable',
+    'pallet_size',
+    'pallet_size_unit_of_measurement',
+    'productImage',
+    'productNumber_aggregation',
+    'firstLayer_aggregation',
+    'secondLayer_aggregation',
+    'thirdLayer_aggregation',
+    'productNumber_print',
+    'firstLayer_print',
+    'secondLayer_print',
+    'thirdLayer_print'
+  ]
 
-    const isValid = await Promise.all(fieldsToValidate.map(field => trigger(field)))
-    if (!isValid.every(Boolean)) {
-      return
-    } else {
-      clearErrors('packagingHierarchy')
-      setModalOpen(false)
-    }
+  const isValid = await Promise.all(fieldsToValidate.map(field => trigger(field)))
+  if (!isValid.every(Boolean)) return
+
+  const hierarchy = Number(watch('packagingHierarchy'))
+
+  // Reset higher levels when reducing hierarchy
+  if (hierarchy < 4) {
+    setValue('thirdLayer', '')
+    setValue('thirdLayer_unit_of_measurement', '')
+    setValue('thirdLayer_print', false)
+    setValue('thirdLayer_aggregation', false)
   }
+  if (hierarchy < 3) {
+    setValue('secondLayer', '')
+    setValue('secondLayer_unit_of_measurement', '')
+    setValue('secondLayer_print', false)
+    setValue('secondLayer_aggregation', false)
+  }
+  if (hierarchy < 2) {
+    setValue('firstLayer', '')
+    setValue('firstLayer_unit_of_measurement', '')
+    setValue('firstLayer_print', false)
+    setValue('firstLayer_aggregation', false)
+  }
+
+  clearErrors('packagingHierarchy')
+  setModalOpen(false)
+}
 
   const getCompanies = async () => {
     try {
@@ -1018,7 +1039,6 @@ function ProductModal({
                     <Grid2 size={12} className={palletisation_applicable ? '' : 'mb-3'}>
                       <Controller
                         control={control}
-                        mj
                         name={'palletisation_applicable'}
                         render={({ field }) => (
                           <FormControlLabel
@@ -1127,7 +1147,7 @@ function ProductModal({
               </Grid2>
             </Grid2>
             <Grid2 item xs={12} className='my-3 '>
-              <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'>
+              <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'   onClick={() => console.log('Submit button clicked')}>
                 Save Changes
               </Button>
               <Button

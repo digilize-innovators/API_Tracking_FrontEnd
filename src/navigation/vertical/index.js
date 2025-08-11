@@ -17,8 +17,12 @@ import {
   MdInventory2,
   MdReceiptLong,
   MdCameraAlt,
-  MdSync
+  MdSync,
+  MdSummarize     
+  
 } from 'react-icons/md'
+import { TbReportAnalytics } from 'react-icons/tb';
+
 
 import { AiOutlineProduct, AiOutlineAudit } from 'react-icons/ai'
 import { IoLocationOutline } from 'react-icons/io5'
@@ -235,7 +239,13 @@ const navigation = () => {
       icon: MdSync,
       path: '/stock-reconciliation',
       mainTitle: false
-    }
+    },
+      {
+      title: 'Stock Summary',
+      icon: TbReportAnalytics    ,
+      path: '/stock-summary',
+      mainTitle: false
+    },
   ]
   const configurationScreen = [
     {
