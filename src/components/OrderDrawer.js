@@ -30,9 +30,9 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
     const tableData = useMemo(
         () => ({
             tableHeader: ['Sr.No.', 'Product', 'Batch', 'Total Quantity', 'Scanned Quantity'],
-            tableHeaderText: `${title} Order`,
+            tableHeaderText: `${title}`,
             tableBodyText: `${row.order_no} list`,
-            filename: `${title}Order_${row.order_no}`
+            filename: `${title}_${row.order_no}`
         }),
         []
     )
@@ -79,7 +79,7 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
     return (
         <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }}>
             <Grid2 item xs={12}>
-                <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8 }}> {title} Order Details</Typography>
+                <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8 }}> {title} </Typography>
                 <Box
                     sx={{
                         px: 6,

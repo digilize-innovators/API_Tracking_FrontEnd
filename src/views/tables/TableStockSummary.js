@@ -7,13 +7,12 @@ import {
   TableBody,
   TableCell,
   Typography,
-  IconButton,
   Button,
   SwipeableDrawer,
-  Grid2
+  Grid2,
+  IconButton
 } from '@mui/material'
 import { MdVisibility } from 'react-icons/md'
-import moment from 'moment'
 import TableStockSummaryDetail from 'src/views/tables/TableStockSummaryDetail'
 import { useSettings } from 'src/@core/hooks/useSettings'
 import { useRouter } from 'next/router'
@@ -22,27 +21,60 @@ import { useLoading } from 'src/@core/hooks/useLoading'
 import { api } from 'src/utils/Rest-API'
 import CustomTable from 'src/components/CustomTable'
 import { useAuth } from 'src/Context/AuthContext'
-import { IoIosAdd } from 'react-icons/io'
+import PropTypes from 'prop-types'
+import SnackbarAlert from 'src/components/SnackbarAlert'
+import { getSortIcon } from 'src/utils/sortUtils'
+
 
 
  
 
 const Row = ({
-  key,row,index ,page,rowsPerPage
+row,index ,page,rowsPerPage
 }) => {
 
-
+    const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
    const [openLocation,setOpenLocation]=useState({})
      const [state, setState] = useState({ addDrawer: false })
+        const router = useRouter()
+        const { removeAuthToken } = useAuth()
 
+  
 
   const handleLocationStock = async row => {
-        setOpenLocation(row)
+      try{
+               const stockDetail= await api(`/stock-summary/getStockByLocation?locationId=${row?.id}`,{}, 'get', true)
+
+              if (stockDetail.data.success) {
+             setOpenLocation({locationData:row,productData:stockDetail.data.data})
+
+      } 
+      else if (stockDetail.data.code === 401) {
+        removeAuthToken()
+        router.push('/401')
+      }
+        else if (stockDetail.data.code === 404) {
+ setAlertData({
+    ...alertData,
+    type: 'error',
+    message: stockDetail.data?.message || 'Not Found',
+    openSnackbar: true
+  })  
+      }
+       else {
+                console.error('Failed to fetch data:', stockDetail.data)
+      }
+      }catch (error) {
+      console.error('Error fetching data:', error)
+    } 
+
     }
 
 
 
-
+   const closeSnackbar = () => {
+    setAlertData({ ...alertData, openSnackbar: false })
+  }
     const toggleDrawer = (anchor, open) => event => {
     console.log('open drawer', open)
     if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -51,7 +83,7 @@ const Row = ({
     setState({ ...state, [anchor]: open })
   }
   
-
+   
   const list = anchor => (
     <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }}>
       <Grid2 item xs={12}>
@@ -59,7 +91,7 @@ const Row = ({
           Stock Summary
         </Typography>
          <Typography  variant='h4' fontWeight="bold" className='mx-4 my-4 mx-2' >
-          LocationName:{openLocation?.location_name}
+          LocationName:{openLocation?.locationData.location_name}
         </Typography>
         <Box
           sx={{
@@ -70,14 +102,20 @@ const Row = ({
         >
           <Box>
             <Grid2 item xs={12}>
-              <TableStockSummaryDetail />
+              <TableStockSummaryDetail
+               data={openLocation?.productData?.finalStockArray}
+               locationId={openLocation?.locationData.id}
+                locationName={openLocation?.locationData.location_name}
+                />
             </Grid2>
           </Box>
         </Box>
       </Grid2>
+      
     </Box>
   )
   return(
+    <>
         <TableRow sx={{ '& > *': { borderBottom: '1px solid rgba(224, 224, 224, 1)' } }}>
       <TableCell
                 align='center'
@@ -102,7 +140,7 @@ const Row = ({
                               />
                             </Button>
                 </TableCell>
-                 {openLocation?.location_names && (
+                 {openLocation?.locationData?.location_name && (
                             <SwipeableDrawer
                               anchor={'right'}
                               open={state['addDrawer']}
@@ -113,14 +151,23 @@ const Row = ({
                             </SwipeableDrawer>
                           )}   
               </TableRow>
+                     <SnackbarAlert alertData={alertData} closeSnackbar={closeSnackbar} openSnackbar={alertData.openSnackbar} />
+</>
   )
 }
-
+Row.propTypes={
+  row:PropTypes.any,
+  index:PropTypes.any, 
+  page:PropTypes.any,
+  rowsPerPage:PropTypes.any
+}
 const TableStockSummary = ({                tableHeaderData
 }) => {
   const { settings } = useSettings()
   const[locationData,setLocationData]=useState({data:[],total:0,})
   const [sortDirection, setSortDirection] = useState('asc')
+    const [sortBy, setSortBy] = useState('')
+
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
    const router = useRouter()
@@ -146,10 +193,11 @@ useMemo(() => {
           limit: rowsPerPage === -1 ? -1 : rowsPerPage,
           search: tableHeaderData.searchVal,
         })
-        const res = await api(`/stock-summary/?${params.toString()}`, {}, 'get', true)
+        const res = await api(`/location/?${params.toString()}`, {}, 'get', true)
         setIsLoading(false)
         if (res.data.success) {
-          setLocationData({ data: res.data.data.stockLocations, total: res.data.data.total })
+          console.log(res.data.data)
+          setLocationData({ data: res.data.data.locations, total: res.data.data.total })
           // setDepartment({ data: res.data.data.departments, index: res.data.data.offset })
         } else if (res.data.code === 401) {
           removeAuthToken()
@@ -200,7 +248,11 @@ const handleChangePage = (event, newPage) => {
               onClick={() => handleSort('location_name')}
             >
               Location
+                <IconButton size='small'>
+                                   {getSortIcon(sortBy, "location_name", sortDirection)}
+                                 </IconButton>
              </TableCell>
+            
             <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
               Action
             </TableCell>
@@ -229,5 +281,7 @@ const handleChangePage = (event, newPage) => {
       </CustomTable>
   )
 }
-TableStockSummary.propTypes = {}
+TableStockSummary.propTypes = {
+  tableHeaderData:PropTypes.any
+}
 export default TableStockSummary

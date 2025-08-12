@@ -16,9 +16,14 @@ const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) =
     doc.setFontSize(10)
 if (tableHeaderData !== null) {
   doc.text('Search : ' + (tableHeaderData?.searchVal || '__'), 15, 25);
-}
-   if(tableData.tableHeaderText!=='Stock Summary')
-   {
+} 
+ console.log(tableData.tableHeaderText,"tableData.tableHeaderText")
+if (
+  tableData.tableHeaderText !== 'Stock Summary' &&
+  tableData.tableHeaderText !== 'Sale Order Detail' &&
+  tableData.tableHeaderText !== 'Purchase Order Detail' &&
+  tableData.tableHeaderText !== 'StockTransfer Order Detail'
+)   {
         doc.text('Filters :\n', 15, 30)
 
    }
@@ -56,7 +61,10 @@ if (tableData.Filter[0] === 'department') {
 
       autoTable(doc, {
         startY: currentPage === 1 ? 60 : 50, // Ensure consistent spacing
-        styles: { halign: 'center' },
+        styles: { halign: 'center' ,
+           cellWidth: 'auto',       // Let widths adjust automatically
+    minCellWidth: 20    
+        },
         headStyles: { fontSize: 8, fillColor: [80, 189, 160] },
         alternateRowStyles: { fillColor: [249, 250, 252] },
         tableLineColor: [80, 189, 160],

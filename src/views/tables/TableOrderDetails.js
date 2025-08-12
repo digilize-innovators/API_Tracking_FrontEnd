@@ -82,7 +82,7 @@ const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlert
   const getUniqueCode = async row => {
     try {
       let query = `${endpoint}scanned-codes/${orderDetail.id}/${row.batch_id}`
-
+       console.log(query)
       setIsLoading(true)
       const res = await api(query, {}, 'get', true)
       setIsLoading(false)

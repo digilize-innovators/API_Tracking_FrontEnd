@@ -15,6 +15,7 @@ import { sortData } from 'src/utils/sortData'
 import { OrderRow } from './OrderRow'
 
 const OrderTable = ({
+  title,
   endpoint,
   columns,
   tableHeaderData,
@@ -147,6 +148,7 @@ const OrderTable = ({
                 key={row.id}
                 row={row}
                 index={index}
+                title={title}
                 page={page}
                 rowsPerPage={rowsPerPage}
                 endpoint={endpoint}

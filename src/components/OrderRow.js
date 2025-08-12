@@ -13,6 +13,7 @@ import OrderDrawer from "./OrderDrawer";
 const OrderRow = ({
     row,
     index,
+    title,
     page,
     rowsPerPage,
     endpoint,
@@ -122,7 +123,7 @@ const OrderRow = ({
                         >
                             <OrderDrawer
                                 anchor={'addDrawer'}
-                                title={'Sales'}
+                                title={title}
                                 details={[
                                     { label: 'Order No.', path: 'order_no' },
                                     {
