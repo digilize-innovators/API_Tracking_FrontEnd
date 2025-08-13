@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useRef } from 'react'
-import { Button,  Box, Grid2, Typography } from '@mui/material'
+import { Box, Grid2, Typography } from '@mui/material'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
 import Head from 'next/head'
@@ -31,8 +31,6 @@ const Index = () => {
   const handleSearch = val => {
     setTableHeaderData({ ...tableHeaderData, searchVal: val.trim().toLowerCase() })
   }
- 
-
 
   return (
     <Box padding={4}>
@@ -42,39 +40,33 @@ const Index = () => {
       <Grid2 item xs={12}>
         <Typography variant='h2'>Stock Summary</Typography>
       </Grid2>
-       <Grid2 item xs={12}>
-             <Grid2 item xs={12}>
-               <Box sx={{ backgroundColor: settings.mode === 'dark' ? '#212121' : 'white', borderRadius: 1 }}>
-                 <Grid2 item xs={12}>
-
-                     <Typography variant='h4' className='mx-4 my-2 mx-2' sx={{ paddingTop: '1%' }}>
-                       Filter
-                     </Typography>
-                   <Grid2 item xs={12}>
-                     
-                     <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
-                <ExportResetActionButtons handleDownloadPdf={null} resetFilter={resetFilter} />
-                       <Box className='d-flex justify-content-between align-items-center '>
-                  <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
-                       </Box>
-                     </Box>
-                   </Grid2>
-                 </Grid2>
-                 <Grid2 item xs={12}>
-                   <Typography variant='h4' className='mx-4 mt-3'>
-                   Stock Summary Data
-                   </Typography>
-                 
-                 </Grid2>
-                   <Grid2 item xs={12}>
-                                 <TableStockSummary 
-                                                 tableHeaderData={tableHeaderData}
-
-                                 />
-                             </Grid2>
-               </Box>
-             </Grid2>
-           </Grid2>
+      <Grid2 item xs={12}>
+        <Grid2 item xs={12}>
+          <Box sx={{ backgroundColor: settings.mode === 'dark' ? '#212121' : 'white', borderRadius: 1 }}>
+            <Grid2 item xs={12}>
+              <Typography variant='h4' className='mx-4 my-2 mx-2' sx={{ paddingTop: '1%' }}>
+                Filter
+              </Typography>
+              <Grid2 item xs={12}>
+                <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
+                  <ExportResetActionButtons handleDownloadPdf={null} resetFilter={resetFilter} />
+                  <Box className='d-flex justify-content-between align-items-center '>
+                    <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
+                  </Box>
+                </Box>
+              </Grid2>
+            </Grid2>
+            <Grid2 item xs={12}>
+              <Typography variant='h4' className='mx-4 mt-3'>
+                Stock Summary Data
+              </Typography>
+            </Grid2>
+            <Grid2 item xs={12}>
+              <TableStockSummary tableHeaderData={tableHeaderData} />
+            </Grid2>
+          </Box>
+        </Grid2>
+      </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
       <AccessibilitySettings />
       <ChatbotComponent />

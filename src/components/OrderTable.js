@@ -32,6 +32,8 @@ const OrderTable = ({
   const { settings } = useSettings()
   const [sortBy, setSortBy] = useState('')
   const [page, setPage] = useState(0)
+      const [invoiceBtnDisable, setInvoiceBtnDisable] = useState(false)
+  
   const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
   const [sortDirection, setSortDirection] = useState('asc')
   const [tableData, setTableData] = useState({ data: [], total: 0 })
@@ -45,7 +47,7 @@ const OrderTable = ({
 
   useEffect(() => {
     getData()
-  }, [tableHeaderData, page, rowsPerPage])
+  }, [tableHeaderData, page, rowsPerPage,invoiceBtnDisable])
 
   const getData = async () => {
     try {
@@ -161,6 +163,9 @@ const OrderTable = ({
                 handleUpdate={handleUpdate}
                 apiAccess={apiAccess}
                 customActions={customActions}
+              invoiceBtnDisable={invoiceBtnDisable}
+              setInvoiceBtnDisable={setInvoiceBtnDisable}
+
               />
             ))}
             {tableData?.data?.length === 0 && (
@@ -178,6 +183,7 @@ const OrderTable = ({
 }
 
 OrderTable.propTypes = {
+  title:PropTypes.any,
   endpoint: PropTypes.string.isRequired,
   columns: PropTypes.array.isRequired,
   tableHeaderData: PropTypes.object,

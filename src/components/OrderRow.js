@@ -20,12 +20,14 @@ const OrderRow = ({
     columns,
     handleUpdate,
     apiAccess,
-    customActions
+    customActions,
+    invoiceBtnDisable,
+    setInvoiceBtnDisable
+
 }) => {
     const serialNumber = index + 1 + page * rowsPerPage;
     const [state, setState] = useState({ addDrawer: false })
     const [orderId, setOrderId] = useState('')
-    const [invoiceBtnDisable, setInvoiceBtnDisable] = useState(false)
     const [transactionsDetail, setTransactionsDetail] = useState({});
     const { setIsLoading } = useLoading()
     const { removeAuthToken } = useAuth()
@@ -154,6 +156,7 @@ const OrderRow = ({
 export { OrderRow }
 
 OrderRow.propTypes = {
+    title:PropTypes.any,
     row: PropTypes.any,
     index: PropTypes.any,
     page: PropTypes.any,
@@ -162,6 +165,8 @@ OrderRow.propTypes = {
     columns: PropTypes.any,
     handleUpdate: PropTypes.any,
     apiAccess: PropTypes.any,
-    customActions: PropTypes.any
+    customActions: PropTypes.any,
+    invoiceBtnDisable:PropTypes.any,
+    setInvoiceBtnDisable:PropTypes.any
 
 }

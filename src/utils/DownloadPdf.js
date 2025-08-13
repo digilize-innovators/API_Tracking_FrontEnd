@@ -4,39 +4,38 @@ import { headerContentFix } from 'src/utils/headerContentPdfFix'
 import { footerContent } from 'src/utils/footerContentPdf'
 
 const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) => {
-
   const head = tableData.tableHeader
   const doc = new jsPDF()
-
-  
 
   const headerContent = () => {
     headerContentFix(doc, `${tableData.tableHeaderText}`)
 
     doc.setFontSize(10)
-if (tableHeaderData !== null) {
-  doc.text('Search : ' + (tableHeaderData?.searchVal || '__'), 15, 25);
-} 
- console.log(tableData.tableHeaderText,"tableData.tableHeaderText")
-if (
-  tableData.tableHeaderText !== 'Stock Summary' &&
-  tableData.tableHeaderText !== 'Sale Order Detail' &&
-  tableData.tableHeaderText !== 'Purchase Order Detail' &&
-  tableData.tableHeaderText !== 'StockTransfer Order Detail'
-)   {
-        doc.text('Filters :\n', 15, 30)
+    if (tableHeaderData !== null) {
+      doc.text('Search : ' + (tableHeaderData?.searchVal || '__'), 15, 25)
+    }
+    console.log(tableData.tableHeaderText, 'tableData.tableHeaderText')
+    if (
+      tableData.tableHeaderText !== 'Stock Summary' &&
+      tableData.tableHeaderText !== 'Sale Order Detail' &&
+      tableData.tableHeaderText !== 'Purchase Order Detail' &&
+      tableData.tableHeaderText !== 'StockTransfer Order Detail'
+    ) {
+      doc.text('Filters :\n', 15, 30)
+    }
 
-   }
-
-    if (tableData.Filter) {
+    if (tableData.Filter[0] !== 'Stock_Summary') {
       doc.text(`${tableData.Filter[0]} : ` + (tableData.Filter[1] || '__'), 20, 35)
-      let labelText = '';
-if (tableData.Filter[0] === 'department') {
-  labelText = `Status : ${tableData?.statusFilter || '__'}`;
-} else if (tableData.Filter[0] !== 'Order Type') {
-  labelText = `E-Sign : ${tableHeaderData?.esignStatus || '__'}`;
-}
+      let labelText = ''
+      if (tableData.Filter[0] === 'department') {
+        labelText = `Status : ${tableData?.statusFilter || '__'}`
+      } else if (tableData.Filter[0] !== 'Order Type') {
+        labelText = `E-Sign : ${tableHeaderData?.esignStatus || '__'}`
+      }
       doc.text(labelText, 20, 40)
+    } else if (tableData.Filter[0] == 'Stock_Summary') {
+      doc.text(`Location Name : ` + (tableData.Filter[2] || '__'), 20, 35)
+      doc.text(`Product Name : ` + (tableData.Filter[1] || '__'), 20, 40)
     } else if (tableHeaderData?.esignStatus) {
       doc.text('E-Sign : ' + (tableHeaderData?.esignStatus || '__'), 20, 35)
     }
@@ -54,16 +53,17 @@ if (tableData.Filter[0] === 'department') {
     while (dataIndex < Data.length) {
       if (currentPage > 1) {
         doc.addPage()
-        headerContent() // Ensure header is added on new pages
+        headerContent() 
       }
 
       const body = tableBody.slice(dataIndex, dataIndex + 25)
 
       autoTable(doc, {
         startY: currentPage === 1 ? 60 : 50, // Ensure consistent spacing
-        styles: { halign: 'center' ,
-           cellWidth: 'auto',       // Let widths adjust automatically
-    minCellWidth: 20    
+        styles: {
+          halign: 'center',
+          cellWidth: 'auto', // Let widths adjust automatically
+          minCellWidth: 20
         },
         headStyles: { fontSize: 8, fillColor: [80, 189, 160] },
         alternateRowStyles: { fillColor: [249, 250, 252] },
