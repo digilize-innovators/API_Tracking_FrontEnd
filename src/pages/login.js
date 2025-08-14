@@ -131,12 +131,14 @@ const LoginPage = () => {
 
         default:
           if (res.data.success) {
+            console.log(res.data.data)
             setIsLoading(true)
             setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Login successful' })
             login(`Bearer ${res.data.data.token}`)
             Cookies.set('token', res.data.data.token)
             Cookies.set('screens', JSON.stringify(res.data.data.screens))
             Cookies.set('profile-image', `${res.data.data.profile_image}`)
+            Cookies.set('location', `${res.data.data.location}`)
             setUserInfo(res.data.data)
             reset()
             setIsLoading(false)

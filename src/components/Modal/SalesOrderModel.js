@@ -70,9 +70,13 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
   const [locationSr, setLocationSr] = useState([])
   const [productData, setProductData] = useState([])
   const [batchOptionsMap, setBatchOptionsMap] = useState({})
+  const [batchQuantityMap, setBatchQuantityMap] = useState({});
+
   const [editableIndex, setEditableIndex] = useState(null)
   const [openConfirm, setOpenConfirm] = useState(false)
   const [error,setError]=useState('')
+  const [openUpdateConfirm, setOpenUpdateConfirm] = useState(false);
+const [updateIndex, setUpdateIndex] = useState(null);
   const [deleteBatch, setDeleteBatch] = useState('')
   const [deleteIndex,setDeleteIndex]=useState(null)
   const [initialHeaderValues, setInitialHeaderValues] = useState(null)
@@ -85,7 +89,9 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
     formState: { errors },
     getValues,
     watch,
-    setValue
+    setValue,
+
+
   } = useForm({
     resolver: yupResolver(SalesOrderSchema),
     defaultValues: {
@@ -125,11 +131,26 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
     try {
       const res = await api(`/batch/${productId}?onlyended=true`, {}, 'get', true)
       if (res.data.success) {
+         const quantityMap = {};
+        
+                             res.data.data.batches?.forEach(batch => {
+                        quantityMap[batch.batch_uuid] = batch.quantity|| 0;
+                    });
+ setBatchQuantityMap(prev => ({
+                        ...prev,
+                        [index]: quantityMap
+                    }));
         return res.data.data.batches?.map(batch => ({
           id: batch.batch_uuid,
           value: batch.batch_uuid,
-          label: batch.batch_no
+          label: batch.batch_no,
+          quantity:batch.quantity
         }))
+                           
+
+                   
+                   
+
       }
       return []
     } catch (error) {
@@ -294,7 +315,7 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
       ...Object.fromEntries(updates.map(({ index, productId, options }) => [index, { productId, options }]))
     }))
   }
-
+   
   useEffect(() => {
     const subscription = watch((value, { name }) => {
       if (name && name.startsWith('orders.') && name.endsWith('.productId')) {
@@ -370,49 +391,60 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
     }
   }
 
-  const handleEditOrSave = async index => {
-    const isEditing = editableIndex?.[index]
-    if (isEditing) {
-      const updatedItem = getValues(`orders.${index}`)
-      updatedItem.orderId = editData.id
-      const itemId = saleDetail?.[index]?.id
+  const handleEditOrSave = (index) => {
+  const isEditing = editableIndex?.[index];
+  if (isEditing) {
+    const updatedItem = getValues(`orders.${index}`);
 
-      if (itemId) {
-        try {
-          setIsLoading(true)
-          if(updatedItem.qty>10000)
-          {
-            setError('qty is not more than 10000') 
-            return
-          }
-          setError('')
-          const res = await api(`/sales-order/details/${itemId}`, updatedItem, 'put', true)
-          if (res.data.success) {
-            setEditableIndex(prev => ({
-              ...prev,
-              [index]: false
-            }))
-          }
-        } catch (err) {
-          console.error('Error updating order', err)
-        } finally {
-          setIsLoading(false)
-        }
-      }
-    } else {
+    if (updatedItem.qty > 10000) {
+      setError('qty is not more than 10000');
+      return;
+    }
+    const isValid = validateQuantity(index, parseFloat(updatedItem.qty), updatedItem.batchId);
+    if (!isValid) {
+      return;
+    }
+
+    // Store the index and open confirmation
+    setUpdateIndex(index);
+    setOpenUpdateConfirm(true);
+  } else {
+    setEditableIndex(prev => ({
+      ...prev,
+      [index]: true
+    }));
+  }
+};
+const confirmUpdateOrder = async () => {
+  if (updateIndex == null) return;
+
+  const updatedItem = getValues(`orders.${updateIndex}`);
+  updatedItem.orderId = editData.id;
+  const itemId = saleDetail?.[updateIndex]?.id;
+
+  try {
+    setIsLoading(true);
+    setError('');
+    const res = await api(`/sales-order/details/${itemId}`, updatedItem, 'put', true);
+    if (res.data.success) {
       setEditableIndex(prev => ({
         ...prev,
-        [index]: true
-      }))
+        [updateIndex]: false
+      }));
     }
+  } catch (err) {
+    console.error('Error updating order', err);
+  } finally {
+    setIsLoading(false);
+    setOpenUpdateConfirm(false);
+    setUpdateIndex(null);
   }
+};
 
   const handleReset = () => {
     if (initialHeaderValues) {
-      // Get current order details
       const currentOrders = getValues('orders')
 
-      // Reset only the header fields while preserving orders
       reset({
         ...initialHeaderValues,
         orders: currentOrders
@@ -425,8 +457,48 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
       })
       setEditableIndex(newEditableIndex)
     }
+     setBatchOptionsMap({}); // Also clear the batch dropdown options
+    setBatchQuantityMap({})
   }
 
+const validateQuantity = (index, quantity, batchId) => {
+    const batchQtyMap = batchQuantityMap[index];
+    if (!batchQtyMap || !batchId || !quantity) return true;
+
+    const availableQty = batchQtyMap[batchId];
+    if (availableQty && quantity > availableQty) {
+        setError(`Quantity cannot exceed available batch quantity: ${availableQty}`);
+        return false;
+    } else {
+       setError('')
+        return true;
+    }
+};
+
+// Add this new useEffect for real-time validation
+useEffect(() => {
+    watchedProducts?.forEach((order, index) => {
+        // Only validate if the order exists and has required fields
+        if (order?.qty && order?.batchId) {
+            validateQuantity(index, parseFloat(order.qty), order.batchId);
+        }
+    });
+}, [watchedProducts, batchQuantityMap]);
+
+const onSubmit = (data) => {
+    let hasValidationError = false;
+    data.orders?.forEach((order, index) => {
+        if ( order?.qty && order?.batchId && !validateQuantity(index, parseFloat(order.qty), order.batchId)) {
+            hasValidationError = true;
+        }
+    });
+
+    if (hasValidationError) {
+        return; 
+    }
+
+    handleSubmitForm(data);
+};
   return (
     <>
       <Modal open={open} onClose={handleClose} aria-labelledby='Purchase'>
@@ -441,7 +513,7 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
             {editData?.order_no ? 'Edit Sale Order' : 'Add Sale Order'}
           </Typography>
 
-          <form onSubmit={handleSubmit(handleSubmitForm)}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <Grid2 container spacing={2}>
               <Grid2 size={4}>
                 <CustomDropdown
@@ -512,6 +584,7 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
                 <Grid2 style={{marginTop: 6 }}>
                 {fields.map((field, index)=> {
                   const existOrder=saleDetail.find(item=>item.batch_id===field?.batchId)
+                  
                   return(
                   <Grid2 container spacing={2} key={field.id}>
                     <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -542,6 +615,7 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
                         label='Quantity'
                         control={control}
                         disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
+                        
                         
                       />
                     </Grid2>
@@ -583,7 +657,9 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
                       {existOrder && (
                         <Tooltip title={editableIndex?.[index] ? 'Save' : 'Edit'}>
                           <IconButton
-                            onClick={() => handleEditOrSave(index)}
+                            onClick={() => handleEditOrSave(index)
+                              
+                            }
                             sx={{
                               color: settings.themeColor,
                               mt: 1
@@ -638,6 +714,32 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
           </form>
         </Box>
       </Modal>
+      {openUpdateConfirm && (
+  <Dialog
+    open={openUpdateConfirm}
+    onClose={() => setOpenUpdateConfirm(false)}
+    aria-labelledby="confirm-update-dialog"
+  >
+    <Typography variant="h4" sx={{ mx: 4, mt: 8, mb: 2 }}>
+      Confirm update item
+    </Typography>
+    <DialogActions sx={{ pb: 4, px: 4 }}>
+      <Button
+        variant="outlined"
+        onClick={() => setOpenUpdateConfirm(false)}
+      >
+        Cancel
+      </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={confirmUpdateOrder}
+      >
+        Confirm
+      </Button>
+    </DialogActions>
+  </Dialog>
+)}
       {openConfirm && (
         <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)} aria-labelledby='confirm-dialog'>
           <Typography variant='h4' sx={{ mx: 4, mt: 8, mb: 2 }}>

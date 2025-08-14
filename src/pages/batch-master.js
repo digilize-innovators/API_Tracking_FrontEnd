@@ -55,6 +55,7 @@ const Index = () => {
     getAllProducts()
     getAllLocations()
     let data = getUserData()
+    console.log(data)
     const decodedToken = getTokenValues()
     setConfig(decodedToken)
     setUserDataPdf(data)
@@ -425,10 +426,10 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   const getAllLocations = async () => {
     try {
       setIsLoading(true)
-      const res = await api('/location?limit=-1&history_latest=true', {}, 'get', true)
+      const res = await api(`/location/type-so-sto`, {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
-        setAllLocationData(res.data.data.locations)
+         setAllLocationData(res.data.data)
       } else {
         console.log('Error to get all locations ', res.data)
         if (res.data.code === 401) {

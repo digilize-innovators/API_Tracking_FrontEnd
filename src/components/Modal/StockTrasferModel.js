@@ -70,7 +70,13 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
   const [editableIndex, setEditableIndex] = useState(null)
   const [openConfirm, setOpenConfirm] = useState(false)
   const [deleteIndex, setDeleteIndex] = useState(null)
-    const [deleteBatch, setDeleteBatch] = useState('')
+  const [deleteBatch, setDeleteBatch] = useState('')
+  const [batchQuantityMap, setBatchQuantityMap] = useState({})
+  const [openUpdateConfirm, setOpenUpdateConfirm] = useState(false);
+  const [updateIndex, setUpdateIndex] = useState(null);
+  const [error, setError] = useState('')
+  const [initialHeaderValues, setInitialHeaderValues] = useState(null)
+  
 
   const { settings } = useSettings()
 
@@ -110,22 +116,38 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
   }
 
   useEffect(() => {
-    if (editData?.id) {
-      reset({
+     if (editData?.id) {
+      setInitialHeaderValues({
+        type: editData.order_type || '',
         orderNo: editData.order_no || '',
         orderDate: formatDate(editData.order_date) || '',
         from: editData.from_location || '',
-        to: editData.to_location || '',
-        orders: stocktransferDetail?.length
-          ? stocktransferDetail.map(order => ({
-              productId: order.product_id || '',
-              batchId: order.batch_id || '',
-              qty: order.qty || ''
-            }))
-          : [{ productId: '', batchId: '', qty: '' }]
+        to: editData.to_location || ''
+      })
+      reset(defaultValues)
+
+      // Fetch batch options for initial values
+      const newBatchOptionsMap = {}
+      defaultValues.orders.forEach(async (order, index) => {
+        if (order.productId) {
+          const options = await fetchBatchesForProduct(order.productId, index)
+          newBatchOptionsMap[index] = {
+            productId: order.productId,
+            options
+          }
+          setBatchOptionsMap(prev => ({ ...prev, ...newBatchOptionsMap }))
+        }
       })
     } else {
+      setInitialHeaderValues({
+        type: '',
+        orderNo: '',
+        orderDate: '',
+        from: '',
+        to: ''
+      })
       reset({
+        type: '',
         orderNo: '',
         orderDate: '',
         from: '',
@@ -133,7 +155,7 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
         orders: [{ productId: '', batchId: '', qty: '' }]
       })
     }
-  }, [editData])
+  }, [editData, stocktransferDetail])
 
   const watchedProducts = useWatch({
     control,
@@ -141,56 +163,66 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
   })
 
   // Helper function to fetch batches for a single product
-const fetchProductBatches = async (productId) => {
-  try {
-    const res = await api(`/batch/${productId}?onlyended=true`, {}, 'get', true);
-    if (!res.data.success) return null;
-    
-    return res.data.data.batches?.map(batch => ({
-      id: batch.batch_uuid,
-      value: batch.batch_uuid,
-      label: batch.batch_no
-    }));
-  } catch (error) {
-    console.error(`Error fetching batches for product ${productId}`, error);
-    return null;
-  }
-};
-
-// Helper function to update batch options in state
-const updateBatchOptions = (index, productId, options) => {
-  setBatchOptionsMap(prev => ({
-    ...prev,
-    [index]: { productId, options }
-  }));
-};
-
-// Main effect with reduced nesting
-useEffect(() => {
-  const processProducts = async () => {
-    if (!watchedProducts) return;
-
-    const updatePromises = watchedProducts.map(async (purchase, index) => {
-      const productId = purchase?.productId;
-      if (!productId) return;
-      
-      const existing = batchOptionsMap[index];
-      if (existing?.productId === productId) return;
-
-      const options = await fetchProductBatches(productId);
-      if (options) {
-        return { index, productId, options };
+  const fetchProductBatches = async (productId, index) => {
+    try {
+      const res = await api(`/batch/${productId}?onlyended=true`, {}, 'get', true)
+      if (res.data.success) {
+        const quantityMap = {}
+        res.data.data.batches?.forEach(batch => {
+          quantityMap[batch.batch_uuid] = batch.quantity || 0
+        })
+        setBatchQuantityMap(prev => ({
+          ...prev,
+          [index]: quantityMap
+        }))
+        return res.data.data.batches?.map(batch => ({
+          id: batch.batch_uuid,
+          value: batch.batch_uuid,
+          label: batch.batch_no,
+          quantity: batch.quantity
+        }))
       }
-    });
+      return []
+    } catch (error) {
+      console.error(`Error fetching batches for product ${productId}`, error)
+      return []
+    }
+  }
 
-    const updates = (await Promise.all(updatePromises)).filter(Boolean);
-    updates.forEach(({ index, productId, options }) => {
-      updateBatchOptions(index, productId, options);
-    });
-  };
+  // Helper function to update batch options in state
+  const updateBatchOptions = (index, productId, options) => {
+    setBatchOptionsMap(prev => ({
+      ...prev,
+      [index]: { productId, options }
+    }))
+  }
 
-  processProducts();
-}, [watchedProducts]);
+  // Main effect with reduced nesting
+  useEffect(() => {
+    const processProducts = async () => {
+      if (!watchedProducts) return
+
+      const updatePromises = watchedProducts.map(async (purchase, index) => {
+        const productId = purchase?.productId
+        if (!productId) return
+
+        const existing = batchOptionsMap[index]
+        if (existing?.productId === productId) return
+
+        const options = await fetchProductBatches(productId, index)
+        if (options) {
+          return { index, productId, options }
+        }
+      })
+
+      const updates = (await Promise.all(updatePromises)).filter(Boolean)
+      updates.forEach(({ index, productId, options }) => {
+        updateBatchOptions(index, productId, options)
+      })
+    }
+
+    processProducts()
+  }, [watchedProducts])
 
   useEffect(() => {
     const getLocation = async () => {
@@ -223,7 +255,6 @@ useEffect(() => {
         const res = await api('/product?limit=-1&history_latest=true', {}, 'get', true)
         setIsLoading(false)
         if (res.data.success) {
-          // setAllProductData(res.data.data.products)
           const data = res.data.data.products?.map(item => ({
             id: item.product_uuid,
             value: item.product_uuid,
@@ -292,47 +323,99 @@ useEffect(() => {
     }
   }
 
+ const handleEditOrSave = (index) => {
+  const isEditing = editableIndex?.[index];
+  if (isEditing) {
+    const updatedItem = getValues(`orders.${index}`);
 
+    if (updatedItem.qty > 10000) {
+      setError('qty is not more than 10000');
+      return;
+    }
+    const isValid = validateQuantity(index, parseFloat(updatedItem.qty), updatedItem.batchId);
+    if (!isValid) {
+      return;
+    }
 
-  const handleEditOrSave = async index => {
-    const isEditing = editableIndex?.[index]
-    if (isEditing) {
-      // Save mode
-      const updatedItem = getValues(`orders.${index}`)
-      updatedItem.orderId = editData.id
-      const itemId = stocktransferDetail?.[index]?.id
+    // Store the index and open confirmation
+    setUpdateIndex(index);
+    setOpenUpdateConfirm(true);
+  } else {
+    setEditableIndex(prev => ({
+      ...prev,
+      [index]: true
+    }));
+  }
+};
 
-      if (itemId) {
-        try {
-          setIsLoading(true)
-          const res = await api(`/stocktransfer-order/details/${itemId}`, updatedItem, 'put', true)
-          if (res.data.success) {
-            setEditableIndex(prev => ({
-              ...prev,
-              [index]: false // Exit edit mode
-            }))
-          } else {
-            console.error('Failed to update order', res.data)
-          }
-        } catch (err) {
-          console.error('Error updating order', err)
-        } finally {
-          setIsLoading(false)
-        }
-      }
+  const handleReset = () => {
+    reset() 
+    setBatchOptionsMap({})
+    setBatchQuantityMap({}) // Also clear the batch dropdown options
+  }
+
+  const validateQuantity = (index, quantity, batchId) => {
+    const batchQtyMap = batchQuantityMap[index]
+    if (!batchQtyMap || !batchId || !quantity) return true
+
+    const availableQty = batchQtyMap[batchId]
+    if (availableQty && quantity > availableQty) {
+      setError(`Quantity cannot exceed available batch quantity: ${availableQty}`)
+      return false
     } else {
-      // Enter edit mode
-      setEditableIndex(prev => ({
-        ...prev,
-        [index]: true
-      }))
+      setError('')
+      return true
     }
   }
 
-  const handleReset = () => {
-    reset() // Resets the form values
-    setBatchOptionsMap({}) // Also clear the batch dropdown options
+  useEffect(() => {
+    watchedProducts?.forEach((order, index) => {
+      if (order?.qty && order?.batchId) {
+        validateQuantity(index, parseFloat(order.qty), order.batchId)
+      }
+    })
+  }, [watchedProducts, batchQuantityMap])
+
+  const onSubmit = data => {
+    let hasValidationError = false
+    data.orders?.forEach((order, index) => {
+      if ( order?.qty && order?.batchId && !validateQuantity(index, parseFloat(order.qty), order.batchId)) {
+        hasValidationError = true
+      }
+    })
+
+    if (hasValidationError) {
+      return // Don't submit if there are validation errors
+    }
+
+    handleSubmitForm(data)
   }
+
+  const confirmUpdateOrder = async () => {
+    if (updateIndex == null) return;
+  
+    const updatedItem = getValues(`orders.${updateIndex}`);
+    updatedItem.orderId = editData.id;
+    const itemId = stocktransferDetail?.[updateIndex]?.id;
+  
+    try {
+      setIsLoading(true);
+      setError('');
+      const res = await api(`/stocktransfer-order/details/${itemId}`, updatedItem, 'put', true)
+      if (res.data.success) {
+        setEditableIndex(prev => ({
+          ...prev,
+          [updateIndex]: false
+        }));
+      }
+    } catch (err) {
+      console.error('Error updating order', err);
+    } finally {
+      setIsLoading(false);
+      setOpenUpdateConfirm(false);
+      setUpdateIndex(null);
+    }
+  };
 
   return (
     <>
@@ -348,7 +431,7 @@ useEffect(() => {
             {editData?.order_no ? 'Edit Stock Transfer Order' : 'Add Stock Transfer Order'}
           </Typography>
 
-          <form onSubmit={handleSubmit(handleSubmitForm)}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <Grid2 container spacing={2}>
               <Grid2 size={6}>
                 <CustomTextField name='orderNo' label='Order No' control={control} disabled={!!editData?.location_id} />
@@ -365,10 +448,11 @@ useEffect(() => {
                       id='Order-date'
                       label='Order Date'
                       type='date'
-                       slotProps={{
-                      inputLabel: {
-                        shrink: true
-                      }}}
+                      slotProps={{
+                        inputLabel: {
+                          shrink: true
+                        }
+                      }}
                       error={!!errors.orderDate}
                       helperText={errors.orderDate?.message || ''}
                     />
@@ -396,94 +480,101 @@ useEffect(() => {
                 </Button>
               </Grid2>
               <Grid2 style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: 1 }}>
-                {fields.map((field, index) => 
-                {
-                       const  existOrder= stocktransferDetail.find((item)=>item.batch_id===field.batchId)
-                               return (
-                  <Grid2 container spacing={2} key={field.id}>
-                    <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>{index + 1}</Typography>{' '}
-                    </Grid2>
-                    <Grid2 size={3.5}>
-                      <CustomDropdown
-                        name={`orders.${index}.productId`}
-                        label='Product'
-                        control={control}
-                        options={productData}
-                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
-                      />
-                    </Grid2>
-                    <Grid2 size={3}>
-                      <CustomDropdown
-                        name={`orders.${index}.batchId`}
-                        label='Batch'
-                        control={control}
-                        options={batchOptionsMap[index]?.options || []}
-                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
-                      />
-                    </Grid2>
-                    <Grid2 size={3.5}>
-                      <CustomTextField
-                        type='Number'
-                        name={`orders.${index}.qty`}
-                        label='Quantity'
-                        control={control}
-                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
-                      />
-                    </Grid2>
-                    <Grid2
-                      size={0.5}
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column'
-                      }}
-                    >
-                      <Box sx={{ marginTop: 2 }}>
-                        <IconButton
-                          onClick={() => {
-                            setDeleteBatch(existOrder)
-                            setDeleteIndex(index)
-                            setOpenConfirm(true)
-                          }}
-                          disabled={fields.length === 1}
-                          sx={{
-                            color: '#e53935',
-                            '&:hover': {
-                              color: '#c62828'
-                            }
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Box>
-                    </Grid2>
-                    <Grid2
-                      size={0.5}
-                      sx={{
-                        ml: 6,
-                        display: 'flex',
-                        alignItems: 'flex-start', // Align to the top
-                        justifyContent: 'center'
-                        // Move slightly upward
-                      }}
-                    >
-                      {existOrder && (
-                        <Tooltip title={editableIndex?.[index] ? 'Save' : 'Edit'}>
+                {fields.map((field, index) => {
+                  const existOrder = stocktransferDetail.find(item => item.batch_id === field.batchId)
+                  return (
+                    <Grid2 container spacing={2} key={field.id}>
+                      <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>{index + 1}</Typography>{' '}
+                      </Grid2>
+                      <Grid2 size={3.5}>
+                        <CustomDropdown
+                          name={`orders.${index}.productId`}
+                          label='Product'
+                          control={control}
+                          options={productData}
+                          disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
+                        />
+                      </Grid2>
+                      <Grid2 size={3}>
+                        <CustomDropdown
+                          name={`orders.${index}.batchId`}
+                          label='Batch'
+                          control={control}
+                          options={batchOptionsMap[index]?.options || []}
+                          disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
+                        />
+                      </Grid2>
+                      <Grid2 size={3.5}>
+                        <CustomTextField
+                          type='Number'
+                          name={`orders.${index}.qty`}
+                          label='Quantity'
+                          control={control}
+                          disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
+                        />
+                      </Grid2>
+                      <Grid2
+                        size={0.5}
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column'
+                        }}
+                      >
+                        <Box sx={{ marginTop: 2 }}>
                           <IconButton
-                            onClick={() => handleEditOrSave(index)}
+                            onClick={() => {
+                              setDeleteBatch(existOrder)
+                              setDeleteIndex(index)
+                              setOpenConfirm(true)
+                            }}
+                            disabled={fields.length === 1}
                             sx={{
-                              color: settings.themeColor,
-                              mt: 1
+                              color: '#e53935',
+                              '&:hover': {
+                                color: '#c62828'
+                              }
                             }}
                           >
-                            {editableIndex?.[index] ? <SaveIcon /> : <EditIcon />}
+                            <DeleteIcon />
                           </IconButton>
-                        </Tooltip>
-                      )}
+                        </Box>
+                      </Grid2>
+                      <Grid2
+                        size={0.5}
+                        sx={{
+                          ml: 6,
+                          display: 'flex',
+                          alignItems: 'flex-start', // Align to the top
+                          justifyContent: 'center'
+                          // Move slightly upward
+                        }}
+                      >
+                        {existOrder && (
+                          <Tooltip title={editableIndex?.[index] ? 'Save' : 'Edit'}>
+                            <IconButton
+                              onClick={() => handleEditOrSave(index)}
+                              sx={{
+                                color: settings.themeColor,
+                                mt: 1
+                              }}
+                            >
+                              {editableIndex?.[index] ? <SaveIcon /> : <EditIcon />}
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Grid2>
                     </Grid2>
-                  </Grid2>
-                )})}
+                  )
+                })}
               </Grid2>
+              {error.length > 0 && (
+                <Grid2>
+                  <Typography color='error' sx={{ mt: 2, fontSize: 14 }}>
+                    {error}
+                  </Typography>
+                </Grid2>
+              )}
               {errors.orders?.root?.message && (
                 <Grid2>
                   <Typography color='error' sx={{ mt: 2, fontSize: 14 }}>
@@ -506,7 +597,32 @@ useEffect(() => {
           </form>
         </Box>
       </Modal>
-
+        {openUpdateConfirm && (
+         <Dialog
+           open={openUpdateConfirm}
+           onClose={() => setOpenUpdateConfirm(false)}
+           aria-labelledby="confirm-update-dialog"
+         >
+           <Typography variant="h4" sx={{ mx: 4, mt: 8, mb: 2 }}>
+             Confirm update item
+           </Typography>
+           <DialogActions sx={{ pb: 4, px: 4 }}>
+             <Button
+               variant="outlined"
+               onClick={() => setOpenUpdateConfirm(false)}
+             >
+               Cancel
+             </Button>
+             <Button
+               variant="contained"
+               color="primary"
+               onClick={confirmUpdateOrder}
+             >
+               Confirm
+             </Button>
+           </DialogActions>
+         </Dialog>
+       )}
       {openConfirm && (
         <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)} aria-labelledby='confirm-dialog'>
           <Typography variant='h4' sx={{ mx: 4, mt: 8, mb: 2 }}>
@@ -520,8 +636,8 @@ useEffect(() => {
               variant='contained'
               color='error'
               onClick={() => {
-                  handleDeleteOrder(deleteBatch?.id, deleteIndex)
-                } }
+                handleDeleteOrder(deleteBatch?.id, deleteIndex)
+              }}
             >
               Delete
             </Button>

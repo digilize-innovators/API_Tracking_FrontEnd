@@ -23,8 +23,9 @@ export const AuthProvider = ({ children }) => {
   const getUserData = () => {
     const profileImage=Cookies.get("profile-image");
     const userName = Cookies.get('userName');
+    const userLocation=Cookies.get('location');
     const departmentName = Cookies.get('departmentName');
-    return { userName, departmentName,profileImage };
+    return { userName, departmentName,profileImage ,userLocation};
   };
 
   const login = (token) => {
@@ -61,6 +62,7 @@ export const AuthProvider = ({ children }) => {
     Cookies.remove('userName');
     Cookies.remove('departmentName');
     Cookies.remove('showBot');
+    Cookies.remove('location')
     setUser(null);
   };
 
