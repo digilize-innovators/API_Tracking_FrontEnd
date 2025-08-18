@@ -32,7 +32,7 @@ const CommonRow = ({
   const renderEditIcon = () => {
     if (customActions) return customActions(row, index);
 
-    if (row.esign_status === 'pending' && showEsignStatus) {
+    if (row.esign_status === 'pending' && showEsignStatus && config?.role !== 'admin') {
       return (
         <MdOutlineDomainVerification
           fontSize={20}
@@ -142,7 +142,7 @@ const CommonRow = ({
           </TableCell>
         ))}
 
-        {showEsignStatus && (
+        {showEsignStatus && config?.role !== 'admin' && (
           <TableCell align='center'>
             <StatusChip
               label={row?.esign_status}

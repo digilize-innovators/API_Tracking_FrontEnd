@@ -151,7 +151,7 @@ const CommonTableWrapper = ({
                   </TableCell>
                 )
               })}
-              {esignEnabled && <TableCell align='center'>E-Sign</TableCell>}
+              {esignEnabled && config?.role !== 'admin'&& <TableCell align='center'>E-Sign</TableCell>}
               <TableCell align='center' sx={{ cursor: 'pointer' }}
                     onClick={() => handleSort('updated_at')} >Updated At
                     <IconButton size='small'>

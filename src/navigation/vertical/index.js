@@ -287,7 +287,8 @@ const navigation = () => {
       'Department Master',
       'User Master',
       'Dashboard',
-      'Stock Summary'
+      'Stock Summary',
+      'Batch Master'
     )
     Cookies.set('screens', JSON.stringify(screens))
   }

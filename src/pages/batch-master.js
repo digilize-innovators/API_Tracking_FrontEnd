@@ -55,7 +55,6 @@ const Index = () => {
     getAllProducts()
     getAllLocations()
     let data = getUserData()
-    console.log(data)
     const decodedToken = getTokenValues()
     setConfig(decodedToken)
     setUserDataPdf(data)
@@ -64,7 +63,7 @@ const Index = () => {
 
   useEffect(() => {
     if (pendingAction && formData) {
-      const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
+      const esign_status = config?.config?.esign_status && config?.role !== 'admin' ? 'pending' : 'approved'
       if (pendingAction === 'edit') {
         editBatch(esign_status)
       } else if (pendingAction == 'add') {
@@ -145,7 +144,7 @@ const Index = () => {
     } else {
       setApproveAPI({ approveAPIName: 'batch-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/batch' })
     }
-    if (config?.config?.esign_status) {
+    if (config?.config?.esign_status && config?.role !== 'admin') {
       setAuthModalOpen(true)
       return
     }
@@ -231,6 +230,15 @@ const Index = () => {
   }
 
   const handleUpdate = item => {
+    if(config?.role === 'admin')
+    {
+    setAlertData({
+      type: 'error',
+      openSnackbar: true,
+      message: 'No access to admin'
+    });
+      return
+    }
     resetForm()
     setEditData(item)
     setOpenModal(true)
@@ -377,7 +385,15 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     if (searchBarRef.current) {
       searchBarRef.current.resetSearch()
     }
-    setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '', filterProductVal: '', filterLocationVal: '' });
+    if(userDataPdf?.userName!=='admin01')
+    {
+          setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '', filterProductVal: '', filterLocationVal: userDataPdf?.userLocation});
+
+    }
+    else{
+          setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '', filterProductVal: '', filterLocationVal: '' });
+
+    }
   }
 
   const handleAuthModalOpen = () => {
@@ -395,7 +411,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
       approveAPImethod: 'PATCH',
       approveAPIEndPoint: '/api/v1/batch'
     })
-    if (config?.config?.esign_status) {
+    if (config?.config?.esign_status && config?.role !== 'admin') {
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return
@@ -424,24 +440,44 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   const getAllLocations = async () => {
-    try {
-      setIsLoading(true)
-      const res = await api(`/location/type-so-sto`, {}, 'get', true)
-      setIsLoading(false)
-      if (res.data.success) {
-         setAllLocationData(res.data.data)
-      } else {
-        console.log('Error to get all locations ', res.data)
-        if (res.data.code === 401) {
-          removeAuthToken()
-          router.push('/401')
-        }
+  try {
+    setIsLoading(true);
+    const res = await api('/location?limit=-1&history_latest=true', {}, 'get', true);
+    setIsLoading(false);
+    if (res.data.success) {
+      const plantLocations = res.data.data.locations.filter(item => item.location_type === 'PLANT');
+      const user =getUserData()
+      const userLocation = user.userLocation; // or location_id depending on token structure
+      const userName =user.departmentName
+;      if (userName ==='Admin') {
+        // restrict to user location only
+          setAllLocationData(plantLocations);
+        
+      }else
+      {
+           const finalLocations = plantLocations.filter(loc => loc.location_name === userLocation);
+         
+             setTableHeaderData(prev => ({
+            ...prev,
+            filterLocationVal: userLocation
+          }));
+          
+              setAllLocationData(finalLocations);
+
       }
-    } catch (error) {
-      console.log('Error in get locations ', error)
-      setIsLoading(false)
+    } else {
+      console.log('Error to get all locations ', res.data);
+      if (res.data.code === 401) {
+        removeAuthToken();
+        router.push('/401');
+      }
     }
+  } catch (error) {
+    console.log('Error in get locations ', error);
+    setIsLoading(false);
   }
+};
+
 
   return (
     <Box padding={4}>
@@ -459,28 +495,30 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
             </Typography>
             <Grid2 item xs={12}>
               <Box className='d-flex-row justify-content-start align-items-center mx-4 my-3 '>
-                {config?.config?.esign_status && (
+                {config?.config?.esign_status && config?.role !== 'admin' && (
                   <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
                 )}
                 <FormControl className='w-25 mx-2'>
                   <InputLabel id='batch-filter-by-location'>Location</InputLabel>
                   <Select
-                    labelId='batch-select-by-location'
-                    id='product-select-by-location'
-                    value={tableHeaderData.filterLocationVal}
-                    label='Location'
-                    onChange={handleLocationFilter}
-                  >
-                    {allLocationData?.map(item => {
-                      return (
-                        <MenuItem key={item?.location_uuid} value={item?.location_name}>
-                          {item?.location_name}
-                        </MenuItem>
-                      )
-                    })}
-                  </Select>
+  labelId='batch-select-by-location'
+  id='product-select-by-location'
+  value={tableHeaderData.filterLocationVal}
+  label='Location'
+  onChange={handleLocationFilter}
+>
+  {allLocationData.length === 0 ? (
+    <MenuItem value='' disabled>No Location Available</MenuItem>
+  ) : (
+    allLocationData.map(item => (
+      <MenuItem key={item?.location_uuid} value={item?.location_name}>
+        {item?.location_name}
+      </MenuItem>
+    ))
+  )}
+</Select>
                 </FormControl>
-
+                 
                 <FormControl className='w-25 ml-2'>
                   <InputLabel id='batch-filter-by-product'>Product</InputLabel>
                   <Select
@@ -504,7 +542,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
-                  {apiAccess.addApiAccess && (
+                  {apiAccess.addApiAccess && config?.role !== 'admin' && allLocationData.length>0 &&(
                     <Button variant='contained' sx={{mx:2}} onClick={handleOpenModal} >
                       <span>
                         <IoMdAdd />
