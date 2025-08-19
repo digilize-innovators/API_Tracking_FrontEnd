@@ -269,7 +269,10 @@ const Index = () => {
 
       return
     }
-
+    if (esignStatus === 'rejected' && esignDownloadPdf) {
+      setOpenModalApprove(false)
+      return;
+    }
     const res = await api('/esign-status/update-esign-status', payload, 'patch', true)
 
     if (res?.data) {
@@ -283,9 +286,6 @@ const Index = () => {
 
     setPendingAction(true)
 
-    if (esignStatus === 'rejected' && esignDownloadPdf) {
-      setOpenModalApprove(false)
-    }
   }
 
   const handleCreatorActions = (user, esignStatus, remarks, isApprover) => {

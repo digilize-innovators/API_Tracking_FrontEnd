@@ -272,6 +272,11 @@ const handleApproverActions = async (user, esignStatus, remarks) => {
     return;
   }
 
+  if (esignStatus === 'rejected' && esignDownloadPdf) {
+      setOpenModalApprove(false)
+      return;
+    }
+
   const data = buildApproverData(user, esignStatus, remarks);
   const res = await api('/esign-status/update-esign-status', data, 'patch', true);
 

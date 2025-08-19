@@ -253,7 +253,10 @@ const handleApproverActions = async (esignStatus, remarks, user) => {
     resetState();
     return;
   }
-
+ if (esignStatus === 'rejected' && esignDownloadPdf) {
+      setOpenModalApprove(false)
+      return;
+    }
   await updateEsignStatus(esignStatus, remarks, user);
   setPendingAction(true);
 };
