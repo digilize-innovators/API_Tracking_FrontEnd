@@ -120,6 +120,7 @@ const Index = () => {
     setSaleDetail([])
   }
   const handleSubmitForm = async data => {
+    // console.log(data)
     setFormData(data)
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
@@ -130,6 +131,8 @@ const Index = () => {
   const addSaleOrder = async () => {
     try {
       const data = { ...formData }
+
+      console.log('sale data',data)
       setIsLoading(true)
       const res = await api('/sales-order/', data, 'post', true)
       setIsLoading(false)
@@ -160,18 +163,8 @@ const Index = () => {
   const editSaleOrder = async () => {
     try {
       const data = { ...formData }
+    
       delete data.type
-
-      const filteredOrders = data.orders.filter(
-        order => !saleDetail.some(item => item.batch_id === order.batchId)
-      )
-      if (filteredOrders.length > 0) {
-        data.orders = filteredOrders
-      } else {
-        delete data.orders
-      }
-      // filteredOrders.length>0 ? data.orders=filteredOrders : delete data.orders
-
       setIsLoading(true)
       const res = await api(`/sales-order/${editData.id}`, data, 'put', true)
       setIsLoading(false)

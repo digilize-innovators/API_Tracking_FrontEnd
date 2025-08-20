@@ -42,7 +42,10 @@ const StockTrasferSchema = yup.object().shape({
           .typeError('Quantity must be a number')
           .positive('Quantity must be greater than zero')
           .min(1)
-          .max(10000)
+          .max(10000),
+           added:yup.boolean(),
+           edited:yup.boolean(),
+           deleted:yup.boolean()
       })
     )
     .min(1, 'At least one purchase item is required')
@@ -72,12 +75,10 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
   const [deleteIndex, setDeleteIndex] = useState(null)
   const [deleteBatch, setDeleteBatch] = useState('')
   const [batchQuantityMap, setBatchQuantityMap] = useState({})
-  const [openUpdateConfirm, setOpenUpdateConfirm] = useState(false);
-  const [updateIndex, setUpdateIndex] = useState(null);
   const [error, setError] = useState('')
-  const [initialHeaderValues, setInitialHeaderValues] = useState(null)
+  const [deletedOrders, setDeletedOrders] = useState([]);
   
-
+  
   const { settings } = useSettings()
 
   const {
@@ -85,6 +86,8 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
     control,
     reset,
     getValues,
+    setValue,
+    watch,
     formState: { errors }
   } = useForm({
     resolver: yupResolver(StockTrasferSchema),
@@ -99,7 +102,7 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
             batchId: order.batch_id || '',
             qty: order.qty || ''
           }))
-        : [{ productId: '', batchId: '', qty: '' }]
+        : []
     }
   })
 
@@ -115,47 +118,40 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
     return ''
   }
 
-  useEffect(() => {
-     if (editData?.id) {
-      setInitialHeaderValues({
-        type: editData.order_type || '',
-        orderNo: editData.order_no || '',
-        orderDate: formatDate(editData.order_date) || '',
-        from: editData.from_location || '',
-        to: editData.to_location || ''
-      })
-      reset(defaultValues)
+   useEffect(() => {
+  const defaultValues = {
+    orderNo: editData?.order_no || '',
+    orderDate: formatDate(editData?.order_date) || '',
+    from: editData?.from_location || '',
+    to: editData?.to_location || '',
+    orders: stocktransferDetail?.length
+      ? stocktransferDetail.map(order => ({
+          productId: order.product_id || '',
+          batchId: order.batch_id || '',
+          qty: order.qty || '',
+          added: false,
+          edited: false,
+          deleted: false,
+          orderDetailId:order.id
+        }))
+      : [          { productId: '', batchId: '', qty: '', added: true, edited: false, deleted: false }
+]
+  }
 
-      // Fetch batch options for initial values
-      const newBatchOptionsMap = {}
-      defaultValues.orders.forEach(async (order, index) => {
-        if (order.productId) {
-          const options = await fetchBatchesForProduct(order.productId, index)
-          newBatchOptionsMap[index] = {
-            productId: order.productId,
-            options
-          }
-          setBatchOptionsMap(prev => ({ ...prev, ...newBatchOptionsMap }))
-        }
-      })
-    } else {
-      setInitialHeaderValues({
-        type: '',
-        orderNo: '',
-        orderDate: '',
-        from: '',
-        to: ''
-      })
-      reset({
-        type: '',
-        orderNo: '',
-        orderDate: '',
-        from: '',
-        to: '',
-        orders: [{ productId: '', batchId: '', qty: '' }]
-      })
+  reset(defaultValues)
+
+  const newBatchOptionsMap = {}
+  defaultValues.orders.forEach(async (order, index) => {
+    if (order.productId) {
+      const options = await fetchProductBatches(order.productId, index)
+      newBatchOptionsMap[index] = {
+        productId: order.productId,
+        options
+      }
+      setBatchOptionsMap(prev => ({ ...prev, ...newBatchOptionsMap }))
     }
-  }, [editData, stocktransferDetail])
+  })
+}, [editData, stocktransferDetail])
 
   const watchedProducts = useWatch({
     control,
@@ -275,6 +271,7 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
     }
     getAllProducts()
     getLocation()
+
   }, [])
 
   useEffect(() => {
@@ -287,42 +284,32 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
       setEditableIndex(initialEditable)
     }
   }, [open, editData])
+  const handleDeleteOrder = (orderId, index) => {
+  const row = getValues(`orders.${index}`);
 
-  const handleDeleteOrder = async (orderId, index) => {
-    try {
-      setIsLoading(true)
-      if (orderId) {
-        const res = await api(`/stocktransfer-order/details/${orderId}`, { orderId: editData.id }, 'delete', true)
-        if (!res.data.success) {
-          console.error('Failed to delete item:', res.data)
-          return
-        }
-      }
-      remove(index)
-      setEditableIndex(prev => {
-        const newState = { ...prev }
-        delete newState[index]
-        const updatedState = {}
-        Object.keys(newState).forEach(key => {
-          const numKey = parseInt(key)
-          if (numKey > index) {
-            updatedState[numKey - 1] = newState[numKey]
-          } else if (numKey < index) {
-            updatedState[numKey] = newState[numKey]
-          }
+  setDeletedOrders(prev => [...prev, { ...row, deleted: true, edited: false, added: false }]);
+
+  remove(index);
+
+  setOpenConfirm(false);
+  setDeleteBatch('');
+  setDeleteIndex(null);
+};
+
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (name && name.startsWith('orders.') && name.endsWith('.productId')) {
+        const index = parseInt(name.split('.')[1])
+        setValue(`orders.${index}.batchId`, '')
+        setBatchOptionsMap(prev => {
+          const newMap = { ...prev }
+          delete newMap[index]
+          return newMap
         })
-        return updatedState
-      })
-    } catch (error) {
-      console.error('Error deleting order item:', error)
-    } finally {
-      setIsLoading(false)
-      setOpenConfirm(false)
-      setDeleteBatch('')
-      setDeleteIndex(null)
-    }
-  }
-
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [watch, setValue])
  const handleEditOrSave = (index) => {
   const isEditing = editableIndex?.[index];
   if (isEditing) {
@@ -336,11 +323,13 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
     if (!isValid) {
       return;
     }
-
-    // Store the index and open confirmation
-    setUpdateIndex(index);
-    setOpenUpdateConfirm(true);
-  } else {
+      setValue(`orders.${index}.edited`, true);
+        setEditableIndex(prev => ({
+      ...prev,
+      [index]: false
+    }));
+  } 
+  else {
     setEditableIndex(prev => ({
       ...prev,
       [index]: true
@@ -348,12 +337,7 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
   }
 };
 
-  const handleReset = () => {
-    reset() 
-    setBatchOptionsMap({})
-    setBatchQuantityMap({}) // Also clear the batch dropdown options
-  }
-
+ 
   const validateQuantity = (index, quantity, batchId) => {
     const batchQtyMap = batchQuantityMap[index]
     if (!batchQtyMap || !batchId || !quantity) return true
@@ -377,6 +361,11 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
   }, [watchedProducts, batchQuantityMap])
 
   const onSubmit = data => {
+    const hasUnsavedEdits = Object.values(editableIndex || {}).some(val => val === true);
+  if (hasUnsavedEdits) {
+    setError('Please save or cancel all edits before submitting.');
+    return;
+  }
     let hasValidationError = false
     data.orders?.forEach((order, index) => {
       if ( order?.qty && order?.batchId && !validateQuantity(index, parseFloat(order.qty), order.batchId)) {
@@ -385,38 +374,17 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
     })
 
     if (hasValidationError) {
-      return // Don't submit if there are validation errors
+      return 
     }
-
-    handleSubmitForm(data)
+   const payload = {
+    ...data,
+    orders: [...data.orders, ...deletedOrders]
+  };
+    setDeletedOrders([])
+    handleSubmitForm(payload)
   }
 
-  const confirmUpdateOrder = async () => {
-    if (updateIndex == null) return;
-  
-    const updatedItem = getValues(`orders.${updateIndex}`);
-    updatedItem.orderId = editData.id;
-    const itemId = stocktransferDetail?.[updateIndex]?.id;
-  
-    try {
-      setIsLoading(true);
-      setError('');
-      const res = await api(`/stocktransfer-order/details/${itemId}`, updatedItem, 'put', true)
-      if (res.data.success) {
-        setEditableIndex(prev => ({
-          ...prev,
-          [updateIndex]: false
-        }));
-      }
-    } catch (err) {
-      console.error('Error updating order', err);
-    } finally {
-      setIsLoading(false);
-      setOpenUpdateConfirm(false);
-      setUpdateIndex(null);
-    }
-  };
-
+ 
   return (
     <>
       <Modal open={open} onClose={handleClose} aria-labelledby='StockTranfer'>
@@ -474,14 +442,17 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
                   type='button'
                   variant='contained'
                   sx={{ marginRight: 3.5 }}
-                  onClick={() => append({ productId: '', batchId: '', qty: '' })}
+                  onClick={() => append({ productId: '', batchId: '', qty: '',added:true,edited:false,deleted:false})}
                 >
                   Add
                 </Button>
               </Grid2>
-              <Grid2 style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: 1 }}>
+              <Grid2 style={{ maxHeight: '250px', overflowY: 'auto', paddingRight: 1 }}>
+               <Grid2 style={{marginTop: 6 }}>
+              
                 {fields.map((field, index) => {
                   const existOrder = stocktransferDetail.find(item => item.batch_id === field.batchId)
+                    if (watch(`orders.${index}.deleted`)) return null; 
                   return (
                     <Grid2 container spacing={2} key={field.id}>
                       <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -505,7 +476,7 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
                           disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                         />
                       </Grid2>
-                      <Grid2 size={3.5}>
+                      <Grid2 size={3}>
                         <CustomTextField
                           type='Number'
                           name={`orders.${index}.qty`}
@@ -567,6 +538,7 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
                     </Grid2>
                   )
                 })}
+                </Grid2>
               </Grid2>
               {error.length > 0 && (
                 <Grid2>
@@ -587,42 +559,23 @@ const StockTrasferModel = ({ open, handleClose, editData, stocktransferDetail, h
               <Button type='submit' variant='contained' sx={{ marginRight: 3.5 }}>
                 Save Changes
               </Button>
-              <Button type='button' variant='outlined' onClick={handleReset} color='primary'>
+              <Button type='button' variant='outlined'  onClick={() =>{
+                 reset();
+    setDeletedOrders([])
+               } }  color='primary'>
                 Reset
               </Button>
-              <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={handleClose}>
+              <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={()=>{
+                setDeletedOrders([])
+                handleClose()
+
+              }}>
                 Close
               </Button>
             </Grid2>
           </form>
         </Box>
       </Modal>
-        {openUpdateConfirm && (
-         <Dialog
-           open={openUpdateConfirm}
-           onClose={() => setOpenUpdateConfirm(false)}
-           aria-labelledby="confirm-update-dialog"
-         >
-           <Typography variant="h4" sx={{ mx: 4, mt: 8, mb: 2 }}>
-             Confirm update item
-           </Typography>
-           <DialogActions sx={{ pb: 4, px: 4 }}>
-             <Button
-               variant="outlined"
-               onClick={() => setOpenUpdateConfirm(false)}
-             >
-               Cancel
-             </Button>
-             <Button
-               variant="contained"
-               color="primary"
-               onClick={confirmUpdateOrder}
-             >
-               Confirm
-             </Button>
-           </DialogActions>
-         </Dialog>
-       )}
       {openConfirm && (
         <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)} aria-labelledby='confirm-dialog'>
           <Typography variant='h4' sx={{ mx: 4, mt: 8, mb: 2 }}>

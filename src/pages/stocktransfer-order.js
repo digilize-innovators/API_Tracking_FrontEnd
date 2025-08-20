@@ -162,15 +162,7 @@ const Index = () => {
   const editStockTrasfer = async () => {
     try {
       const data = { ...formData }
-      const filteredOrders = data.orders.filter(
-        order => !stocktransferDetail.some(item => item.batch_id === order.batchId)
-      )
-  if (filteredOrders.length > 0) {
-        data.orders = filteredOrders
-      } 
-      else {
-        delete data.orders
-      }  
+
           setIsLoading(true)
       const res = await api(`/stocktransfer-order/${editData.id}`, data, 'put', true)
       setIsLoading(false)

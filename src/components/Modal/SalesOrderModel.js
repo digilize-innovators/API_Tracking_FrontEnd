@@ -43,7 +43,10 @@ const SalesOrderSchema = yup.object().shape({
           .typeError('Quantity must be a number')
           .positive('Quantity must be greater than zero')
           .min(1)
-          .max(10000)
+          .max(10000),
+          added:yup.boolean(),
+          edited:yup.boolean(),
+          deleted:yup.boolean(),
       })
     )
     .min(1, 'At least one purchase item is required')
@@ -71,15 +74,13 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
   const [productData, setProductData] = useState([])
   const [batchOptionsMap, setBatchOptionsMap] = useState({})
   const [batchQuantityMap, setBatchQuantityMap] = useState({});
-
   const [editableIndex, setEditableIndex] = useState(null)
   const [openConfirm, setOpenConfirm] = useState(false)
   const [error,setError]=useState('')
-  const [openUpdateConfirm, setOpenUpdateConfirm] = useState(false);
-const [updateIndex, setUpdateIndex] = useState(null);
   const [deleteBatch, setDeleteBatch] = useState('')
   const [deleteIndex,setDeleteIndex]=useState(null)
-  const [initialHeaderValues, setInitialHeaderValues] = useState(null)
+  const [deletedOrders, setDeletedOrders] = useState([]);
+
   const { settings } = useSettings()
 
   const {
@@ -100,7 +101,7 @@ const [updateIndex, setUpdateIndex] = useState(null);
       orderDate: '',
       from: '',
       to: '',
-      orders: [{ productId: '', batchId: '', qty: '' }]
+      orders: []
     }
   })
 
@@ -159,65 +160,47 @@ const [updateIndex, setUpdateIndex] = useState(null);
     }
   }
 
-  useEffect(() => {
-    const defaultValues = {
-      type: editData.order_type || '',
-      orderNo: editData.order_no || '',
-      orderDate: formatDate(editData.order_date) || '',
-      from: editData.from_location || '',
-      to: editData.to_location || '',
-      orders: saleDetail?.length
-        ? saleDetail.map(order => ({
-            productId: order.product_id || '',
-            batchId: order.batch_id || '',
-            qty: order.qty || ''
-          }))
-        : [{ productId: '', batchId: '', qty: '' }]
-    }
+ useEffect(() => {
+  const defaultValues = {
+    type: editData?.order_type || '',
+    orderNo: editData?.order_no || '',
+    orderDate: formatDate(editData?.order_date) || '',
+    from: editData?.from_location || '',
+    to: editData?.to_location || '',
+    orders: saleDetail?.length
+      ? saleDetail.map(order => ({
+          productId: order.product_id || '',
+          batchId: order.batch_id || '',
+          qty: order.qty || '',
+          added: false,
+          edited: false,
+          deleted: false,
+          orderDetailId:order.id
+        }))
+      :  [
+          { productId: '', batchId: '', qty: '', added: true, edited: false, deleted: false }
+        ]
+  }
 
-    if (editData?.id) {
-      setInitialHeaderValues({
-        type: editData.order_type || '',
-        orderNo: editData.order_no || '',
-        orderDate: formatDate(editData.order_date) || '',
-        from: editData.from_location || '',
-        to: editData.to_location || ''
-      })
-      reset(defaultValues)
+  reset(defaultValues)
 
-      // Fetch batch options for initial values
-      const newBatchOptionsMap = {}
-      defaultValues.orders.forEach(async (order, index) => {
-        if (order.productId) {
-          const options = await fetchBatchesForProduct(order.productId, index)
-          newBatchOptionsMap[index] = {
-            productId: order.productId,
-            options
-          }
-          setBatchOptionsMap(prev => ({ ...prev, ...newBatchOptionsMap }))
-        }
-      })
-    } else {
-      setInitialHeaderValues({
-        type: '',
-        orderNo: '',
-        orderDate: '',
-        from: '',
-        to: ''
-      })
-      reset({
-        type: '',
-        orderNo: '',
-        orderDate: '',
-        from: '',
-        to: '',
-        orders: [{ productId: '', batchId: '', qty: '' }]
-      })
+  const newBatchOptionsMap = {}
+  defaultValues.orders.forEach(async (order, index) => {
+    if (order.productId) {
+      const options = await fetchBatchesForProduct(order.productId, index)
+      newBatchOptionsMap[index] = {
+        productId: order.productId,
+        options
+      }
+      setBatchOptionsMap(prev => ({ ...prev, ...newBatchOptionsMap }))
     }
-  }, [editData, saleDetail])
+  })
+}, [editData, saleDetail])
+
 
   useEffect(() => {
     fetchAllInitialData()
+    setDeletedOrders([])
   }, [])
 
   const fetchAllInitialData = async () => {
@@ -356,40 +339,17 @@ const [updateIndex, setUpdateIndex] = useState(null);
     }
   }, [open, editData])
 
-  const handleDeleteOrder = async (orderId, index) => {
-    try {
-      setIsLoading(true)
-      if (orderId) {
-        const res = await api(`/sales-order/details/${orderId}`, { orderId: editData.id }, 'delete', true)
-        if (!res.data.success) {
-          console.error('Failed to delete item:', res.data)
-          return
-        }
-      }
-      remove(index)
-      setEditableIndex(prev => {
-        const newState = { ...prev }
-        delete newState[index]
-        const updatedState = {}
-        Object.keys(newState).forEach(key => {
-          const numKey = parseInt(key)
-          if (numKey > index) {
-            updatedState[numKey - 1] = newState[numKey]
-          } else if (numKey < index) {
-            updatedState[numKey] = newState[numKey]
-          }
-        })
-        return updatedState
-      })
-    } catch (error) {
-      console.error('Error deleting order item:', error)
-    } finally {
-      setIsLoading(false)
-      setOpenConfirm(false)
-      setDeleteBatch('')
-      setDeleteIndex(null)
-    }
-  }
+ const handleDeleteOrder = (orderId, index) => {
+  const row = getValues(`orders.${index}`);
+
+  setDeletedOrders(prev => [...prev, { ...row, deleted: true, edited: false, added: false }]);
+
+  remove(index);
+
+  setOpenConfirm(false);
+  setDeleteBatch('');
+  setDeleteIndex(null);
+};
 
   const handleEditOrSave = (index) => {
   const isEditing = editableIndex?.[index];
@@ -404,10 +364,12 @@ const [updateIndex, setUpdateIndex] = useState(null);
     if (!isValid) {
       return;
     }
-
-    // Store the index and open confirmation
-    setUpdateIndex(index);
-    setOpenUpdateConfirm(true);
+      setValue(`orders.${index}.edited`, true);
+        setEditableIndex(prev => ({
+      ...prev,
+      [index]: false
+    }));
+   
   } else {
     setEditableIndex(prev => ({
       ...prev,
@@ -415,51 +377,9 @@ const [updateIndex, setUpdateIndex] = useState(null);
     }));
   }
 };
-const confirmUpdateOrder = async () => {
-  if (updateIndex == null) return;
 
-  const updatedItem = getValues(`orders.${updateIndex}`);
-  updatedItem.orderId = editData.id;
-  const itemId = saleDetail?.[updateIndex]?.id;
 
-  try {
-    setIsLoading(true);
-    setError('');
-    const res = await api(`/sales-order/details/${itemId}`, updatedItem, 'put', true);
-    if (res.data.success) {
-      setEditableIndex(prev => ({
-        ...prev,
-        [updateIndex]: false
-      }));
-    }
-  } catch (err) {
-    console.error('Error updating order', err);
-  } finally {
-    setIsLoading(false);
-    setOpenUpdateConfirm(false);
-    setUpdateIndex(null);
-  }
-};
 
-  const handleReset = () => {
-    if (initialHeaderValues) {
-      const currentOrders = getValues('orders')
-
-      reset({
-        ...initialHeaderValues,
-        orders: currentOrders
-      })
-
-      // Reset edit mode for all rows
-      const newEditableIndex = {}
-      currentOrders.forEach((_, index) => {
-        newEditableIndex[index] = false
-      })
-      setEditableIndex(newEditableIndex)
-    }
-     setBatchOptionsMap({}); // Also clear the batch dropdown options
-    setBatchQuantityMap({})
-  }
 
 const validateQuantity = (index, quantity, batchId) => {
     const batchQtyMap = batchQuantityMap[index];
@@ -475,7 +395,6 @@ const validateQuantity = (index, quantity, batchId) => {
     }
 };
 
-// Add this new useEffect for real-time validation
 useEffect(() => {
     watchedProducts?.forEach((order, index) => {
         // Only validate if the order exists and has required fields
@@ -486,6 +405,11 @@ useEffect(() => {
 }, [watchedProducts, batchQuantityMap]);
 
 const onSubmit = (data) => {
+    const hasUnsavedEdits = Object.values(editableIndex || {}).some(val => val === true);
+  if (hasUnsavedEdits) {
+    setError('Please save or cancel all edits before submitting.');
+    return;
+  }
     let hasValidationError = false;
     data.orders?.forEach((order, index) => {
         if ( order?.qty && order?.batchId && !validateQuantity(index, parseFloat(order.qty), order.batchId)) {
@@ -496,8 +420,12 @@ const onSubmit = (data) => {
     if (hasValidationError) {
         return; 
     }
-
-    handleSubmitForm(data);
+const payload = {
+    ...data,
+    orders: [...data.orders, ...deletedOrders]
+  };
+setDeletedOrders([])
+    handleSubmitForm(payload);
 };
   return (
     <>
@@ -575,7 +503,7 @@ const onSubmit = (data) => {
                   type='button'
                   variant='contained'
                   sx={{ marginRight: 3.5 }}
-                  onClick={() => append({productId: '', batchId: '', qty: '' })}
+                  onClick={() => append({productId: '', batchId: '', qty: '',added:true,edited:false,deleted:false })}
                 >
                   Add
                 </Button>
@@ -584,9 +512,11 @@ const onSubmit = (data) => {
                 <Grid2 style={{marginTop: 6 }}>
                 {fields.map((field, index)=> {
                   const existOrder=saleDetail.find(item=>item.batch_id===field?.batchId)
+
+                    if (watch(`orders.${index}.deleted`)) return null; // hide deleted row
                   
                   return(
-                  <Grid2 container spacing={2} key={field.id}>
+                  <Grid2 container spacing={2} key={field.id} >
                     <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>{index + 1}</Typography>
                     </Grid2>
@@ -608,7 +538,7 @@ const onSubmit = (data) => {
                         disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                       />
                     </Grid2>
-                    <Grid2 size={3.5}>
+                    <Grid2 size={3}>
                       <CustomTextField
                         type='Number'
                         name={`orders.${index}.qty`}
@@ -701,45 +631,25 @@ const onSubmit = (data) => {
               <Button
                 type='button'
                 variant='outlined'
-                onClick={handleReset}
+               onClick={() =>{
+                 reset();
+    setDeletedOrders([])
+               } }
                 color='primary'
-                disabled={!initialHeaderValues}
               >
                 Reset
               </Button>
-              <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={handleClose}>
+              <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={()=>{
+                setDeletedOrders([])
+                handleClose()
+
+              }}>
                 Close
               </Button>
             </Grid2>
           </form>
         </Box>
       </Modal>
-      {openUpdateConfirm && (
-  <Dialog
-    open={openUpdateConfirm}
-    onClose={() => setOpenUpdateConfirm(false)}
-    aria-labelledby="confirm-update-dialog"
-  >
-    <Typography variant="h4" sx={{ mx: 4, mt: 8, mb: 2 }}>
-      Confirm update item
-    </Typography>
-    <DialogActions sx={{ pb: 4, px: 4 }}>
-      <Button
-        variant="outlined"
-        onClick={() => setOpenUpdateConfirm(false)}
-      >
-        Cancel
-      </Button>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={confirmUpdateOrder}
-      >
-        Confirm
-      </Button>
-    </DialogActions>
-  </Dialog>
-)}
       {openConfirm && (
         <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)} aria-labelledby='confirm-dialog'>
           <Typography variant='h4' sx={{ mx: 4, mt: 8, mb: 2 }}>
