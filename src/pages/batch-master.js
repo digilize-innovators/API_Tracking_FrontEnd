@@ -42,7 +42,12 @@ const Index = () => {
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const apiAccess = useApiAccess('batch-create', 'batch-update', 'batch-approve')
-  const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '', filterProductVal: '', filterLocationVal: '' })
+  const [tableHeaderData, setTableHeaderData] = useState({
+    esignStatus: '',
+    searchVal: '',
+    filterProductVal: '',
+    filterLocationVal: ''
+  })
   const searchBarRef = useRef('')
   const [allProductData, setAllProductData] = useState([])
   const [allLocationData, setAllLocationData] = useState([])
@@ -230,13 +235,12 @@ const Index = () => {
   }
 
   const handleUpdate = item => {
-    if(config?.role === 'admin')
-    {
-    setAlertData({
-      type: 'error',
-      openSnackbar: true,
-      message: 'No access to admin'
-    });
+    if (config?.role === 'admin') {
+      setAlertData({
+        type: 'error',
+        openSnackbar: true,
+        message: 'No access to admin'
+      })
       return
     }
     resetForm()
@@ -248,129 +252,124 @@ const Index = () => {
     setTableHeaderData({ ...tableHeaderData, filterLocationVal: e.target.value })
   }
 
-   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-
-  if (!isAuthenticated) {
-    setAlertData({
-      type: 'error',
-      openSnackbar: true,
-      message: 'Authentication failed, Please try again.'
-    });
-    resetState();
-    return;
-  }
-
-  if (isApprover) {
-    await handleApproverActions(user, esignStatus, remarks);
-  } else {
-    handleCreatorActions(user, esignStatus, remarks,isApprover);
-  }
-
-  resetState();
-};
-
-const resetState = () => {
-  setApproveAPI({ approveAPIName: '', approveAPIEndPoint: '', approveAPImethod: '' });
-  setEsignDownloadPdf(false);
-  setAuthModalOpen(false);
-};
-
-const buildAuditLog = (user, remarks, action) => {
-  return config?.config?.audit_logs
-    ? {
-        user_id: user.userId,
-        user_name: user.userName,
-        remarks: remarks?.length > 0 ? remarks : `batch ${action} - ${auditLogMark}`,
-        authUser: user.user_id,
-        product: eSignStatusId.product.product_history[0]?.product_name
-      }
-    : {};
-};
-
-const handleApproverActions = async (user, esignStatus, remarks) => {
-  const payload = {
-    modelName: 'batch',
-    esignStatus,
-    id: eSignStatusId?.id,
-    name: auditLogMark,
-    audit_log: buildAuditLog(user, remarks, esignStatus)
-  };
-
-  if (esignStatus === 'approved' && esignDownloadPdf) {
-    setOpenModalApprove(false);
-
-    downloadPdf(tableData, tableHeaderData, tableBody, batchData?.data, user);
-
-    if (config?.config?.audit_logs) {
-      const auditPayload = {
-        audit_log: {
-          audit_log: true,
-          performed_action: 'Export report of batchMaster',
-          remarks: remarks?.length > 0 ? remarks : 'Batch master export report',
-          authUser: user
-        }
-      };
-      await api('/auditlog/', auditPayload, 'post', true);
+  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+    if (!isAuthenticated) {
+      setAlertData({
+        type: 'error',
+        openSnackbar: true,
+        message: 'Authentication failed, Please try again.'
+      })
+      resetState()
+      return
     }
 
-    return;
-  }
-    if (esignStatus === 'rejected' && esignDownloadPdf) {
-    setOpenModalApprove(false);
-    return;
-  }
-  const res = await api('/esign-status/update-esign-status', payload, 'patch', true);
-
-  if (res?.data) {
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: res.data.code === 200 ? 'success' : 'error',
-      message: res.data.message
-    });
-  }
-
-  setPendingAction(true);
-
-
-};
-
-const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
-  if (esignStatus === 'rejected') {
-    setAuthModalOpen(false);
-    setOpenModalApprove(false);
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: 'error',
-      message: 'Access denied for this user.'
-    });
-    return;
-  }
-
-  if (!isApprover && esignDownloadPdf) {
-    setAlertData({
-      ...alertData,
-      openSnackbar: true,
-      type: 'error',
-      message: 'Access denied: Download pdf disabled for this user.'
-    });
-    resetState();
-    return;
-  }
-
-  if (esignStatus === 'approved') {
-
-    if (esignDownloadPdf) {
-      setEsignDownloadPdf(false);
-      setOpenModalApprove(true);
+    if (isApprover) {
+      await handleApproverActions(user, esignStatus, remarks)
     } else {
-      setAuthUser(user);
-      setEsignRemark(remarks);
-      setPendingAction(editData?.id ? 'edit' : 'add');
+      handleCreatorActions(user, esignStatus, remarks, isApprover)
+    }
+
+    resetState()
+  }
+
+  const resetState = () => {
+    setApproveAPI({ approveAPIName: '', approveAPIEndPoint: '', approveAPImethod: '' })
+    setEsignDownloadPdf(false)
+    setAuthModalOpen(false)
+  }
+
+  const buildAuditLog = (user, remarks, action) => {
+    return config?.config?.audit_logs
+      ? {
+          user_id: user.userId,
+          user_name: user.userName,
+          remarks: remarks?.length > 0 ? remarks : `batch ${action} - ${auditLogMark}`,
+          authUser: user.user_id,
+          product: eSignStatusId.product.product_history[0]?.product_name
+        }
+      : {}
+  }
+
+  const handleApproverActions = async (user, esignStatus, remarks) => {
+    if (esignStatus === 'approved' && esignDownloadPdf) {
+      setOpenModalApprove(false)
+
+      downloadPdf(tableData, tableHeaderData, tableBody, batchData?.data, user)
+
+      if (config?.config?.audit_logs) {
+        const auditPayload = {
+          audit_log: {
+            audit_log: true,
+            performed_action: 'Export report of batchMaster',
+            remarks: remarks?.length > 0 ? remarks : 'Batch master export report',
+            authUser: user
+          }
+        }
+        await api('/auditlog/', auditPayload, 'post', true)
+      }
+
+      return
+    }
+    if (esignStatus === 'rejected' && esignDownloadPdf) {
+      setOpenModalApprove(false)
+      return
+    }
+    const payload = {
+      modelName: 'batch',
+      esignStatus,
+      id: eSignStatusId?.id,
+      name: auditLogMark,
+      audit_log: buildAuditLog(user, remarks, esignStatus)
+    }
+    const res = await api('/esign-status/update-esign-status', payload, 'patch', true)
+
+    if (res?.data) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: res.data.code === 200 ? 'success' : 'error',
+        message: res.data.message
+      })
+    }
+
+    setPendingAction(true)
+  }
+
+  const handleCreatorActions = (user, esignStatus, remarks, isApprover) => {
+    if (esignStatus === 'rejected') {
+      setAuthModalOpen(false)
+      setOpenModalApprove(false)
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied for this user.'
+      })
+      return
+    }
+
+    if (!isApprover && esignDownloadPdf) {
+      setAlertData({
+        ...alertData,
+        openSnackbar: true,
+        type: 'error',
+        message: 'Access denied: Download pdf disabled for this user.'
+      })
+      resetState()
+      return
+    }
+
+    if (esignStatus === 'approved') {
+      if (esignDownloadPdf) {
+        setEsignDownloadPdf(false)
+        setOpenModalApprove(true)
+      } else {
+        setAuthUser(user)
+        setEsignRemark(remarks)
+        setPendingAction(editData?.id ? 'edit' : 'add')
+      }
     }
   }
-};
   const handleAuthCheck = async row => {
     setApproveAPI({
       approveAPIName: 'batch-approve',
@@ -386,14 +385,22 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
     if (searchBarRef.current) {
       searchBarRef.current.resetSearch()
     }
-    if(userDataPdf?.userName!=='admin01')
-    {
-          setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '', filterProductVal: '', filterLocationVal: userDataPdf?.userLocation});
-
-    }
-    else{
-          setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '', filterProductVal: '', filterLocationVal: '' });
-
+    if (userDataPdf?.userName !== 'admin01') {
+      setTableHeaderData({
+        ...tableHeaderData,
+        esignStatus: '',
+        searchVal: '',
+        filterProductVal: '',
+        filterLocationVal: userDataPdf?.userLocation
+      })
+    } else {
+      setTableHeaderData({
+        ...tableHeaderData,
+        esignStatus: '',
+        searchVal: '',
+        filterProductVal: '',
+        filterLocationVal: ''
+      })
     }
   }
 
@@ -441,44 +448,40 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
   }
 
   const getAllLocations = async () => {
-  try {
-    setIsLoading(true);
-    const res = await api('/location?limit=-1&history_latest=true', {}, 'get', true);
-    setIsLoading(false);
-    if (res.data.success) {
-      const plantLocations = res.data.data.locations.filter(item => item.location_type === 'PLANT');
-      const user =getUserData()
-      const userLocation = user.userLocation; // or location_id depending on token structure
-      const userName =user.departmentName
-;      if (userName ==='Admin') {
-        // restrict to user location only
-          setAllLocationData(plantLocations);
-        
-      }else
-      {
-           const finalLocations = plantLocations.filter(loc => loc.location_name === userLocation);
-         
-             setTableHeaderData(prev => ({
+    try {
+      setIsLoading(true)
+      const res = await api('/location?limit=-1&history_latest=true', {}, 'get', true)
+      setIsLoading(false)
+      if (res.data.success) {
+        const plantLocations = res.data.data.locations.filter(item => item.location_type === 'PLANT')
+        const user = getUserData()
+        const userLocation = user.userLocation // or location_id depending on token structure
+        const userName = user.departmentName
+        if (userName === 'Admin') {
+          // restrict to user location only
+          setAllLocationData(plantLocations)
+        } else {
+          const finalLocations = plantLocations.filter(loc => loc.location_name === userLocation)
+
+          setTableHeaderData(prev => ({
             ...prev,
             filterLocationVal: userLocation
-          }));
-          
-              setAllLocationData(finalLocations);
+          }))
 
+          setAllLocationData(finalLocations)
+        }
+      } else {
+        console.log('Error to get all locations ', res.data)
+        if (res.data.code === 401) {
+          removeAuthToken()
+          router.push('/401')
+        }
       }
-    } else {
-      console.log('Error to get all locations ', res.data);
-      if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
-      }
+    } catch (error) {
+      console.log('Error in get locations ', error)
+      setIsLoading(false)
     }
-  } catch (error) {
-    console.log('Error in get locations ', error);
-    setIsLoading(false);
   }
-};
-
 
   return (
     <Box padding={4}>
@@ -502,24 +505,26 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                 <FormControl className='w-25 mx-2'>
                   <InputLabel id='batch-filter-by-location'>Location</InputLabel>
                   <Select
-  labelId='batch-select-by-location'
-  id='product-select-by-location'
-  value={tableHeaderData.filterLocationVal}
-  label='Location'
-  onChange={handleLocationFilter}
->
-  {allLocationData.length === 0 ? (
-    <MenuItem value='' disabled>No Location Available</MenuItem>
-  ) : (
-    allLocationData.map(item => (
-      <MenuItem key={item?.location_uuid} value={item?.location_name}>
-        {item?.location_name}
-      </MenuItem>
-    ))
-  )}
-</Select>
+                    labelId='batch-select-by-location'
+                    id='product-select-by-location'
+                    value={tableHeaderData.filterLocationVal}
+                    label='Location'
+                    onChange={handleLocationFilter}
+                  >
+                    {allLocationData.length === 0 ? (
+                      <MenuItem value='' disabled>
+                        No Location Available
+                      </MenuItem>
+                    ) : (
+                      allLocationData.map(item => (
+                        <MenuItem key={item?.location_uuid} value={item?.location_name}>
+                          {item?.location_name}
+                        </MenuItem>
+                      ))
+                    )}
+                  </Select>
                 </FormControl>
-                 
+
                 <FormControl className='w-25 ml-2'>
                   <InputLabel id='batch-filter-by-product'>Product</InputLabel>
                   <Select
@@ -527,7 +532,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                     id='product-select-by-product'
                     value={tableHeaderData.filterProductVal}
                     label='Product'
-                    onChange={e => setTableHeaderData({ ...tableHeaderData, filterProductVal: e.target.value})}
+                    onChange={e => setTableHeaderData({ ...tableHeaderData, filterProductVal: e.target.value })}
                   >
                     {allProductData?.map(item => {
                       return (
@@ -543,8 +548,8 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
-                  {apiAccess.addApiAccess && config?.role !== 'admin' && allLocationData.length>0 &&(
-                    <Button variant='contained' sx={{mx:2}} onClick={handleOpenModal} >
+                  {apiAccess.addApiAccess && config?.role !== 'admin' && allLocationData.length > 0 && (
+                    <Button variant='contained' sx={{ mx: 2 }} onClick={handleOpenModal}>
                       <span>
                         <IoMdAdd />
                       </span>
@@ -558,7 +563,9 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Batch Data
               </Typography>
-              <TableBatch
+              {
+                config?.role !== 'admin' && tableHeaderData?.filterLocationVal.length>0 &&   
+                <TableBatch
                 handleUpdate={handleUpdate}
                 tableHeaderData={tableHeaderData}
                 setDataCallback={setBatchData}
@@ -567,6 +574,20 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                 config={config}
                 pendingAction={pendingAction}
               />
+              }
+              {
+                 config?.role === 'admin' && 
+                   <TableBatch
+                handleUpdate={handleUpdate}
+                tableHeaderData={tableHeaderData}
+                setDataCallback={setBatchData}
+                handleAuthCheck={handleAuthCheck}
+                apiAccess={apiAccess}
+                config={config}
+                pendingAction={pendingAction}
+              />
+              }
+            
             </Grid2>
           </Box>
         </Grid2>

@@ -24,16 +24,18 @@ const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) =
       doc.text('Filters :\n', 15, 30)
     }
 
-    if (tableData.Filter[0] !== 'Stock_Summary') {
+    if (tableData?.Filter && tableData?.Filter?.[0] !== 'Stock_Summary') {
       doc.text(`${tableData.Filter[0]} : ` + (tableData.Filter[1] || '__'), 20, 35)
       let labelText = ''
       if (tableData.Filter[0] === 'department') {
+         doc.text(`E-Sign : ${tableHeaderData?.esignStatus || '__'}`, 20, 45)
         labelText = `Status : ${tableData?.statusFilter || '__'}`
+
       } else if (tableData.Filter[0] !== 'Order Type') {
         labelText = `E-Sign : ${tableHeaderData?.esignStatus || '__'}`
       }
       doc.text(labelText, 20, 40)
-    } else if (tableData.Filter[0] == 'Stock_Summary') {
+    } else if (tableData?.Filter && tableData?.Filter?.[0] == 'Stock_Summary') {
       doc.text(`Location Name : ` + (tableData.Filter[2] || '__'), 20, 35)
       doc.text(`Product Name : ` + (tableData.Filter[1] || '__'), 20, 40)
     } else if (tableHeaderData?.esignStatus) {

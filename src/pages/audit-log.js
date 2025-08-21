@@ -123,6 +123,10 @@ const Index = () => {
       return
     }
     if (isApprover && esignDownloadPdf) {
+      if (esignStatus === 'rejected' && esignDownloadPdf) {
+    setOpenModalApprove(false);
+    return;
+  }
       downloadPdf(tableData, tableHeaderData, tableBody, auditLogData.data, user)
       if (config?.config?.audit_logs) {
         const data = {}

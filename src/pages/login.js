@@ -190,6 +190,7 @@ const LoginPage = () => {
         setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Login successful' })
         login(`Bearer ${res.data.data.token}`)
         Cookies.set('token', res.data.data.token)
+       Cookies.set('location', `${res.data.data.location}`)
         Cookies.set('screens', JSON.stringify(res.data.data.screens))
         setUserInfo(res.data.data)
         reset()

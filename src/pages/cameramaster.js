@@ -308,6 +308,7 @@ const handleModalActions = async (isApproved, user, remarks) => {
       await api('/auditlog/', data, 'post', true);
     }
   }
+  
 };
 
 const createAuditLog = (action, user, remarks) => {
@@ -350,7 +351,7 @@ const processApproverActions = async (esignStatus, user, remarks) => {
   if (isApproved || esignStatus === 'rejected') {
     await handleModalActions(isApproved, user, remarks);
 
-    if (isApproved && esignDownloadPdf) {
+    if ( esignDownloadPdf) {
       resetState();
       return;
     }
