@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import {
-  Box,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  IconButton,
-} from '@mui/material'
+import { Box, Table, TableHead, TableRow, TableCell, TableBody, IconButton } from '@mui/material'
 import CustomTable from './CustomTable'
 import { getSortIcon } from 'src/utils/sortUtils'
 import { sortData } from 'src/utils/sortData'
@@ -32,8 +24,8 @@ const OrderTable = ({
   const { settings } = useSettings()
   const [sortBy, setSortBy] = useState('')
   const [page, setPage] = useState(0)
-      const [invoiceBtnDisable, setInvoiceBtnDisable] = useState(false)
-  
+  const [invoiceBtnDisable, setInvoiceBtnDisable] = useState(false)
+
   const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
   const [sortDirection, setSortDirection] = useState('asc')
   const [tableData, setTableData] = useState({ data: [], total: 0 })
@@ -47,7 +39,7 @@ const OrderTable = ({
 
   useEffect(() => {
     getData()
-  }, [tableHeaderData, page, rowsPerPage,invoiceBtnDisable])
+  }, [tableHeaderData, page, rowsPerPage, invoiceBtnDisable])
 
   const getData = async () => {
     try {
@@ -56,18 +48,18 @@ const OrderTable = ({
         page: page + 1,
         limit: rowsPerPage === -1 ? -1 : rowsPerPage,
         search: tableHeaderData?.searchVal,
-        esign_status: tableHeaderData?.esignStatus,
-      });
+        esign_status: tableHeaderData?.esignStatus
+      })
 
       const optionalFields = {
         locationName: tableHeaderData?.filterLocationVal,
         productName: tableHeaderData?.filterProductVal,
-        type: tableHeaderData?.orderTypeFilter,
-      };
+        type: tableHeaderData?.orderTypeFilter
+      }
 
       for (const [key, value] of Object.entries(optionalFields)) {
         if (value !== undefined && value !== null && value !== '') {
-          params.append(key, value);
+          params.append(key, value)
         }
       }
 
@@ -127,16 +119,9 @@ const OrderTable = ({
                 const path = typeof col === 'string' ? col : col.path
                 const label = col.label || col
                 return (
-                  <TableCell
-                    key={label}
-                    align='center'
-                    sx={{ cursor: 'pointer' }}
-                    onClick={() => handleSort(path)}
-                  >
+                  <TableCell key={label} align='center' sx={{ cursor: 'pointer' }} onClick={() => handleSort(path)}>
                     {label}
-                    <IconButton size='small'>
-                      {getSortIcon(sortBy, path, sortDirection)}
-                    </IconButton>
+                    <IconButton size='small'>{getSortIcon(sortBy, path, sortDirection)}</IconButton>
                   </TableCell>
                 )
               })}
@@ -155,17 +140,16 @@ const OrderTable = ({
                 rowsPerPage={rowsPerPage}
                 endpoint={endpoint}
                 columns={columns.map(col => {
-                    if (typeof col === 'object' && col.render) {
+                  if (typeof col === 'object' && col.render) {
                     return col // includes custom render logic
-                    }
-                    return col
+                  }
+                  return col
                 })}
                 handleUpdate={handleUpdate}
                 apiAccess={apiAccess}
                 customActions={customActions}
-              invoiceBtnDisable={invoiceBtnDisable}
-              setInvoiceBtnDisable={setInvoiceBtnDisable}
-
+                invoiceBtnDisable={invoiceBtnDisable}
+                setInvoiceBtnDisable={setInvoiceBtnDisable}
               />
             ))}
             {tableData?.data?.length === 0 && (
@@ -183,7 +167,7 @@ const OrderTable = ({
 }
 
 OrderTable.propTypes = {
-  title:PropTypes.any,
+  title: PropTypes.any,
   endpoint: PropTypes.string.isRequired,
   columns: PropTypes.array.isRequired,
   tableHeaderData: PropTypes.object,

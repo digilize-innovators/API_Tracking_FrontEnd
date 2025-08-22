@@ -41,7 +41,7 @@ const OrderRow = ({
             if (res.data.success) {
                 setTransactionsDetail(res?.data.data)
                 setInvoiceBtnDisable(
-                    res.data.data.transactions.length > 0 && res.data.data.transactions.every(item => item.status === 'COMPLETED') && row.status !== 'INVOICE_GENERATED'
+                    res.data.data.transactions.length > 0 && res.data.data.transactions.every(item => item.status === 'COMPLETED') && (row.status === 'SCANNING_COMPLETED' || row.status === 'INWARD_COMPLETED')
                 )
             } else if (res.data.code === 401) {
                 removeAuthToken()

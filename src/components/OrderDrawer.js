@@ -12,6 +12,17 @@ import downloadPdf from 'src/utils/DownloadPdf'
 import TableTransaction from 'src/views/tables/TableTransaction'
 import TableOrderDetails from 'src/views/tables/TableOrderDetails'
 
+const statusActionMap = {
+  CREATED: { title: "Generate Invoice", endpoint : 'generate-invoice'},
+  SCANNING_IN_PROGRESS: { title: "Generate Invoice", endpoint : 'generate-invoice'},
+  SCANNING_COMPLETED: { title: "Generate Invoice", endpoint : 'generate-invoice'},
+  INVOICE_CANCELLED: { title: "Generate Invoice", endpoint : 'generate-invoice'},
+  INVOICE_GENERATED: { title: "Generate GRN", endpoint : 'generate-grn'},
+  INWARD_IN_PROGRESS:  { title: "Generate GRN", endpoint : 'generate-grn'},
+  INWARD_COMPLETED:  { title: "Generate GRN", endpoint : 'generate-grn'},
+  GRN_GENERATED:  { title: "Generate GRN", endpoint : 'generate-grn'},
+};
+
 const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail, invoiceBtnDisable, setInvoiceBtnDisable }) => {
     const [userDataPdf, setUserDataPdf] = useState()
     const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
@@ -19,12 +30,10 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
     const { removeAuthToken, getUserData } = useAuth()
     const { setIsLoading } = useLoading()
     const router = useRouter()
-
+    
     useEffect(() => {
         let data = getUserData()
-        setUserDataPdf(data)
-        console.log('staus ', invoiceBtnDisable);
-        
+        setUserDataPdf(data);
     }, [])
 
     const tableData = useMemo(
@@ -52,11 +61,12 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
     const handleGenerate = async () => {
         try {
             const data = { orderId: row.id }
-            setIsLoading(true)
-            const res = await api(`${endpoint}generate-invoice/`, data, 'post', true);
+            setIsLoading(true);
+            
+            const res = await api(`${endpoint}${statusActionMap[row.status].endpoint}/`, data, 'post', true);
             setIsLoading(false)
             if (res?.data?.success) {
-                setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Invoice Generated successfully' })
+                setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: res.data.message })
                 setInvoiceBtnDisable(false)
             }
             else if (res.data.code === 401) {
@@ -132,7 +142,7 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
                 onClick={handleGenerate}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ marginLeft: 6 }}> Generate Invoice </span>
+                    <span style={{ marginLeft: 6 }}> { statusActionMap[row.status].title } </span>
                 </Box>
             </Button>
 
