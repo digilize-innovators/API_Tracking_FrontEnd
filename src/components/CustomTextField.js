@@ -5,7 +5,8 @@ import PropTypes from 'prop-types';
 import { FaEye } from 'react-icons/fa';
 import { AiFillEyeInvisible } from 'react-icons/ai';
 
-const CustomTextField = ({ name, label, control, rules, disabled, type }) => {
+const CustomTextField = ({ name, label, control, rules, disabled, type,multiline = false, // Add a multiline prop
+  rows, }) => {
     const [showPassword, setShowPassword] = useState(false);
     const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
 
@@ -25,6 +26,8 @@ const CustomTextField = ({ name, label, control, rules, disabled, type }) => {
           helperText={error ? error.message : ''}
           disabled={disabled}
           type={showPassword ? 'text' : type}
+            multiline={multiline} // Use the multiline prop
+          rows={rows} 
           onInput={
             type === 'number'
               ? (e) => {

@@ -69,9 +69,8 @@ const Index = () => {
     item?.product_id,
     item?.product_name,
     item?.gtin,
-    item?.ndc,
-    item?.generic_name,
-    item?.packaging_size,
+    item?.division,
+    item?.foreign_name,
     item?.company.CompanyHistory[0]?.company_name,
     item.countryMaster.country,
     item?.esign_status
@@ -84,9 +83,8 @@ const Index = () => {
         'Product Id',
         'Product Name',
         'GTIN',
-        'NDC No.',
-        'Generic Name',
-        'Packaging Size',
+        'Division',
+        'foreign Name',
         'Company Name',
         'Country',
         'E-Sign'
@@ -438,6 +436,7 @@ const Index = () => {
     }
   }
   const handleUpdate = item => {
+    console.log(item)
     resetForm()
     setOpenModal(true)
     setEditData(item)

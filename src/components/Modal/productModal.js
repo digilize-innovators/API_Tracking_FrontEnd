@@ -1,6 +1,5 @@
 /* eslint-disable no-undef */
 import { useEffect, useState } from 'react'
-import * as yup from 'yup'
 import {
   Modal,
   Box,
@@ -15,8 +14,7 @@ import {
   Radio,
   IconButton,
   FormHelperText,
-  TextField,
-
+  TextField
 } from '@mui/material'
 import { style, modalStyle } from 'src/configs/generalConfig'
 import CustomTextField from '../CustomTextField'
@@ -33,290 +31,7 @@ import { useAuth } from 'src/Context/AuthContext'
 import { convertImageToBase64 } from 'src/utils/UrlToBase64'
 import PropTypes from 'prop-types'
 import PackagingHierarchyLevelInput from 'src/components/PackagingHierarchyLevelInput'
-
-const validationSchema = yup.object().shape({
-  productId: yup
-    .string()
-    .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .max(20, 'Product ID length should be <= 20')
-    .required("Product ID can't be empty"),
-
-  productName: yup
-    .string()
-    .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .max(50, 'Product Name length should be <= 50')
-    .matches(/^[a-zA-Z0-9]+(?: [a-zA-Z0-9]+)*$/, 'Product name can only contain letters, numbers, and single spaces between words')
-    .required("Product Name can't be empty"),
-
-  gtin: yup
-    .string()
-    .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .length(12, 'GTIN length should be 12')
-    .required('GTIN is required'),
-
-  ndc: yup
-    .string()
-    .trim()
-    .transform(value => {
-      if (value === '' || value == null) {
-        return ''
-      }
-      return isNaN(Number(value)) ? '' : value
-    })
-    .test('length', 'NDC length should be 10', value => {
-      return value === '' || value?.length === 10
-    })
-    .optional(),
-  mrp: yup
-    .number()
-    .transform(value => {
-      if (value === '' || value == null) {
-        return 0
-      }
-      return isNaN(value) ? 0 : value
-    })
-    .min(0, 'MRP cannot be negative')
-    .max(100000, 'Level 1 value shoulde be less than 1 lakh'),
-
-  genericName: yup
-    .string()
-    .optional()
-    .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .max(50, 'Generic Name length should be <= 50')
-    .notRequired(),
-
-  packagingSize: yup
-    .number()
-    .nullable()
-    .transform((value, originalValue) => (originalValue === '' ? null : value))
-    .max(100000, 'Packaging Size length should be <= 100000')
-    .required('Packaging Size is required'),
-
-  generic_salt: yup
-    .string()
-    .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .required('Generic Salt is required'),
-
-  composition: yup
-    .string()
-    .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .required('Composition is required'),
-
-  dosage: yup
-    .string()
-    .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .required('Dosage is required'),
-
-  remarks: yup
-    .string()
-    .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .required('Remarks is required'),
-
-  companyUuid: yup
-    .string()
-    .nullable()
-    .transform(value => (value == null ? '' : value))
-    .trim()
-    .required('Company is required'),
-
-  prefix: yup
-    .string()
-    .nullable()
-    .transform(value => (value == null ? '' : value))
-    .trim()
-    .required('Prefix is required'),
-
-  country: yup
-    .string()
-    .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .required('Country is required'),
-
-  unit_of_measurement: yup
-    .string()
-    .nullable()
-    .transform(value => (value == null ? '' : String(value)))
-    .trim()
-    .required('Uom is required'),
-
-  no_of_units_in_primary_level: yup
-    .number()
-    .nullable()
-    .transform((value, originalValue) => (originalValue === '' ? null : value))
-    .max(100000, 'No Of Units In Primary Level length should be <= 100000')
-    .required('No Of Units In Primary Level is required'),
-
-  packagingHierarchy: yup
-    .number()
-    .transform((value, originalValue) => {
-      return originalValue === '' || originalValue == null ? null : Number(originalValue)
-    })
-    .required('Packaging Hierarchy is required'),
-
-  productNumber_unit_of_measurement: yup.string().required('Please Select Level 0 UOM'),
-
-  productNumber: yup
-    .number()
-    .transform(value => {
-      if (value === '' || value == null) {
-        return 0
-      }
-      return isNaN(value) ? 0 : value
-    })
-    .required('Level 0 value should be greater than 0')
-    .min(1, 'Level 0 value should be greater than 0')
-    .max(100000, 'Level 0 value shoulde be less than 1 lakh'),
-
-  firstLayer: yup
-    .number()
-    .nullable()
-    .transform((value, originalValue) => {
-      if (originalValue === '') {
-        return 0
-      }
-      const parsed = parseFloat(originalValue)
-      return isNaN(parsed) ? null : parsed
-    })
-    .when('packagingHierarchy', (packagingHierarchy, schema) => {
-      return packagingHierarchy[0] >= 2
-        ? schema.required('Level 1 value should be greater than 0').min(1, 'Level 1 value should be greater than 0')
-        : schema
-    })
-    .test('less-than-level0', 'Level 1 value should be less than level 0', function (value) {
-      return !this.parent.productNumber || !value || value <= this.parent.productNumber
-    })
-    .test('divisible-level0', 'Level 1 value should be divisible with level 0 value', function (value) {
-      return !this.parent.productNumber || !value || this.parent.productNumber % value === 0
-    })
-    .max(100000, 'Level 1 value shoulde be less than 1 lakh'),
-
-  firstLayer_unit_of_measurement: yup.string().when('packagingHierarchy', {
-    is: val => val >= 2,
-    then: schema => schema.required('Please Select Level 1 UOM')
-  }),
-
-  secondLayer: yup
-    .number()
-    .nullable()
-    .transform((value, originalValue) => {
-      if (originalValue === '') {
-        return 0
-      }
-      const parsed = parseFloat(originalValue)
-      return isNaN(parsed) ? null : parsed
-    })
-    .when('packagingHierarchy', (packagingHierarchy, schema) => {
-      if (packagingHierarchy && packagingHierarchy.length > 0) {
-        if (packagingHierarchy[0] >= 3) {
-          return schema
-            .required('Level 2 value should be greater than 0')
-            .min(1, 'Level 2 value should be greater than 0')
-        } else {
-          return schema
-        }
-      } else {
-        return schema
-      }
-    }).test('less-than-level1', 'Level 2 value should be less than level 1', function (value) {
-    return !this.parent.firstLayer || !value || value <= this.parent.firstLayer
-  })
-  .test('divisible-level1', 'Level 2 value should be divisible by level 1 value', function (value) {
-    return !this.parent.firstLayer || !value || this.parent.firstLayer % value === 0
-  })
-    .max(100000, 'Level 2 value shoulde be less than 1 lakh'),
-
-  secondLayer_unit_of_measurement: yup.string().when('packagingHierarchy', {
-    is: val => val >= 3,
-    then: schema => schema.required('Please Select Level 2 UOM')
-  }),
-
-  thirdLayer: yup
-    .number()
-    .nullable()
-    .transform((value, originalValue) => {
-      if (originalValue === '') {
-        return 0
-      }
-      const parsed = parseFloat(originalValue)
-      return isNaN(parsed) ? null : parsed
-    })
-    .when('packagingHierarchy', (packagingHierarchy, schema) => {
-      if (packagingHierarchy && packagingHierarchy.length > 0) {
-        if (packagingHierarchy[0] === 4) {
-          return schema
-            .required('Level 3 value should be greater than 0')
-            .min(1, 'Level 3 value should be greater than 0')
-        } else {
-          return schema
-        }
-      } else {
-        return schema
-      }
-    }).test('less-than-level2', 'Level 3 value should be less than level 2', function (value) {
-    return !this.parent.secondLayer || !value || value <= this.parent.secondLayer
-  })
-  .test('divisible-level2', 'Level 3 value should be divisible by level 2 value', function (value) {
-    return !this.parent.secondLayer || !value || this.parent.secondLayer % value === 0
-  })
-    .max(100000, 'Level 1 value shoulde be less than 1 lakh'),
-
-  thirdLayer_unit_of_measurement: yup.string().when('packagingHierarchy', {
-    is: val => val >= 4,
-    then: schema => schema.required('Please Select Level 3 UOM')
-  }),
-
-  palletisation_applicable: yup.boolean().optional(),
-  pallet_size: yup
-    .number()
-    .nullable() // Allow null values
-    .transform((value, originalValue) => {
-      // If the value is an empty string, transform it to undefined
-      if (originalValue === '') {
-        return 0
-      }
-      return value
-    })
-    .optional() // Allow the field to be optional
-    .when('palletisation_applicable', {
-      is: true,
-      then: schema => schema.required('Pallet size is required').min(1, 'Pallet size should be greater than 0'),
-      otherwise: schema => schema.nullable() // Allow null or undefined when not applicable
-    }),
-  file: yup.mixed().optional(),
-  pallet_size_unit_of_measurement: yup
-    .string()
-    .optional()
-    .when('palletisation_applicable', {
-      is: true,
-      then: schema => schema.required('Please Select Pallet Size UOM')
-    }),
-  productNumber_print: yup.boolean().optional(),
-  firstLayer_print: yup.boolean().optional(),
-  secondLayer_print: yup.boolean().optional(),
-  thirdLayer_print: yup.boolean().optional(),
-  productNumber_aggregation: yup.boolean().optional(),
-  firstLayer_aggregation: yup.boolean().optional(),
-  secondLayer_aggregation: yup.boolean().optional(),
-  thirdLayer_aggregation: yup.boolean().optional(),
-  schedule_drug: yup.boolean().optional()
-});
+import validationSchema from 'src/components/Validation/ProductValidation'
 
 function ProductModal({
   openModal,
@@ -327,15 +42,15 @@ function ProductModal({
   setProductImage,
   tableHeaderData
 }) {
-  const methods = useForm({ // Use methods to pass to FormProvider
+  const methods = useForm({
+    // Use methods to pass to FormProvider
     resolver: yupResolver(validationSchema),
     defaultValues: {
       productId: '',
       productName: '',
       gtin: '',
-      ndc: '',
       mrp: '',
-      genericName: '',
+      foreignName: '',
       companyUuid: '',
       prefix: '',
       country: '',
@@ -362,12 +77,23 @@ function ProductModal({
       palletisation_applicable: false,
       pallet_size: 0,
       pallet_size_unit_of_measurement: '',
-      generic_salt: '',
-      composition: '',
-      dosage: '',
-      remarks: '',
-      schedule_drug: false,
       productImage: '/images/avatars/p.png',
+      itemNo:'',
+      itemCategory:'',
+      intendedUser:'',
+      description:'',
+      length:0,
+      diameter:0,
+      catherLength:0,
+      radiopacityMarkers:null,
+      deliverSystemType:'',
+      platformType:'',
+      compatibleProsthetics:'',
+      materialComposition:'',
+      surfaceTreatment:'',
+      compatibeGuideWireSize:''
+
+
     }
   })
   const {
@@ -379,7 +105,7 @@ function ProductModal({
     setValue,
     clearErrors,
     formState: { errors }
-  } = methods; 
+  } = methods
   const router = useRouter()
   const [gtinLastDigit, setGtinLastDigit] = useState()
   const { removeAuthToken } = useAuth()
@@ -400,13 +126,13 @@ function ProductModal({
 
   const getPrefixData = () => {
     if (companyUuid) {
-      const company = companies.find(company => company.company_uuid === companyUuid);
+      const company = companies.find(company => company.company_uuid === companyUuid)
       if (company) {
-        let prefixs = [];
+        let prefixs = []
         if (company.gs1_prefix) prefixs.push({ label: company.gs1_prefix, id: company.gs1_prefix })
         if (company.gs2_prefix) prefixs.push({ label: company.gs2_prefix, id: company.gs2_prefix })
         if (company.gs3_prefix) prefixs.push({ label: company.gs3_prefix, id: company.gs3_prefix })
-        return prefixs;
+        return prefixs
       } else {
         return []
       }
@@ -416,8 +142,8 @@ function ProductModal({
   useEffect(() => {
     if (!companyUuid) return // Ensure companyUuid exists before running the logic
     if (companyUuid) {
-      getPrefixData();
-      setValue('prefix', '');
+      getPrefixData()
+      setValue('prefix', '')
     }
     if (editData?.prefix) setValue('prefix', editData.prefix) // Restore edit data if available
   }, [editData, companyUuid, companies]) // Ensure companies is a dependency
@@ -445,58 +171,58 @@ function ProductModal({
     getUomData()
   }, [])
 
-const applyPackagingHierarchy = async () => {
-  const fieldsToValidate = [
-    'productNumber',
-    'firstLayer',
-    'secondLayer',
-    'thirdLayer',
-    'productNumber_unit_of_measurement',
-    'firstLayer_unit_of_measurement',
-    'secondLayer_unit_of_measurement',
-    'thirdLayer_unit_of_measurement',
-    'palletisation_applicable',
-    'pallet_size',
-    'pallet_size_unit_of_measurement',
-    'productImage',
-    'productNumber_aggregation',
-    'firstLayer_aggregation',
-    'secondLayer_aggregation',
-    'thirdLayer_aggregation',
-    'productNumber_print',
-    'firstLayer_print',
-    'secondLayer_print',
-    'thirdLayer_print'
-  ]
+  const applyPackagingHierarchy = async () => {
+    const fieldsToValidate = [
+      'productNumber',
+      'firstLayer',
+      'secondLayer',
+      'thirdLayer',
+      'productNumber_unit_of_measurement',
+      'firstLayer_unit_of_measurement',
+      'secondLayer_unit_of_measurement',
+      'thirdLayer_unit_of_measurement',
+      'palletisation_applicable',
+      'pallet_size',
+      'pallet_size_unit_of_measurement',
+      'productImage',
+      'productNumber_aggregation',
+      'firstLayer_aggregation',
+      'secondLayer_aggregation',
+      'thirdLayer_aggregation',
+      'productNumber_print',
+      'firstLayer_print',
+      'secondLayer_print',
+      'thirdLayer_print'
+    ]
 
-  const isValid = await Promise.all(fieldsToValidate.map(field => trigger(field)))
-  if (!isValid.every(Boolean)) return
+    const isValid = await Promise.all(fieldsToValidate.map(field => trigger(field)))
+    if (!isValid.every(Boolean)) return
 
-  const hierarchy = Number(watch('packagingHierarchy'))
+    const hierarchy = Number(watch('packagingHierarchy'))
 
-  // Reset higher levels when reducing hierarchy
-  if (hierarchy < 4) {
-    setValue('thirdLayer', '')
-    setValue('thirdLayer_unit_of_measurement', '')
-    setValue('thirdLayer_print', false)
-    setValue('thirdLayer_aggregation', false)
+    // Reset higher levels when reducing hierarchy
+    if (hierarchy < 4) {
+      setValue('thirdLayer', '')
+      setValue('thirdLayer_unit_of_measurement', '')
+      setValue('thirdLayer_print', false)
+      setValue('thirdLayer_aggregation', false)
+    }
+    if (hierarchy < 3) {
+      setValue('secondLayer', '')
+      setValue('secondLayer_unit_of_measurement', '')
+      setValue('secondLayer_print', false)
+      setValue('secondLayer_aggregation', false)
+    }
+    if (hierarchy < 2) {
+      setValue('firstLayer', '')
+      setValue('firstLayer_unit_of_measurement', '')
+      setValue('firstLayer_print', false)
+      setValue('firstLayer_aggregation', false)
+    }
+
+    clearErrors('packagingHierarchy')
+    setModalOpen(false)
   }
-  if (hierarchy < 3) {
-    setValue('secondLayer', '')
-    setValue('secondLayer_unit_of_measurement', '')
-    setValue('secondLayer_print', false)
-    setValue('secondLayer_aggregation', false)
-  }
-  if (hierarchy < 2) {
-    setValue('firstLayer', '')
-    setValue('firstLayer_unit_of_measurement', '')
-    setValue('firstLayer_print', false)
-    setValue('firstLayer_aggregation', false)
-  }
-
-  clearErrors('packagingHierarchy')
-  setModalOpen(false)
-}
 
   const getCompanies = async () => {
     try {
@@ -544,13 +270,12 @@ const applyPackagingHierarchy = async () => {
         productId: editData?.product_id || '',
         productName: editData?.product_name || '',
         gtin: editData?.gtin || '',
-        ndc: editData?.ndc || '',
         mrp: editData?.mrp || '',
-        genericName: editData?.generic_name || '',
+        foreignName: editData?.foreign_name || '',
         companyUuid: editData?.company_uuid || '',
         prefix: editData.prefix?.split(','),
         country: editData?.country_id || '',
-        packagingSize: editData?.packaging_size || '',
+        packagingSize: editData?.packaging_size || 0,
         no_of_units_in_primary_level: editData?.no_of_units_in_primary_level || '',
         unit_of_measurement: editData?.unit_of_measurement || '',
         packagingHierarchy: editData?.packagingHierarchy || '',
@@ -573,16 +298,23 @@ const applyPackagingHierarchy = async () => {
         palletisation_applicable: editData?.palletisation_applicable || false,
         pallet_size: editData?.pallet_size?.toString() || '',
         pallet_size_unit_of_measurement: editData?.pallet_size_unit_of_measurement || '',
-        generic_salt: editData?.generic_salt || '',
-        composition: editData?.composition || '',
-        dosage: editData?.dosage || '',
-        remarks: editData?.remarks || '',
-        schedule_drug: editData?.schedule_drug || false
+         itemNo:editData?.item_no||'',
+      itemCategory:editData?.item_category||'',
+      intendedUser:editData?.intended_user||'',
+      description:editData?.description||'',
+      length:editData.length||0,
+      diameter:editData.length||0,
+      catherLength:editData.cather_length||0,
+      radiopacityMarkers:editData?.radiopacity_markers||null,
+      deliverSystemType:editData?.delivery_system_type||'',
+      platformType:editData?.platform_type||'',
+      compatibleProsthetics:editData?.compatible_prosthetic_components||'',
+      materialComposition:editData?.material_composition||'',
+      surfaceTreatment:editData?.surface_treatment||'',
+      compatibeGuideWireSize:editData?.compatible_guidewire_size||'',
+      division:editData.division||''
       })
-      if (
-        editData?.product_image &&
-        editData?.product_image !== '/images/avatars/p.png'
-      ) {
+      if (editData?.product_image && editData?.product_image !== '/images/avatars/p.png') {
         convertImageToBase64(editData?.productImage, setProductImage)
         setValue('productImage', editData?.productImage)
       }
@@ -636,12 +368,40 @@ const applyPackagingHierarchy = async () => {
     value: item.uom_uuid,
     label: item.uom_name
   }))
+  const RadiopacityData = [
+      {
+    id:null,
+    value: null,
+    label: 'No select'
+  },
+  {
+    id:true,
+    value: true,
+    label: 'Enable'
+  },
+  {
+    id:false ,
+    value: false,
+    label: 'Disable'
+  }
+]
+
 
   const CompanyData = companies?.map(item => ({
     id: item.company_uuid,
     value: item.company_uuid,
     label: item.company_name
   }))
+
+  const divisionData =[{
+    id:'HEART',
+    value:'HEART',
+    label:'Heart'
+  },
+  { id:'DENTAL',
+    value:'DENTAL',
+    label:'Dental'}
+  ]
 
   const calculateGtinCheckDigit = input => {
     if (input.length !== 12 || isNaN(input)) {
@@ -674,7 +434,9 @@ const applyPackagingHierarchy = async () => {
         <Typography variant='h4' className='my-2'>
           {editData?.id ? 'Edit Product' : 'Add Product'}
         </Typography>
-        <FormProvider {...methods}> {/* Wrap the form with FormProvider */}
+        <FormProvider {...methods}>
+          {' '}
+          {/* Wrap the form with FormProvider */}
           <form onSubmit={handleSubmit(handleSubmitForm)}>
             <Grid2 item xs={12} className='d-flex justify-content-between align-items-center'>
               <Box>
@@ -747,7 +509,7 @@ const applyPackagingHierarchy = async () => {
               </Box>
             </Grid2>
             <Grid2 container spacing={2}>
-              <Grid2 size={4}>
+              <Grid2 size={3}>
                 <CustomTextField
                   fullWidth
                   control={control}
@@ -757,112 +519,157 @@ const applyPackagingHierarchy = async () => {
                   disabled={!!editData?.id}
                 />
               </Grid2>
-              <Grid2 size={4}>
-                <CustomTextField label='Product Name *' placeholder='Product Name' name={'productName'} control={control} />
+              <Grid2 size={3}>
+                <CustomTextField
+                  label='Product Name *'
+                  placeholder='Product Name'
+                  name={'productName'}
+                  control={control}
+                />
               </Grid2>
-              <Grid2 size={4}>
-               <Controller
-  name='gtin'
-  control={control}
-  rules={{
-    required: 'GTIN is required',
-    maxLength: {
-      value: 12,
-      message: 'GTIN cannot exceed 12 digits'
-    }
-  }}
-  render={({ field }) => (
-    <TextField
-      {...field}
-      fullWidth
-      type='number'
-      id='gtin'
-      label='GTIN *'
-      placeholder='GTIN'
-      onBlur={e => calculateGtinCheckDigit(e.target.value)}
-      onChange={e => {
-        if (e.target.value?.length <= 12) {
-          field.onChange(e.target.value); // Use field.onChange instead of setValue
-        }
-        if (e.target.value.length === 12) {
-          clearErrors('gtin');
-        }
-        if (e.target.value?.length !== 12) {
-          setGtinLastDigit(null);
-        }
-      }}
-      error={!!errors.gtin}
-      helperText={errors.gtin?.message}
-      slotProps={{
-        input: {
-          sx: { paddingRight: 0 }
-        },
-        root: {
-          sx: {
-            '& .MuiInputBase-root': {
-              paddingRight: 0
-            }
-          }
-        },
-        endAdornment: {
-          position: 'end',
-          sx: {
-            paddingX: '15px',
-            paddingY: errors.gtin ? '16px' : '28px',
-            borderRadius: '4px',
-            color: '#666'
-          }
-        }
-      }}
-      endAdornment={
-        <Box
-          sx={{
-            paddingX: '15px',
-            paddingY: errors.gtin ? '16px' : '28px',
-            borderRadius: '4px',
-            color: '#666'
-          }}
-        >
-          {gtinLastDigit || ''}
-        </Box>
-      }
-    />
-  )}
-/>
+            
+                 <Grid2 size ={3}>
+               <CustomTextField
+                  label='Item No *'
+                  placeholder='Item No'
+                  name={'itemNo'}
+                  control={control}
+                />
+              </Grid2>
+               <Grid2 size ={3}>
+               <CustomTextField
+                  label='Item Category *'
+                  placeholder='Item Category'
+                  name={'itemCategory'}
+                  control={control}
+                />
               </Grid2>
             </Grid2>
+          
             <Grid2 container spacing={2}>
-              <Grid2 size={4}>
-                <CustomTextField control={control} type='number' label='NDC' placeholder='NDC' name={'ndc'} />
+              <Grid2 size ={3}>
+               <CustomDropdown options={divisionData} label='Division *' name={'division'} control={control} />
               </Grid2>
-              <Grid2 size={4}>
-                <CustomTextField type='number' step='0.01' label='MRP' placeholder='MRP' name={'mrp'} control={control} />
+              
+              <Grid2 size={3}>
+                <CustomTextField
+                  type='number'
+                  step='0.01'
+                  label='MRP *'
+                  placeholder='MRP'
+                  name={'mrp'}
+                  control={control}
+                />
               </Grid2>
-              <Grid2 size={4}>
-                <CustomTextField label='Generic Name' placeholder='Generic Name' name={'genericName'} control={control} />
+              <Grid2 size={3}>
+                <CustomTextField
+                  label='Foreign Name'
+                  placeholder='Foreign Name'
+                  name={'foreignName'}
+                  control={control}
+                />
               </Grid2>
+                <Grid2 size={3}>
+                <CustomTextField
+                  label='User Type'
+                  placeholder='User Type'
+                  name={'intendedUser'}
+                  control={control}
+                />
+              </Grid2>
+          
             </Grid2>
             <Grid2 container spacing={2} sx={{ marginBottom: 3 }}>
-              <Grid2 size={4}>
+               <Grid2 size={3}>
+                <Controller
+                  name='gtin'
+                  control={control}
+                  rules={{
+                    required: 'GTIN is required',
+                    maxLength: {
+                      value: 12,
+                      message: 'GTIN cannot exceed 12 digits'
+                    }
+                  }}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      type='number'
+                      id='gtin'
+                      label='GTIN *'
+                      placeholder='GTIN'
+                      onBlur={e => calculateGtinCheckDigit(e.target.value)}
+                      onChange={e => {
+                        if (e.target.value?.length <= 12) {
+                          field.onChange(e.target.value) // Use field.onChange instead of setValue
+                        }
+                        if (e.target.value.length === 12) {
+                          clearErrors('gtin')
+                        }
+                        if (e.target.value?.length !== 12) {
+                          setGtinLastDigit(null)
+                        }
+                      }}
+                      error={!!errors.gtin}
+                      helperText={errors.gtin?.message}
+                      slotProps={{
+                        input: {
+                          sx: { paddingRight: 0 }
+                        },
+                        root: {
+                          sx: {
+                            '& .MuiInputBase-root': {
+                              paddingRight: 0
+                            }
+                          }
+                        },
+                        endAdornment: {
+                          position: 'end',
+                          sx: {
+                            paddingX: '15px',
+                            paddingY: errors.gtin ? '16px' : '28px',
+                            borderRadius: '4px',
+                            color: '#666'
+                          }
+                        }
+                      }}
+                      endAdornment={
+                        <Box
+                          sx={{
+                            paddingX: '15px',
+                            paddingY: errors.gtin ? '16px' : '28px',
+                            borderRadius: '4px',
+                            color: '#666'
+                          }}
+                        >
+                          {gtinLastDigit || ''}
+                        </Box>
+                      }
+                    />
+                  )}
+                />
+              </Grid2>
+              <Grid2 size={3}>
                 <CustomDropdown options={CompanyData} label='Company *' name={'companyUuid'} control={control} />
               </Grid2>
-              <Grid2 size={4}>
+              <Grid2 size={3}>
                 <CustomDropdown options={prefixs} label='Prefix *' name={'prefix'} control={control} />
               </Grid2>
-              <Grid2 size={4}>
+              <Grid2 size={3}>
                 <CustomDropdown label='Country *' name={'country'} control={control} options={CountryData} />
               </Grid2>
             </Grid2>
             <Grid2 container spacing={2}>
-              <Grid2 size={4}>
+              <Grid2 size={3}>
                 <CustomTextField
                   control={control}
-                  label='Product Strength *'
+                  label='Product Strength'
                   placeholder='Product Strength'
                   name={'packagingSize'}
                 />
               </Grid2>
-              <Grid2 size={4}>
+              <Grid2 size={3}>
                 <CustomTextField
                   control={control}
                   label='No. Of Units in Primary Level *'
@@ -870,8 +677,11 @@ const applyPackagingHierarchy = async () => {
                   name={'no_of_units_in_primary_level'}
                 />
               </Grid2>
-              <Grid2 size={4}>
+              <Grid2 size={3}>
                 <CustomDropdown label='UOM *' name={'unit_of_measurement'} control={control} options={UomData} />
+              </Grid2>
+               <Grid2 size={3}>
+                <CustomDropdown label='Radiopacity Markers' name={'radiopacityMarkers'} control={control} options={RadiopacityData} />
               </Grid2>
             </Grid2>
             <Grid2 container spacing={2}>
@@ -941,101 +751,111 @@ const applyPackagingHierarchy = async () => {
                   </FormControl>
                 </FormControl>
 
-     <Modal
-  open={modalOpen}
-  onClose={() => setModalOpen(false)}
-  aria-labelledby='modal-title'
-  aria-describedby='modal-description'
->
-  <Box sx={modalStyle}>
-    <h2 id='modal-title'>
-      {packagingHierarchy !== 1 &&
-        packagingHierarchy !== 2 &&
-        packagingHierarchy !== 3 &&
-        packagingHierarchy !== 4 ? (
-        <div>
-          <Typography variant='h3' gutterBottom>
-            Packaging Hierarchy Summary
-          </Typography>
-          <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
-            <li>
-              <Typography variant='body1'>
-                <strong>Selected Hierarchy:</strong> {packagingHierarchy} Level{packagingHierarchy !== 1 ? 's' : ''}
-              </Typography>
-            </li>
+                <Modal
+                  open={modalOpen}
+                  onClose={() => setModalOpen(false)}
+                  aria-labelledby='modal-title'
+                  aria-describedby='modal-description'
+                >
+                  <Box sx={modalStyle}>
+                    <h2 id='modal-title'>
+                      {packagingHierarchy !== 1 &&
+                      packagingHierarchy !== 2 &&
+                      packagingHierarchy !== 3 &&
+                      packagingHierarchy !== 4 ? (
+                        <div>
+                          <Typography variant='h3' gutterBottom>
+                            Packaging Hierarchy Summary
+                          </Typography>
+                          <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
+                            <li>
+                              <Typography variant='body1'>
+                                <strong>Selected Hierarchy:</strong> {packagingHierarchy} Level
+                                {packagingHierarchy !== 1 ? 's' : ''}
+                              </Typography>
+                            </li>
 
-            {/* Always show Level 0 (Product Number) */}
-            <li>
-              <Typography variant='body1'>
-                <strong>Level 0 (Product):</strong> {productNumber} {watch('productNumber_unit_of_measurement')}
-              </Typography>
-            </li>
+                            {/* Always show Level 0 (Product Number) */}
+                            <li>
+                              <Typography variant='body1'>
+                                <strong>Level 0 (Product):</strong> {productNumber}{' '}
+                                {watch('productNumber_unit_of_measurement')}
+                              </Typography>
+                            </li>
 
-            {/* Show First Level if hierarchy is 2, 3, or 4 */}
-            {(packagingHierarchy >= 2) && (
-              <li>
-                <Typography variant='body1'>
-                  <strong>Level 1:</strong> {firstLayer} {watch('firstLayer_unit_of_measurement')}
-                </Typography>
-              </li>
-            )}
+                            {/* Show First Level if hierarchy is 2, 3, or 4 */}
+                            {packagingHierarchy >= 2 && (
+                              <li>
+                                <Typography variant='body1'>
+                                  <strong>Level 1:</strong> {firstLayer} {watch('firstLayer_unit_of_measurement')}
+                                </Typography>
+                              </li>
+                            )}
 
-            {/* Show Second Level if hierarchy is 3 or 4 */}
-            {(packagingHierarchy >= 3) && (
-              <li>
-                <Typography variant='body1'>
-                  <strong>Level 2:</strong> {secondLayer} {watch('secondLayer_unit_of_measurement')}
-                </Typography>
-              </li>
-            )}
+                            {/* Show Second Level if hierarchy is 3 or 4 */}
+                            {packagingHierarchy >= 3 && (
+                              <li>
+                                <Typography variant='body1'>
+                                  <strong>Level 2:</strong> {secondLayer} {watch('secondLayer_unit_of_measurement')}
+                                </Typography>
+                              </li>
+                            )}
 
-            {/* Show Third Level only if hierarchy is 4 */}
-            {(packagingHierarchy === 4) && (
-              <li>
-                <Typography variant='body1'>
-                  <strong>Level 3:</strong> {thirdLayer} {watch('thirdLayer_unit_of_measurement')}
-                </Typography>
-              </li>
-            )}
-          </ul>
-        </div>
-      ) : (
-        // Optimized rendering for packaging hierarchy levels with similar heading styles
-        <>
-          <Typography variant='h3' gutterBottom>
-            {packagingHierarchy === 1 && 'One Level'}
-            {packagingHierarchy === 2 && 'Two Level'}
-            {packagingHierarchy === 3 && 'Three Level'}
-            {packagingHierarchy === 4 && 'Four Level'}
-          </Typography>
-          <Grid2 container size={12} spacing={5} className='mb-2'>
-            <Grid2 size={4}>
-              <Typography variant='subtitle1' component='span' sx={{ fontWeight: 'bold' }}>Level</Typography>
-            </Grid2>
-            <Grid2 size={3}>
-              <Typography variant='subtitle1' component='span' sx={{ fontWeight: 'bold' }}>Level Uom</Typography>
-            </Grid2>
-            <Grid2 size={2}>
-              <Typography variant='subtitle1' component='span' sx={{ fontWeight: 'bold' }}>Print</Typography>
-            </Grid2>
-            <Grid2 size={2}>
-              <Typography variant='subtitle1' component='span' sx={{ fontWeight: 'bold' }}>Aggregation</Typography>
-            </Grid2>
-          </Grid2>
-          {[...Array(packagingHierarchy)].map((_, index) => {
-            const levelLabels = ['0th', 'First', 'Second', 'Third'];
-            return (
-              <PackagingHierarchyLevelInput
-                key={levelLabels[index]}
-                level={index}
-                label={levelLabels[index]}
-                uomOptions={UomData}
-              />
-            );
-          })}
-        </>
-      )}
-    </h2>
+                            {/* Show Third Level only if hierarchy is 4 */}
+                            {packagingHierarchy === 4 && (
+                              <li>
+                                <Typography variant='body1'>
+                                  <strong>Level 3:</strong> {thirdLayer} {watch('thirdLayer_unit_of_measurement')}
+                                </Typography>
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      ) : (
+                        // Optimized rendering for packaging hierarchy levels with similar heading styles
+                        <>
+                          <Typography variant='h3' gutterBottom>
+                            {packagingHierarchy === 1 && 'One Level'}
+                            {packagingHierarchy === 2 && 'Two Level'}
+                            {packagingHierarchy === 3 && 'Three Level'}
+                            {packagingHierarchy === 4 && 'Four Level'}
+                          </Typography>
+                          <Grid2 container size={12} spacing={5} className='mb-2'>
+                            <Grid2 size={4}>
+                              <Typography variant='subtitle1' component='span' sx={{ fontWeight: 'bold' }}>
+                                Level
+                              </Typography>
+                            </Grid2>
+                            <Grid2 size={3}>
+                              <Typography variant='subtitle1' component='span' sx={{ fontWeight: 'bold' }}>
+                                Level Uom
+                              </Typography>
+                            </Grid2>
+                            <Grid2 size={2}>
+                              <Typography variant='subtitle1' component='span' sx={{ fontWeight: 'bold' }}>
+                                Print
+                              </Typography>
+                            </Grid2>
+                            <Grid2 size={2}>
+                              <Typography variant='subtitle1' component='span' sx={{ fontWeight: 'bold' }}>
+                                Aggregation
+                              </Typography>
+                            </Grid2>
+                          </Grid2>
+                          {[...Array(packagingHierarchy)].map((_, index) => {
+                            const levelLabels = ['0th', 'First', 'Second', 'Third']
+                            return (
+                              <PackagingHierarchyLevelInput
+                                key={levelLabels[index]}
+                                level={index}
+                                label={levelLabels[index]}
+                                uomOptions={UomData}
+                              />
+                            )
+                          })}
+                        </>
+                      )}
+                    </h2>
                     <Grid2 size={12} className={palletisation_applicable ? '' : 'mb-3'}>
                       <Controller
                         control={control}
@@ -1065,7 +885,13 @@ const applyPackagingHierarchy = async () => {
                     {palletisation_applicable && (
                       <Grid2 container spacing={5} size={12} className='d-flex align-items-center mb-3'>
                         <Grid2 size={7}>
-                          <CustomTextField control={control} id='pallet_size' label='Pallet size' name={'pallet_size'} type='number' />
+                          <CustomTextField
+                            control={control}
+                            id='pallet_size'
+                            label='Pallet size'
+                            name={'pallet_size'}
+                            type='number'
+                          />
                         </Grid2>
                         <Grid2 size={4}>
                           <CustomDropdown
@@ -1079,9 +905,9 @@ const applyPackagingHierarchy = async () => {
                     )}
 
                     {packagingHierarchy !== 1 &&
-                      packagingHierarchy !== 2 &&
-                      packagingHierarchy !== 3 &&
-                      packagingHierarchy !== 4 ? (
+                    packagingHierarchy !== 2 &&
+                    packagingHierarchy !== 3 &&
+                    packagingHierarchy !== 4 ? (
                       ''
                     ) : (
                       <>
@@ -1108,46 +934,116 @@ const applyPackagingHierarchy = async () => {
                 </Modal>
               </Grid2>
             </Grid2>
-            <Grid2 item xs={12} className='d-flex justify-content-between align-items-center mb-2'></Grid2>
+              <Grid2 item xs={12} className='d-flex justify-content-between align-items-center mb-2'></Grid2>
             <Grid2 item xs={12} className='d-flex justify-content-between align-items-center mb-2'>
               <Box></Box>
             </Grid2>
-            <Grid2 container xs={12} className='d-flex justify-content-between align-items-center' spacing={5}>
-              <Grid2 size={12}>
-                <Typography variant='h5' className='my-2'>
-                  DGFT Information
-                </Typography>
-              </Grid2>
-              <Grid2 size={5}>
-                <CustomTextField label='Generic Salt *' control={control} name={'generic_salt'} />
-              </Grid2>
-              <Grid2 size={5}>
-                <CustomTextField label='Composition *' name={'composition'} control={control} />
-              </Grid2>
-              <Grid2 size={5}>
-                <CustomTextField control={control} label='Dosage *' name={'dosage'} />
-              </Grid2>
-              <Grid2 size={5}>
-                <CustomTextField label='Remarks *' name={'remarks'} control={control} />
-              </Grid2>
-              <Grid2 size={6}>
-                <Controller
-                  name={'schedule_drug'}
+               <Grid2 container spacing={2}>
+                   <Grid2 size={3}>
+                <CustomTextField
                   control={control}
-                  render={({ field }) => (
-                    <FormControlLabel
-                      label='Scheduled Drug?'
-                      labelPlacement='start'
-                      control={
-                        <Switch {...field} checked={field.value} name='schedule_drug' color='primary' />
-                      }
-                    />
-                  )}
+                  label='Diameter'
+                  placeholder='Diameter'
+                  name={'diameter'}
+                />
+              </Grid2> 
+               <Grid2 size={3}>
+                <CustomTextField
+                  control={control}
+                  label='Length'
+                  placeholder='Length'
+                  name={'length'}
                 />
               </Grid2>
-            </Grid2>
+               <Grid2 size={3}>
+                <CustomTextField
+                  control={control}
+                  label='Cather Length'
+                  placeholder='Cather Lengt'
+                  name={'catherLength'}
+                />
+              </Grid2>
+               <Grid2 size={3}>
+                <CustomTextField
+                  control={control}
+                  label='Compatible Size'
+                  placeholder='Compatible Size'
+                  name={'compatibeGuideWireSize'}
+                />
+              </Grid2>
+              
+                </Grid2>   
+                  <Grid2 container spacing={2} >
+
+               <Grid2 size={4}>
+                <CustomTextField
+                  control={control}
+                  label='Surface Treatment'
+                  placeholder='Surface Treatment'
+                  name={'surfaceTreatment'}
+                />
+              </Grid2>
+               <Grid2 size={4}>
+                <CustomTextField
+                  control={control}
+                  label='Platform Type'
+                  placeholder='Platform Type'
+                  name={'platformType'}
+                />
+              </Grid2>
+               <Grid2 size={4}>
+                <CustomTextField
+                  control={control}
+                  label='System Type'
+                  placeholder='System Type'
+                  name={'deliverSystemType'}
+                />
+              </Grid2>
+              
+              
+                </Grid2> 
+            <Grid2 container xs={12} className='d-flex justify-content-between align-items-center' spacing={5}>
+                    <Grid2 size={4}>
+                <CustomTextField
+                  control={control}
+                  label='Product Description *'
+                  placeholder='Product Description'
+                  name={'description'}
+                  multiline={true} // Enable multiline
+                  rows={3}
+                />
+              </Grid2>
+               <Grid2 size={4}>
+                <CustomTextField
+                  label='Material Composition'
+                  placeholder='Material Composition'
+                  name={'materialComposition'}
+                  multiline={true} // Enable multiline
+                  rows={3}
+                />
+              </Grid2>
+               <Grid2 size={4}>
+                <CustomTextField
+                  control={control}
+                  label='Compatible Prosthetics'
+                  placeholder='Compatible Prosthetics'
+                  name={'compatibleProsthetics'}
+                   multiline={true} // Enable multiline
+                   rows={3}
+                  
+                />
+              </Grid2>
+
+                 </Grid2>
+
+            
             <Grid2 item xs={12} className='my-3 '>
-              <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'   onClick={() => console.log('Submit button clicked')}>
+              <Button
+                variant='contained'
+                sx={{ marginRight: 3.5 }}
+                type='submit'
+                onClick={() => console.log('Submit button clicked')}
+              >
                 Save Changes
               </Button>
               <Button
@@ -1179,13 +1075,13 @@ const applyPackagingHierarchy = async () => {
     </Modal>
   )
 }
-ProductModal.propTypes={
-   openModal:PropTypes.any,
-  handleCloseModal:PropTypes.any,
-  editData:PropTypes.any,
-  handleSubmitForm:PropTypes.any,
-  productImage:PropTypes.any,
-  setProductImage:PropTypes.any,
-  tableHeaderData:PropTypes.any
+ProductModal.propTypes = {
+  openModal: PropTypes.any,
+  handleCloseModal: PropTypes.any,
+  editData: PropTypes.any,
+  handleSubmitForm: PropTypes.any,
+  productImage: PropTypes.any,
+  setProductImage: PropTypes.any,
+  tableHeaderData: PropTypes.any
 }
 export default ProductModal

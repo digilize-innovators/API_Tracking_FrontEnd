@@ -11,18 +11,17 @@ const TableProduct = props => {
         { label: 'Product ID', path: 'product_id' },
         { label: 'Product Name', path: 'product_name' },
         { label: 'GTIN', path: 'gtin' },
-        { label: 'Packaging Size', path: 'packaging_size' },
+        { label: 'Division', path: 'division' },
+        { label: 'Foreign Name', path: 'foreign_name' },
         { label: 'Company', path: 'company.CompanyHistory[0].company_name' },
         { label: 'Country', path: 'countryMaster.country' }
       ]}
       historyColumns={[
         { label: 'Product ID', path: 'product_id' },
         { label: 'Product Name', path: 'product_name' },
-        { label: 'GTIN', path: 'gtin' },
-        { label: 'NDC', path: 'ndc' },
-        { label: 'MRP', path: 'mrp' },
-        { label: 'Generic Name', path: 'generic_name' },
-        { label: 'Packaging Size', path: 'packaging_size' },
+        { label: 'GTIN', path: 'gtin' }, 
+        { label: 'Division', path: 'division' },
+        { label: 'Foreign Name', path: 'foreign_name' },
         { label: 'Company', path: 'company.CompanyHistory[0].company_name' },
         { label: 'Country', path: 'countryMaster.country' }
       ]}
