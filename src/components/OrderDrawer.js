@@ -1,16 +1,16 @@
 import { Box, Button, Grid2, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
 import PropTypes from 'prop-types'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { CiExport } from 'react-icons/ci'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
 import { api } from 'src/utils/Rest-API'
 import { getFieldValue } from 'src/utils/rowUtils'
 import SnackbarAlert from './SnackbarAlert'
-import downloadPdf from 'src/utils/DownloadPdf'
 import TableTransaction from 'src/views/tables/TableTransaction'
 import TableOrderDetails from 'src/views/tables/TableOrderDetails'
+import salepdf from 'src/utils/salePDf'
 
 const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail, invoiceBtnDisable, setInvoiceBtnDisable }) => {
     const [userDataPdf, setUserDataPdf] = useState()
@@ -27,15 +27,6 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
         
     }, [])
 
-    const tableData = useMemo(
-        () => ({
-            tableHeader: ['Sr.No.', 'Product', 'Batch', 'Total Quantity', 'Scanned Quantity'],
-            tableHeaderText: `${title}`,
-            tableBodyText: `${row.order_no} list`,
-            filename: `${title}_${row.order_no}`
-        }),
-        []
-    )
 
     const tableBody = orderDetail?.map((item, index) => [
         index + 1,
@@ -45,8 +36,17 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
         item.o_scan_qty
     ])
 
-    const handleDownloadPdf = () => {
-        downloadPdf(tableData, null, tableBody, orderDetail, userDataPdf)
+    const handleDownloadPdf = async() => {
+        if(row.status!=='INVOICE_GENERATED')
+        {
+            salePdf(row, title, tableBody, orderDetail, userDataPdf)
+            
+        }
+        else{
+            const res = await api(`${endpoint}scanned-codes/${row?.id}`,{}, 'get', true)
+             salePdf(row, title, tableBody, orderDetail, userDataPdf,res.data.data.codes)
+        }
+       
     }
 
     const handleGenerate = async () => {
@@ -135,13 +135,16 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
                     <span style={{ marginLeft: 6 }}> Generate Invoice </span>
                 </Box>
             </Button>
-
-            <Grid2 item xs={12}>
+            { 
+                row.status!=='INVOICE_GENERATED' &&  
+                  <Grid2 item xs={12}>
                 <Typography variant='h4' className='mx-4 mt-3' sx={{ mb: 3 }}>
                     Transaction Detail
                 </Typography>
                 <TableTransaction transactionsDetail={transactionsDetail} />
             </Grid2>
+            }
+         
             <Grid2 item xs={12}>
                 <TableOrderDetails
                     endpoint={endpoint}
