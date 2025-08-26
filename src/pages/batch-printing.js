@@ -70,7 +70,6 @@ const Index = ({ userId, ip }) => {
     }
 
     socket.current.on('connect', () => {
-      console.log('Connected to socket server, socket id:', socket.current.id)
       setSocketId(socket.current.id)
     })
 
@@ -163,7 +162,7 @@ const Index = ({ userId, ip }) => {
     socket.current.on('printStoped', handlePrintStopped)
 
     function handlePrintStopped(data) {
-      console.log('printStoped', data)
+      // console.log('printStoped', data)
       setPrinterLines(prevLines => updatePrintStopState(prevLines, data))
       setAlertData({
         openSnackbar: true,
@@ -265,7 +264,9 @@ const Index = ({ userId, ip }) => {
         printCount: data.printCount,
         scanned: data.scanCount,
         disabledReset: true,
-        disabledStopSession: false
+        disabledStopSession: false,
+        availableToCode: data.availableCodes
+
       }
 
       updatedLines[lineIndex] = updatedLine
@@ -455,10 +456,9 @@ const Index = ({ userId, ip }) => {
   }
 
   const getProducts = async (panelIndex, lineIndex) => {
-    console.log('calling ..')
     try {
       const res = await api('/batchprinting/getAllProducts', {}, 'get', true, ip, true)
-      console.log('Res of getProducts ', res.data)
+      // console.log('Res of getProducts ', res.data)
       if (res.data.success) {
         const products = res.data.data.products
         updatePrinterLine(panelIndex, lineIndex, 'products', products)
@@ -478,7 +478,7 @@ const Index = ({ userId, ip }) => {
     setIsLoading(true)
     try {
       const res = await api(`/batchprinting/getBatchesByProduct/${productId}`, {}, 'get', true, ip, true);
-      console.log("Get batches by product " , res.data);
+      // console.log("Get batches by product " , res.data);
       
       if (res.data.success) {
         const batches = res.data.data.batches
@@ -519,9 +519,8 @@ const Index = ({ userId, ip }) => {
         true
       )
       if (res.data.success) {
-        console.log('handleBatchChange', res.data.data)
-        const packagingHierarchies = res.data.data.packagingheirarchy
-        console.log('packaging', packagingHierarchies)
+        // console.log('handleBatchChange', res.data.data)
+        const packagingHierarchies = res.data.data.packagingheirarchy;
         setPrinterLines(prevLines => {
           const panels = [...prevLines]
           const line = panels[panelIndex].lines[lineIndex]
@@ -612,7 +611,6 @@ const Index = ({ userId, ip }) => {
     if (!checkValidate(panelIndex, lineIndex)) {
       return
     }
-    console.log('Panles group ', printerLines)
     try {
       setIsLoading(true)
       const res = await api(
@@ -623,7 +621,7 @@ const Index = ({ userId, ip }) => {
         ip,
         true
       )
-      console.log('Res of submit form ', res.data)
+      // console.log('Res of submit form ', res.data)
       if (res.data.success) {
         const { availableCodes, codeToPrint } = res.data.data
         setPrinterLines(prevLines => {
@@ -696,7 +694,7 @@ const Index = ({ userId, ip }) => {
     }
   }
 
-  const handleStartPrinting = async (panelIndex, lineIndex, line) => {
+  const handleStartPrinting = async (line) => {
     try {
       const data = { line }
       socket.current.emit('startPrinting', data)
@@ -706,8 +704,7 @@ const Index = ({ userId, ip }) => {
     }
   }
 
-  const handleStopPrinting = async (panelIndex, lineIndex, line) => {
-    console.log('STop printing clicked...')
+  const handleStopPrinting = async (line) => {
     try {
       const data = { line }
       socket.current.emit('stopPrinting', data)
@@ -743,7 +740,6 @@ const Index = ({ userId, ip }) => {
     setPrinterLines(lines)
     try {
       setIsLoading(true)
-      console.log('redis key ', redisKey)
       const res = await api(
         '/batchprinting/removeTableFromRedis',
         { redisKey, lineId: line.id },
@@ -761,7 +757,6 @@ const Index = ({ userId, ip }) => {
   }
 
   const handleOpenSetting = async line => {
-    console.log('setting of line ', line)
     setProjectSettingData({ ...projectSettingData, lineId: line.id, printerId: line.printer_id })
     setOpenProjectModal(!openProjectModal)
   }
@@ -870,7 +865,6 @@ const Index = ({ userId, ip }) => {
   }
 
   const handleAuthModalOpen = user => {
-    console.log('Open auth model again')
     setApproveAPI({
       ...approveAPI,
       approveAPIName: 'batch-printing-approve',
@@ -916,7 +910,6 @@ const Index = ({ userId, ip }) => {
     const handleEsignApproved = async () => {
       const sessionType = approveAPI.session === 'start' ? 'start' : 'stop'
       const finalRemarks = remarks.length > 0 ? remarks : `Batch printing session ${sessionType} requested`
-      console.log('esign is approved for creator.')
       const data = {
         esignStatus: 'approved',
         audit_log: config?.config?.audit_logs
@@ -1223,7 +1216,7 @@ const Index = ({ userId, ip }) => {
                                 <Button
                                   variant='contained'
                                   className='py-2 mx-3'
-                                  onClick={() => handleStartPrinting(panelIndex, lineIndex, line)}
+                                  onClick={() => handleStartPrinting(line)}
                                   disabled={line.disabledStartPrint}
                                 >
                                   Start
@@ -1232,7 +1225,7 @@ const Index = ({ userId, ip }) => {
                                   variant='contained'
                                   color='error'
                                   className='py-2'
-                                  onClick={() => handleStopPrinting(panelIndex, lineIndex, line)}
+                                  onClick={() => handleStopPrinting(line)}
                                   disabled={line.disabledStopPrint}
                                 >
                                   Stop
