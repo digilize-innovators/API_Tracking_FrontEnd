@@ -86,12 +86,10 @@ const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlert
       setIsLoading(true)
       const res = await api(query, {}, 'get', true)
       setIsLoading(false)
-      if (res.data.success && orderDetail.status == 'INVOICE_GENERATED') {
+      if (res.data.success ) {
         setAlertData({ openSnackbar: true, type: 'success', message: 'Code Export Successfully', variant: 'filled' })
         downloadPdf(res.data.data.codes)
-      } else if (orderDetail.status !== 'INVOICE_GENERATED') {
-        setAlertData({ openSnackbar: true, type: 'error', message: 'Invoice is not generated yet', variant: 'filled' })
-      } else {
+      }  else {
         setAlertData({ openSnackbar: true, type: 'error', message: 'Something went wrong', variant: 'filled' })
         if (res.data.code === 401) {
           removeAuthToken()
@@ -131,14 +129,14 @@ const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlert
       </TableCell>
       <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
         <span>
-          <Tooltip title={orderDetail.status !== 'INVOICE_GENERATED' ? 'No access' : 'Export'}>
+          <Tooltip title={row.o_scan_qty<=0 ? 'No access' : 'Export'}>
             <IconButton data-testid={`auth-check-icon-${row.id}`}>
               <CiExport
                 fontSize={20}
-                onClick={orderDetail.status == 'INVOICE_GENERATED' ? () => getUniqueCode(row) : null}
+                onClick={row.o_scan_qty>0 ? () => getUniqueCode(row) : null}
                 style={{
-                  cursor: orderDetail.status == 'INVOICE_GENERATED' ? 'pointer' : 'not-allowed',
-                  opacity: orderDetail.status == 'INVOICE_GENERATED' ? 1 : 0.3
+                  cursor: row.o_scan_qty>0 ? 'pointer' : 'not-allowed',
+                  opacity: row.o_scan_qty>0 ? 1 : 0.3
                 }}
               />
             </IconButton>

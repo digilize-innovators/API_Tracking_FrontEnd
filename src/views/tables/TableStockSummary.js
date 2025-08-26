@@ -153,7 +153,7 @@ const TableStockSummary = ({ tableHeaderData }) => {
   const [rowsPerPage, setRowsPerPage] = useState(settings.rowsPerPage)
   const router = useRouter()
   const { setIsLoading } = useLoading()
-  const { removeAuthToken } = useAuth()
+  const { removeAuthToken,getUserData } = useAuth()
 
   useMemo(() => {
     setPage(0)
@@ -174,8 +174,18 @@ const TableStockSummary = ({ tableHeaderData }) => {
       const res = await api(`/location/?${params.toString()}`, {}, 'get', true)
       setIsLoading(false)
       if (res.data.success) {
-        console.log(res.data.data)
+        const user = getUserData()
+         const userLocation = user.userLocation // or location_id depending on token structure
+        const userName = user.departmentName
+        if (userName === 'Admin') {
+          // restrict to user location only
         setLocationData({ data: res.data.data.locations, total: res.data.data.total })
+        } else {
+          const finalLocations = res.data.data.locations.filter(loc => loc.location_name === userLocation)
+           setLocationData({ data:finalLocations, total: res.data.data.total })
+
+        }
+        
       } else if (res.data.code === 401) {
         removeAuthToken()
         router.push('/401')
