@@ -297,16 +297,16 @@ const navigation = () => {
 
   const filteredMasterScreens = masterScreens.filter(item => screens.includes(item.title))
 
-  // const fiiterProcessScreens = processScreens.filter(item => screens.includes(item.title))
-  // const fiiterProcessScreens = processScreens.filter(item => screens.includes(item.title))
-
   const filteredProductionScreens = productionScreens.filter(item => screens.includes(item.title))
 
   const filteredAuditScreens = auditScreens.filter(item => screens.includes(item.title))
 
   const filteredDashboardScreen = dashboardScreen.filter(item => screens.includes(item.title))
+  
   const filteredPrinterScreen = printerScreens.filter(item => screens.includes(item.title))
+
   const filterSalesScreen = salesScreens.filter(item => screens.includes(item.title))
+
   const drawerArray = [
     {
       title: 'Home Screen',

@@ -1,7 +1,7 @@
 import axios from 'axios';
-import config from '../../constants';
+import { BaseUrl, trustedOrigins } from '../../constants';
 import Cookies from 'js-cookie';
-const trustedOrigins = ['http://192.168.1.50:3000', "http://192.168.1.55:3000","http://192.168.1.9:3000", "http://192.168.5.143:3000", "http://192.168.5.144:3000", "http://192.168.5.145:3000"];
+
 const getCorsHeaders = (origin) => {
   if (trustedOrigins.includes(origin)) {
     return { 'Access-Control-Allow-Origin': origin };
@@ -9,7 +9,7 @@ const getCorsHeaders = (origin) => {
   return {};
 };
 export const api = async (endpoint, data, type, token, ip,isPrint = false) => {
-  let mainUrl = config.BaseUrl + '/api/v1';
+  let mainUrl = BaseUrl + '/api/v1';
   if (isPrint && isPrint === true) {
     mainUrl = `http://${ip}:4000/api/v1`;
   }
