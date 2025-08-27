@@ -10,7 +10,7 @@ import { getFieldValue } from 'src/utils/rowUtils'
 import SnackbarAlert from './SnackbarAlert'
 import TableTransaction from 'src/views/tables/TableTransaction'
 import TableOrderDetails from 'src/views/tables/TableOrderDetails'
-import salepdf from 'src/utils/salePDf'
+import salepdf from 'src/utils/salePdf'
 
 const statusActionMap = {
   CREATED: { title: "Generate Invoice", endpoint : 'generate-invoice'},
@@ -42,18 +42,20 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
         item.product_name,
         item.batch_no,
         item.qty,
-        item.o_scan_qty
+        item.scanned_qty
     ])
 
     const handleDownloadPdf = async() => {
-        if(row.status!=='INVOICE_GENERATED')
+        if(row.status==='INVOICE_GENERATED' ||row.status==='GRN_GENERATED')
         {
-            salePdf(row, title, tableBody, orderDetail, userDataPdf)
+              const res = await api(`${endpoint}scanned-codes/${row?.id}`,{}, 'get', true)
+              console.log('data',res.data.data)
+             salepdf(row, title, tableBody, orderDetail, userDataPdf,res.data.data)
             
         }
         else{
-            const res = await api(`${endpoint}scanned-codes/${row?.id}`,{}, 'get', true)
-             salePdf(row, title, tableBody, orderDetail, userDataPdf,res.data.data.codes)
+            salepdf(row, title, tableBody, orderDetail, userDataPdf)
+          
         }
        
     }
