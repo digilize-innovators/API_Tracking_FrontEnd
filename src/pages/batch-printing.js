@@ -104,7 +104,7 @@ const Index = ({ userId, ip }) => {
 
     function handleDataScanned(data) {
       const { lineId, scanned, panelName } = data
-      console.log('dataScanned', data)
+      // console.log('dataScanned', data)
       setPrinterLines(prevLines => updateScannedLines(prevLines, panelName, lineId, scanned))
     }
 
@@ -127,7 +127,7 @@ const Index = ({ userId, ip }) => {
     socket.current.on('printStarted', handlePrintStarted)
 
     function handlePrintStarted(data) {
-      console.log('printStarted', data)
+      // console.log('printStarted', data)
       setPrinterLines(prevLines => updatePrintStartState(prevLines, data))
       setAlertData({
         openSnackbar: true,
@@ -155,6 +155,7 @@ const Index = ({ userId, ip }) => {
       line.disabledReset = true
       line.disabledCodeToPrint = true
       line.disabledStopSession = true
+      line.scanned = 0
 
       return panels
     }
@@ -266,7 +267,6 @@ const Index = ({ userId, ip }) => {
         disabledReset: true,
         disabledStopSession: false,
         availableToCode: data.availableCodes
-
       }
 
       updatedLines[lineIndex] = updatedLine
@@ -283,7 +283,7 @@ const Index = ({ userId, ip }) => {
     }
 
     socket.current.on('onMessage', data => {
-      console.log('onMessage ', data)
+      // console.log('onMessage ', data)
       setAlertData({ openSnackbar: true, type: data.type, message: data.message, variant: 'filled' })
     })
 
@@ -318,29 +318,27 @@ const Index = ({ userId, ip }) => {
 
               if (res?.data?.success && res?.data?.data) {
                 const data = res.data.data.result
-                console.log('line is ', line)
-
                 line.product = data.product_id
 
                 // Fetch additional data
                 const [productRes, batchRes, levelRes, availRes] = await Promise.all([
-                  api('/batchprinting/getAllProducts', {}, 'get', true, true, ip),
-                  api(`/batchprinting/getBatchesByProduct/${data.product_id}`, {}, 'get', true, true, ip),
+                  api('/batchprinting/getAllProducts', {}, 'get', true, ip, true),
+                  api(`/batchprinting/getBatchesByProduct/${data.product_id}`, {}, 'get', true, ip, true),
                   api(
                     `/batchprinting/getPackagingHeirarchyFromProductAndBatch/${data.product_id}/${data.batch_id}`,
                     {},
                     'get',
                     true,
-                    true,
-                    ip
+                    ip,
+                    true
                   ),
                   api(
                     `/batchprinting/getAvailableCodesFromProductAndBatch/${data.product_id}/${data.batch_id}/${data.packing_hierarchy}/${line.ControlPanel.id}/${line.id}`,
                     {},
                     'get',
                     true,
-                    true,
-                    ip
+                    ip,
+                    true
                   )
                 ])
 
@@ -370,7 +368,7 @@ const Index = ({ userId, ip }) => {
                   line.disabledStopSession = false
                   line.disabledCodePrintSave = false
                   line.disabledStopPrint = true
-                  line.disabledCodeToPrint = true
+                  line.disabledCodeToPrint = false
                 } else {
                   line.disabledStopSession = false
                   line.disabledCodePrintSave = false
@@ -477,9 +475,9 @@ const Index = ({ userId, ip }) => {
   const handleProductChange = async (panelIndex, lineIndex, productId) => {
     setIsLoading(true)
     try {
-      const res = await api(`/batchprinting/getBatchesByProduct/${productId}`, {}, 'get', true, ip, true);
+      const res = await api(`/batchprinting/getBatchesByProduct/${productId}`, {}, 'get', true, ip, true)
       // console.log("Get batches by product " , res.data);
-      
+
       if (res.data.success) {
         const batches = res.data.data.batches
         setPrinterLines(prevLines => {
@@ -520,7 +518,7 @@ const Index = ({ userId, ip }) => {
       )
       if (res.data.success) {
         // console.log('handleBatchChange', res.data.data)
-        const packagingHierarchies = res.data.data.packagingheirarchy;
+        const packagingHierarchies = res.data.data.packagingheirarchy
         setPrinterLines(prevLines => {
           const panels = [...prevLines]
           const line = panels[panelIndex].lines[lineIndex]
@@ -657,10 +655,9 @@ const Index = ({ userId, ip }) => {
     if (!checkValidateBeforeStart(panelIndex, lineIndex)) {
       return
     }
-    console.log('LIne send ', line)
     try {
       const res = await api(`/batchprinting/sendCodesToPrinter`, { line, socketId }, 'post', true, ip, true)
-      console.log('res of handlestart printing ', res.data)
+      // console.log('res of handlestart printing ', res.data)
 
       if (res.data.success) {
         setPrinterLines(prevLines => {
@@ -694,7 +691,7 @@ const Index = ({ userId, ip }) => {
     }
   }
 
-  const handleStartPrinting = async (line) => {
+  const handleStartPrinting = async line => {
     try {
       const data = { line }
       socket.current.emit('startPrinting', data)
@@ -704,10 +701,17 @@ const Index = ({ userId, ip }) => {
     }
   }
 
-  const handleStopPrinting = async (line) => {
+  const handleStopPrinting = async line => {
     try {
       const data = { line }
       socket.current.emit('stopPrinting', data)
+      const updatedPrinterLines = [...printerLines]
+      const panel = updatedPrinterLines?.find(p => p.panelName === line.ControlPanel.name)
+      if (!panel) return
+      const panelLine = panel.lines.find(l => l.id === line.id)
+      if (!panelLine) return
+      panelLine.disabledStopPrint = true
+      setPrinterLines(updatedPrinterLines)
     } catch (error) {
       console.log('Error handleStop Printing', error)
       setAlertData({ ...alertData, type: 'error', message: error, openSnackbar: true })
@@ -761,31 +765,26 @@ const Index = ({ userId, ip }) => {
     setOpenProjectModal(!openProjectModal)
   }
 
-  const handleAfterStartSession = async () => {
-    const panels = [...printerLines]
-    const data = { stop: false }
-    await Promise.all(
-      panels.map(async panel => {
-        const lines = [...panel.lines]
-        await Promise.all(
-          lines.map(async line => {
-            if (line.line_pc_ip === ip) {
-              data.lineId = line.id
-              line.disabledCodePrintSave = false
-              line.disabledStartSession = true
-              line.disabledCodeToPrint = true
-              line.disabledStopSession = false
-              line.disabledReset = true
-              line.sessionStarted = true
-            }
-            return line
-          })
-        )
-        panel.lines = lines
-        return panel
-      })
-    )
-    setPrinterLines(panels)
+  const handleAfterStartSession = async lineId => {
+    const data = { stop: false, userId, lineId }
+    const updatedPanels = printerLines.map(panel => {
+      const updatedLines = panel.lines.map(line => {
+        if (line.id === lineId) {
+          return {
+            ...line,
+            disabledCodePrintSave: false,
+            disabledStartSession: true,
+            disabledCodeToPrint: true,
+            disabledStopSession: false,
+            disabledReset: true,
+            sessionStarted: true
+          }
+        }
+        return line
+      });
+      return { ...panel, lines: updatedLines};
+    })
+    setPrinterLines(updatedPanels)
     try {
       socket.current.emit('stopPrintingSession', data)
     } catch (error) {
@@ -794,31 +793,28 @@ const Index = ({ userId, ip }) => {
     }
   }
 
-  const handleAfterStopSession = async () => {
-    const panels = [...printerLines]
-    const data = { stop: true }
-    await Promise.all(
-      panels.map(async panel => {
-        const lines = [...panel.lines]
-        await Promise.all(
-          lines.map(async line => {
-            data.lineId = line.id
-            line.disabledCodePrintSave = true
-            line.disabledStartSession = true
-            line.disabledStopSession = true
-            line.disabledCodeToPrint = true
-            line.disabledStartPrint = true
-            line.disabledStopPrint = true
-            line.disabledReset = false
-            line.sessionStarted = false
-            return line
-          })
-        )
-        panel.lines = lines
-        return panel
+  const handleAfterStopSession = async lineId => {
+    const data = { stop: true, userId, lineId }
+    const updatedPanels = printerLines.map(panel => {
+      const updatedLines = panel.lines.map(line => {
+        if (line.id === lineId) {
+          return {
+            ...line,
+            disabledCodePrintSave: true,
+            disabledStartSession: true,
+            disabledStopSession: true,
+            disabledCodeToPrint: true,
+            disabledStartPrint: true,
+            disabledStopPrint: true,
+            disabledReset: false,
+            sessionStarted: false
+          }
+        }
+        return line
       })
-    )
-    setPrinterLines(panels)
+      return { ...panel, lines: updatedLines }
+    })
+    setPrinterLines(updatedPanels)
     try {
       socket.current.emit('stopPrintingSession', data)
     } catch (error) {
@@ -839,7 +835,7 @@ const Index = ({ userId, ip }) => {
       })
       setAuthModalOpen(true)
     } else {
-      handleAfterStartSession()
+      handleAfterStartSession(data.id)
     }
   }
 
@@ -855,7 +851,7 @@ const Index = ({ userId, ip }) => {
       })
       setAuthModalOpen(true)
     } else {
-      handleAfterStopSession()
+      handleAfterStopSession(data.id)
     }
   }
 
@@ -875,7 +871,7 @@ const Index = ({ userId, ip }) => {
     setAuthModalOpen(true)
   }
 
-  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus) => {
     const resetState = () => {
       setApproveAPI({
         approveAPIName: '',
@@ -886,73 +882,57 @@ const Index = ({ userId, ip }) => {
         lineId: null
       })
       setAuthModalOpen(false)
+      setOpenModalApprove(false)
     }
+
     if (!isAuthenticated) {
-      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
+      setAlertData({ type: 'error', message: 'Authentication failed, please try again.', openSnackbar: true })
       return
     }
-    const sessionType = approveAPI.session === 'start' ? 'start' : 'stop'
-    const finalRemarks = remarks.length > 0 ? remarks : `Batch printing session ${sessionType} requested`
+
     const prepareData = () => ({
-      esignStatus: esignStatus,
+      esignStatus,
       session: approveAPI.session,
       lineId: approveAPI.lineId,
-      audit_log: config?.config?.audit_logs
-        ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            performed_action: 'approved',
-            remarks: finalRemarks,
-            authUser: user.user_id
-          }
-        : {}
+      audit_log: config?.config?.audit_logs ? { authUser: user.user_id } : {}
     })
-    const handleEsignApproved = async () => {
-      const sessionType = approveAPI.session === 'start' ? 'start' : 'stop'
-      const finalRemarks = remarks.length > 0 ? remarks : `Batch printing session ${sessionType} requested`
-      const data = {
-        esignStatus: 'approved',
-        audit_log: config?.config?.audit_logs
-          ? {
-              user_id: user.userId,
-              user_name: user.userName,
-              performed_action: 'approved',
-              remarks: finalRemarks,
-              authUser: user.user_id
-            }
-          : {}
-      }
-      await api('/esign-status/double-esign', data, 'patch', true)
-      handleAuthModalOpen(user)
-    }
-    const handleApproverActions = async () => {
-      console.log('esign approve by approver.')
-      const data = prepareData()
-      await api('/esign-status/double-esign', data, 'patch', true)
-    }
-    if (isApprover && esignStatus === 'approved') {
-      await handleApproverActions()
-      if (approveAPI.authUser.userId === user.userId) {
-        setAlertData({ ...alertData, openSnackbar: true, message: 'Same user cannot Approved', type: 'error' })
+
+    try {
+      if (esignStatus === 'rejected') {
+        console.log('eSign rejected.')
+        resetState()
         return
       }
-      if (approveAPI.session === 'start') {
-        handleAfterStartSession()
-      } else {
-        handleAfterStopSession()
+
+      if (esignStatus === 'approved') {
+        if (isApprover) {
+          if (approveAPI.authUser.userId === user.userId) {
+            setAlertData({ type: 'error', message: 'Same user cannot approve.', openSnackbar: true })
+            return
+          }
+          await api('/esign-status/double-esign', prepareData(), 'patch', true)
+          approveAPI.session === 'start'
+            ? handleAfterStartSession(approveAPI.lineId)
+            : handleAfterStopSession(approveAPI.lineId)
+          resetState()
+        } else {
+          await api(
+            '/esign-status/double-esign',
+            {
+              esignStatus: 'approved',
+              audit_log: config?.config?.audit_logs ? { authUser: user.user_id } : {}
+            },
+            'patch',
+            true
+          )
+          handleAuthModalOpen(user)
+        }
       }
-      resetState()
-    } else if (esignStatus === 'rejected') {
-      console.log('esign is rejected.')
-      setAuthModalOpen(false)
-      setOpenModalApprove(false)
-      resetState()
-    } else if (esignStatus === 'approved') {
-      handleEsignApproved()
+    } catch (error) {
+      console.error('Error handling auth result:', error)
+      setAlertData({ type: 'error', message: 'An error occurred during authentication.', openSnackbar: true })
     }
   }
-
-
 
   return (
     <Box padding={4}>
@@ -1097,9 +1077,7 @@ const Index = ({ userId, ip }) => {
                           value={line.packagingHierarchy}
                           onChange={e => handleInputChange(panelIndex, lineIndex, 'packagingHierarchy', e.target.value)}
                         >
-                           <MenuItem value={'firstLayer'}>
-                            {'First Layer'}
-                          </MenuItem>
+                          <MenuItem value={'firstLayer'}>{'First Layer'}</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid2>

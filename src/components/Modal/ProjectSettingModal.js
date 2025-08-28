@@ -128,7 +128,8 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
               checked: res.data.data.variables?.includes(item.value)
             }
           })
-        })
+        });
+        setLabels([res.data.data.label]);
       } else {
         setSettingData({
           ...settingData
@@ -150,8 +151,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       printPerGroup: settingData.printPerGroup.toString(),
       variables: settingData.selectedVariables
     }
-
-
     try {
       setIsLoading(true)
       const res = await api('/printLineSetting/', data, 'post', true,ip,true)
@@ -249,11 +248,12 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       )
       setIsLoading(false)
       if (res?.data.success) {
-        setLabels(res.data?.data?.projectNames)
+        const projectNames = res.data?.data?.projectNames || [];
+        setLabels(projectNames.includes(settingData.label) ? projectNames : [...projectNames, settingData.label]);
       }
     } catch (error) {
-      console.log("getting while fetching label",error)
-      console.error('Error to get print line setting')
+      console.log("Error getting while fetching label ", error)
+    } finally {
       setIsLoading(false)
     }
   }
@@ -352,7 +352,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                   value={settingData.label}
                   onOpen={getLabels}
                 >
-                  {labels?.map((item, index) => (
+                  {labels?.map((item) => (
                     <MenuItem key={item} value={item}>
                       {item}
                     </MenuItem>
