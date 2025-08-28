@@ -10,7 +10,7 @@ import { getFieldValue } from 'src/utils/rowUtils'
 import SnackbarAlert from './SnackbarAlert'
 import TableTransaction from 'src/views/tables/TableTransaction'
 import TableOrderDetails from 'src/views/tables/TableOrderDetails'
-import salepdf from 'src/utils/salePDf'
+import salepdf from 'src/utils/salePdf'
 
 const statusActionMap = {
   CREATED: { title: "Generate Invoice", endpoint : 'generate-invoice'},
@@ -27,6 +27,7 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
     const [userDataPdf, setUserDataPdf] = useState()
     const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
     const [orderDetail, setOrderDetail] = useState([])
+    const [orderScannedCode,setOrderScannedCode]=useState({})
     const { removeAuthToken, getUserData } = useAuth()
     const { setIsLoading } = useLoading()
     const router = useRouter()
@@ -42,20 +43,16 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
         item.product_name,
         item.batch_no,
         item.qty,
-        item.o_scan_qty
+        item.scanned_qty
     ])
 
     const handleDownloadPdf = async() => {
-        if(row.status!=='INVOICE_GENERATED')
-        {
-            salePdf(row, title, tableBody, orderDetail, userDataPdf)
-            
-        }
-        else{
-            const res = await api(`${endpoint}scanned-codes/${row?.id}`,{}, 'get', true)
-             salePdf(row, title, tableBody, orderDetail, userDataPdf,res.data.data.codes)
-        }
        
+              const res = await api(`${endpoint}scanned-codes/${row?.id}`,{}, 'get', true)
+              setOrderScannedCode(res?.data?.data)
+            orderScannedCode.outward?  salepdf(row, title, tableBody, orderDetail, userDataPdf,orderScannedCode):''
+            
+            
     }
 
     const handleGenerate = async () => {
