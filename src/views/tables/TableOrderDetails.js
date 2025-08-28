@@ -21,7 +21,6 @@ const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlert
   const { removeAuthToken } = useAuth()
 
 const downloadPdf = data => {
-  console.log(data)
   const doc = new jsPDF()
 
   const headerContent = () => {
@@ -33,7 +32,7 @@ const downloadPdf = data => {
   }
 
   const addTableSection = (title, items, startIndex, startY) => {
-    const codes = items.map((item, index) => [startIndex + index, item])
+    const codes = items?.map((item, index) => [startIndex + index, item])
 
     // Print section title
     if (startIndex <= 1) {
@@ -65,15 +64,20 @@ const downloadPdf = data => {
     let startY = 60
 
     // ---- Unique Codes Section ----
-    if (data.codes.length > 0) {
-      startY = addTableSection('Unique Code', data.codes, serialNumber, startY)
-      serialNumber += data.codes.length
-      startY += 10 // **Extra spacing after Unique Code table**
+    if (data.outwardcode.length > 0) {
+      startY = addTableSection('Outward codes', data.outwardcode, serialNumber, startY)
+      serialNumber += data.outwardcode.length
+      startY += 10 
+    }
+     if (data.inwardcode.length > 0) {
+      startY = addTableSection('Inward codes', data.inwardcode, 1, startY)
+      serialNumber += data.inwardcode.length
+      startY += 10 
     }
 
     // ---- Missing Codes Section ----
     if (data.missingcode && data.missingcode.length > 0) {
-      startY = addTableSection('Missing Code', data.missingcode, 1, startY)
+      startY = addTableSection('Missing codes', data.missingcode, 1, startY)
     }
 
     // ---- FOOTER ONCE PER PAGE ----

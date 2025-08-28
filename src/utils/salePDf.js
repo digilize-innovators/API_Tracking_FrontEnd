@@ -1,109 +1,97 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import moment from 'moment'
 import { headerContentFix } from 'src/utils/headerContentPdfFix'
 import { footerContent } from 'src/utils/footerContentPdf'
-import moment from 'moment';
 
-
-const salePdf = (row, title, tableBody, orderDetail, userDataPdf, uniquecode) => {
-  const head = ['Sr.No.', 'Product', 'Batch', 'Total Quantity', 'Scanned Quantity']
+const salePdf = (row, title, tableBody, orderDetail, userDataPdf, scannedcode) => {
   const doc = new jsPDF()
 
-  const headerContent = () => {
-    headerContentFix(doc, `${title}`)
+  const addHeader = () => {
+    headerContentFix(doc, title)
     doc.setFontSize(10)
     doc.text(`Order No: ${row.order_no}`, 15, 30)
-    doc.text(`Order Date:  ${moment(row.order_date).format('DD-MM-YYYY')}`, 15, 35)
+    doc.text(`Order Date: ${moment(row.order_date).format('DD-MM-YYYY')}`, 15, 35)
     doc.text(`From: ${row.order_from_location.location_name}`, 15, 40)
     doc.text(`To: ${row.order_to_location.location_name}`, 15, 45)
     doc.text(`Status: ${row.status}`, 15, 50)
   }
 
-  // Call before any table to ensure first page header
-  headerContent()
+const addTable = (head, body, startY, title = null) => {
+  if (!body?.length) return
 
-  // Order Details Table
+  let tableStartY = startY || (doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 70)
+
+  const pageHeight = doc.internal.pageSize.height
+  const bottomMargin = 30
+  const rowHeight = 10 // estimated row height
+  const headerHeight = 10
+  const titleHeight = title ? 10 : 0
+
+  // Check if there's enough space for at least 1 row
+  const availableSpace = pageHeight - tableStartY - bottomMargin
+  const requiredForOneRow = titleHeight + headerHeight + rowHeight
+
+  if (availableSpace < requiredForOneRow) {
+    doc.addPage()
+    tableStartY = 40 // reset top margin for new page
+  }
+
+  // Add section title
+  if (title) {
+    doc.setFontSize(12).setFont(undefined, 'bold')
+    doc.text(title, 14, tableStartY)
+    tableStartY += 5
+  }
+
+  // Draw table
   autoTable(doc, {
-    startY: 70,
+    startY: tableStartY,
     head: [head],
-    body: tableBody,
+    body,
     styles: { halign: 'center', cellWidth: 'auto', minCellWidth: 20 },
     headStyles: { fontSize: 8, fillColor: [80, 189, 160] },
     alternateRowStyles: { fillColor: [249, 250, 252] },
     tableLineColor: [80, 189, 160],
     tableLineWidth: 0.1,
     margin: { bottom: 20 },
-    didDrawPage: function (data) {
+    didDrawPage: () => {
       const pageCount = doc.internal.getNumberOfPages()
       footerContent(doc.internal.getCurrentPageInfo().pageNumber, pageCount, userDataPdf, doc)
     }
   })
+}
 
-  // Unique Codes Table
-  if (row?.status === 'INVOICE_GENERATED' || row.status === 'GRN_GENERATED') {
-    const codesBody = uniquecode?.codes.map((item, index) => [
-      index + 1, item.product_name, item.batch_name, item.unique_code
+
+  addHeader()
+
+  // Main Order Table
+  addTable(
+    ['Sr.No.', 'Product', 'Batch', 'Total Quantity', 'Scanned Quantity'],
+    tableBody,
+    70,
+    'Order Detail'
+  )
+
+  // Dynamic Sections
+  const sections = [
+    { key: 'outward', title: 'Outward Unique Codes Detail' },
+    { key: 'inward', title: 'Inward Unique Codes Detail' },
+    { key: 'missingcode', title: 'Missing Codes Detail' }
+  ]
+
+  sections.forEach(({ key, title }) => {
+    const body = scannedcode?.[key]?.map((item, i) => [
+      i + 1, item.product_name, item.batch_name, item.unique_code
     ]) || []
-
-    if (codesBody.length > 0) {
-      const startY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 70
-      doc.setFontSize(12).setFont(undefined, 'bold')
-      doc.text('Unique Codes Details', 14, startY)
-
-      autoTable(doc, {
-        startY: startY + 5,
-        head: [['Sr.No.', 'Product', 'Batch', 'Unique code']],
-        body: codesBody,
-        styles: { halign: 'center', cellWidth: 'auto', minCellWidth: 20 },
-        headStyles: { fontSize: 8, fillColor: [80, 189, 160] },
-        alternateRowStyles: { fillColor: [249, 250, 252] },
-        tableLineColor: [80, 189, 160],
-        tableLineWidth: 0.1,
-        margin: { bottom: 20 },
-        didDrawPage: function () {
-          const pageCount = doc.internal.getNumberOfPages()
-          footerContent(doc.internal.getCurrentPageInfo().pageNumber, pageCount, userDataPdf, doc)
-        }
-      })
-    }
-  }
-
-  // Missing Codes Table
-  if (row.status === 'GRN_GENERATED') {
-    const missingBody = uniquecode?.missingcode.map((item, index) => [
-      index + 1, item.product_name, item.batch_name, item.unique_code
-    ]) || []
-
-    if (missingBody.length > 0) {
-      const startY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 70
-      doc.setFontSize(12).setFont(undefined, 'bold')
-      doc.text('Missing Codes Details', 14, startY)
-
-      autoTable(doc, {
-        startY: startY + 5,
-        head: [['Sr.No.', 'Product', 'Batch', 'Unique code']],
-        body: missingBody,
-        styles: { halign: 'center', cellWidth: 'auto', minCellWidth: 20 },
-        headStyles: { fontSize: 8, fillColor: [80, 189, 160] },
-        alternateRowStyles: { fillColor: [249, 250, 252] },
-        tableLineColor: [80, 189, 160],
-        tableLineWidth: 0.1,
-        margin: { bottom: 20 },
-        didDrawPage: function () {
-          const pageCount = doc.internal.getNumberOfPages()
-          footerContent(doc.internal.getCurrentPageInfo().pageNumber, pageCount, userDataPdf, doc)
-        }
-      })
-    }
-  }
+    addTable(['Sr.No.', 'Product', 'Batch', 'Unique code'], body, null, title)
+  })
 
   // Save PDF with timestamp
-  const currentDate = new Date()
-  const formattedDate = currentDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
-  const formattedTime = currentDate.toLocaleTimeString('en-US', { hour12: false }).replace(/:/g, '-')
-  const fileName = `${row?.order_no}_${formattedDate}_${formattedTime}.pdf`
-
-  doc.save(fileName)
+  const now = new Date()
+  const formattedDate = now.toLocaleDateString('en-GB').replace(/\//g, '-')
+  const formattedTime = now.toLocaleTimeString('en-US', { hour12: false }).replace(/:/g, '-')
+  doc.save(`${row?.order_no}_${formattedDate}_${formattedTime}.pdf`)
 }
 
 export default salePdf

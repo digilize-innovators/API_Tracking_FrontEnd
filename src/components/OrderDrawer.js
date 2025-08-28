@@ -27,6 +27,7 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
     const [userDataPdf, setUserDataPdf] = useState()
     const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
     const [orderDetail, setOrderDetail] = useState([])
+    const [orderScannedCode,setOrderScannedCode]=useState({})
     const { removeAuthToken, getUserData } = useAuth()
     const { setIsLoading } = useLoading()
     const router = useRouter()
@@ -46,18 +47,12 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
     ])
 
     const handleDownloadPdf = async() => {
-        if(row.status==='INVOICE_GENERATED' ||row.status==='GRN_GENERATED')
-        {
-              const res = await api(`${endpoint}scanned-codes/${row?.id}`,{}, 'get', true)
-              console.log('data',res.data.data)
-             salepdf(row, title, tableBody, orderDetail, userDataPdf,res.data.data)
-            
-        }
-        else{
-            salepdf(row, title, tableBody, orderDetail, userDataPdf)
-          
-        }
        
+              const res = await api(`${endpoint}scanned-codes/${row?.id}`,{}, 'get', true)
+              setOrderScannedCode(res?.data?.data)
+            orderScannedCode.outward?  salepdf(row, title, tableBody, orderDetail, userDataPdf,orderScannedCode):''
+            
+            
     }
 
     const handleGenerate = async () => {
