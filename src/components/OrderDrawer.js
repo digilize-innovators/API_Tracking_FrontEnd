@@ -1,7 +1,7 @@
 import { Box, Button, Grid2, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
 import PropTypes from 'prop-types'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useState } from 'react'
 import { CiExport } from 'react-icons/ci'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
@@ -11,13 +11,14 @@ import SnackbarAlert from './SnackbarAlert'
 import TableTransaction from 'src/views/tables/TableTransaction'
 import TableOrderDetails from 'src/views/tables/TableOrderDetails'
 import salepdf from 'src/utils/salePdf'
+import { Trumpet } from 'mdi-material-ui'
 
 const statusActionMap = {
   CREATED: { title: "Generate Invoice", endpoint : 'generate-invoice'},
   SCANNING_IN_PROGRESS: { title: "Generate Invoice", endpoint : 'generate-invoice'},
   SCANNING_COMPLETED: { title: "Generate Invoice", endpoint : 'generate-invoice'},
   INVOICE_CANCELLED: { title: "Generate Invoice", endpoint : 'generate-invoice'},
-  INVOICE_GENERATED: { title: "Generate GRN", endpoint : 'generate-grn'},
+  INVOICE_GENERATED: { title: "Cancelled Invoice", endpoint : 'cancelled-invoice'},
   INWARD_IN_PROGRESS:  { title: "Generate GRN", endpoint : 'generate-grn'},
   INWARD_COMPLETED:  { title: "Generate GRN", endpoint : 'generate-grn'},
   GRN_GENERATED:  { title: "Generate GRN", endpoint : 'generate-grn'},
@@ -35,9 +36,10 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
     useEffect(() => {
         let data = getUserData()
         setUserDataPdf(data);
+    
     }, [])
 
-
+  
     const tableBody = orderDetail?.map((item, index) => [
         index + 1,
         item.product_name,
@@ -62,9 +64,11 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
             
             const res = await api(`${endpoint}${statusActionMap[row.status].endpoint}/`, data, 'post', true);
             setIsLoading(false)
-            if (res?.data?.success) {
+            if (res?.data?.success) { 
+                invoiceBtnDisable==true?setInvoiceBtnDisable(false):setInvoiceBtnDisable(true)
+                
+
                 setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: res.data.message })
-                setInvoiceBtnDisable(false)
             }
             else if (res.data.code === 401) {
                 removeAuthToken()
@@ -82,7 +86,6 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
             setIsLoading(false)
         }
     }
-
     return (
         <Box sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 800 }}>
             <Grid2 item xs={12}>
@@ -135,7 +138,10 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
                     ml: 8,
                     my: 6
                 }}
-                disabled={!invoiceBtnDisable}
+              disabled={
+  !invoiceBtnDisable &&
+  !(row.status === 'INVOICE_GENERATED' || row.status === 'SCANNING_COMPLETED')
+}
                 onClick={handleGenerate}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -143,7 +149,7 @@ const OrderDrawer = ({ anchor, title, details, row, endpoint, transactionsDetail
                 </Box>
             </Button>
             { 
-                row.status!=='INVOICE_GENERATED' &&  
+                row?.status!=='INVOICE_GENERATED' &&  
                   <Grid2 item xs={12}>
                 <Typography variant='h4' className='mx-4 mt-3' sx={{ mb: 3 }}>
                     Transaction Detail

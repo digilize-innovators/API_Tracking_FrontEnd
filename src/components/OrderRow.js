@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useLayoutEffect, useState } from "react";
 import { SwipeableDrawer, TableCell, TableRow, Tooltip, Button } from "@mui/material";
 import moment from "moment";
 import { MdModeEdit, MdVisibility } from "react-icons/md";
@@ -41,7 +41,11 @@ const OrderRow = ({
             if (res.data.success) {
                 setTransactionsDetail(res?.data.data)
                 setInvoiceBtnDisable(
-                    res.data.data.transactions.length > 0 && res.data.data.transactions.every(item => item.status === 'COMPLETED') && (row.status === 'SCANNING_COMPLETED' || row.status === 'INWARD_COMPLETED')
+                    res.data.data.transactions.length > 0
+                     && res.data.data.transactions.every(item => item.status === 'COMPLETED') 
+                    && (row.status === 'SCANNING_COMPLETED'
+                         || row.status === 'INWARD_COMPLETED'
+                        || row.status === 'INVOICE_GENERATED')
                 )
             } else if (res.data.code === 401) {
                 removeAuthToken()
@@ -65,7 +69,7 @@ const OrderRow = ({
     }
 
 
-
+ 
     return (
         <Fragment>
             {/* Main Row */}
