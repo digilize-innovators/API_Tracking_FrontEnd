@@ -352,7 +352,7 @@ const navigation = () => {
       subPages: filterSalesScreen
     },
     {
-      title: 'Audit Logs',
+      title: 'Logs & Reports',
       icon: MdOutlineFormatAlignCenter,
       mainTitle: true,
       path: '/master',
