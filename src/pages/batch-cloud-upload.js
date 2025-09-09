@@ -18,6 +18,7 @@ import { getTokenValues } from '../utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
 import CustomSearchBar from 'src/components/CustomSearchBar'
+import ImportExportIcon from '@mui/icons-material/ImportExport';
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import downloadPdf from 'src/utils/DownloadPdf'
 import moment from 'moment'
@@ -26,6 +27,8 @@ import TableBatchCloud from 'src/views/tables/TableBatchCloud'
 const Index = () => {
   const router = useRouter()
   const [openModal, setOpenModal] = useState(false)
+    const [openModalSync, setOpenModalSync] = useState(false)
+
   const [batchData, setBatchData] = useState([])
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [allProductData, setAllProductData] = useState([])
@@ -149,6 +152,8 @@ const Index = () => {
     }
     BatchDataUploadOnCloud(batchDetail)
   }
+
+   
   const BatchDataUploadOnCloud = async (batch, remarks) => {
     try {
       const data = { dataId: batch.id, tableName: 'batch' }
@@ -248,9 +253,10 @@ const Index = () => {
       }
 
       if (esignStatus === 'approved') {
-        // const esign_status = 'pending'
+
         BatchDataUploadOnCloud(batchDetail, remarks)
       }
+     
     }
 
     if (!isApprover && esignDownloadPdf) {
@@ -313,9 +319,54 @@ const Index = () => {
     }
     downloadPdf(tableData, tableHeaderData, tableBody, batchData, userDataPdf)
   }
+  const syncData =async()=>{
+   try{
+   const data ={
+   }
+
+     if (config?.config?.audit_logs) {
+        data.audit_log = {
+          audit_log: true,
+          remarks: `Sync Cloud Data`,
+        }
+      }
+  setIsLoading(true)
+   const res = await api('/batch-cloud-upload/synCloudData', data, 'post', true)
+       setIsLoading(false)
+      console.log('Batch Upload :', res.data)
+      if (res?.data?.success) {
+        console.log('res ', res?.data)
+        setAlertData({
+          ...alertData,
+          openSnackbar: true,
+          type: 'success',
+          message: 'Data Sync successfully on target database'
+        })
+      } else {
+        console.log('error to add batch ', res.data)
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
+        if (res.data.code === 401) {
+          removeAuthToken()
+          router.push('/401')
+        }
+      }
+    } catch (error) {
+      console.log('Erorr to sync data ', error)
+      router.push('/500')
+    } finally {
+      setOpenModalSync(false)
+      setIsLoading(false)
+      setApproveAPI({
+        approveAPIName: '',
+        approveAPImethod: '',
+        approveAPIEndPoint: ''
+      })
+    }
+  }
+   
+   
   return (
     <Box padding={4}>
-      {console.log('batchdata', batchData)}
       <Head>
         <title>Batch Sync</title>
       </Head>
@@ -375,6 +426,14 @@ const Index = () => {
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
                   <CustomSearchBar ref={searchBarRef} handleSearchClick={handleSearch} />
+                   <Box className='mx-2'>
+                                        <Button variant='contained' className='py-2' onClick={()=>setOpenModalSync(true)}>
+                                          <span>
+                                            <ImportExportIcon/>
+                                          </span>
+                                          <span>Sync Data</span>
+                                        </Button>
+                                      </Box>
                 </Box>
               </Box>
             </Grid2>
@@ -396,6 +455,30 @@ const Index = () => {
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
       <Modal
+        open={openModalSync}
+        onClose={()=>setOpenModalSync(false)}
+        aria-labelledby='modal-modal-title'
+        aria-describedby='modal-modal-description'
+        data-testid='modal'
+      >
+        <Box sx={style}>
+          <Typography variant='h4' className='my-2'>
+           Are you want sync Data
+          </Typography>
+
+          <Grid2 item xs={12} className='my-3 '>
+            <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={syncData}>
+              Yes
+            </Button>
+
+            <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={()=>setOpenModalSync(false)}>
+              No
+            </Button>
+          </Grid2>
+        </Box>
+      </Modal>
+
+       <Modal
         open={openModal}
         onClose={handleCloseModal}
         aria-labelledby='modal-modal-title'

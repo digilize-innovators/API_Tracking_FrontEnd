@@ -959,7 +959,7 @@ function ProductModal({
                 <CustomTextField
                   control={control}
                   label='Cather Length'
-                  placeholder='Cather Lengt'
+                  placeholder='Cather Length'
                   name={'catherLength'}
                 />
               </Grid2>
