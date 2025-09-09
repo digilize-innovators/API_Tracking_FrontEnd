@@ -546,10 +546,16 @@ const Index = ({ userId, ip }) => {
         line.packagingHierarchy === ''
           ? { isError: true, message: 'Packaging Hierarchy is required' }
           : { isError: false, message: '' }
-      line.errorCodeToPrint =
-        parseInt(line.codeToPrint) <= 0
-          ? { isError: true, message: 'Code to print must be positive number' }
-          : { isError: false, message: '' }
+
+      if (!line.codeToPrint || parseInt(line.codeToPrint) <= 0) {
+        line.errorCodeToPrint = { isError: true, message: 'Code to print must be positive number' }
+      } else if (parseInt(line.codeToPrint) > line.availableToCode) {
+        line.errorCodeToPrint = { isError: true, message: 'Code to print can not grater than available code' }
+      } else if (parseInt(line.codeToPrint) > 1000000) {
+        line.errorCodeToPrint = { isError: true, message: 'Code to print can not grater than 1000000' }
+      } else {
+        line.errorCodeToPrint = { isError: false, message: '' }
+      }
       return newLines
     })
   }
@@ -561,7 +567,7 @@ const Index = ({ userId, ip }) => {
 
   const checkValidateBeforeStart = (panelIndex, lineIndex) => {
     const line = printerLines[panelIndex].lines[lineIndex]
-    return line.batch !== '' && line.product !== '' && line.packagingHierarchy !== '' && parseInt(line.codeToPrint) > 0
+    return line.batch !== '' && line.product !== '' && line.packagingHierarchy !== '' && parseInt(line.codeToPrint) > 0 && parseInt(line.codeToPrint) <= parseInt(line.availableToCode) && parseInt(line.codeToPrint) <= 1000000
   }
 
   const handleSubmitForm = async (panelIndex, lineIndex, line) => {
