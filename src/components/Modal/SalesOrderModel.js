@@ -128,37 +128,37 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
     return ''
   }
 
-  const fetchBatchesForProduct = async (productId, index) => {
-    try {
-      const res = await api(`/batch/${productId}?onlyended=true`, {}, 'get', true)
-      if (res.data.success) {
-         const quantityMap = {};
-        
-                             res.data.data.batches?.forEach(batch => {
-                        quantityMap[batch.batch_uuid] = batch.quantity|| 0;
-                    });
- setBatchQuantityMap(prev => ({
-                        ...prev,
-                        [index]: quantityMap
-                    }));
-        return res.data.data.batches?.map(batch => ({
+ // replace existing fetchBatchesForProduct
+const fetchBatchesForProduct = async (productId, fieldId) => {
+  try {
+    const res = await api(`/batch/${productId}?onlyended=true`, {}, 'get', true)
+    if (res.data.success) {
+      const quantityMap = {}
+      const options = (res.data.data.batches || []).map(batch => {
+        quantityMap[batch.batch_uuid] = batch.quantity || 0
+        return {
           id: batch.batch_uuid,
           value: batch.batch_uuid,
           label: batch.batch_no,
-          quantity:batch.quantity
-        }))
-                           
+          quantity: batch.quantity
+        }
+      })
 
-                   
-                   
+      // store quantities by fieldId (stable key)
+      setBatchQuantityMap(prev => ({
+        ...prev,
+        [fieldId]: quantityMap
+      }))
 
-      }
-      return []
-    } catch (error) {
-      console.error(`Error fetching batches for product ${productId}`, error)
-      return []
+      return options
     }
+    return []
+  } catch (error) {
+    console.error(`Error fetching batches for product ${productId}`, error)
+    return []
   }
+}
+
 
  useEffect(() => {
   const defaultValues = {
@@ -184,18 +184,32 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
 
   reset(defaultValues)
 
-  const newBatchOptionsMap = {}
-  defaultValues.orders.forEach(async (order, index) => {
-    if (order.productId) {
-      const options = await fetchBatchesForProduct(order.productId, index)
-      newBatchOptionsMap[index] = {
-        productId: order.productId,
-        options
-      }
-      setBatchOptionsMap(prev => ({ ...prev, ...newBatchOptionsMap }))
-    }
-  })
+
 }, [editData, saleDetail])
+
+useEffect(() => {
+  if (fields.length === 0) return;
+
+  const fetchAll = async () => {
+    const updates = await Promise.all(
+      fields.map(async f => {
+        const index = fields.findIndex(x => x.id === f.id);
+        const productId = getValues(`orders.${index}.productId`);
+        if (!productId) return null;
+        const options = await fetchBatchesForProduct(productId, f.id);
+        return { fieldId: f.id, productId, options };
+      })
+    );
+
+    const map = {};
+    updates.forEach(u => {
+      if (u) map[u.fieldId] = { productId: u.productId, options: u.options };
+    });
+    setBatchOptionsMap(map);
+  };
+
+  fetchAll();
+}, [fields]);
 
 
   useEffect(() => {
@@ -262,57 +276,63 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
     }
   }
 
-  useEffect(() => {
-    const processProducts = async () => {
-      if (!watchedProducts) return
+useEffect(() => {
+  const processProducts = async () => {
+    if (!watchedProducts) return
+    const updates = await getBatchUpdates(watchedProducts, batchOptionsMap)
+    if (updates.length > 0) updateBatchOptions(updates)
+  }
+  processProducts()
+}, [watchedProducts, batchOptionsMap, fields])
 
-      const updates = await getBatchUpdates(watchedProducts, batchOptionsMap)
-      if (updates.length > 0) {
-        updateBatchOptions(updates)
-      }
-    }
+const getBatchUpdates = async (products, currentBatchMap) => {
+  const updates = []
 
-    processProducts()
-  }, [watchedProducts])
+  for (const [index, purchase] of products.entries()) {
+    const productId = purchase?.productId
+    if (!productId) continue
 
-  const getBatchUpdates = async (products, currentBatchMap) => {
-    const updates = []
+    const fieldId = fields[index]?.id
+    if (!fieldId) continue
 
-    for (const [index, purchase] of products.entries()) {
-      const productId = purchase?.productId
-      if (!productId) continue
+    const existing = currentBatchMap[fieldId]
+    if (existing && existing.productId === productId) continue
 
-      const existing = currentBatchMap[index]
-      if (existing && existing.productId === productId) continue
-
-      const options = await fetchBatchesForProduct(productId, index)
-      updates.push({ index, productId, options })
-    }
-
-    return updates
+    const options = await fetchBatchesForProduct(productId, fieldId)
+    updates.push({ fieldId, productId, options })
   }
 
-  const updateBatchOptions = updates => {
-    setBatchOptionsMap(prev => ({
-      ...prev,
-      ...Object.fromEntries(updates.map(({ index, productId, options }) => [index, { productId, options }]))
-    }))
-  }
+  return updates
+}
+
+const updateBatchOptions = updates => {
+  setBatchOptionsMap(prev => ({
+    ...prev,
+    ...Object.fromEntries(updates.map(({ fieldId, productId, options }) => [fieldId, { productId, options }]))
+  }))
+}
+
    
-  useEffect(() => {
-    const subscription = watch((value, { name }) => {
-      if (name && name.startsWith('orders.') && name.endsWith('.productId')) {
-        const index = parseInt(name.split('.')[1])
-        setValue(`orders.${index}.batchId`, '')
-        setBatchOptionsMap(prev => {
-          const newMap = { ...prev }
-          delete newMap[index]
-          return newMap
-        })
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [watch, setValue])
+ useEffect(() => {
+  const subscription = watch((value, { name }) => {
+    if (name && name.startsWith('orders.') && name.endsWith('.productId')) {
+      const index = parseInt(name.split('.')[1], 10)
+      const fieldId = fields[index]?.id
+      setValue(`orders.${index}.batchId`, '')
+      setBatchOptionsMap(prev => {
+        const newMap = { ...prev }
+        if (fieldId) delete newMap[fieldId]
+        return newMap
+      })
+      setBatchQuantityMap(prev => {
+        const newMap = { ...prev }
+        if (fieldId) delete newMap[fieldId]
+        return newMap
+      })
+    }
+  })
+  return () => subscription.unsubscribe()
+}, [watch, setValue, fields])
 
   const orderTypeValue = watch('type')
 
@@ -339,17 +359,40 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
     }
   }, [open, editData])
 
- const handleDeleteOrder = (orderId, index) => {
-  const row = getValues(`orders.${index}`);
+const handleDeleteOrder = (orderId, index) => {
+  const fieldId = fields[index]?.id
+  const row = getValues(`orders.${index}`)
 
-  setDeletedOrders(prev => [...prev, { ...row, deleted: true, edited: false, added: false }]);
+  if (editableIndex?.[index]) {
+    setError('Please save edited item(s).')
+    setOpenConfirm(false)
+    return
+  }
 
-  remove(index);
+if (!row?.added) {
+    setDeletedOrders(prev => [
+      ...prev,
+      { ...row, deleted: true, edited: false, added: false }
+    ])
+  }
+  // remove mapping for this fieldId so other rows don't pick it up
+  setBatchOptionsMap(prev => {
+    const newMap = { ...prev }
+    if (fieldId) delete newMap[fieldId]
+    return newMap
+  })
+  setBatchQuantityMap(prev => {
+    const newMap = { ...prev }
+    if (fieldId) delete newMap[fieldId]
+    return newMap
+  })
 
-  setOpenConfirm(false);
-  setDeleteBatch('');
-  setDeleteIndex(null);
-};
+  remove(index)
+  setOpenConfirm(false)
+  setDeleteBatch('')
+  setDeleteIndex(null)
+}
+
 
   const handleEditOrSave = (index) => {
   const isEditing = editableIndex?.[index];
@@ -365,6 +408,11 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
       return;
     }
       setValue(`orders.${index}.edited`, true);
+      setValue(`orders.${index}.added`,false);
+      setValue(`orders.${index}.deleted`, false);
+
+
+
         setEditableIndex(prev => ({
       ...prev,
       [index]: false
@@ -382,18 +430,20 @@ const SalesOrderModel = ({ open, handleClose, editData, saleDetail, handleSubmit
 
 
 const validateQuantity = (index, quantity, batchId) => {
-    const batchQtyMap = batchQuantityMap[index];
-    if (!batchQtyMap || !batchId || !quantity) return true;
+  const fieldId = fields[index]?.id
+  const batchQtyMap = batchQuantityMap[fieldId]
+  if (!batchQtyMap || !batchId || !quantity) return true
 
-    const availableQty = batchQtyMap[batchId];
-    if (availableQty && quantity > availableQty) {
-        setError(`Quantity cannot exceed available batch quantity: ${availableQty}`);
-        return false;
-    } else {
-       setError('')
-        return true;
-    }
-};
+  const availableQty = batchQtyMap[batchId]
+  if (availableQty && quantity > availableQty) {
+    setError(`Quantity cannot exceed available batch quantity: ${availableQty}`)
+    return false
+  } else {
+    setError('')
+    return true
+  }
+}
+
 
 useEffect(() => {
     watchedProducts?.forEach((order, index) => {
@@ -420,11 +470,14 @@ const onSubmit = (data) => {
     if (hasValidationError) {
         return; 
     }
+ const deletedData = deletedOrders.filter(item=>item.productId!=='')
+
 const payload = {
     ...data,
-    orders: [...data.orders, ...deletedOrders]
+    orders: [...data.orders, ...deletedData]
   };
 setDeletedOrders([])
+  console.log(payload)
     handleSubmitForm(payload);
 };
   return (
@@ -512,6 +565,7 @@ setDeletedOrders([])
                 <Grid2 style={{marginTop: 6 }}>
                 {fields.map((field, index)=> {
                   const existOrder=saleDetail.find(item=>item.batch_id===field?.batchId)
+                    const filteredBatchOptions = batchOptionsMap[field.id]?.options || []
 
                     if (watch(`orders.${index}.deleted`)) return null; // hide deleted row
                   
@@ -534,7 +588,7 @@ setDeletedOrders([])
                         name={`orders.${index}.batchId`}
                         label='Batch'
                         control={control}
-                        options={batchOptionsMap[index]?.options || []}
+                        options={filteredBatchOptions}
                         disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
                       />
                     </Grid2>
