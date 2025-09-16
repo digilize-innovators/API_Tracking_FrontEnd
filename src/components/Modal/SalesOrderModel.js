@@ -362,8 +362,9 @@ const updateBatchOptions = updates => {
 const handleDeleteOrder = (orderId, index) => {
   const fieldId = fields[index]?.id
   const row = getValues(`orders.${index}`)
+    const hasUnsavedEdits = Object.values(editableIndex).some((isEditing) => isEditing);
 
-  if (editableIndex?.[index]) {
+  if (hasUnsavedEdits) {
     setError('Please save edited item(s).')
     setOpenConfirm(false)
     return

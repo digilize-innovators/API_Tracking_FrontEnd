@@ -1,7 +1,7 @@
 import { Box, Button, Grid2, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
 import PropTypes from 'prop-types'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useState } from 'react'
 import { CiExport } from 'react-icons/ci'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
@@ -11,6 +11,7 @@ import SnackbarAlert from './SnackbarAlert'
 import TableTransaction from 'src/views/tables/TableTransaction'
 import TableOrderDetails from 'src/views/tables/TableOrderDetails'
 import salepdf from 'src/utils/salePdf'
+import { Trumpet } from 'mdi-material-ui'
 
 const statusActionMap = {
   CREATED: { title: 'Generate Invoice', endpoint: 'generate-invoice' },
@@ -18,11 +19,12 @@ const statusActionMap = {
   SCANNING_COMPLETED: { title: 'Generate Invoice', endpoint: 'generate-invoice' },
   INVOICE_CANCELLED: { title: 'Generate Invoice', endpoint: 'generate-invoice' },
   INVOICE_GENERATED: { title: 'Cancelled Invoice', endpoint: 'cancelled-invoice' },
-  INWARD_IN_PROGRESS: { title: 'Generate Invoice', endpoint: 'generate-invoice' },
-  INWARD_COMPLETED: { title: 'Generate Invoice', endpoint: 'generate-invoice' }
+  INWARD_IN_PROGRESS: { title: 'Generate GRN', endpoint: 'generate-grn' },
+  INWARD_COMPLETED: { title: 'Generate GRN', endpoint: 'generate-grn' },
+  GRN_GENERATED: { title: 'Generate GRN', endpoint: 'generate-grn' }
 }
 
-const OrderDrawer = ({
+const StockOrderDrawer = ({
   anchor,
   title,
   details,
@@ -35,6 +37,7 @@ const OrderDrawer = ({
   const [userDataPdf, setUserDataPdf] = useState()
   const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [orderDetail, setOrderDetail] = useState([])
+  const [orderScannedCode, setOrderScannedCode] = useState({})
   const { removeAuthToken, getUserData } = useAuth()
   const { setIsLoading } = useLoading()
   const router = useRouter()
@@ -57,6 +60,7 @@ const OrderDrawer = ({
       setIsLoading(true)
       const res = await api(`${endpoint}scanned-codes/${row?.id}`, {}, 'get', true)
       setIsLoading(false)
+
       if (res?.data?.success) {
         salepdf(row, title, tableBody, orderDetail, userDataPdf, res?.data?.data)
       } else if (res.data.code === 401) {
@@ -105,7 +109,7 @@ const OrderDrawer = ({
       <Grid2 item xs={12}>
         <Typography variant='h2' className='my-3 mx-2' sx={{ fontWeight: 'bold', paddingLeft: 8 }}>
           {' '}
-          {title}{' '}
+          Stock Transfer Order Detail{' '}
         </Typography>
         <Box
           sx={{
@@ -189,7 +193,7 @@ const OrderDrawer = ({
     </Box>
   )
 }
-OrderDrawer.propTypes = {
+StockOrderDrawer.propTypes = {
   anchor: PropTypes.any.isRequired,
   title: PropTypes.string.isRequired,
   details: PropTypes.array,
@@ -200,4 +204,4 @@ OrderDrawer.propTypes = {
   setInvoiceBtnDisable: PropTypes.func.isRequired
 }
 
-export default OrderDrawer
+export default StockOrderDrawer

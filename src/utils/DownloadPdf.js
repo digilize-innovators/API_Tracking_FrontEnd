@@ -25,7 +25,7 @@ const downloadPdf = (tableData, tableHeaderData, tableBody, Data, userDataPdf) =
     }
 
     if (tableData?.Filter && tableData?.Filter?.[0] !== 'Stock_Summary') {
-      doc.text(`${tableData.Filter[0]} : ` + (tableData.Filter[1] || '__'), 20, 35)
+      doc.text(`${tableData?.Filter[0]} : ` + (tableData.Filter[1] || '__'), 20, 35)
       let labelText = ''
       if (tableData.Filter[0] === 'department') {
          doc.text(`E-Sign : ${tableHeaderData?.esignStatus || '__'}`, 20, 45)

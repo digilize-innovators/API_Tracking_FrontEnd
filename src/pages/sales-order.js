@@ -78,9 +78,9 @@ const Index = () => {
       tableHeaderText: 'Sale Order Report',
       tableBodyText: 'Sale  Order Data',
       filename: 'saleOrder',
-      Filter: ['Order Type', tableHeaderData.orderTypeFilter]
+      Filter: ['Order Type', tableHeaderData?.orderTypeFilter]
     }),
-    []
+    [tableHeaderData.orderTypeFilter]
   )
 
   
@@ -126,6 +126,7 @@ const Index = () => {
   }
 
   const handleOrderTypeChange = e => {
+    console.log( e.target.value )
     setTableHeaderData({ ...tableHeaderData, orderTypeFilter: e.target.value })
   }
   const addSaleOrder = async () => {

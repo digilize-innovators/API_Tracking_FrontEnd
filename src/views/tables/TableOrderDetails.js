@@ -64,19 +64,26 @@ const downloadPdf = data => {
     let startY = 60
 
     // ---- Unique Codes Section ----
-    if (data.outwardcode.length > 0) {
+    if (data?.outwardcode?.length > 0) {
       startY = addTableSection('Outward codes', data.outwardcode, serialNumber, startY)
       serialNumber += data.outwardcode.length
       startY += 10 
     }
-     if (data.inwardcode.length > 0) {
+     if (data?.inwardcode?.length > 0) {
       startY = addTableSection('Inward codes', data.inwardcode, 1, startY)
       serialNumber += data.inwardcode.length
       startY += 10 
     }
 
+     if (data?.uniqueCode?.length > 0) {
+      startY = addTableSection('Unique codes', data.uniqueCode, 1, startY)
+      serialNumber += data.uniqueCode.length
+      startY += 10 
+    }
+
+
     // ---- Missing Codes Section ----
-    if (data.missingcode && data.missingcode.length > 0) {
+    if (data?.missingcode && data.missingcode.length > 0) {
       startY = addTableSection('Missing codes', data.missingcode, 1, startY)
     }
 
@@ -114,8 +121,9 @@ const downloadPdf = data => {
       const res = await api(query, {}, 'get', true)
       setIsLoading(false)
       if (res.data.success ) {
-        setAlertData({ openSnackbar: true, type: 'success', message: 'Code Export Successfully', variant: 'filled' })
         downloadPdf(res.data.data)
+        setAlertData({ openSnackbar: true, type: 'success', message: 'Code Export Successfully', variant: 'filled' })
+
       }  else {
         setAlertData({ openSnackbar: true, type: 'error', message: 'Something went wrong', variant: 'filled' })
         if (res.data.code === 401) {

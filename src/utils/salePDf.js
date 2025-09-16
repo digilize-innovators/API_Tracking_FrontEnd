@@ -10,6 +10,11 @@ const salePdf = (row, title, tableBody, orderDetail, userDataPdf, scannedcode) =
   const addHeader = () => {
     headerContentFix(doc, title)
     doc.setFontSize(10)
+    if(row?.order_type)
+    {
+          doc.text(`Order Type: ${row.order_type}`, 15, 25)
+
+    }
     doc.text(`Order No: ${row.order_no}`, 15, 30)
     doc.text(`Order Date: ${moment(row.order_date).format('DD-MM-YYYY')}`, 15, 35)
     doc.text(`From: ${row.order_from_location.location_name}`, 15, 40)
@@ -77,7 +82,8 @@ const addTable = (head, body, startY, title = null) => {
   const sections = [
     { key: 'outward', title: 'Outward Unique Codes Detail' },
     { key: 'inward', title: 'Inward Unique Codes Detail' },
-    { key: 'missingcode', title: 'Missing Codes Detail' }
+    { key: 'missingcode', title: 'Missing Codes Detail' },
+    { key: 'uniqueCodeData', title: 'Unique Codes Detail' }
   ]
 
   sections.forEach(({ key, title }) => {

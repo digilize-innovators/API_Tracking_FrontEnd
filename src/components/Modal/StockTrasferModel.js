@@ -307,8 +307,8 @@ useEffect(() => {
 const handleDeleteOrder = (orderId, index) => {
   const fieldId = fields[index]?.id
   const row = getValues(`orders.${index}`)
-
-  if (editableIndex?.[index]) {
+  const hasUnsavedEdits = Object.values(editableIndex).some((isEditing) => isEditing);
+  if (hasUnsavedEdits) {
     setError('Please save edited item(s).')
     setOpenConfirm(false)
     return
@@ -413,6 +413,13 @@ const validateQuantity = (index, quantity, batchId) => {
   }, [watchedProducts, batchQuantityMap])
 
   const onSubmit = data => {
+      const isDifferent = data.from && data.to && data.from !== data.to;
+
+       if (!isDifferent) {
+      setError("From and To cannot be same!");
+      return;
+    }
+
     const hasUnsavedEdits = Object.values(editableIndex || {}).some(val => val === true);
   if (hasUnsavedEdits) {
     setError('Please save or cancel all edits before submitting.');
