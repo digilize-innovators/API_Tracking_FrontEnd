@@ -1,8 +1,8 @@
 import { createContext, useState, useEffect, useMemo } from 'react'
 import themeConfig from '../../configs/themeConfig'
 import PropTypes from 'prop-types'
-
-const initialSettings = {
+import Cookies from 'js-cookie'
+let  initialSettings = {
   themeColor: '#50BDA0',
   mode: 'light',
   contentWidth: themeConfig.contentWidth,
@@ -12,6 +12,20 @@ const initialSettings = {
   fontSize: 16
 }
 
+const accessibity =Cookies.get('accessibility')
+if(accessibity)
+{
+ const accessibityObj= JSON.parse(accessibity)
+  initialSettings ={
+    themeColor: accessibityObj.themeColor,
+  mode: accessibityObj.mode,
+  contentWidth: themeConfig.contentWidth,
+  recordPerPage: [5, 10, 25, 50, 100],
+  rowsPerPage: 25,
+  fontFamily: accessibityObj.fontFamily,
+  fontSize: accessibityObj.fontSize
+  }
+}
 export const SettingsContext = createContext({
   saveSettings: () => null,
   settings: initialSettings
@@ -31,6 +45,7 @@ export const SettingsProvider = ({ children }) => {
       ...prevSettings,
       ...updatedSettings
     }))
+  
   }
 
   const contextValue = useMemo(

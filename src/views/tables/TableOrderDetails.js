@@ -13,85 +13,118 @@ import { headerContentFix } from 'src/utils/headerContentPdfFix'
 import { footerContent } from 'src/utils/footerContentPdf'
 import { useAuth } from 'src/Context/AuthContext'
 import { sortData } from 'src/utils/sortData'
+import { FiDownload } from 'react-icons/fi';
+
 
 const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlertData, endpoint }) => {
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
 
-  const downloadPdf = data => {
-    const doc = new jsPDF()
-    const headerContent = () => {
-      headerContentFix(doc, 'Scanned Detail')
+const downloadPdf = data => {
+  const doc = new jsPDF()
 
-      doc.setFontSize(10)
-      doc.text('Order No : ' + (orderDetail?.order_no || '__'), 15, 25)
-
-      doc.text('Product Name  : ' + (row.product_name || '__'), 15, 30)
-      doc.text('Batch No. : ' + (row.batch_no || '__'), 15, 35)
-
-      doc.setFontSize(12)
-      doc.text('Unique Code', 15, 55)
-    }
-
-    const bodyContent = () => {
-      let currentPage = 1
-      let dataIndex = 0
-      const totalPages = Math.ceil(data.length / 25)
-      headerContent()
-
-      while (dataIndex < data.length) {
-        if (currentPage > 1) {
-          doc.addPage()
-          headerContent() // Ensure header is added on new pages
-        }
-        let codes = data.map((item, index) => [index + 1, item])
-        const body = codes.slice(dataIndex, dataIndex + 25)
-
-        autoTable(doc, {
-          startY: currentPage === 1 ? 60 : 50, // Ensure consistent spacing
-          styles: { halign: 'center' },
-          headStyles: { fontSize: 8, fillColor: [80, 189, 160] },
-          alternateRowStyles: { fillColor: [249, 250, 252] },
-          tableLineColor: [80, 189, 160],
-          tableLineWidth: 0.1,
-          head: [['Sr.No.', 'UniqueCode']],
-          body: body,
-          columnWidth: 'wrap',
-          margin: { bottom: 20 }, // Add margin to prevent footer overlap
-          didDrawPage: function (data) {
-            footerContent(currentPage, totalPages, userDataPdf, doc)
-          }
-        })
-
-        dataIndex += 25
-        currentPage++
-      }
-    }
-
-    bodyContent()
-
-    const currentDate = new Date()
-    const formattedDate = currentDate
-      .toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
-      .replace(/\//g, '-')
-    const formattedTime = currentDate.toLocaleTimeString('en-US', { hour12: false }).replace(/:/g, '-')
-    const fileName = `Scanned_Detil_${formattedDate}_${formattedTime}.pdf`
-    doc.save(fileName)
+  const headerContent = () => {
+    headerContentFix(doc, 'Scanned Detail')
+    doc.setFontSize(10)
+    doc.text('Order No : ' + (orderDetail?.order_no || '__'), 15, 25)
+    doc.text('Product Name  : ' + (row?.product_name || '__'), 15, 30)
+    doc.text('Batch No. : ' + (row?.batch_no || '__'), 15, 35)
   }
+
+  const addTableSection = (title, items, startIndex, startY) => {
+    const codes = items?.map((item, index) => [startIndex + index, item])
+
+    // Print section title
+    if (startIndex <= 1) {
+      doc.setFontSize(12)
+      doc.text(title, 15, startY - 5)
+    }
+
+    autoTable(doc, {
+      startY: startY,
+      styles: { halign: 'center' },
+      headStyles: { fontSize: 8, fillColor: [80, 189, 160] },
+      alternateRowStyles: { fillColor: [249, 250, 252] },
+      tableLineColor: [80, 189, 160],
+      tableLineWidth: 0.1,
+      head: [['Sr.No.', 'Unique Code']],
+      body: codes,
+      margin: { bottom: 20 }
+    })
+
+    return doc.lastAutoTable.finalY + 10 // return next Y position with spacing
+  }
+
+  const bodyContent = () => {
+    headerContent()
+
+    const totalPagesGetter = () => doc.internal.getNumberOfPages()
+
+    let serialNumber = 1
+    let startY = 60
+
+    // ---- Unique Codes Section ----
+    if (data?.outwardcode?.length > 0) {
+      startY = addTableSection('Outward codes', data.outwardcode, serialNumber, startY)
+      serialNumber += data.outwardcode.length
+      startY += 10 
+    }
+     if (data?.inwardcode?.length > 0) {
+      startY = addTableSection('Inward codes', data.inwardcode, 1, startY)
+      serialNumber += data.inwardcode.length
+      startY += 10 
+    }
+
+     if (data?.uniqueCode?.length > 0) {
+      startY = addTableSection('Unique codes', data.uniqueCode, 1, startY)
+      serialNumber += data.uniqueCode.length
+      startY += 10 
+    }
+
+
+    // ---- Missing Codes Section ----
+    if (data?.missingcode && data.missingcode.length > 0) {
+      startY = addTableSection('Missing codes', data.missingcode, 1, startY)
+    }
+
+    // ---- FOOTER ONCE PER PAGE ----
+    const totalPages = totalPagesGetter()
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i)
+      footerContent(i, totalPages, userDataPdf, doc)
+    }
+  }
+
+  bodyContent()
+
+  // ---- FILE NAME ----
+  const currentDate = new Date()
+  const formattedDate = currentDate.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).replace(/\//g, '-')
+
+  const formattedTime = currentDate.toLocaleTimeString('en-US', {
+    hour12: false
+  }).replace(/:/g, '-')
+
+  const fileName = `Scanned_Detail_${formattedDate}_${formattedTime}.pdf`
+  doc.save(fileName)
+}
+
 
   const getUniqueCode = async row => {
     try {
       let query = `${endpoint}scanned-codes/${orderDetail.id}/${row.batch_id}`
-       console.log(query)
       setIsLoading(true)
       const res = await api(query, {}, 'get', true)
       setIsLoading(false)
-      if (res.data.success && orderDetail.status == 'INVOICE_GENERATED') {
+      if (res.data.success ) {
+        downloadPdf(res.data.data)
         setAlertData({ openSnackbar: true, type: 'success', message: 'Code Export Successfully', variant: 'filled' })
-        downloadPdf(res.data.data.codes)
-      } else if (orderDetail.status !== 'INVOICE_GENERATED') {
-        setAlertData({ openSnackbar: true, type: 'error', message: 'Invoice is not generated yet', variant: 'filled' })
-      } else {
+
+      }  else {
         setAlertData({ openSnackbar: true, type: 'error', message: 'Something went wrong', variant: 'filled' })
         if (res.data.code === 401) {
           removeAuthToken()
@@ -127,18 +160,18 @@ const Row = ({ row, index, page, rowsPerPage, orderDetail, userDataPdf, setAlert
         {row?.qty}
       </TableCell>
       <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-        {/* {row.} */} {row.o_scan_qty}
+        {/* {row.} */} {row.scanned_qty}
       </TableCell>
       <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
         <span>
-          <Tooltip title={orderDetail.status !== 'INVOICE_GENERATED' ? 'No access' : 'Export'}>
-            <IconButton data-testid={`auth-check-icon-${row.id}`}>
-              <CiExport
+          <Tooltip title={row.scanned_qty<=0 ? 'No access' : 'Export'}>
+            <IconButton data-testid={`auth-check-icon-${row.id}`} color={ 'default'}>
+              <FiDownload 
                 fontSize={20}
-                onClick={orderDetail.status == 'INVOICE_GENERATED' ? () => getUniqueCode(row) : null}
+                onClick={row.scanned_qty>0 ? () => getUniqueCode(row) : null}
                 style={{
-                  cursor: orderDetail.status == 'INVOICE_GENERATED' ? 'pointer' : 'not-allowed',
-                  opacity: orderDetail.status == 'INVOICE_GENERATED' ? 1 : 0.3
+                  cursor: row.scanned_qty>0 ? 'pointer' : 'not-allowed',
+                  opacity: row.scanned_qty>0 ? 1 : 0.3
                 }}
               />
             </IconButton>

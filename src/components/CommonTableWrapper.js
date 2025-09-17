@@ -141,19 +141,23 @@ const CommonTableWrapper = ({
                   <TableCell
                     key={label}
                     align='center'
-                    sx={{ cursor: 'pointer' }}
+                    sx={{ cursor: 'pointer' , whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}
                     onClick={() => handleSort(path)}
                   >
+                    <Box display='flex' alignItems='center' justifyContent='center'>
+
                     {label}
                     <IconButton size='small'>
                       {getSortIcon(sortBy, path, sortDirection)}
                     </IconButton>
+                    </Box>
                   </TableCell>
                 )
               })}
               {esignEnabled && config?.role !== 'admin'&& <TableCell align='center'>E-Sign</TableCell>}
               <TableCell align='center' sx={{ cursor: 'pointer' }}
-                    onClick={() => handleSort('updated_at')} >Updated At
+                    onClick={() => handleSort('updated_at')} >
+                      Updated At
                     <IconButton size='small'>
                       {getSortIcon(sortBy, "updated_at", sortDirection)}
                     </IconButton>

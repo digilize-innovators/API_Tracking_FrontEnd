@@ -14,7 +14,7 @@ import {
   InputLabel,
   FormControl,
   Paper,
-  Divider,
+  Divider
 } from '@mui/material'
 import { AiOutlineSetting } from 'react-icons/ai'
 import Head from 'next/head'
@@ -55,7 +55,7 @@ const Index = ({ userId, ip }) => {
     authUser: {},
     lineId: null
   })
-  const [config, setConfig] = useState(null);
+  const [config, setConfig] = useState(null)
 
   useEffect(() => {
     (async () => {
@@ -70,230 +70,185 @@ const Index = ({ userId, ip }) => {
     }
 
     socket.current.on('connect', () => {
-      console.log('Connected to socket server, socket id:', socket.current.id)
       setSocketId(socket.current.id)
     })
 
-    socket.current.on('dataPrinted', handleDataPrinted);
+    socket.current.on('dataPrinted', handleDataPrinted)
     function handleDataPrinted(data) {
-  const { lineId, printCount, panelName } = data;
-  setPrinterLines(prevLines => updatePrintedCounts(prevLines, panelName, lineId, printCount));
-}
-function updateLineIfMatches(line, lineId, printCount) {
-  if (line.id !== lineId) return line;
-  return {
-    ...line,
-    printCount,
-    pendingCount: Number(line.codeToPrint) - printCount
-  };
-}
-function updateLinesInPanel(lines, lineId, printCount) {
-  return lines.map(line => updateLineIfMatches(line, lineId, printCount));
-}
-function updatePanelIfMatches(panel, panelName, lineId, printCount) {
-  if (panel.panelName !== panelName) return panel;
-  return {
-    ...panel,
-    lines: updateLinesInPanel(panel.lines, lineId, printCount)
-  };
-}
-function updatePrintedCounts(prevLines, panelName, lineId, printCount) {
-  return prevLines.map(panel => updatePanelIfMatches(panel, panelName, lineId, printCount));
-  
-}
+      const { lineId, printCount, panelName } = data
+      setPrinterLines(prevLines => {
+        return prevLines.map(panel => {
+          if (panel.panelName !== panelName) return panel
 
- socket.current.on('dataScanned', handleDataScanned);
+          return {
+            ...panel,
+            lines: panel.lines.map(line => {
+              if (line.id !== lineId) return line
 
-function handleDataScanned(data) {
-  const { lineId, scanned, panelName } = data;
-  console.log('dataScanned', data);
-  setPrinterLines(prevLines => updateScannedLines(prevLines, panelName, lineId, scanned));
-}
+              return {
+                ...line,
+                printCount,
+                pendingCount: Number(line.codeToPrint) - printCount
+              }
+            })
+          }
+        })
+      })
+    }
 
-const updateScannedLines = (prevLines, panelName, lineId, scanned) => {
-  const panels = [...prevLines];
-  const panel = panels.find(p => p.panelName === panelName);
-  if (!panel) {
-    return panels; 
-  }
+    socket.current.on('dataScanned', handleDataScanned)
 
-  const line = panel.lines.find(l => l.id === lineId);
-  if (!line) 
-   {
-    return panels; 
-  }
-  line.scanned = scanned;
-  console.log('dataScanned panels ', panels);
-  return panels;
-};
+    function handleDataScanned(data) {
+      const { lineId, scanned, panelName } = data
+      // console.log('dataScanned', data)
+      setPrinterLines(prevLines => {
+        return prevLines.map(panel => {
+          if (panel.panelName !== panelName) return panel
 
-socket.current.on('printStarted', handlePrintStarted);
+          return {
+            ...panel,
+            lines: panel.lines.map(line => {
+              if (line.id !== lineId) return line
 
-function handlePrintStarted (data)  {
-  console.log('printStarted', data);
-  setPrinterLines(prevLines => updatePrintStartState(prevLines, data));
-  setAlertData({
-    openSnackbar: true,
-    type: 'success',
-    message: 'Printer started',
-    variant: 'filled'
-  });
-}
+              return {
+                ...line,
+                scanned
+              }
+            })
+          }
+        })
+      })
+    }
 
-const updatePrintStartState = (prevLines, data) => {
-  const panels = [...prevLines];
-  const panel = panels.find(p => p.panelName === data.panelName);
-  if (!panel) 
-  {
-    return panel;
-  }
+    socket.current.on('printStarted', handlePrintStarted)
 
-  const line = panel.lines.find(l => l.id === data.lineId);
-  if (!line)
-  {
-    return panel;
-  }
+    function handlePrintStarted(data) {
+      // console.log('printStarted', data)
+      setPrinterLines(prevLines => {
+        return prevLines.map(panel => {
+          if (panel.panelName !== data.panelName) return panel
 
-  // Mutate safely (or use spread if you prefer immutability)
-  line.disabledStartPrint = true;
-  line.disabledStopPrint = false;
-  line.disabledReset = true;
-  line.disabledCodeToPrint = true;
-  line.disabledStopSession = true;
+          return {
+            ...panel,
+            connected: true,
+            lines: panel.lines.map(line => {
+              if (line.id !== data.lineId) return line
 
-  return panels;
-};
+              return {
+                ...line,
+                disabledStartPrint: true,
+                disabledStopPrint: false,
+                disabledReset: true,
+                disabledCodeToPrint: true,
+                disabledStopSession: true,
+                scanned: 0
+              }
+            })
+          }
+        })
+      })
+      setAlertData({
+        openSnackbar: true,
+        type: 'success',
+        message: 'Printer started',
+        variant: 'filled'
+      })
+    }
 
-   
-socket.current.on('printStoped', handlePrintStopped);
-    function handlePrintStopped (data)  {
-  console.log('printStoped', data);
+    socket.current.on('printStoped', handlePrintStopped)
 
-  setPrinterLines(prevLines => updatePrintStopState(prevLines, data));
+    function handlePrintStopped(data) {
+      console.log('printStoped', data)
+      setPrinterLines(prevLines => {
+        return prevLines.map(panel => {
+          if (panel.panelName !== data.panelName) return panel
 
-  setAlertData({
-    openSnackbar: true,
-    type: 'success',
-    message: 'Printer stopped Successfully',
-    variant: 'filled'
-  });
-}
+          return {
+            ...panel,
+            connected: false,
+            lines: panel.lines.map(line => {
+              if (line.id !== data.lineId) return line
 
-const updatePrintStopState = (prevLines, data) => {
-  const panels = [...prevLines];
-  const panel = panels.find(p => p.panelName === data.panelName);
-  if (!panel) 
-  {
-    return panel;
-  }
+              return {
+                ...line,
+                codeToPrint: data?.pendingCount ? String(data.pendingCount) : line.pendingCount,
+                availableToCode: data?.availableCodes ?? line.availableToCode - line.printCount,
+                printCount: data?.printCount ?? line.printCount,
+                scanned: data?.scanCount ?? line.scanned,
+                disabledStartPrint: true,
+                disabledStopPrint: true,
+                disabledCodePrintSave: false,
+                disabledReset: true,
+                disabledCodeToPrint: false,
+                disabledStopSession: false,
+                pendingCount: 0
+              }
+            })
+          }
+        })
+      })
+      setAlertData({
+        openSnackbar: true,
+        type: 'success',
+        message: 'Printer stopped Successfully',
+        variant: 'filled'
+      })
+    }
 
-  const line = panel.lines.find(l => l.id === data.lineId);
-  if (!line) {
-    return panel;
-  }
+    socket.current.on('panelPing', handlePanelPing)
 
-  line.codeToPrint = String(data.pendingCount);
-  line.disabledStartPrint = true;
-  line.disabledStopPrint = true;
-  line.disabledCodePrintSave = false;
-  line.disabledReset = true;
-  line.disabledCodeToPrint = false;
-  line.disabledStopSession = false;
-  line.pendingCount = 0;
-  line.printCount = data.printCount;
-  line.scanned = data.scanCount;
+    function handlePanelPing(data) {
+      setPrinterLines(prevLines => {
+        return prevLines.map(panel => {
+          if(panel.panelName !== data.panelName) return panel;
 
-  return panels;
-};
+          return { ...panel, connected: data.panelConnected }
+        })
+      })
+    }
 
+    socket.current.on('printingCompleted', data => {
+      console.log('complete printing ', data)
 
-socket.current.on('panelPing', handlePanelPing);
+      setPrinterLines(prev => updatePrintCompleted(prev, data))
+      setAlertData({
+        openSnackbar: true,
+        type: 'success',
+        message: 'Printing completed',
+        variant: 'filled'
+      })
+    })
 
-function handlePanelPing(data) {
-  setPrinterLines(prevLines => updatePanelConnection(prevLines, data));
-}
-function updatePanelConnection(prevLines, data) {
-  return prevLines.map(panel =>
-    panel.panelName === data.panelName
-      ? { ...panel, connected: data.panelConnected }
-      : panel
-  );
-}
+    function updatePrintCompleted(prevLines, data) {
+      return prevLines.map(panel => {
+        if (panel.panelName !== data.panelName) return panel
 
- socket.current.on('printingCompleted', handlePrintingCompleted);
-     async function handlePrintingCompleted(data) {
-  try {
-    await api(
-      '/batchprinting/panelStop',
-      {
-        line: {
-          ControlPanel: { id: data.panelId },
-          id: data.lineId
-        },
-        panelStopPing: true
-      },
-      'post',
-      true,
-      ip,
-      true
-    );
+        return {
+          ...panel,
+          connected: false,
+          lines: panel.lines.map(line => {
+            if (line.id !== data.lineId) return line
 
-    setPrinterLines(prev => updatePrintCompleted(prev, data));
-    
-    setAlertData({
-      openSnackbar: true,
-      type: 'success',
-      message: 'Printing completed',
-      variant: 'filled'
-    });
-  } catch (error) {
-    console.error('Error to stop printing', error);
-  }
-}
-function updatePrintCompleted(prevLines, data) {
-  const panelIndex = prevLines.findIndex(p => p.panelName === data.panelName);
-  if (panelIndex === -1)
-  {
-     return prevLines;
-  }
+            return {
+              ...line,
+              disabledStartPrint: true,
+              disabledStopPrint: true,
+              disabledCodeToPrint: false,
+              disabledCodePrintSave: false,
+              pendingCount: 0,
+              printCount: data.printCount,
+              scanned: data.scanCount,
+              disabledReset: true,
+              disabledStopSession: false,
+              availableToCode: data.availableCodes
+            }
+          })
+        }
+      })
+    }
 
-  const lineIndex = prevLines[panelIndex].lines.findIndex(l => l.id === data.lineId);
-  if (lineIndex === -1)
-  {
-     return prevLines;
-  }
-
-  const updatedLines = [...prevLines[panelIndex].lines];
-  const originalLine = updatedLines[lineIndex];
-
-  const updatedLine = {
-    ...originalLine,
-    disabledStartPrint: true,
-    disabledStopPrint: true,
-    disabledCodeToPrint: false,
-    disabledCodePrintSave: false,
-    pendingCount: 0,
-    printCount: data.printCount,
-    scanned: data.scanCount,
-    disabledReset: true,
-    disabledStopSession: false
-  };
-
-  updatedLines[lineIndex] = updatedLine;
-
-  const updatedPanel = {
-    ...prevLines[panelIndex],
-    lines: updatedLines
-  };
-
-  const updatedPanels = [...prevLines];
-  updatedPanels[panelIndex] = updatedPanel;
-
-  return updatedPanels;
-}
-
-   socket.current.on('onMessage', data => {
-      console.log('onMessage ', data)
+    socket.current.on('onMessage', data => {
+      // console.log('onMessage ', data)
       setAlertData({ openSnackbar: true, type: data.type, message: data.message, variant: 'filled' })
     })
 
@@ -323,34 +278,32 @@ function updatePrintCompleted(prevLines, data) {
           // Process all lines asynchronously
           panel.lines = await Promise.all(
             panel.lines.map(async line => {
-              const res = await api(`/printLineSetting/restore/${line.id}`, {}, 'get', true,ip,true)
+              const res = await api(`/printLineSetting/restore/${line.id}`, {}, 'get', true, ip, true)
               console.log('Response of restore ', res.data)
 
               if (res?.data?.success && res?.data?.data) {
                 const data = res.data.data.result
-                console.log('line is ', line)
-
                 line.product = data.product_id
 
                 // Fetch additional data
                 const [productRes, batchRes, levelRes, availRes] = await Promise.all([
-                  api('/batchprinting/getAllProducts', {}, 'get', true, true, ip),
-                  api(`/batchprinting/getBatchesByProduct/${data.product_id}`, {}, 'get', true, true, ip),
+                  api('/batchprinting/getAllProducts', {}, 'get', true, ip, true),
+                  api(`/batchprinting/getBatchesByProduct/${data.product_id}`, {}, 'get', true, ip, true),
                   api(
                     `/batchprinting/getPackagingHeirarchyFromProductAndBatch/${data.product_id}/${data.batch_id}`,
                     {},
                     'get',
                     true,
-                    true,
-                    ip
+                    ip,
+                    true
                   ),
                   api(
                     `/batchprinting/getAvailableCodesFromProductAndBatch/${data.product_id}/${data.batch_id}/${data.packing_hierarchy}/${line.ControlPanel.id}/${line.id}`,
                     {},
                     'get',
                     true,
-                    true,
-                    ip
+                    ip,
+                    true
                   )
                 ])
 
@@ -380,7 +333,7 @@ function updatePrintCompleted(prevLines, data) {
                   line.disabledStopSession = false
                   line.disabledCodePrintSave = false
                   line.disabledStopPrint = true
-                  line.disabledCodeToPrint = true
+                  line.disabledCodeToPrint = false
                 } else {
                   line.disabledStopSession = false
                   line.disabledCodePrintSave = false
@@ -397,7 +350,7 @@ function updatePrintCompleted(prevLines, data) {
       setPrinterLines(updatedPanels) // Now updatedPanels has all the async results
       setIsLoading(false)
     } catch (error) {
-      console.log('while fetch data',error)
+      console.log('while fetch data', error)
       setIsLoading(false)
       console.log('Error to get Printing status')
     }
@@ -406,7 +359,7 @@ function updatePrintCompleted(prevLines, data) {
   const getLinesByPcIp = async () => {
     setIsLoading(true)
     try {
-      const res = await api(`/batchprinting/getLinesByPcIp/${ip}`, {}, 'get', true,ip,true)
+      const res = await api(`/batchprinting/getLinesByPcIp/${ip}`, {}, 'get', true, ip, true)
       if (!res) {
         setAlertData({
           openSnackbar: true,
@@ -466,10 +419,9 @@ function updatePrintCompleted(prevLines, data) {
   }
 
   const getProducts = async (panelIndex, lineIndex) => {
-    console.log('calling ..')
     try {
-      const res = await api('/batchprinting/getAllProducts', {}, 'get', true,ip, true)
-      console.log('Res of getProducts ', res.data)
+      const res = await api('/batchprinting/getAllProducts', {}, 'get', true, ip, true)
+      // console.log('Res of getProducts ', res.data)
       if (res.data.success) {
         const products = res.data.data.products
         updatePrinterLine(panelIndex, lineIndex, 'products', products)
@@ -488,7 +440,9 @@ function updatePrintCompleted(prevLines, data) {
   const handleProductChange = async (panelIndex, lineIndex, productId) => {
     setIsLoading(true)
     try {
-      const res = await api(`/batchprinting/getBatchesByProduct/${productId}`, {}, 'get', true,ip, true)
+      const res = await api(`/batchprinting/getBatchesByProduct/${productId}`, {}, 'get', true, ip, true)
+      // console.log("Get batches by product " , res.data);
+
       if (res.data.success) {
         const batches = res.data.data.batches
         setPrinterLines(prevLines => {
@@ -528,9 +482,8 @@ function updatePrintCompleted(prevLines, data) {
         true
       )
       if (res.data.success) {
-        console.log('handleBatchChange', res.data.data)
+        // console.log('handleBatchChange', res.data.data)
         const packagingHierarchies = res.data.data.packagingheirarchy
-        console.log('packaging', packagingHierarchies)
         setPrinterLines(prevLines => {
           const panels = [...prevLines]
           const line = panels[panelIndex].lines[lineIndex]
@@ -551,16 +504,6 @@ function updatePrintCompleted(prevLines, data) {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const getLayerOptions = ph => {
-    const options = []
-    options.push({ label: `Product Number`, value: 'productNumber' })
-    if (ph.packagingHierarchy >= 2) options.push({ label: `First Layer`, value: 'firstLayer' })
-    if (ph.packagingHierarchy >= 3) options.push({ label: `Second Layer`, value: 'secondLayer' })
-    if (ph.packagingHierarchy >= 4) options.push({ label: `Third Layer`, value: 'thirdLayer' })
-    options.push({ label: `Outer Layer`, value: 'outerLayer' })
-    return options
   }
 
   const updatePrinterLine = (panelIndex, lineIndex, field, value) => {
@@ -603,10 +546,16 @@ function updatePrintCompleted(prevLines, data) {
         line.packagingHierarchy === ''
           ? { isError: true, message: 'Packaging Hierarchy is required' }
           : { isError: false, message: '' }
-      line.errorCodeToPrint =
-        parseInt(line.codeToPrint) <= 0
-          ? { isError: true, message: 'Code to print must be positive number' }
-          : { isError: false, message: '' }
+
+      if (!line.codeToPrint || parseInt(line.codeToPrint) <= 0) {
+        line.errorCodeToPrint = { isError: true, message: 'Code to print must be positive number' }
+      } else if (parseInt(line.codeToPrint) > line.availableToCode) {
+        line.errorCodeToPrint = { isError: true, message: 'Code to print can not grater than available code' }
+      } else if (parseInt(line.codeToPrint) > 1000000) {
+        line.errorCodeToPrint = { isError: true, message: 'Code to print can not grater than 1000000' }
+      } else {
+        line.errorCodeToPrint = { isError: false, message: '' }
+      }
       return newLines
     })
   }
@@ -618,7 +567,7 @@ function updatePrintCompleted(prevLines, data) {
 
   const checkValidateBeforeStart = (panelIndex, lineIndex) => {
     const line = printerLines[panelIndex].lines[lineIndex]
-    return line.batch !== '' && line.product !== '' && line.packagingHierarchy !== '' && parseInt(line.codeToPrint) > 0
+    return line.batch !== '' && line.product !== '' && line.packagingHierarchy !== '' && parseInt(line.codeToPrint) > 0 && parseInt(line.codeToPrint) <= parseInt(line.availableToCode) && parseInt(line.codeToPrint) <= 1000000
   }
 
   const handleSubmitForm = async (panelIndex, lineIndex, line) => {
@@ -631,7 +580,6 @@ function updatePrintCompleted(prevLines, data) {
     if (!checkValidate(panelIndex, lineIndex)) {
       return
     }
-    console.log('Panles group ', printerLines)
     try {
       setIsLoading(true)
       const res = await api(
@@ -642,7 +590,7 @@ function updatePrintCompleted(prevLines, data) {
         ip,
         true
       )
-      console.log('Res of submit form ', res.data)
+      // console.log('Res of submit form ', res.data)
       if (res.data.success) {
         const { availableCodes, codeToPrint } = res.data.data
         setPrinterLines(prevLines => {
@@ -678,16 +626,15 @@ function updatePrintCompleted(prevLines, data) {
     if (!checkValidateBeforeStart(panelIndex, lineIndex)) {
       return
     }
-    console.log('LIne send ', line)
     try {
-      const res = await api(`/batchprinting/sendCodesToPrinter`, { line, socketId }, 'post', true,ip, true)
-      console.log('res of handlestart printing ', res.data)
+      const res = await api(`/batchprinting/sendCodesToPrinter`, { line, socketId }, 'post', true, ip, true)
+      // console.log('res of handlestart printing ', res.data)
 
       if (res.data.success) {
         setPrinterLines(prevLines => {
           const panels = [...prevLines]
           const panel = panels[panelIndex]
-          panel.connected = true
+          panel.connected = false
           const line = panel.lines[lineIndex]
           line.saveData = true
           line.disabledCodePrintSave = true
@@ -715,9 +662,21 @@ function updatePrintCompleted(prevLines, data) {
     }
   }
 
-  const handleStartPrinting = async (panelIndex, lineIndex, line) => {
+  const handleStartPrinting = async line => {
     try {
-      const data = { line }
+      const data = {
+        printerId: line.printer_id,
+        panelId: line.ControlPanel.id,
+        panelName: line.ControlPanel.name,
+        cameraEnable: line.camera_enable,
+        cameraId: line.cameraId,
+        lineId: line.id,
+        productId: line.product,
+        batchId: line.batch,
+        packagingHierarchy: line.packagingHierarchy,
+        codeToPrint: line.codeToPrint,
+        lineNo: line.line_no
+      }
       socket.current.emit('startPrinting', data)
     } catch (error) {
       console.log('Error handleStart Printing', error)
@@ -725,11 +684,29 @@ function updatePrintCompleted(prevLines, data) {
     }
   }
 
-  const handleStopPrinting = async (panelIndex, lineIndex, line) => {
-    console.log('STop printing clicked...')
+  const handleStopPrinting = async line => {
     try {
-      const data = { line }
+      const data = {
+        printerId: line.printer_id,
+        panelId: line.ControlPanel.id,
+        panelName: line.ControlPanel.name,
+        cameraEnable: line.camera_enable,
+        cameraId: line.cameraId,
+        lineId: line.id,
+        productId: line.product,
+        batchId: line.batch,
+        packagingHierarchy: line.packagingHierarchy,
+        codeToPrint: line.codeToPrint,
+        lineNo: line.line_no
+      }
       socket.current.emit('stopPrinting', data)
+      const updatedPrinterLines = [...printerLines]
+      const panel = updatedPrinterLines?.find(p => p.panelName === line.ControlPanel.name)
+      if (!panel) return
+      const panelLine = panel.lines.find(l => l.id === line.id)
+      if (!panelLine) return
+      panelLine.disabledStopPrint = true
+      setPrinterLines(updatedPrinterLines)
     } catch (error) {
       console.log('Error handleStop Printing', error)
       setAlertData({ ...alertData, type: 'error', message: error, openSnackbar: true })
@@ -762,7 +739,6 @@ function updatePrintCompleted(prevLines, data) {
     setPrinterLines(lines)
     try {
       setIsLoading(true)
-      console.log('redis key ', redisKey)
       const res = await api(
         '/batchprinting/removeTableFromRedis',
         { redisKey, lineId: line.id },
@@ -780,36 +756,30 @@ function updatePrintCompleted(prevLines, data) {
   }
 
   const handleOpenSetting = async line => {
-    console.log('setting of line ', line)
     setProjectSettingData({ ...projectSettingData, lineId: line.id, printerId: line.printer_id })
     setOpenProjectModal(!openProjectModal)
   }
 
-  const handleAfterStartSession = async () => {
-    const panels = [...printerLines]
-    const data = { stop: false }
-    await Promise.all(
-      panels.map(async panel => {
-        const lines = [...panel.lines]
-        await Promise.all(
-          lines.map(async line => {
-            if (line.line_pc_ip === ip) {
-              data.lineId = line.id
-              line.disabledCodePrintSave = false
-              line.disabledStartSession = true
-              line.disabledCodeToPrint = true
-              line.disabledStopSession = false
-              line.disabledReset = true
-              line.sessionStarted = true
-            }
-            return line
-          })
-        )
-        panel.lines = lines
-        return panel
+  const handleAfterStartSession = async lineId => {
+    const data = { stop: false, userId, lineId }
+    const updatedPanels = printerLines.map(panel => {
+      const updatedLines = panel.lines.map(line => {
+        if (line.id === lineId) {
+          return {
+            ...line,
+            disabledCodePrintSave: false,
+            disabledStartSession: true,
+            disabledCodeToPrint: true,
+            disabledStopSession: false,
+            disabledReset: true,
+            sessionStarted: true
+          }
+        }
+        return line
       })
-    )
-    setPrinterLines(panels)
+      return { ...panel, lines: updatedLines }
+    })
+    setPrinterLines(updatedPanels)
     try {
       socket.current.emit('stopPrintingSession', data)
     } catch (error) {
@@ -818,31 +788,28 @@ function updatePrintCompleted(prevLines, data) {
     }
   }
 
-  const handleAfterStopSession = async () => {
-    const panels = [...printerLines]
-    const data = { stop: true }
-    await Promise.all(
-      panels.map(async panel => {
-        const lines = [...panel.lines]
-        await Promise.all(
-          lines.map(async line => {
-            data.lineId = line.id
-            line.disabledCodePrintSave = true
-            line.disabledStartSession = true
-            line.disabledStopSession = true
-            line.disabledCodeToPrint = true
-            line.disabledStartPrint = true
-            line.disabledStopPrint = true
-            line.disabledReset = false
-            line.sessionStarted = false
-            return line
-          })
-        )
-        panel.lines = lines
-        return panel
+  const handleAfterStopSession = async lineId => {
+    const data = { stop: true, userId, lineId }
+    const updatedPanels = printerLines.map(panel => {
+      const updatedLines = panel.lines.map(line => {
+        if (line.id === lineId) {
+          return {
+            ...line,
+            disabledCodePrintSave: true,
+            disabledStartSession: true,
+            disabledStopSession: true,
+            disabledCodeToPrint: true,
+            disabledStartPrint: true,
+            disabledStopPrint: true,
+            disabledReset: false,
+            sessionStarted: false
+          }
+        }
+        return line
       })
-    )
-    setPrinterLines(panels)
+      return { ...panel, lines: updatedLines }
+    })
+    setPrinterLines(updatedPanels)
     try {
       socket.current.emit('stopPrintingSession', data)
     } catch (error) {
@@ -851,7 +818,7 @@ function updatePrintCompleted(prevLines, data) {
     }
   }
 
-  const handleSessionStart = async (data) => {
+  const handleSessionStart = async data => {
     if (config?.config?.esign_status) {
       setApproveAPI({
         approveAPIName: 'batch-printing-create',
@@ -863,11 +830,11 @@ function updatePrintCompleted(prevLines, data) {
       })
       setAuthModalOpen(true)
     } else {
-      handleAfterStartSession()
+      handleAfterStartSession(data.id)
     }
   }
 
-  const handleSessionStop = async (data) => {
+  const handleSessionStop = async data => {
     if (config?.config?.esign_status) {
       setApproveAPI({
         approveAPIName: 'batch-printing-create',
@@ -879,7 +846,7 @@ function updatePrintCompleted(prevLines, data) {
       })
       setAuthModalOpen(true)
     } else {
-      handleAfterStopSession()
+      handleAfterStopSession(data.id)
     }
   }
 
@@ -889,7 +856,6 @@ function updatePrintCompleted(prevLines, data) {
   }
 
   const handleAuthModalOpen = user => {
-    console.log('Open auth model again')
     setApproveAPI({
       ...approveAPI,
       approveAPIName: 'batch-printing-approve',
@@ -900,88 +866,68 @@ function updatePrintCompleted(prevLines, data) {
     setAuthModalOpen(true)
   }
 
-  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
+  const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus) => {
     const resetState = () => {
-      setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '', session: '', authUser: {}, lineId: null })
+      setApproveAPI({
+        approveAPIName: '',
+        approveAPImethod: '',
+        approveAPIEndPoint: '',
+        session: '',
+        authUser: {},
+        lineId: null
+      })
       setAuthModalOpen(false)
+      setOpenModalApprove(false)
     }
+
     if (!isAuthenticated) {
-      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
+      setAlertData({ type: 'error', message: 'Authentication failed, please try again.', openSnackbar: true })
       return
     }
- const sessionType = approveAPI.session === 'start' ? 'start' : 'stop';
-const finalRemarks = remarks.length > 0 ? remarks : `Batch printing session ${sessionType} requested`;
+
     const prepareData = () => ({
-      esignStatus: esignStatus,
+      esignStatus,
       session: approveAPI.session,
       lineId: approveAPI.lineId,
-      audit_log: config?.config?.audit_logs
-        ? {
-            user_id: user.userId,
-            user_name: user.userName,
-            performed_action: 'approved',
-            remarks:finalRemarks ,
-            authUser: user.user_id,
-          }
-        : {}
+      audit_log: config?.config?.audit_logs ? { authUser: user.user_id } : {}
     })
-    const handleEsignApproved = async () => {
-      const sessionType = approveAPI.session === 'start' ? 'start' : 'stop';
-      const finalRemarks = remarks.length > 0 ? remarks : `Batch printing session ${sessionType} requested`;
-      console.log('esign is approved for creator.')
-      const data = {
-        esignStatus: 'approved',
-        audit_log: config?.config?.audit_logs
-          ? {
-              user_id: user.userId,
-              user_name: user.userName,
-              performed_action: 'approved',
-              remarks: finalRemarks,
-              authUser: user.user_id,
-            }
-          : {}
-      }
-      await api('/esign-status/double-esign', data, 'patch', true)
-      handleAuthModalOpen(user)
-    }
-    const handleApproverActions = async () => {
-      console.log('esign approve by approver.')
-      const data = prepareData();
-      await api('/esign-status/double-esign', data, 'patch', true)
-    }
-    if (isApprover && esignStatus === 'approved') {
-      await handleApproverActions()
-      if (approveAPI.authUser.userId === user.userId) {
-        setAlertData({ ...alertData, openSnackbar: true, message: 'Same user cannot Approved', type: 'error' })
+
+    try {
+      if (esignStatus === 'rejected') {
+        console.log('eSign rejected.')
+        resetState()
         return
       }
-      if (approveAPI.session === 'start') {
-        handleAfterStartSession()
-      } else {
-        handleAfterStopSession()
-      }
-      resetState()
-    } else if (esignStatus === 'rejected') {
-        console.log('esign is rejected.')
-        setAuthModalOpen(false)
-        setOpenModalApprove(false)
-        resetState()
-      } else if(esignStatus === 'approved') {
-        handleEsignApproved()
-      }
-    
-  }
-   const renderHierarchyOptions = (ph) => (
-  getLayerOptions(ph).map((option, idx) => 
-    renderHierarchyOption(ph, option, idx)
-  )
-)
 
-const renderHierarchyOption = (ph, option, idx) => (
-  <MenuItem key={`${ph.id}-${idx}`} value={option.value}>
-    {option.label}
-  </MenuItem>
-);
+      if (esignStatus === 'approved') {
+        if (isApprover) {
+          if (approveAPI.authUser.userId === user.userId) {
+            setAlertData({ type: 'error', message: 'Same user cannot approve.', openSnackbar: true })
+            return
+          }
+          await api('/esign-status/double-esign', prepareData(), 'patch', true)
+          approveAPI.session === 'start'
+            ? handleAfterStartSession(approveAPI.lineId)
+            : handleAfterStopSession(approveAPI.lineId)
+          resetState()
+        } else {
+          await api(
+            '/esign-status/double-esign',
+            {
+              esignStatus: 'approved',
+              audit_log: config?.config?.audit_logs ? { authUser: user.user_id } : {}
+            },
+            'patch',
+            true
+          )
+          handleAuthModalOpen(user)
+        }
+      }
+    } catch (error) {
+      console.error('Error handling auth result:', error)
+      setAlertData({ type: 'error', message: 'An error occurred during authentication.', openSnackbar: true })
+    }
+  }
 
   return (
     <Box padding={4}>
@@ -998,7 +944,7 @@ const renderHierarchyOption = (ph, option, idx) => (
           sx={{
             padding: '10px 32px',
             marginTop: '16px',
-            backgroundColor: settings.mode === 'dark' ? '#212121' : 'white',
+            backgroundColor: settings.mode === 'dark' ? '#212121' : '#dedfe529',
             borderRadius: 4
           }}
           elevation={3}
@@ -1034,7 +980,7 @@ const renderHierarchyOption = (ph, option, idx) => (
                     borderRadius: 2,
                     padding: '10px 20px 20px 20px',
                     marginBottom: 5,
-                    backgroundColor: settings.mode === 'dark' ? '#212121' : '#f9fbf9'
+                    backgroundColor: settings.mode === 'dark' ? '#212121' : '#f9fbf92e'
                   }}
                   elevation={3}
                 >
@@ -1126,7 +1072,7 @@ const renderHierarchyOption = (ph, option, idx) => (
                           value={line.packagingHierarchy}
                           onChange={e => handleInputChange(panelIndex, lineIndex, 'packagingHierarchy', e.target.value)}
                         >
-                        {line.packagingHierarchies.map(ph => renderHierarchyOptions(ph))}
+                          <MenuItem value={'firstLayer'}>{'First Layer'}</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid2>
@@ -1243,7 +1189,7 @@ const renderHierarchyOption = (ph, option, idx) => (
                                 <Button
                                   variant='contained'
                                   className='py-2 mx-3'
-                                  onClick={() => handleStartPrinting(panelIndex, lineIndex, line)}
+                                  onClick={() => handleStartPrinting(line)}
                                   disabled={line.disabledStartPrint}
                                 >
                                   Start
@@ -1252,7 +1198,7 @@ const renderHierarchyOption = (ph, option, idx) => (
                                   variant='contained'
                                   color='error'
                                   className='py-2'
-                                  onClick={() => handleStopPrinting(panelIndex, lineIndex, line)}
+                                  onClick={() => handleStopPrinting(line)}
                                   disabled={line.disabledStopPrint}
                                 >
                                   Stop
@@ -1293,7 +1239,7 @@ const renderHierarchyOption = (ph, option, idx) => (
         approveAPI={{
           approveAPIName: approveAPI.approveAPIName,
           approveAPImethod: approveAPI.approveAPImethod,
-          approveAPIEndPoint: approveAPI.approveAPIEndPoint,
+          approveAPIEndPoint: approveAPI.approveAPIEndPoint
         }}
         handleAuthResult={handleAuthResult}
         config={config}
@@ -1303,7 +1249,6 @@ const renderHierarchyOption = (ph, option, idx) => (
     </Box>
   )
 }
-
 
 export async function getServerSideProps(context) {
   return validateToken(context, 'Batch Printing')

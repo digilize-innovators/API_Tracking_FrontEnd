@@ -1,5 +1,5 @@
 'use-client'
-import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useLayoutEffect, useRef, lazy, Suspense } from 'react'
 import {
   InputLabel,
   FormControl,
@@ -33,7 +33,7 @@ import CustomSearchBar from 'src/components/CustomSearchBar'
 import downloadPdf from 'src/utils/DownloadPdf'
 import UserModel from 'src/components/Modal/UserModel'
 import { convertImageToBase64 } from 'src/utils/UrlToBase64'
-import TableUser from 'src/views/tables/TableUser'
+// import TableUser from 'src/views/tables/TableUser'
 
 const mainUrl = BaseUrl
 const Index = () => {
@@ -63,6 +63,7 @@ const Index = () => {
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
   const apiAccess = useApiAccess('user-create', 'user-update', 'user-approve')
+  const TableUser = lazy(()=> import('src/views/tables/TableUser'))
 
   useLayoutEffect(() => {
     let data = getUserData()
@@ -604,6 +605,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 User Data
               </Typography>
+              <Suspense>
                 <TableUser
                   pendingAction={pendingAction}
                   handleUpdate={handleUpdate}
@@ -613,6 +615,7 @@ const handleCreatorActions = (user, esignStatus, remarks,isApprover) => {
                   config={config}
                   tableHeaderData={tableHeaderData}
                 />
+              </Suspense>
             </Grid2>
           </Box>
         </Grid2>

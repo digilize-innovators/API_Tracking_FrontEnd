@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 'use-client'
-import React, { useState, useMemo, useLayoutEffect, useRef } from 'react'
+import React, { useState, useMemo, useLayoutEffect, useRef, lazy, Suspense } from 'react'
 import { Button, Box, Grid2, Typography } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import { api } from 'src/utils/Rest-API'
@@ -17,7 +17,7 @@ import { validateToken } from 'src/utils/ValidateToken'
 import { getTokenValues } from 'src/utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
-import TableCodeGeneration from 'src/views/tables/TableCodeGeneration'
+// import TableCodeGeneration from 'src/views/tables/TableCodeGeneration'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import downloadPdf from 'src/utils/DownloadPdf'
 import CodeGenerationModal from 'src/components/Modal/CodeGenerationModal'
@@ -46,6 +46,7 @@ const Index = () => {
   const [isCodeReGeneration, setIsCodeReGeneration] = useState(false)
   const apiAccess = useApiAccess('codegeneration-create', 'codegeneration-update', 'codegeneration-approve')
   const searchRef = useRef()
+  const TableCodeGeneration = lazy(()=> import('src/views/tables/TableCodeGeneration'));
 
   useLayoutEffect(() => {
     let data = getUserData()
@@ -423,15 +424,17 @@ const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, 
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Code Generation Data
               </Typography>
-              <TableCodeGeneration
-                setCodeRequest={setCodeRequestData}
-                tableHeaderData={tableHeaderData}
-                handleAuthCheck={handleAuthCheck}
-                apiAccess={apiAccess}
-                config={config}
-                handleReopenModal={handleReopenModal}
-                isCodeReGeneration={isCodeReGeneration}
-              />
+              <Suspense>
+                <TableCodeGeneration
+                  setCodeRequest={setCodeRequestData}
+                  tableHeaderData={tableHeaderData}
+                  handleAuthCheck={handleAuthCheck}
+                  apiAccess={apiAccess}
+                  config={config}
+                  handleReopenModal={handleReopenModal}
+                  isCodeReGeneration={isCodeReGeneration}
+                />
+              </Suspense>
             </Grid2>
           </Box>
         </Grid2>

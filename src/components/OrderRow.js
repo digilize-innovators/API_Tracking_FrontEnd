@@ -9,6 +9,7 @@ import { api } from 'src/utils/Rest-API'
 import { useAuth } from "src/Context/AuthContext";
 import { useRouter } from "next/router";
 import OrderDrawer from "./OrderDrawer";
+import StockOrderDrawer from "./stockOrderDrawer";
 
 const OrderRow = ({
     row,
@@ -41,7 +42,11 @@ const OrderRow = ({
             if (res.data.success) {
                 setTransactionsDetail(res?.data.data)
                 setInvoiceBtnDisable(
-                    res.data.data.transactions.length > 0 && res.data.data.transactions.every(item => item.status === 'COMPLETED') && row.status !== 'INVOICE_GENERATED'
+                    res.data.data.transactions.length > 0
+                     && res.data.data.transactions.every(item => item.status === 'COMPLETED') 
+                    && (row.status === 'SCANNING_COMPLETED'
+                         || row.status === 'INWARD_COMPLETED'
+                        || row.status === 'INVOICE_GENERATED')
                 )
             } else if (res.data.code === 401) {
                 removeAuthToken()
@@ -65,7 +70,7 @@ const OrderRow = ({
     }
 
 
-
+ 
     return (
         <Fragment>
             {/* Main Row */}
@@ -123,7 +128,7 @@ const OrderRow = ({
                             onClose={toggleDrawer('addDrawer', false)}
                             onOpen={toggleDrawer('addDrawer', true)}
                         >
-                            <OrderDrawer
+                            {(title=='StockTransfer Order Detail') && <StockOrderDrawer
                                 anchor={'addDrawer'}
                                 title={title}
                                 details={[
@@ -144,7 +149,35 @@ const OrderRow = ({
                                 transactionsDetail={transactionsDetail}
                                 invoiceBtnDisable={invoiceBtnDisable}
                                 setInvoiceBtnDisable={setInvoiceBtnDisable}
+                            />}
+                            {
+                                 (title!=='StockTransfer Order Detail') && <OrderDrawer
+                                anchor={'addDrawer'}
+                                title={title}
+                                details={[
+                                    { label: 'Order Type', path: 'order_type' },
+                                    { label: 'Order No.', path: 'order_no' },
+                                    {
+                                        label: 'Order Date',
+                                        path: 'order_date',
+                                        render: row => (
+                                            <>{moment(row.order_date).format('DD/MM/YYYY')}</>
+                                        )
+                                    },
+                                    { label: 'From', path: 'order_from_location.location_name' },
+                                    { label: 'To', path: 'order_to_location.location_name' },
+                                    { label: 'Status', path: 'status' },
+                                
+
+                                ]}
+                                row={row}
+                                endpoint={endpoint}
+                                transactionsDetail={transactionsDetail}
+                                invoiceBtnDisable={invoiceBtnDisable}
+                                setInvoiceBtnDisable={setInvoiceBtnDisable}
                             />
+                            }
+                          
                         </SwipeableDrawer>
                     )}
                 </TableCell>

@@ -25,11 +25,12 @@ const Card = styled(MuiCard)(({ theme }) => ({
 }))
 
 const removeAuthToken = () => {
-  Cookies.remove('toke')
+  Cookies.remove('token')
   Cookies.remove('userName')
   Cookies.remove('departmentName')
   Cookies.remove('showBot')
   Cookies.remove('screens')
+  Cookies.remove('accessibility')
 }
 const LoginPage = () => {
   const Loginschema = yup.object().shape({
@@ -139,6 +140,7 @@ const LoginPage = () => {
             Cookies.set('screens', JSON.stringify(res.data.data.screens))
             Cookies.set('profile-image', `${res.data.data.profile_image}`)
             Cookies.set('location', `${res.data.data.location}`)
+            Cookies.set('accessibility',JSON.stringify(res.data.data.accessibility))
             setUserInfo(res.data.data)
             reset()
             setIsLoading(false)

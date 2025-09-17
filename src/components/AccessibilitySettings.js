@@ -55,6 +55,12 @@ const AccessibilitySettings = () => {
                 themeColor: color,
                 mode: settings.mode
             });
+            Cookies.set('accessibility',JSON.stringify({
+                fontFamily: font,
+                fontSize: fontSize,
+                themeColor: color,
+                mode: settings.mode
+            }))
             toggleModal();
         } catch (error) {
             console.error("Error applying settings:", error);
