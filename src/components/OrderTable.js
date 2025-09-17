@@ -119,9 +119,12 @@ const OrderTable = ({
                 const path = typeof col === 'string' ? col : col.path
                 const label = col.label || col
                 return (
-                  <TableCell key={label} align='center' sx={{ cursor: 'pointer' }} onClick={() => handleSort(path)}>
+                  <TableCell key={label} align='center' 
+                  sx={{ cursor: 'pointer',whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => handleSort(path)}>
+                     <Box display='flex' alignItems='center' justifyContent='center'>
                     {label}
                     <IconButton size='small'>{getSortIcon(sortBy, path, sortDirection)}</IconButton>
+                    </Box>
                   </TableCell>
                 )
               })}
