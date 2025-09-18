@@ -16,7 +16,6 @@ import {
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { useLoading } from 'src/@core/hooks/useLoading'
-import SnackbarAlert from 'src/components/SnackbarAlert'
 import { api } from 'src/utils/Rest-API'
 import { useAuth } from 'src/Context/AuthContext'
 import { useRouter } from 'next/router'
@@ -26,9 +25,8 @@ import AuthModal from 'src/components/authModal'
 import PropTypes from 'prop-types'
 
 
-const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAccess, ip }) => {
+const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAccess, ip,setAlertData }) => {
   const { setIsLoading } = useLoading()
-  const [alertData, setAlertData] = useState({ openSnackbar: false, type: '', message: '', variant: 'filled' })
   const [editId, setEditId] = useState(null)
   const { removeAuthToken } = useAuth()
   const router = useRouter()
@@ -45,9 +43,9 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         value: 'MRP',
         checked: false
       },
-      {
-        label: 'NDC',
-        value: 'NDC',
+       {
+        label: 'Product Size',
+        value: 'productSize',
         checked: false
       },
       {
@@ -143,6 +141,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
   }
 
   const addSetting = async () => {
+      
     const data = {
       printerLineId: projectSettingData.lineId,
       label: settingData.label,
@@ -155,6 +154,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       setIsLoading(true)
       const res = await api('/printLineSetting/', data, 'post', true,ip,true)
       if (res.data.success) {
+          closeModal()
         setAlertData({
           openSnackbar: true,
           type: 'success',
@@ -188,6 +188,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       setIsLoading(true)
       const res = await api('/printLineSetting/', data, 'put', true,ip,true)
       if (res.data.success) {
+          closeModal()
         setAlertData({
           openSnackbar: true,
           type: 'success',
@@ -198,11 +199,28 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     } catch (error) {
       console.error('Error applying settings:', error)
     } finally {
+
       setIsLoading(false)
+    
     }
   }
 
   const applySettings = async () => {
+    const mustHave = ["CountryCode", "UniqueCode"];
+  const notSelected = mustHave.filter(
+    value => !settingData.selectedVariables.includes(value)
+  );
+
+  if (notSelected.length > 0) {
+    // Show error in snackbar
+    setAlertData({
+      openSnackbar: true,
+      type: "error",
+      message: `Please select: ${notSelected.join(", ")}`,
+      variant: "filled"
+    });
+    return; // Stop execution
+  }
     if (config?.config?.esign_status) {
       setApproveAPI({
         approveAPIName: 'batch-printing-create',
@@ -495,7 +513,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
           </Box>
         </Box>
       </Modal>
-      <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
       <AuthModal
         open={authModalOpen}
         handleClose={handleAuthModalClose}
@@ -509,6 +526,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         handleAuthModalOpen={handleAuthModalOpen}
         openModalApprove={openModalApprove}
       />
+      
     </>
   )
 }

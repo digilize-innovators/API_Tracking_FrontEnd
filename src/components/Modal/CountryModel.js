@@ -41,11 +41,6 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
           checked: false
         },
         {
-          label: 'NDC',
-          value: 'NDC',
-          checked: false
-        },
-        {
           label: 'GTIN',
           value: 'GTIN',
           checked: false

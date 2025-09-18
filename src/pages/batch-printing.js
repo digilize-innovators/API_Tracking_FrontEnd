@@ -1230,6 +1230,7 @@ const Index = ({ userId, ip }) => {
           projectSettingData={projectSettingData}
           apiAccess={apiAccess}
           ip={ip}
+          setAlertData={setAlertData}
         />
       )}
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
