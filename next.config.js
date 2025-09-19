@@ -1,7 +1,12 @@
 const path = require('path')
+/** @type {import('next').NextConfig} */
 
 module.exports = {
-
+    output: 'export', // ✅ enables static export
+  images: {
+    loader: 'custom',
+    unoptimized: true, // disable built-in image optimization
+  },
   eslint: {
         ignoreDuringBuilds: true,
         // target:'serverless',

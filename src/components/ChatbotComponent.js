@@ -54,7 +54,7 @@ const ChatbotComponent = () => {
         <Box className='outerbot' style={botStyle}>
           <Box className='botheader'>
             <Box className='botlogo'>
-              <Image src='/images/zobot.png' alt='botlogo' width={iconSize} height={iconSize} />
+              <Image src='/images/zobot.png' alt='botlogo' width={iconSize} height={iconSize} unoptimized  />
             </Box>
             <Box className='botcontent'>
               <Box className='EqbootTitle'>Digilize</Box>
@@ -77,6 +77,7 @@ const ChatbotComponent = () => {
             width={iconSize}
             height={iconSize}
             onClick={Openbot}
+             unoptimized
           />
         </Box>
       )}
