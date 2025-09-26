@@ -8,6 +8,7 @@ const CustomDropdown = ({ name, label, control, options,onChange, disabled=false
     <Controller
       name={name}
       control={control}
+      label={label}
       render={({ field, fieldState: { error } }) => (
        
         <FormControl fullWidth error={!!error}>

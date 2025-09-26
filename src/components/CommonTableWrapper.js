@@ -69,6 +69,7 @@ const CommonTableWrapper = ({
         type: tableHeaderData?.orderTypeFilter,
         status: tableHeaderData?.userStatus,
         department_name: tableHeaderData?.departmentFilter,
+        grade:tableHeaderData?.grade,
       };
 
       for (const [key, value] of Object.entries(optionalFields)) {

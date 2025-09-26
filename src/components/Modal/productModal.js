@@ -47,16 +47,18 @@ function ProductModal({
     resolver: yupResolver(validationSchema),
     defaultValues: {
       productId: '',
-      productName: '',
-      gtin: '',
-      mrp: '',
-      foreignName: '',
-      companyUuid: '',
-      prefix: '',
+      commonNames: '',
+      apiName: '',
+      potency: '',
+      casNumber: '',
+      therapeuticCategory: '',
+      impurityLimits: '',
+      containerSize: '',
+      shelfLife: '',
+      grades: null,
+      purity: '',
       country: '',
-      packagingSize: '',
-      no_of_units_in_primary_level: '',
-      unit_of_measurement: '',
+      gtin: '',
       packagingHierarchy: '',
       productNumber: 0,
       productNumber_unit_of_measurement: '',
@@ -78,24 +80,13 @@ function ProductModal({
       pallet_size: 0,
       pallet_size_unit_of_measurement: '',
       productImage: '/images/avatars/p.png',
-      itemNo:'',
-      itemCategory:'',
-      intendedUser:'',
-      description:'',
-      length:0,
-      diameter:0,
-      catherLength:0,
-      radiopacityMarkers:null,
-      deliverSystemType:'',
-      platformType:'',
-      compatibleProsthetics:'',
-      materialComposition:'',
-      surfaceTreatment:'',
-      compatibeGuideWireSize:''
-
-
+      storageConditions: '',
+      msdsReference: '',
+      hazardClassification: '',
+      status: false,
     }
   })
+
   const {
     control,
     handleSubmit,
@@ -116,40 +107,15 @@ function ProductModal({
   const secondLayer = watch('secondLayer')
   const thirdLayer = watch('thirdLayer')
   const product_image = watch('productImage')
-  const companyUuid = watch('companyUuid')
   const { setIsLoading } = useLoading()
-  const [companies, setCompanies] = useState([])
   const [countries, setCountries] = useState([])
 
   const [uoms, setUoms] = useState([])
   const [modalOpen, setModalOpen] = useState(false)
 
-  const getPrefixData = () => {
-    if (companyUuid) {
-      const company = companies.find(company => company.company_uuid === companyUuid)
-      if (company) {
-        let prefixs = []
-        if (company.gs1_prefix) prefixs.push({ label: company.gs1_prefix, id: company.gs1_prefix })
-        if (company.gs2_prefix) prefixs.push({ label: company.gs2_prefix, id: company.gs2_prefix })
-        if (company.gs3_prefix) prefixs.push({ label: company.gs3_prefix, id: company.gs3_prefix })
-        return prefixs
-      } else {
-        return []
-      }
-    }
-  }
+
 
   useEffect(() => {
-    if (!companyUuid) return // Ensure companyUuid exists before running the logic
-    if (companyUuid) {
-      getPrefixData()
-      setValue('prefix', '')
-    }
-    if (editData?.prefix) setValue('prefix', editData.prefix) // Restore edit data if available
-  }, [editData, companyUuid, companies]) // Ensure companies is a dependency
-
-  useEffect(() => {
-    getCompanies()
     getCountries()
   }, [tableHeaderData.esignStatus])
 
@@ -224,25 +190,6 @@ function ProductModal({
     setModalOpen(false)
   }
 
-  const getCompanies = async () => {
-    try {
-      setIsLoading(true)
-      const res = await api('/company?limit=-1&history_latest=true', {}, 'get', true)
-      setIsLoading(false)
-      if (res.data.success) {
-        setCompanies(res.data.data.companies)
-      } else {
-        console.log('Error to get all companies ', res.data)
-        if (res.data.code === 401) {
-          removeAuthToken()
-          router.push('/401')
-        }
-      }
-    } catch (error) {
-      console.log('Error in get companies ', error)
-      setIsLoading(false)
-    }
-  }
 
   const getCountries = async () => {
     try {
@@ -268,16 +215,12 @@ function ProductModal({
     if (editData) {
       reset({
         productId: editData?.product_id || '',
-        productName: editData?.product_name || '',
+        commonNames: editData?.common_name || '',
         gtin: editData?.gtin || '',
-        mrp: editData?.mrp || '',
-        foreignName: editData?.foreign_name || '',
-        companyUuid: editData?.company_uuid || '',
-        prefix: editData.prefix?.split(','),
+        casNumber: editData?.cas_number || '',
+        therapeuticCategory: editData?.therapeutic_category || '',
+        impurityLimits: editData?.impurity_limits,
         country: editData?.country_id || '',
-        packagingSize: editData?.packaging_size || 0,
-        no_of_units_in_primary_level: editData?.no_of_units_in_primary_level || '',
-        unit_of_measurement: editData?.unit_of_measurement || '',
         packagingHierarchy: editData?.packagingHierarchy || '',
         productNumber: editData?.productNumber || '',
         productNumber_unit_of_measurement: editData?.productNumber_unit_of_measurement || '',
@@ -298,27 +241,22 @@ function ProductModal({
         palletisation_applicable: editData?.palletisation_applicable || false,
         pallet_size: editData?.pallet_size?.toString() || '',
         pallet_size_unit_of_measurement: editData?.pallet_size_unit_of_measurement || '',
-         itemNo:editData?.item_no||'',
-      itemCategory:editData?.item_category||'',
-      intendedUser:editData?.intended_user||'',
-      description:editData?.description||'',
-      length:editData.length||0,
-      diameter:editData.length||0,
-      catherLength:editData.cather_length||0,
-      radiopacityMarkers:editData?.radiopacity_markers||null,
-      deliverSystemType:editData?.delivery_system_type||'',
-      platformType:editData?.platform_type||'',
-      compatibleProsthetics:editData?.compatible_prosthetic_components||'',
-      materialComposition:editData?.material_composition||'',
-      surfaceTreatment:editData?.surface_treatment||'',
-      compatibeGuideWireSize:editData?.compatible_guidewire_size||'',
-      division:editData.division||''
+        apiName: editData?.api_name || '',
+        potency: editData?.potency || '',
+        purity: editData?.purity || '',
+        storageConditions: editData?.storage_conditions || '',
+        grades: editData?.grade || null,
+        msdsReference: editData?.msds_reference || '',
+        hazardClassification: editData?.hazard_classification || '',
+        containerSize: editData.container_size || '',
+        shelfLife: editData.shelfLife || '',
+        status: editData?.is_active || false
+
       })
       if (editData?.product_image && editData?.product_image !== '/images/avatars/p.png') {
         convertImageToBase64(editData?.productImage, setProductImage)
         setValue('productImage', editData?.productImage)
       }
-      setValue('prefix', editData?.prefix)
     }
   }, [editData])
 
@@ -350,12 +288,6 @@ function ProductModal({
     }
   }))
 
-  const prefixs = (companyUuid && getPrefixData()) || []
-  useEffect(() => {
-    if (!prefixs?.length) {
-      getPrefixData()
-    }
-  }, [prefixs])
 
   const CountryData = countries?.map(item => ({
     id: item.id,
@@ -368,40 +300,16 @@ function ProductModal({
     value: item.uom_uuid,
     label: item.uom_name
   }))
-  const RadiopacityData = [
-      {
-    id:null,
-    value: null,
-    label: 'No select'
-  },
-  {
-    id:true,
-    value: true,
-    label: 'Enable'
-  },
-  {
-    id:false ,
-    value: false,
-    label: 'Disable'
-  }
-]
-
-
-  const CompanyData = companies?.map(item => ({
-    id: item.company_uuid,
-    value: item.company_uuid,
-    label: item.company_name
-  }))
-
-  const divisionData =[{
-    id:'HEART',
-    value:'HEART',
-    label:'Heart'
-  },
-  { id:'DENTAL',
-    value:'DENTAL',
-    label:'Dental'}
+  const GradeData = [
+    { id: 'IP', value: 'IP', label: 'IP' },
+    { id: 'USP', value: 'USP', label: 'USP' },
+    { id: 'EP', value: 'EP', label: 'EP' },
+    { id: 'JP', value: 'JP', label: 'JP' },
+    { id: 'BP', value: 'BP', label: 'BP' }
   ]
+
+
+
 
   const calculateGtinCheckDigit = input => {
     if (input.length !== 12 || isNaN(input)) {
@@ -421,6 +329,8 @@ function ProductModal({
 
   const isPackagingHierarchyLevelIsRequired = () =>
     ['productNumber', 'firstLayer', 'secondLayer', 'thirdLayer'].some(el => Boolean(errors[el]?.message))
+    
+  console.log("hello",errors);
 
   return (
     <Modal
@@ -430,14 +340,15 @@ function ProductModal({
       aria-labelledby='modal-modal-title'
       aria-describedby='modal-modal-description'
     >
-      <Box sx={{ ...style, width: '80%', height: '85%', overflowY: 'auto' }}>
+      <Box sx={{ ...style, width: '80%', height: '70%', overflowY: 'auto' }}>
         <Typography variant='h4' className='my-2'>
           {editData?.id ? 'Edit Product' : 'Add Product'}
         </Typography>
         <FormProvider {...methods}>
-          {' '}
           {/* Wrap the form with FormProvider */}
-          <form onSubmit={handleSubmit(handleSubmitForm)}>
+          <form onSubmit={
+            handleSubmit(handleSubmitForm)
+          }>
             <Grid2 item xs={12} className='d-flex justify-content-between align-items-center'>
               <Box>
                 <Grid2 container xs={12} sx={{ marginTop: 4.8, marginBottom: 3 }}>
@@ -521,66 +432,22 @@ function ProductModal({
               </Grid2>
               <Grid2 size={3}>
                 <CustomTextField
-                  label='Product Name *'
-                  placeholder='Product Name'
-                  name={'productName'}
+                  label='Common Name *'
+                  placeholder='Common Name'
+                  name={'commonNames'}
                   control={control}
                 />
               </Grid2>
-            
-                 <Grid2 size ={3}>
-               <CustomTextField
-                  label='Item No *'
-                  placeholder='Item No'
-                  name={'itemNo'}
-                  control={control}
-                />
-              </Grid2>
-               <Grid2 size ={3}>
-               <CustomTextField
-                  label='Item Category *'
-                  placeholder='Item Category'
-                  name={'itemCategory'}
-                  control={control}
-                />
-              </Grid2>
-            </Grid2>
-          
-            <Grid2 container spacing={2}>
-              <Grid2 size ={3}>
-               <CustomDropdown options={divisionData} label='Division *' name={'division'} control={control} />
-              </Grid2>
-              
+
               <Grid2 size={3}>
                 <CustomTextField
-                  type='number'
-                  step='0.01'
-                  label='MRP *'
-                  placeholder='MRP'
-                  name={'mrp'}
+                  label='API Name *'
+                  placeholder='API Name'
+                  name={'apiName'}
                   control={control}
                 />
               </Grid2>
               <Grid2 size={3}>
-                <CustomTextField
-                  label='Foreign Name'
-                  placeholder='Foreign Name'
-                  name={'foreignName'}
-                  control={control}
-                />
-              </Grid2>
-                <Grid2 size={3}>
-                <CustomTextField
-                  label='User Type'
-                  placeholder='User Type'
-                  name={'intendedUser'}
-                  control={control}
-                />
-              </Grid2>
-          
-            </Grid2>
-            <Grid2 container spacing={2} sx={{ marginBottom: 3 }}>
-               <Grid2 size={3}>
                 <Controller
                   name='gtin'
                   control={control}
@@ -650,40 +517,106 @@ function ProductModal({
                   )}
                 />
               </Grid2>
-              <Grid2 size={3}>
-                <CustomDropdown options={CompanyData} label='Company *' name={'companyUuid'} control={control} />
-              </Grid2>
-              <Grid2 size={3}>
-                <CustomDropdown options={prefixs} label='Prefix *' name={'prefix'} control={control} />
-              </Grid2>
-              <Grid2 size={3}>
-                <CustomDropdown label='Country *' name={'country'} control={control} options={CountryData} />
-              </Grid2>
+
             </Grid2>
+
             <Grid2 container spacing={2}>
+
               <Grid2 size={3}>
                 <CustomTextField
+                  type='number'
+                  step='0.01'
+                  label='CAS Number *'
+                  placeholder='CAS Number'
+                  name={'casNumber'}
                   control={control}
-                  label='Product Strength'
-                  placeholder='Product Strength'
-                  name={'packagingSize'}
                 />
               </Grid2>
               <Grid2 size={3}>
                 <CustomTextField
+                  label='Therapeutic Category'
+                  placeholder='Therapeutic Category'
+                  name={'therapeuticCategory'}
                   control={control}
-                  label='No. Of Units in Primary Level *'
-                  placeholder='No. Of Units in Primary Level'
-                  name={'no_of_units_in_primary_level'}
                 />
               </Grid2>
               <Grid2 size={3}>
-                <CustomDropdown label='UOM *' name={'unit_of_measurement'} control={control} options={UomData} />
+                <CustomTextField
+                  label='Impurity Limits'
+                  placeholder='Impurity Limits'
+                  name={'impurityLimits'}
+                  control={control}
+                />
               </Grid2>
-               <Grid2 size={3}>
-                <CustomDropdown label='Radiopacity Markers' name={'radiopacityMarkers'} control={control} options={RadiopacityData} />
+              <Grid2 size={3}>
+                <CustomTextField
+                  label=' Container Size'
+                  placeholder=' Container Size'
+                  name={'containerSize'}
+                  control={control}
+                />
               </Grid2>
+
             </Grid2>
+
+
+            <Grid2 container spacing={2}>
+
+
+              <Grid2 size={3}>
+                <CustomTextField
+                  type='string'
+                  label='Shelf Life  *'
+                  placeholder='Shelf Life '
+                  name={'shelfLife'}
+                  control={control}
+                />
+              </Grid2>
+              <Grid2 size={3}>
+                <CustomDropdown
+                  label='Grades'
+                  name={'grades'}
+                  control={control}
+                  options={GradeData}
+                />
+              </Grid2>
+              <Grid2 size={3}>
+                <CustomTextField
+                  type='number'
+                  step='0.01'
+                  label='Purity % *'
+                  placeholder='Enter purity (%)'
+                  name={'purity'}
+                  control={control}
+                />
+              </Grid2>
+
+              <Grid2 size={3}>
+                <CustomDropdown
+                  label='Country *'
+                  name={'country'}
+                  control={control}
+                  options={CountryData}
+                />
+              </Grid2>
+
+            </Grid2>
+
+            <Grid2 container spacing={2} sx={{ marginBottom: 3 }}>
+              <Grid2 size={3}>
+                <CustomTextField
+                  type='number'
+                  step='0.01'
+                  label='Potency *'
+                  placeholder='Potency'
+                  name={'potency'}
+                  control={control}
+                />
+              </Grid2>
+
+            </Grid2>
+
+
             <Grid2 container spacing={2}>
               <Grid2 size={8}>
                 <FormControl component='fieldset' fullWidth error={!!errors.packagingHierarchy} required>
@@ -760,9 +693,9 @@ function ProductModal({
                   <Box sx={modalStyle}>
                     <h2 id='modal-title'>
                       {packagingHierarchy !== 1 &&
-                      packagingHierarchy !== 2 &&
-                      packagingHierarchy !== 3 &&
-                      packagingHierarchy !== 4 ? (
+                        packagingHierarchy !== 2 &&
+                        packagingHierarchy !== 3 &&
+                        packagingHierarchy !== 4 ? (
                         <div>
                           <Typography variant='h3' gutterBottom>
                             Packaging Hierarchy Summary
@@ -905,9 +838,9 @@ function ProductModal({
                     )}
 
                     {packagingHierarchy !== 1 &&
-                    packagingHierarchy !== 2 &&
-                    packagingHierarchy !== 3 &&
-                    packagingHierarchy !== 4 ? (
+                      packagingHierarchy !== 2 &&
+                      packagingHierarchy !== 3 &&
+                      packagingHierarchy !== 4 ? (
                       ''
                     ) : (
                       <>
@@ -934,115 +867,63 @@ function ProductModal({
                 </Modal>
               </Grid2>
             </Grid2>
-              <Grid2 item xs={12} className='d-flex justify-content-between align-items-center mb-2'></Grid2>
+            <Grid2 item xs={12} className='d-flex justify-content-between align-items-center mb-2'></Grid2>
             <Grid2 item xs={12} className='d-flex justify-content-between align-items-center mb-2'>
               <Box></Box>
             </Grid2>
-               <Grid2 container spacing={2}>
-                   <Grid2 size={3}>
-                <CustomTextField
-                  control={control}
-                  label='Diameter'
-                  placeholder='Diameter'
-                  name={'diameter'}
-                />
-              </Grid2> 
-               <Grid2 size={3}>
-                <CustomTextField
-                  control={control}
-                  label='Length'
-                  placeholder='Length'
-                  name={'length'}
-                />
-              </Grid2>
-               <Grid2 size={3}>
-                <CustomTextField
-                  control={control}
-                  label='Cather Length'
-                  placeholder='Cather Length'
-                  name={'catherLength'}
-                />
-              </Grid2>
-               <Grid2 size={3}>
-                <CustomTextField
-                  control={control}
-                  label='Compatible Size'
-                  placeholder='Compatible Size'
-                  name={'compatibeGuideWireSize'}
-                />
-              </Grid2>
-              
-                </Grid2>   
-                  <Grid2 container spacing={2} >
 
-               <Grid2 size={4}>
-                <CustomTextField
-                  control={control}
-                  label='Surface Treatment'
-                  placeholder='Surface Treatment'
-                  name={'surfaceTreatment'}
-                />
-              </Grid2>
-               <Grid2 size={4}>
-                <CustomTextField
-                  control={control}
-                  label='Platform Type'
-                  placeholder='Platform Type'
-                  name={'platformType'}
-                />
-              </Grid2>
-               <Grid2 size={4}>
-                <CustomTextField
-                  control={control}
-                  label='System Type'
-                  placeholder='System Type'
-                  name={'deliverSystemType'}
-                />
-              </Grid2>
-              
-              
-                </Grid2> 
             <Grid2 container xs={12} className='d-flex justify-content-between align-items-center' spacing={5}>
-                    <Grid2 size={4}>
+              <Grid2 size={4}>
                 <CustomTextField
                   control={control}
-                  label='Product Description *'
-                  placeholder='Product Description'
-                  name={'description'}
+                  label='Storage Conditions *'
+                  placeholder='Storage Conditions'
+                  name={'storageConditions'}
                   multiline={true} // Enable multiline
                   rows={3}
                 />
               </Grid2>
-               <Grid2 size={4}>
+              <Grid2 size={4}>
                 <CustomTextField
-                  label='Material Composition'
-                  placeholder='Material Composition'
-                  name={'materialComposition'}
+                  label='Hazard Classification'
+                  placeholder='Hazard Classification'
+                  name={'hazardClassification'}
                   multiline={true} // Enable multiline
                   rows={3}
                 />
               </Grid2>
-               <Grid2 size={4}>
+              <Grid2 size={4}>
                 <CustomTextField
                   control={control}
-                  label='Compatible Prosthetics'
-                  placeholder='Compatible Prosthetics'
-                  name={'compatibleProsthetics'}
-                   multiline={true} // Enable multiline
-                   rows={3}
-                  
+                  label='MSDS Reference '
+                  placeholder='MSDS Reference'
+                  name={'msdsReference'}
+                  multiline={true} // Enable multiline
+                  rows={3}
                 />
               </Grid2>
+            </Grid2>
 
-                 </Grid2>
+            <Grid2 container xs={6} spacing={5}>
+              <Grid2 item xs={12} sm={6}>
+                <Typography component='Box'>
+                  <Controller
+                    name='status'
+                    control={control}
+                    render={({ field }) => (
+                      <FormControlLabel control={<Switch {...field} checked={field.value} color='primary' />} />
+                    )}
+                  />
+                  Status
+                </Typography>
+              </Grid2>
+            </Grid2>
 
-            
             <Grid2 item xs={12} className='my-3 '>
               <Button
                 variant='contained'
                 sx={{ marginRight: 3.5 }}
                 type='submit'
-                onClick={() => console.log('Submit button clicked')}
               >
                 Save Changes
               </Button>
@@ -1057,6 +938,7 @@ function ProductModal({
               >
                 Reset
               </Button>
+
               <Button
                 variant='outlined'
                 color='error'

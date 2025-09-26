@@ -1,6 +1,6 @@
 'use-client'
 import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react'
-import { Button, Box, Grid2, Typography } from '@mui/material'
+import { Button, Box, Grid2, Typography, FormControl, InputLabel, MenuItem,Select } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
 import TableProduct from 'src/views/tables/TableProduct'
 import { api } from 'src/utils/Rest-API'
@@ -28,6 +28,7 @@ import ProductModal from 'src/components/Modal/productModal'
 import { getTokenValues } from 'src/utils/tokenUtils'
 import { convertImageToBase64 } from 'src/utils/UrlToBase64'
 
+
 const Index = () => {
   const router = useRouter()
   const { settings } = useSettings()
@@ -48,7 +49,8 @@ const Index = () => {
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [tableHeaderData, setTableHeaderData] = useState({
     esignStatus: '',
-    searchVal: ''
+    searchVal: '',
+    grade: ''
   })
   const apiAccess = useApiAccess('product-create', 'product-update', 'product-approve')
   const [formData, setFormData] = useState()
@@ -62,16 +64,15 @@ const Index = () => {
     setUserDataPdf(data)
     const decodedToken = getTokenValues()
     setConfig(decodedToken)
-    return () => {}
+    return () => { }
   }, [])
   const tableBody = productData?.data?.map((item, index) => [
     index + productData.index,
     item?.product_id,
-    item?.product_name,
+    item?.common_name,
     item?.gtin,
-    item?.division,
-    item?.foreign_name,
-    item?.company.CompanyHistory[0]?.company_name,
+    item?.grade,
+    item?.api_name,
     item.countryMaster.country,
     item?.esign_status
   ])
@@ -81,17 +82,18 @@ const Index = () => {
       tableHeader: [
         'Sr.No.',
         'Product Id',
-        'Product Name',
+        'Common Name',
         'GTIN',
-        'Division',
-        'foreign Name',
-        'Company Name',
+        'Grade',
+        'Api Name',
         'Country',
         'E-Sign'
       ],
       tableHeaderText: 'Product Master Report',
       tableBodyText: 'Product Master Data',
-      filename: 'ProductMaster'
+      filename: 'ProductMaster',
+      Filter: ['grade', tableHeaderData.grade]
+
     }),
     []
   )
@@ -231,11 +233,11 @@ const Index = () => {
   const buildAuditLog = (user, remarks, action) => {
     return config?.config?.audit_logs
       ? {
-          user_id: user.userId,
-          user_name: user.userName,
-          remarks: remarks?.length > 0 ? remarks : `product master ${action} - ${auditLogMark}`,
-          authUser: user.user_id
-        }
+        user_id: user.userId,
+        user_name: user.userName,
+        remarks: remarks?.length > 0 ? remarks : `product master ${action} - ${auditLogMark}`,
+        authUser: user.user_id
+      }
       : {}
   }
 
@@ -342,8 +344,6 @@ const Index = () => {
       const data = {
         ...formData,
         mrp: formData?.mrp === '' ? null : formData?.mrp,
-        no_of_units_in_primary_level: String(formData?.no_of_units_in_primary_level),
-        packagingSize: String(formData?.packagingSize),
         pallet_size: formData?.pallet_size?.toString(),
         productImage: uploadRes?.url != '' ? new URL(uploadRes.url).pathname : ''
       }
@@ -395,14 +395,12 @@ const Index = () => {
         ...formData,
         mrp: formData?.mrp === '' ? null : formData?.mrp,
         pallet_size: formData?.pallet_size?.toString(),
-        no_of_units_in_primary_level: String(formData?.no_of_units_in_primary_level),
-        packagingSize: String(formData?.packagingSize),
         productImage: productImageUrl ? new URL(productImageUrl).pathname : ''
       }
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          remarks: esignRemark > 0 ? esignRemark : `product edited - ${formData?.productName}`,
+          remarks: esignRemark > 0 ? esignRemark : `product edited - ${formData?.productId}`,
           authUser
         }
       }
@@ -455,7 +453,7 @@ const Index = () => {
     if (searchBarRef.current) {
       searchBarRef.current.resetSearch()
     }
-    setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '' })
+    setTableHeaderData({ ...tableHeaderData, esignStatus: '', searchVal: '', grade: '' })
   }
 
   const handleDownloadPdf = () => {
@@ -490,11 +488,32 @@ const Index = () => {
               Filter
             </Typography>
             <Grid2 item xs={12}>
-              <Box className='d-flex justify-content-between align-items-center my-3 mx-4'>
+              <Box className='d-flex justify-content-start align-items-center my-3 mx-4 ' sx={{ gap: 10 }}>
                 {config?.config.esign_status && (
                   <EsignStatusDropdown tableHeaderData={tableHeaderData} setTableHeaderData={setTableHeaderData} />
+
                 )}
+                <FormControl className='w-25'>
+                  <InputLabel id='grade'>Grades</InputLabel>
+                  <Select
+                    labelId='grade'
+                    id='grade'
+                    value={tableHeaderData?.grade}
+                    label='Grade'
+                    onChange={(e) => {
+                      setTableHeaderData({ ...tableHeaderData, grade: e.target.value })
+                    }}
+                  >
+                    <MenuItem value={''}> {'None'} </MenuItem>
+                    <MenuItem value={'IP'}> {'IP'} </MenuItem>
+                    <MenuItem value={'USP'}> {'USP'} </MenuItem>
+                    <MenuItem value={'EP'}> {'EP'} </MenuItem>
+                    <MenuItem value={'JP'}> {'JP'} </MenuItem>
+                    <MenuItem value={'BP'}> {'BP'} </MenuItem>
+                  </Select>
+                </FormControl>
               </Box>
+
               <Box className='d-flex justify-content-between align-items-center mx-4 my-2'>
                 <ExportResetActionButtons handleDownloadPdf={handleDownloadPdf} resetFilter={resetFilter} />
                 <Box className='d-flex justify-content-between align-items-center '>
