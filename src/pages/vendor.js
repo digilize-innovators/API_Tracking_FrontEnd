@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { Button, Box, Grid2, Typography } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
-import TableArea from 'src/views/tables/TableArea'
+import TableVendor from 'src/views/tables/TableVendor'
 import { api } from 'src/utils/Rest-API'
 import ProtectedRoute from 'src/components/ProtectedRoute'
 import SnackbarAlert from 'src/components/SnackbarAlert'
@@ -18,7 +18,8 @@ import { validateToken } from 'src/utils/ValidateToken'
 import { getTokenValues } from '../utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
-import AreaModel from 'src/components/Modal/AreaModel'
+// import AreaModel from 'src/components/Modal/AreaModel'
+import VendorModel from 'src/components/Modal/VendorModel'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
 import downloadPdf from 'src/utils/DownloadPdf'
@@ -41,9 +42,9 @@ const Index = () => {
   const [esignDownloadPdf, setEsignDownloadPdf] = useState(false)
   const [openModalApprove, setOpenModalApprove] = useState(false)
   const [tableHeaderData, setTableHeaderData] = useState({ esignStatus: '', searchVal: '' })
-  const apiAccess = useApiAccess('area-create', 'area-update', 'area-approve')
+  const apiAccess = useApiAccess('vendor-create', 'vendor-update', 'vendor-approve')
   const searchBarRef = useRef(null)
-  const [areaData, setAreaData] = useState({ data: [], index: 0 })
+  const [vendorData, setVendorData] = useState({ data: [], index: 0 })
   const [formData, setFormData] = useState({})
   const [authUser, setAuthUser] = useState({})
   const [esignRemark, setEsignRemark] = useState('')
@@ -53,9 +54,9 @@ const Index = () => {
       if (formData && pendingAction) {
         const esign_status = config?.config?.esign_status ? 'pending' : 'approved'
         if (pendingAction === 'edit') {
-          await editArea(esign_status)
+          await editVendor(esign_status)
         } else if (pendingAction === 'add') {
-          await addArea(esign_status)
+          await addVendor(esign_status)
         }
         setPendingAction(null)
       }
@@ -71,19 +72,20 @@ const Index = () => {
     return () => {}
   }, [])
 
-  const tableBody = areaData?.data?.map((item, index) => [
-    index + areaData.index,
-    item?.area_id,
-    item?.area_name,
-    item?.area_category?.history[0]?.area_category_name,
+  const tableBody = vendorData?.data?.map((item, index) => [
+    index + vendorData.index,
+    item?.vendor_code,
+    item?.vendor_name,
+    item?.address,
+    item?.printing_complied,
     item?.esign_status
   ])
 
   const tableData = {
-    tableHeader: ['Sr.No.', 'Id', 'Name', 'Area Category', 'E-Sign'],
-    tableHeaderText: 'Area Master Report',
-    tableBodyText: 'Area Master Data',
-    filename: 'AreaMaster'
+    tableHeader: ['Sr.No.', 'Id', 'Name', 'Address','Printing Complied', 'E-Sign'],
+    tableHeaderText: 'Vendor Master Report',
+    tableBodyText: 'Vendor Master Data',
+    filename: 'Vendor'
   }
 
   const closeSnackbar = () => {
@@ -91,7 +93,7 @@ const Index = () => {
   }
 
   const handleOpenModal = () => {
-    setApproveAPI({ approveAPIName: 'area-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/area' })
+    setApproveAPI({ approveAPIName: 'vendor-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/vendor' })
     setEditData({})
     setOpenModal(true)
   }
@@ -116,9 +118,9 @@ const Index = () => {
     setFormData(data)
 
     if (editData?.id) {
-      setApproveAPI({ approveAPIName: 'area-update', approveAPImethod: 'PUT', approveAPIEndPoint: '/api/v1/area' })
+      setApproveAPI({ approveAPIName: 'vendor-update', approveAPImethod: 'PUT', approveAPIEndPoint: '/api/v1/vendor' })
     } else {
-      setApproveAPI({ approveAPIName: 'area-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/area' })
+      setApproveAPI({ approveAPIName: 'vendor-create', approveAPImethod: 'POST', approveAPIEndPoint: '/api/v1/vendor' })
     }
 
     if (config?.config?.esign_status) {
@@ -129,22 +131,22 @@ const Index = () => {
     setPendingAction(editData?.id ? 'edit' : 'add')
   }
 
-  const addArea = async esign_status => {
+  const addVendor = async esign_status => {
     try {
       const data = { ...formData }
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          remarks: esignRemark?.length > 0 ? esignRemark : `area added - ${formData.areaName}`,
+          remarks: esignRemark?.length > 0 ? esignRemark : `vendor added - ${formData.vendorName}`,
           authUser
         }
       }
       data.esign_status = esign_status
       setIsLoading(true)
-      const res = await api('/area/', data, 'post', true)
+      const res = await api('/vendor/', data, 'post', true)
       setIsLoading(false)
       if (res?.data?.success) {
-        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Area added successfully' })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Vendor added successfully' })
         resetForm()
         setOpenModal(false)
       } else {
@@ -155,30 +157,30 @@ const Index = () => {
         }
       }
     } catch (error) {
-      console.log('Error to add Area', error)
+      console.log('Error to add Vendor', error)
       router.push('/500')
     } finally {
       setApproveAPI({ approveAPIName: '', approveAPImethod: '', approveAPIEndPoint: '' })
     }
   }
 
-  const editArea = async esign_status => {
+  const editVendor = async esign_status => {
     try {
       const data = { ...formData }
       delete data.areaId
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          remarks: esignRemark > 0 ? esignRemark : `area edited - ${formData?.areaName}`,
+          remarks: esignRemark > 0 ? esignRemark : `vendor edited - ${formData?.vendorName}`,
           authUser
         }
       }
       data.esign_status = esign_status
       setIsLoading(true)
-      const res = await api(`/area/${editData.id}`, data, 'put', true)
+      const res = await api(`/vendor/${editData.id}`, data, 'put', true)
       setIsLoading(false)
       if (res.data.success) {
-        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Area updated successfully' })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'success', message: 'Vendor updated successfully' })
         resetForm()
         setOpenModal(false)
       } else {
@@ -262,14 +264,14 @@ const handleApproverActions = async (esignStatus, remarks, user) => {
 };
 
 const handlePdfExport = async (remarks, user) => {
-  downloadPdf(tableData, tableHeaderData, tableBody, areaData.data, user);
+    downloadPdf(tableData, tableHeaderData, tableBody, vendorData.data, user);
   
   if (config?.config?.audit_logs) {
     const auditData = {
       audit_log: {
         audit_log: true,
-        performed_action: 'Export report of areaMaster',
-        remarks: remarks?.length > 0 ? remarks : 'Area master export report',
+        performed_action: 'Export report of vendorMaster',
+        remarks: remarks?.length > 0 ? remarks : 'Vendor master export report',
         authUser: user
       }
     };
@@ -279,14 +281,14 @@ const handlePdfExport = async (remarks, user) => {
 
 const updateEsignStatus = async (esignStatus, remarks, user) => {
   const data = {
-    modelName: 'area',
+    modelName: 'vendor',
     esignStatus,
     id: eSignStatusId,
     name: auditLogMark,
     audit_log: config?.config?.audit_logs ? {
       user_id: user.userId,
       user_name: user.userName,
-      remarks: remarks?.length > 0 ? remarks : `area ${esignStatus} - ${auditLogMark}`,
+      remarks: remarks?.length > 0 ? remarks : `vendor ${esignStatus} - ${auditLogMark}`,
       authUser: user.user_id
     } : {}
   };
@@ -328,7 +330,7 @@ const handleCreatorRejection = () => {
 const handleCreatorApproval = (remarks, user,isApprover) => {
   if (esignDownloadPdf) {
     setOpenModalApprove(true);
-  } else if (!isApprover && approveAPI.approveAPIName === 'area-approve') {
+  } else if (!isApprover && approveAPI.approveAPIName === 'vendor-approve') {
     setAlertData({
       ...alertData,
       openSnackbar: true,
@@ -343,11 +345,11 @@ const handleCreatorApproval = (remarks, user,isApprover) => {
 };
 
   const handleAuthCheck = async row => {
-    setApproveAPI({ approveAPIName: 'area-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/area' })
+    setApproveAPI({ approveAPIName: 'vendor-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/vendor' })
 
     setAuthModalOpen(true)
     setESignStatusId(row.id)
-    setAuditLogMark(row.area_id)
+    setAuditLogMark(row.vendor_code)
   }
 
   const handleUpdate = item => {
@@ -368,27 +370,27 @@ const handleCreatorApproval = (remarks, user,isApprover) => {
   }
 
   const handleAuthModalOpen = () => {
-    setApproveAPI({ approveAPIName: 'area-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/area' })
+    setApproveAPI({ approveAPIName: 'vendor-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/vendor' })
     setAuthModalOpen(true)
   }
 
   const handleDownloadPdf = () => {
-    setApproveAPI({ approveAPIName: 'area-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/area' })
+    setApproveAPI({ approveAPIName: 'vendor-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/vendor' })
     if (config?.config?.esign_status) {
       setEsignDownloadPdf(true)
       setAuthModalOpen(true)
       return
     }
-    downloadPdf(tableData, tableHeaderData, tableBody, areaData.data, userDataPdf)
+    downloadPdf(tableData, tableHeaderData, tableBody, vendorData.data, userDataPdf)
   }
 
   return (
     <Box padding={4}>
       <Head>
-        <title>Area Master</title>
+        <title>Vendor Master</title>
       </Head>
       <Grid2 item xs={12}>
-        <Typography variant='h2'>Area Master</Typography>
+        <Typography variant='h2'>Vendor Master</Typography>
       </Grid2>
       <Grid2 item xs={12}>
         <Grid2 item xs={12}>
@@ -421,13 +423,13 @@ const handleCreatorApproval = (remarks, user,isApprover) => {
             </Grid2>
             <Grid2 item xs={12}>
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
-                Area Data
+                Vendor Data
               </Typography>
-                <TableArea
+                <TableVendor
                   handleUpdate={handleUpdate}
                   tableHeaderData={tableHeaderData}
                   pendingAction={pendingAction}
-                  setDataCallback={setAreaData}
+                  setDataCallback={setVendorData}
                   handleAuthCheck={handleAuthCheck}
                   apiAccess={apiAccess}
                   config={config}
@@ -438,7 +440,7 @@ const handleCreatorApproval = (remarks, user,isApprover) => {
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
     
-      <AreaModel 
+      <VendorModel 
       open={openModal} 
       onClose={handleCloseModal} 
       editData={editData} 

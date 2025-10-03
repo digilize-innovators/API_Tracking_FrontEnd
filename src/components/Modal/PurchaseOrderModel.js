@@ -128,7 +128,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         orders: purchaseDetail.map(order => ({
           productId: order.product_id || '',
           batchId: order.batch_id || '',
-          qty: order.qty || ''
+          qty: order.qty || '' 
         }))
       })
     } else {
@@ -213,14 +213,14 @@ const updateBatchOptions = (updates) => {
     const getLocation = async () => {
       try {
         setIsLoading(true)
-        const res = await api(`/location/type-purchase`, {}, 'get', true)
+        const res = await api(`/vendor?history_latest=true`, {}, 'get', true)
         setIsLoading(false)
         console.log('All locations vendors', res.data)
         if (res.data.success) {
-          const data = res.data.data?.map(item => ({
-            id: item.location_uuid,
-            value: item.location_uuid,
-            label: item.location_name
+          const data = res.data.data?.vendors.map(item => ({
+            id: item.vendor_uuid, 
+            value: item.vendor_uuid,
+            label: item.vendor_name
           }))
           setLocationFrom(data)
         } else {
@@ -231,7 +231,7 @@ const updateBatchOptions = (updates) => {
           }
         }
       } catch (error) {
-        console.log('Error in get location type-purchase ', error)
+        console.log('Error in get location in vendor ', error)
         setIsLoading(false)
       }
     }

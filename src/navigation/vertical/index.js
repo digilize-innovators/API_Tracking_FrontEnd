@@ -18,6 +18,7 @@ import {
   MdReceiptLong,
   MdCameraAlt,
   MdSync,
+  MdAcUnit ,
   MdSummarize     
   
 } from 'react-icons/md'
@@ -170,6 +171,12 @@ const navigation = () => {
       title: 'Company',
       icon: MdLocationCity,
       path: '/company',
+      mainTitle: false
+    },
+     {
+      title: 'Vendor Master',
+      icon: MdAcUnit ,
+      path: '/vendor',
       mainTitle: false
     },
     {
