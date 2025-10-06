@@ -18,7 +18,6 @@ import { validateToken } from 'src/utils/ValidateToken'
 import { getTokenValues } from '../utils/tokenUtils'
 import { useApiAccess } from 'src/@core/hooks/useApiAccess'
 import ExportResetActionButtons from 'src/components/ExportResetActionButtons'
-// import AreaModel from 'src/components/Modal/AreaModel'
 import VendorModel from 'src/components/Modal/VendorModel'
 import CustomSearchBar from 'src/components/CustomSearchBar'
 import EsignStatusDropdown from 'src/components/EsignStatusDropdown'
@@ -167,7 +166,7 @@ const Index = () => {
   const editVendor = async esign_status => {
     try {
       const data = { ...formData }
-      delete data.areaId
+      delete data.vendorCode
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
@@ -346,7 +345,6 @@ const handleCreatorApproval = (remarks, user,isApprover) => {
 
   const handleAuthCheck = async row => {
     setApproveAPI({ approveAPIName: 'vendor-approve', approveAPImethod: 'PATCH', approveAPIEndPoint: '/api/v1/vendor' })
-
     setAuthModalOpen(true)
     setESignStatusId(row.id)
     setAuditLogMark(row.vendor_code)
