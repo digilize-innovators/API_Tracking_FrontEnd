@@ -222,6 +222,7 @@ const updateBatchOptions = (updates) => {
             value: item.vendor_uuid,
             label: item.vendor_name
           }))
+          console.log('All locations vendorsdata',data)
           setLocationFrom(data)
         } else {
           console.log('Error to get all designation ', res.data)
@@ -302,6 +303,8 @@ const updateBatchOptions = (updates) => {
     }
   }, [open, editData])
 
+ 
+
  const handleDeleteOrder = async (orderId, index) => {
      try {
        setIsLoading(true)
@@ -376,7 +379,7 @@ const updateBatchOptions = (updates) => {
     reset() // Resets the form values
     setBatchOptionsMap({}) // Also clear the batch dropdown options
   }
-
+  
   return (
     <>
       <Modal open={open} onClose={handleClose} aria-labelledby='Purchase'>
@@ -421,7 +424,12 @@ const updateBatchOptions = (updates) => {
             </Grid2>
             <Grid2 container spacing={2}>
               <Grid2 size={6}>
-                <CustomDropdown name='from' label='From' control={control} options={locationFrom} Grid2 />
+                <CustomDropdown 
+                name='from' 
+                label='From' 
+                control={control} 
+                options={locationFrom} 
+                 />
               </Grid2>
               <Grid2 size={6}>
                 <Controller

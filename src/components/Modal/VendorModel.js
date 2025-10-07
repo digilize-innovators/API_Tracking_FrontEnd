@@ -28,7 +28,6 @@ const vendorSchema = yup.object().shape({
 const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
   const [openVendorCountryModal, setOpenVendorCountryModal] = useState(false)
   const [codeStructure, setCodeStructure] = useState([])
-  console.log('codesgfg', codeStructure)
 
   const handleCloseModal = () => {
     setOpenVendorCountryModal(false)
@@ -44,8 +43,8 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
       vendorCode: editData?.vendor_code || '',
       vendorName: editData?.vendor_name || '',
       address: editData?.address || '',
-      printingcomplied: editData?.printing_complied || false,
-      vendorStructure: editData?.vendorStructure || codeStructure?.length > 0 ? codeStructure?.join('') : ''
+      printingComplied: editData?.printing_complied,
+      vendorStructure: editData?.code_structure || codeStructure?.length > 0 ? codeStructure?.join('') : ''
     }
   })
   useEffect(() => {
@@ -58,9 +57,10 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
         vendorName: editData?.vendor_name || '',
         address: editData?.address || '',
         printingcomplied: editData?.printing_complied || false,
-        vendorStructure: editData?.vendor_structure || codeStructure?.length ? codeStructure?.join('') : ''
+        vendorStructure: editData?.code_structure || codeStructure?.length ? codeStructure?.join(' ') : ''
       })
     }
+    setValue('vendorStructure', editData?.code_structure)
   }, [editData])
 
   useEffect(() => {
@@ -70,6 +70,7 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
   useEffect(() => {
     console.log('hello', codeStructure)
   }, [codeStructure])
+
   console.log('get vales', getValues())
   const printingComplied = watch('printingcomplied')
 
@@ -89,7 +90,7 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
           <form onSubmit={handleSubmit(handleSubmitForm)}>
             <Grid2 container spacing={2}>
               <Grid2 size={6}>
-                <CustomTextField name='VendorCode' label='Vendor ID *' control={control} disabled={!!editData?.id} />
+                <CustomTextField name='vendorCode' label='Vendor ID *' control={control} disabled={!!editData?.id} />
               </Grid2>
 
               <Grid2 size={6}>
@@ -159,7 +160,7 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
         // setOpenModal={setOpenVendorCountryModal}
         handleCloseModal={handleCloseModal}
         editData={editData}
-        setEditData={() => {}}
+        setEditData={() => { }}
         codeStructure={codeStructure}
         setCodeStructure={setCodeStructure}
       />

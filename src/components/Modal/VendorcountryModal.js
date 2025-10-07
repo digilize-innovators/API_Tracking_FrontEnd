@@ -6,7 +6,7 @@ import { useRouter } from 'next/router'
 import { api } from 'src/utils/Rest-API'
 import SnackbarAlert from '../SnackbarAlert'
 import PropTypes from 'prop-types'
-
+ 
 const modalBoxStyle = {
   width: '50vw', // 70% of viewport width
   maxHeight: '70vh', // 70% of viewport height
@@ -28,7 +28,6 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [country, setCountry] = useState('')
   const [crmURL, setCrmURL] = useState({ value: '', checked: false })
-   const [inputValue, setInputValue] = useState('')
 //   const [codeStructure, setCodeStructure] = useState([])
 
   const [errorCountry, setErrorCountry] = useState({ isError: false, message: '' })
@@ -194,7 +193,6 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
 
   useEffect(() => {
     if (editData) {
-      setCountry(editData?.country)
       const editCodeStructure = editData?.codeStructure?.split(/\s+/)
       updateCheckedValues(editCodeStructure)
       setCodeStructure(editCodeStructure)

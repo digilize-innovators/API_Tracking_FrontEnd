@@ -464,6 +464,6 @@ const handleCreatorApproval = (remarks, user,isApprover) => {
   )
 }
 export async function getServerSideProps(context) {
-  return validateToken(context, 'Area Master')
+  return validateToken(context, 'Vendor Master')
 }
 export default ProtectedRoute(Index)

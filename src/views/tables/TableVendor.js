@@ -36,7 +36,7 @@ const TableArea = props => {
                   label: 'Printing Complied',
                   path: 'printing_complied',
                   render: row => {
-                    const status = row.is_active ? 'enabled' : 'disabled'
+                    const status = row.printing_complied ? 'enabled' : 'disabled'
                     return (
                       <StatusChip
                         label={status}
