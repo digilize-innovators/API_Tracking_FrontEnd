@@ -74,6 +74,17 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
   console.log('get vales', getValues())
   const printingComplied = watch('printingcomplied')
 
+  const handleFormReset = () => {
+    const current = getValues()
+    reset({
+      vendorCode: current.vendorCode,
+      vendorName: editData?.vendor_name || '',
+      address: editData?.address || '',
+      printingcomplied: current.printingcomplied,
+      vendorStructure: current.vendorStructure
+    })
+  }
+
   return (
     <>
       <Modal
@@ -144,7 +155,7 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
               <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'>
                 Save Changes
               </Button>
-              <Button type='reset' variant='outlined' color='primary' onClick={reset}>
+              <Button variant='outlined' color='primary' onClick={handleFormReset}>
                 Reset
               </Button>
               <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={onClose}>

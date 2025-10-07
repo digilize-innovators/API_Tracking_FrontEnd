@@ -22,15 +22,13 @@ const modalBoxStyle = {
 }
 
 const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData,codeStructure,setCodeStructure }) => {
+  console.log("code strucut:",codeStructure);
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
   const router = useRouter()
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
-  const [country, setCountry] = useState('')
   const [crmURL, setCrmURL] = useState({ value: '', checked: false })
 //   const [codeStructure, setCodeStructure] = useState([])
-
-  const [errorCountry, setErrorCountry] = useState({ isError: false, message: '' })
   const [urlMakerData, setUrlMakerData] = useState([
     {
       label: 'Product',
@@ -167,7 +165,7 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
   const resetForm = () => {
     setCodeStructure([])
     setCrmURL({ ...crmURL, checked: false })
-    setCountry('')
+   
     const updatedData = urlMakerData.map(el => {
       return {
         ...el,
@@ -181,9 +179,7 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
     })
     setUrlMakerData(updatedData)
 
-    // setErrorCodeStructure({ isError: false, message: '' })
-    setErrorCountry({ isError: false, message: '' })
-    setEditData({})
+   
   }
 
   useEffect(() => {
@@ -193,36 +189,47 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
 
   useEffect(() => {
     if (editData) {
-      const editCodeStructure = editData?.codeStructure?.split(/\s+/)
+      const rawCodeStructure = editData?.code_structure || editData?.codeStructure || ''
+      const editCodeStructure = Array.isArray(rawCodeStructure)
+        ? rawCodeStructure
+        : (rawCodeStructure || '')
+            .toString()
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean)
+
       updateCheckedValues(editCodeStructure)
       setCodeStructure(editCodeStructure)
     }
   }, [editData])
 
   const resetEditForm = () => {
-    setCodeStructure('')
-    const newURLMakerData = editData?.codeStructure?.split('/')
+    // Build a normalized list of code structure tokens from edit data
+    const raw = editData?.code_structure || editData?.codeStructure || ''
+    const values = Array.isArray(raw)
+      ? raw
+      : (raw || '')
+          .toString()
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean)
 
-    // Create a Set for quick lookups of valid labels
-    const validLabels = new Set(newURLMakerData.slice(newURLMakerData?.length)) // Only store labels after index 1 for efficient lookup
+    // Reset local selections to the original edit values
+    setCodeStructure(values)
 
-    // Map through the existing data
-    const updatedData = urlMakerData.map(el => ({
-      ...el,
-      options: el?.options?.map(option => ({
-        ...option,
-        checked: validLabels.has(option.label)
+    // Sync CRM URL checkbox with values
+    setCrmURL(prev => ({ value: prev.value, checked: values.includes('CRMURL') }))
+
+    // Update checkbox groups to reflect values
+    setUrlMakerData(prevData =>
+      prevData.map(group => ({
+        ...group,
+        options: group.options.map(option => ({
+          ...option,
+          checked: values.includes(option.value)
+        }))
       }))
-    }))
-    setUrlMakerData(updatedData)
-
-    setCountry(editData?.country)
-    setEditData(prev => ({
-      ...prev,
-      country: prev.country,
-      crmurl: prev.crmurl,
-      codeStructure: prev.codeStructure
-    }))
+    )
   }
 
   const updateCheckedValues = valuesToFind => {
@@ -263,109 +270,18 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
     }
   }
 
-  const validateNotEmpty = (field, value, fieldName) => {
-  if (!value?.trim()) {
-    field({ isError: true, message: `${fieldName} can't be empty` });
-  } else {
-    field({ isError: false, message: '' });
-  }
-  }
+ 
 
-  const applyValidation = () => {
-    validateNotEmpty(setErrorCountry, country, 'Country')
-    // validateNotEmpty(setErrorCodeStructure, codeStructure, 'url', true)
-  }
 
-  const checkValidate = () => {
-    let isValid = true
-    if (!codeStructure || codeStructure == '') {
-      // setErrorCodeStructure({ isError: true, message: 'Code Structure is required' })
-      isValid = false
-    }
-    if (!country || country == '') {
-      setErrorCountry({ isError: true, message: 'Country is required' })
-      isValid = false
-    }
-    return isValid
-  }
 
-  const handleSubmitForm = async () => {
-    applyValidation()
-    const validate = checkValidate()
-    if (!validate) {
-      return
-    }
-    handleCloseModal()
-
-    editData?.id ? editCountry() : addCountry()
-  }
-
-  const addCountry = async () => {
-    try {
-      const data = {
-        country,
-        codeStructure: codeStructure.join(' ')
-        // crmURL
-      }
-      setIsLoading(true)
-      const res = await api('/country-master/', data, 'post', true)
-      setIsLoading(false)
-      if (res?.data?.success) {
-        setAlertData({ ...alertData, type: 'success', message: 'Country added successfully', openSnackbar: true })
-        resetForm()
-      } else {
-        setAlertData({ ...alertData, type: 'error', message: res.data?.message, openSnackbar: true })
-        if (res.data.code === 401) {
-          removeAuthToken()
-          router.push('/401')
-        }
-      }
-    } catch (error) {
-      console.log('Erorr to add country ', error)
-      router.push('/500')
-    } finally {
-      handleCloseModal()
-      setIsLoading(false)
-      resetForm()
-    }
-  }
-
-  const editCountry = async () => {
-    try {
-      const data = {
-        country,
-        codeStructure: codeStructure.join(' ')
-      }
-      setIsLoading(true)
-      const res = await api(`/country-master/${editData.id}`, data, 'put', true)
-      setIsLoading(false)
-      if (res?.data?.success) {
-        setAlertData({ ...alertData, type: 'success', message: 'Country updated successfully', openSnackbar: true })
-        resetForm()
-      } else {
-
-        setAlertData({ ...alertData, type: 'error', message: res.data.message, openSnackbar: true })
-        if (res.data.code === 401) {
-          removeAuthToken()
-          router.push('/401')
-        }
-      }
-    } catch (error) {
-      console.log('Eorrr to edit country ', error)
-      router.push('/500')
-    } finally {
-      handleCloseModal()
-      setIsLoading(false)
-      resetForm()
-    }
-  }
+ 
 
   return (
     <>
       <Modal
         open={openModal}
         onClose={() => {
-          resetForm()
+          resetEditForm()
           handleCloseModal()
         }}
         data-testid='modal'
@@ -413,7 +329,7 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
                   id='url'
                   multiline
                   rows={3}
-                  value={codeStructure?.length ? codeStructure?.join('') : ''}
+                  value={codeStructure?.length ? codeStructure?.join(' ') : ''}
                   required
                   disabled
                   style={{ backgroundColor: '#dde1e7', borderRadius: 5 }}
@@ -506,7 +422,7 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
                 color='error'
                 sx={{ marginLeft: 3.5 }}
                 onClick={() => {
-                  resetForm()
+                  resetEditForm()
                   handleCloseModal()
                 }}
               >
