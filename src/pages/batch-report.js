@@ -105,7 +105,7 @@ const BatchReport = () => {
     const productId = event.target.value
     setSelectedProduct(event.target.value)
     const selected = products.find(p => p.product_uuid === productId)
-    setSelectedProductName(selected?.product_name || '')
+    setSelectedProductName(selected?.common_name || '')
     setSelectedBatch('')
     setBatches([])
     setReport(null)
@@ -404,7 +404,7 @@ const jsonData = constructProductionInfo(data, gtin, BatchNo, AggregationFile);
             PRODUCT: {
               PRODUCT_TYPE: 0,
               PRODUCT_CODE: product.gtin,
-              PRODUCT_NAME: product.product_name,
+              PRODUCT_NAME: product.common_name,
               GENERIC_NAME: product.generic_name,
               COMPOSITION: product.composition || 'no data available',
               USAGE: product.dosage || 'no data available',
@@ -511,7 +511,7 @@ const jsonData = constructProductionInfo(data, gtin, BatchNo, AggregationFile);
       const rows = [
         BatchDetail.product.gtin,
         BatchDetail.batch_no,
-        BatchDetail.product.product_name,
+        BatchDetail.product.common_name,
         BatchDetail.manufacturing_date ? moment(BatchDetail.manufacturing_date).format('DD/MM/YYYY ') : 'N/A',
         BatchDetail.expiry_date ? moment(BatchDetail.expiry_date).format('DD/MM/YYYY ') : 'N/A',
         BatchDetail.created_at ? moment(BatchDetail.created_at).format('DD/MM/YYYY ') : 'N/A'
@@ -750,7 +750,7 @@ const jsonData = constructProductionInfo(data, gtin, BatchNo, AggregationFile);
       const rows = [
         BatchDetail?.product?.gtin || 'N/A',
         BatchDetail?.batch_no || 'N/A',
-        BatchDetail?.product?.product_name || 'N/A',
+        BatchDetail?.product?.common_name || 'N/A',
         BatchDetail?.manufacturing_date ? moment(BatchDetail?.manufacturing_date).format('DD/MM/YYYY') : 'N/A',
         BatchDetail?.expiry_date ? moment(BatchDetail?.expiry_date).format('DD/MM/YYYY') : 'N/A',
         BatchDetail?.created_at ? moment(BatchDetail?.created_at).format('DD/MM/YYYY') : 'N/A'
@@ -942,7 +942,7 @@ const jsonData = constructProductionInfo(data, gtin, BatchNo, AggregationFile);
           <Select labelId='product-label' value={selectedProduct} label='Product' onChange={handleProductChange}>
             {products.map(product => (
               <MenuItem key={product.product_uuid} value={product.product_uuid}>
-                {product.product_name}
+                {product.common_name}
               </MenuItem>
             ))}
           </Select>

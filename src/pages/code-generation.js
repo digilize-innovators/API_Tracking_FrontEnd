@@ -68,7 +68,7 @@ const Index = () => {
 
   const tableBody = codeRequestData?.data?.map((item, index) => [
     index + codeRequestData.index,
-    item?.product.product_history[0].product_name,
+    item?.product.product_history[0].common_name,
     item?.batch.batch_no,
     item?.locations.location_name,
     item?.batch.qty,

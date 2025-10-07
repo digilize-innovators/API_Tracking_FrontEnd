@@ -27,7 +27,7 @@ const downloadPdf = data => {
     headerContentFix(doc, 'Scanned Detail')
     doc.setFontSize(10)
     doc.text('Order No : ' + (orderDetail?.order_no || '__'), 15, 25)
-    doc.text('Product Name  : ' + (row?.product_name || '__'), 15, 30)
+    doc.text('Product Name  : ' + (row?.common_name || '__'), 15, 30)
     doc.text('Batch No. : ' + (row?.batch_no || '__'), 15, 35)
   }
 
@@ -150,7 +150,7 @@ const downloadPdf = data => {
       </TableCell>
 
       <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-        {row?.product_name}
+        {row?.common_name}
       </TableCell>
       <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
         {row?.batch_no}
@@ -248,11 +248,11 @@ const TableOrderDetails = ({
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('product_name')}
+                onClick={() => handleSort('common_name')}
               >
                 Product
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'product_name', sortDirection)}
+                  {getSortIcon(sortBy, 'common_name', sortDirection)}
                 </IconButton>
               </TableCell>
               <TableCell

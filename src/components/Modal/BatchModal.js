@@ -61,7 +61,7 @@ function BatchModal({ openModal, handleCloseModal, editData, allProductData, all
   const ProductData = allProductData?.map(item => ({
     id: item.product_uuid,
     value: item.product_uuid,
-    label: item.product_name
+    label: item.common_name
   }))
 
   const LocationData = allLocationData?.map(item => ({

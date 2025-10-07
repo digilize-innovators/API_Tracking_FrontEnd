@@ -545,7 +545,7 @@ const Index = () => {
                 config={config}
               />
             </Grid2>
-          </Box>
+          </Box> 
         </Grid2>
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />

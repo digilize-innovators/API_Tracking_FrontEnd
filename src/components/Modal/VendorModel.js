@@ -43,8 +43,8 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
       vendorCode: editData?.vendor_code || '',
       vendorName: editData?.vendor_name || '',
       address: editData?.address || '',
-      printingComplied: editData?.printing_complied,
-      vendorStructure: editData?.code_structure || codeStructure?.length > 0 ? codeStructure?.join('') : ''
+      printingcomplied: !!editData?.printing_complied,
+      vendorStructure: (editData?.code_structure && editData?.code_structure.toString()) || (codeStructure?.length > 0 ? codeStructure?.join(' ') : '')
     }
   })
   useEffect(() => {
@@ -56,11 +56,11 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
         vendorCode: editData?.vendor_code || '',
         vendorName: editData?.vendor_name || '',
         address: editData?.address || '',
-        printingcomplied: editData?.printing_complied || false,
-        vendorStructure: editData?.code_structure || codeStructure?.length ? codeStructure?.join(' ') : ''
+        printingcomplied: !!editData?.printing_complied,
+        vendorStructure: (editData?.code_structure && editData?.code_structure.toString()) || (codeStructure?.length ? codeStructure?.join(' ') : '')
       })
     }
-    setValue('vendorStructure', editData?.code_structure)
+    setValue('vendorStructure', (editData?.code_structure && editData?.code_structure.toString()) || '')
   }, [editData])
 
   useEffect(() => {

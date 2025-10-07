@@ -36,7 +36,7 @@ const Row = ({ row, index, locationId, locationName }) => {
           tableHeaderText: `Stock Summary`,
           tableBodyText: `Stock Summary list`,
           filename: `Stock_Summary`,
-          Filter: ['Stock_Summary', res.data.data.stockDetail?.[0].product_name, locationName]
+          Filter: ['Stock_Summary', res.data.data.stockDetail?.[0].common_name, locationName]
         }
         const tableBody = res.data.data.stockDetail?.map((item, index) => [
           index + 1,
@@ -80,7 +80,7 @@ const Row = ({ row, index, locationId, locationName }) => {
           {index + 1}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.product_name}
+          {row.common_name}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {row.count}

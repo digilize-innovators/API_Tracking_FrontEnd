@@ -46,7 +46,7 @@ const OrderDrawer = ({
 
   const tableBody = orderDetail?.map((item, index) => [
     index + 1,
-    item.product_name,
+    item.common_name,
     item.batch_no,
     item.qty,
     item.scanned_qty

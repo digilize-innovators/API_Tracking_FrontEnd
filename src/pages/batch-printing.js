@@ -1032,7 +1032,7 @@ const Index = ({ userId, ip }) => {
                         >
                           {line?.products?.map(product => (
                             <MenuItem key={product.product_uuid} value={product.product_uuid}>
-                              {product?.product_name}
+                              {product?.common_name}
                             </MenuItem>
                           ))}
                         </Select>

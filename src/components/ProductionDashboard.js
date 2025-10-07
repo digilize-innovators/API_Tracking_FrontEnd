@@ -231,7 +231,7 @@ const CurrentOrder = ({ selectedLine }) => {
             Product Name
           </Typography>
           <Typography variant='body2' sx={{ color: textColor, fontWeight: 500 }}>
-            {currentItem?.product.product_name || 'N/A'}
+            {currentItem?.product.common_name || 'N/A'}
           </Typography>
         </Grid2>
         <Grid2 item size={4} mb={1}>

@@ -272,7 +272,7 @@ const updateBatchOptions = (updates) => {
           const data = res.data.data.products?.map(item => ({
             id: item.product_uuid,
             value: item.product_uuid,
-            label: item.product_name
+            label: item.common_name
           }))
           setProductData(data)
         } else {

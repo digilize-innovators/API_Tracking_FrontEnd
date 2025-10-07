@@ -88,7 +88,7 @@ const addTable = (head, body, startY, title = null) => {
 
   sections.forEach(({ key, title }) => {
     const body = scannedcode?.[key]?.map((item, i) => [
-      i + 1, item.product_name, item.batch_name, item.unique_code
+      i + 1, item.common_name, item.batch_name, item.unique_code
     ]) || []
     addTable(['Sr.No.', 'Product', 'Batch', 'Unique code'], body, null, title)
   })
