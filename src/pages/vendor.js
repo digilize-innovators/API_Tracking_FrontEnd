@@ -418,7 +418,7 @@ const handleCreatorApproval = (remarks, user,isApprover) => {
                   )}
                 </Box>
               </Box>
-            </Grid2>
+            </Grid2> 
             <Grid2 item xs={12}>
               <Typography variant='h4' className='mx-4 my-2 mt-3'>
                 Vendor Data

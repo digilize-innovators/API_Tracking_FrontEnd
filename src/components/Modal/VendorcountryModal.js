@@ -21,8 +21,7 @@ const modalBoxStyle = {
   padding: 4
 }
 
-const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData,codeStructure,setCodeStructure }) => {
-  console.log("code strucut:",codeStructure);
+const VendorcountryModal = ({ openModal, handleCloseModal, editData,codeStructure,setCodeStructure }) => {
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
   const router = useRouter()
@@ -184,7 +183,6 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
 
   useEffect(() => {
     resetForm()
-    getCRMURL()
   }, [])
 
   useEffect(() => {
@@ -203,8 +201,27 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
     }
   }, [editData])
 
+  useEffect(() => {
+    const values = Array.isArray(codeStructure)
+      ? codeStructure
+      : (codeStructure || '')
+          .toString()
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean)
+    setCrmURL(prev => ({ value: prev.value, checked: values.includes('CRMURL') }))
+    setUrlMakerData(prevData =>
+      prevData.map(group => ({
+        ...group,
+        options: group.options.map(option => ({
+          ...option,
+          checked: values.includes(option.value)
+        }))
+      }))
+    )
+  }, [codeStructure])
+
   const resetEditForm = () => {
-    // Build a normalized list of code structure tokens from edit data
     const raw = editData?.code_structure || editData?.codeStructure || ''
     const values = Array.isArray(raw)
       ? raw
@@ -213,14 +230,10 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
           .trim()
           .split(/\s+/)
           .filter(Boolean)
-
-    // Reset local selections to the original edit values
     setCodeStructure(values)
 
-    // Sync CRM URL checkbox with values
+  
     setCrmURL(prev => ({ value: prev.value, checked: values.includes('CRMURL') }))
-
-    // Update checkbox groups to reflect values
     setUrlMakerData(prevData =>
       prevData.map(group => ({
         ...group,
@@ -251,29 +264,7 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
   setUrlMakerData(prevData => prevData.map(updateGroupOptions))
   }
 
-  const getCRMURL = async () => {
-    try {
-      setIsLoading(true)
-      const res = await api('/superadmin-configuration/', {}, 'get', true)
-      setIsLoading(false)
-      if (res.data.success) {
-        
-        setCrmURL({ value: res.data.data[0].crm_url, checked: false })
-      } else if (res.data.code === 401) {
-          removeAuthToken()
-          router.push('/401')
-        
-      }
-    } catch (error) {
-      console.log('Error in get companies ', error)
-      setIsLoading(false)
-    }
-  }
-
  
-
-
-
  
 
   return (
@@ -289,9 +280,9 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
         aria-describedby='modal-modal-description'
       >
         <Box sx={modalBoxStyle}>
-          {/* <Typography variant='h4' className='my-3' sx={{ textAlign: 'center', fontWeight: 'bold' }}>
-            {editData?.id ? 'Edit Country URL' : 'Add Country URL'}
-          </Typography> */}
+          <Typography variant='h4' className='my-3' sx={{ textAlign: 'center', fontWeight: 'bold' }}>
+            {editData?.id ? 'Edit CodeStructure' : 'Add CodeStructure'}
+          </Typography>
           <Grid2
             sx={{
               maxHeight: '50vh', // or any height you need
@@ -299,25 +290,6 @@ const VendorcountryModal = ({ openModal, handleCloseModal, editData, setEditData
               paddingRight: 2 // optional: add padding to avoid scrollbar overlap
             }}
           >
-            {/* <Grid2 container spacing={2}>
-              <Grid2 size={5} sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography variant='body1'>Enter Country Name :</Typography>
-              </Grid2>
-              <Grid2 size={7} sx={{ mb: 3 }}>
-                <TextField
-                  fullWidth
-                  id='country'
-                  onChange={e => {
-                    setErrorCountry('')
-                    setCountry(e.target.value)
-                  }}
-                  value={country}
-                  required
-                  error={errorCountry.isError}
-                  helperText={errorCountry.isError ? errorCountry.message : ''}
-                />
-              </Grid2>
-            </Grid2> */}
 
             <Grid2 container spacing={2}>
               <Grid2 size={5} sx={{ display: 'flex', alignItems: 'center' }}>
@@ -440,7 +412,6 @@ VendorcountryModal.propTypes={
   openModal:PropTypes.any,
    handleCloseModal:PropTypes.any,
     editData:PropTypes.any, 
-    setEditData:PropTypes.any,
     //  setOpenModal:PropTypes.any
 }
 export default VendorcountryModal

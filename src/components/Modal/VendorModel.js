@@ -43,22 +43,29 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
       vendorCode: editData?.vendor_code || '',
       vendorName: editData?.vendor_name || '',
       address: editData?.address || '',
-      printingcomplied: !!editData?.printing_complied,
+      printingcomplied: editData?.printing_complied || false,
       vendorStructure: (editData?.code_structure && editData?.code_structure.toString()) || (codeStructure?.length > 0 ? codeStructure?.join(' ') : '')
     }
-  })
+  }) 
   useEffect(() => {
-    console.log('editdata 1', editData)
-    console.log('codeStructure', codeStructure)
-    if (editData) {
-      console.log('editdata 2', editData)
+    if (editData?.id) {
+  
       reset({
         vendorCode: editData?.vendor_code || '',
         vendorName: editData?.vendor_name || '',
         address: editData?.address || '',
-        printingcomplied: !!editData?.printing_complied,
+        printingcomplied: editData?.printing_complied ||false,
         vendorStructure: (editData?.code_structure && editData?.code_structure.toString()) || (codeStructure?.length ? codeStructure?.join(' ') : '')
       })
+      const raw = editData?.code_structure || ''
+      const values = Array.isArray(raw)
+        ? raw
+        : (raw || '')
+            .toString()
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean)
+      setCodeStructure(values)
     }
     setValue('vendorStructure', (editData?.code_structure && editData?.code_structure.toString()) || '')
   }, [editData])
@@ -66,24 +73,9 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
   useEffect(() => {
     setValue('vendorStructure', codeStructure?.join(' '))
   }, [codeStructure])
-
-  useEffect(() => {
-    console.log('hello', codeStructure)
-  }, [codeStructure])
-
-  console.log('get vales', getValues())
   const printingComplied = watch('printingcomplied')
 
-  const handleFormReset = () => {
-    const current = getValues()
-    reset({
-      vendorCode: current.vendorCode,
-      vendorName: editData?.vendor_name || '',
-      address: editData?.address || '',
-      printingcomplied: current.printingcomplied,
-      vendorStructure: current.vendorStructure
-    })
-  }
+ 
 
   return (
     <>
@@ -135,7 +127,6 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
                   }}
                 />
               </Grid2>
-
               {printingComplied && (
                 <>
                   <Grid2 size={6}>
@@ -155,7 +146,24 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
               <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'>
                 Save Changes
               </Button>
-              <Button variant='outlined' color='primary' onClick={handleFormReset}>
+              <Button variant='outlined' color='primary' onClick={() => {
+                reset({
+                  vendorCode: editData?.vendor_code || '',
+                  vendorName: editData?.vendor_name || '',
+                  address: editData?.address || '',
+                  printingcomplied: editData?.printing_complied || false,
+                  vendorStructure: (editData?.code_structure && editData?.code_structure.toString()) || (codeStructure?.length > 0 ? codeStructure?.join(' ') : '')
+                })
+                const raw = editData?.code_structure || ''
+                const values = Array.isArray(raw)
+                  ? raw
+                  : (raw || '')
+                      .toString()
+                      .trim()
+                      .split(/\s+/)
+                      .filter(Boolean)
+                setCodeStructure(values)
+              }}>
                 Reset
               </Button>
               <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={onClose}>
@@ -168,10 +176,8 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
 
       <VendorcountryModal
         openModal={openVendorCountryModal}
-        // setOpenModal={setOpenVendorCountryModal}
         handleCloseModal={handleCloseModal}
         editData={editData}
-        setEditData={() => { }}
         codeStructure={codeStructure}
         setCodeStructure={setCodeStructure}
       />
