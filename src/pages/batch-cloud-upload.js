@@ -56,7 +56,7 @@ const Index = () => {
   const tableBody = batchData?.data?.map((item, index) => [
     index + batchData.index,
     item?.batch_no,
-    item?.product?.product_history[0]?.common_name,
+    item?.product?.product_history[0]?.api_name,
     item?.location?.history[0]?.location_name,
     item?.manufacturing_date ? moment(item.manufacturing_date).format('DD-MM-YYYY') : 'N/A',
     item?.expiry_date ? moment(item.expiry_date).format('DD-MM-YYYY') : 'N/A',
@@ -414,8 +414,8 @@ const Index = () => {
                   >
                     {allProductData?.map(item => {
                       return (
-                        <MenuItem key={item?.id} value={item?.common_name}>
-                          {item?.common_name}
+                        <MenuItem key={item?.id} value={item?.api_name}>
+                          {item?.api_name}
                         </MenuItem>
                       )
                     })}

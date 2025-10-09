@@ -1,7 +1,7 @@
 import { Box, Button, Grid2, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
 import PropTypes from 'prop-types'
-import React, { useEffect, useLayoutEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { CiExport } from 'react-icons/ci'
 import { useLoading } from 'src/@core/hooks/useLoading'
 import { useAuth } from 'src/Context/AuthContext'
@@ -10,8 +10,7 @@ import { getFieldValue } from 'src/utils/rowUtils'
 import SnackbarAlert from './SnackbarAlert'
 import TableTransaction from 'src/views/tables/TableTransaction'
 import TableOrderDetails from 'src/views/tables/TableOrderDetails'
-import salepdf from 'src/utils/salePdf'
-import { Trumpet } from 'mdi-material-ui'
+import salepdf from 'src/utils/salePDf'
 
 const statusActionMap = {
   CREATED: { title: 'Generate Invoice', endpoint: 'generate-invoice' },
@@ -49,7 +48,7 @@ const StockOrderDrawer = ({
 
   const tableBody = orderDetail?.map((item, index) => [
     index + 1,
-    item.common_name,
+    item.api_name,
     item.batch_no,
     item.qty,
     item.scanned_qty

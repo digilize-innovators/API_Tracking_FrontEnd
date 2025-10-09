@@ -10,7 +10,7 @@ import { getFieldValue } from 'src/utils/rowUtils'
 import SnackbarAlert from './SnackbarAlert'
 import TableTransaction from 'src/views/tables/TableTransaction'
 import TableOrderDetails from 'src/views/tables/TableOrderDetails'
-import salepdf from 'src/utils/salePdf'
+import salepdf from 'src/utils/salePDf'
 
 const statusActionMap = {
   CREATED: { title: 'Generate Invoice', endpoint: 'generate-invoice' },
@@ -46,7 +46,7 @@ const OrderDrawer = ({
 
   const tableBody = orderDetail?.map((item, index) => [
     index + 1,
-    item.common_name,
+    item.api_name,
     item.batch_no,
     item.qty,
     item.scanned_qty

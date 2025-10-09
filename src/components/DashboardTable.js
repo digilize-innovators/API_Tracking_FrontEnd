@@ -44,7 +44,7 @@ const List = ({ data }) => {
         created_at: row.updated_at || row.created_at,
         area: {
           area_category: {
-            area_category_name: row.product?.common_name
+            area_category_name: row.product?.api_name
           }
         },
         location: {
@@ -109,7 +109,7 @@ const List = ({ data }) => {
                         </IconButton>
                       </TableCell>
                       <TableCell align="center">{index + 1}</TableCell>
-                      <TableCell align="center">{row?.product?.common_name}</TableCell>
+                      <TableCell align="center">{row?.product?.api_name}</TableCell>
                       <TableCell align="center">{row?.batch_no}</TableCell>
                       <TableCell align="center">{row?.qty}</TableCell>
                       <TableCell align="center">{moment(row?.manufacturing_date).format('DD-MM-YYYY')}</TableCell>
@@ -151,7 +151,7 @@ const List = ({ data }) => {
                                   {row.history.map((h, i) => (
                                     <TableRow key={h?.created_at}>
                                       <TableCell align="center">{i + 1}</TableCell>
-                                      <TableCell align="center">{h?.product?.common_name}</TableCell>
+                                      <TableCell align="center">{h?.product?.api_name}</TableCell>
                                       <TableCell align="center">{h?.batch_no}</TableCell>
                                       <TableCell align="center">{h?.qty}</TableCell>
                                       <TableCell align="center">{moment(h?.manufacturing_date).format('DD-MM-YYYY')}</TableCell>

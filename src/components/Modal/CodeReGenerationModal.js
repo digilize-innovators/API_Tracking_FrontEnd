@@ -112,7 +112,7 @@ const CodeReGenerationModal = ({
             <TextField
               fullWidth
               label='Product'
-              value={availableCodeData?.product?.product_history[0]?.common_name}
+              value={availableCodeData?.product?.product_history[0]?.api_name}
               disabled
             />
           </Box>

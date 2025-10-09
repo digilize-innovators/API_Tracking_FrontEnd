@@ -274,7 +274,7 @@ useEffect(() => {
           const data = res.data.data.products?.map(item => ({
             id: item.product_uuid,
             value: item.product_uuid,
-            label: item.common_name
+            label: item.api_name
           }))
           setProductData(data)
         } else {

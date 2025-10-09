@@ -49,7 +49,10 @@ const purchaseSchema = yup.object().shape({
           .typeError('Quantity must be a number')
           .positive('Quantity must be greater than zero')
           .min(1)
-          .max(10000)
+          .max(10000),
+           added: yup.boolean(),
+           edited: yup.boolean(),
+           deleted: yup.boolean(),
       })
     )
     .min(1, 'At least one purchase item is required')
@@ -70,13 +73,14 @@ const purchaseSchema = yup.object().shape({
 })
 
 const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handleSubmitForm }) => {
+  console.log("purchase details::", purchaseDetail);
   const [locationFrom, setLocationFrom] = useState([])
   const [locationTo, setLocationTo] = useState({})
   const [productData, setProductData] = useState([])
   const [batchOptionsMap, setBatchOptionsMap] = useState({})
   const [editableIndex, setEditableIndex] = useState(null)
   const [openConfirm, setOpenConfirm] = useState(false)
-  const [deleteBatch,setDeleteBatch]=useState('')
+  const [deleteBatch, setDeleteBatch] = useState('')
   const [deleteIndex, setDeleteIndex] = useState(null)
   const { settings } = useSettings()
   const { setIsLoading } = useLoading()
@@ -97,13 +101,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
       orderDate: editData.order_date || '',
       from: editData.from_location || '',
       to: editData.to_location || locationTo.id || '',
-      orders: purchaseDetail?.length
-        ? purchaseDetail.map(order => ({
-            productId: order.product_id || '',
-            batchId: order.batch_id || '',
-            qty: order.qty || ''
-          }))
-        : [{ productId: '', batchId: '', qty: '' }]
+      orders: []
     }
   })
   const { fields, append, remove } = useFieldArray({
@@ -128,7 +126,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         orders: purchaseDetail.map(order => ({
           productId: order.product_id || '',
           batchId: order.batch_id || '',
-          qty: order.qty || '' 
+          qty: order.qty || ''
         }))
       })
     } else {
@@ -148,67 +146,67 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
   })
 
   useEffect(() => {
-  const fetchAndUpdateBatches = async () => {
-    if (!watchOrders) return;
+    const fetchAndUpdateBatches = async () => {
+      if (!watchOrders) return;
 
-    const updates = await processBatchUpdates(watchOrders, batchOptionsMap);
-    if (updates.length > 0) {
-      updateBatchOptions(updates);
+      const updates = await processBatchUpdates(watchOrders, batchOptionsMap);
+      if (updates.length > 0) {
+        updateBatchOptions(updates);
+      }
+    };
+
+    fetchAndUpdateBatches();
+  }, [watchOrders]);
+
+  // Helper function to determine which products need batch updates
+  const processBatchUpdates = async (orders, currentBatchMap) => {
+    const updates = [];
+
+    for (const [index, order] of orders.entries()) {
+      const productId = order?.productId;
+      if (!productId) continue;
+
+      const existing = currentBatchMap[index];
+      if (existing?.productId === productId) continue;
+
+      const batchOptions = await fetchBatchesForProduct(productId);
+      if (batchOptions) {
+        updates.push({ index, productId, options: batchOptions });
+      }
+    }
+
+    return updates;
+  };
+
+  // Helper function to fetch batches for a single product
+  const fetchBatchesForProduct = async (productId) => {
+    try {
+      const res = await api(`/batch/${productId}?onlyended=true`, {}, 'get', true);
+      if (res.data.success) {
+        return res.data.data.batches?.map(batch => ({
+          id: batch.batch_uuid,
+          value: batch.batch_uuid,
+          label: batch.batch_no
+        }));
+      }
+    } catch (error) {
+      console.error(`Error fetching batches for product ${productId}`, error);
+      return null;
     }
   };
 
-  fetchAndUpdateBatches();
-}, [watchOrders]);
-
-// Helper function to determine which products need batch updates
-const processBatchUpdates = async (orders, currentBatchMap) => {
-  const updates = [];
-
-  for (const [index, order] of orders.entries()) {
-    const productId = order?.productId;
-    if (!productId) continue;
-
-    const existing = currentBatchMap[index];
-    if (existing?.productId === productId) continue;
-
-    const batchOptions = await fetchBatchesForProduct(productId);
-    if (batchOptions) {
-      updates.push({ index, productId, options: batchOptions });
-    }
-  }
-
-  return updates;
-};
-
-// Helper function to fetch batches for a single product
-const fetchBatchesForProduct = async (productId) => {
-  try {
-    const res = await api(`/batch/${productId}?onlyended=true`, {}, 'get', true);
-    if (res.data.success) {
-      return res.data.data.batches?.map(batch => ({
-        id: batch.batch_uuid,
-        value: batch.batch_uuid,
-        label: batch.batch_no
-      }));
-    }
-  } catch (error) {
-    console.error(`Error fetching batches for product ${productId}`, error);
-    return null;
-  }
-};
-
-// Helper function to update state
-const updateBatchOptions = (updates) => {
-  setBatchOptionsMap(prev => ({
-    ...prev,
-    ...Object.fromEntries(
-      updates.map(({ index, productId, options }) => [
-        index,
-        { productId, options }
-      ])
-    )
-  }));
-};
+  // Helper function to update state
+  const updateBatchOptions = (updates) => {
+    setBatchOptionsMap(prev => ({
+      ...prev,
+      ...Object.fromEntries(
+        updates.map(({ index, productId, options }) => [
+          index,
+          { productId, options }
+        ])
+      )
+    }));
+  };
   useEffect(() => {
     const getLocation = async () => {
       try {
@@ -218,11 +216,11 @@ const updateBatchOptions = (updates) => {
         console.log('All locations vendors', res.data)
         if (res.data.success) {
           const data = res.data.data?.vendors.map(item => ({
-            id: item.vendor_uuid, 
+            id: item.vendor_uuid,
             value: item.vendor_uuid,
             label: item.vendor_name
           }))
-          console.log('All locations vendorsdata',data)
+          console.log('All locations vendorsdata', data)
           setLocationFrom(data)
         } else {
           console.log('Error to get all designation ', res.data)
@@ -269,10 +267,11 @@ const updateBatchOptions = (updates) => {
         const res = await api('/product?limit=-1&history_latest=true', {}, 'get', true)
         setIsLoading(false)
         if (res.data.success) {
+          console.log("res data::", res.data);
           const data = res.data.data.products?.map(item => ({
             id: item.product_uuid,
             value: item.product_uuid,
-            label: item.common_name
+            label: item.api_name
           }))
           setProductData(data)
         } else {
@@ -303,42 +302,42 @@ const updateBatchOptions = (updates) => {
     }
   }, [open, editData])
 
- 
 
- const handleDeleteOrder = async (orderId, index) => {
-     try {
-       setIsLoading(true)
-       if (orderId) {
+
+  const handleDeleteOrder = async (orderId, index) => {
+    try {
+      setIsLoading(true)
+      if (orderId) {
         const res = await api(`/purchase-order/details/${orderId}`, { orderId: editData.id }, 'delete', true)
-         if (!res.data.success) {
-           console.error('Failed to delete item:', res.data)
-           return
-         }
-       }
-       remove(index)
-       setEditableIndex(prev => {
-         const newState = { ...prev }
-         delete newState[index]
-         const updatedState = {}
-         Object.keys(newState).forEach(key => {
-           const numKey = parseInt(key)
-           if (numKey > index) {
-             updatedState[numKey - 1] = newState[numKey]
-           } else if (numKey < index) {
-             updatedState[numKey] = newState[numKey]
-           }
-         })
-         return updatedState
-       })
-     } catch (error) {
-       console.error('Error deleting order item:', error)
-     } finally {
-       setIsLoading(false)
-       setOpenConfirm(false)
-       setDeleteBatch('')
-       setDeleteIndex(null)
-     }
-   }
+        if (!res.data.success) {
+          console.error('Failed to delete item:', res.data)
+          return
+        }
+      }
+      remove(index)
+      setEditableIndex(prev => {
+        const newState = { ...prev }
+        delete newState[index]
+        const updatedState = {}
+        Object.keys(newState).forEach(key => {
+          const numKey = parseInt(key)
+          if (numKey > index) {
+            updatedState[numKey - 1] = newState[numKey]
+          } else if (numKey < index) {
+            updatedState[numKey] = newState[numKey]
+          }
+        })
+        return updatedState
+      })
+    } catch (error) {
+      console.error('Error deleting order item:', error)
+    } finally {
+      setIsLoading(false)
+      setOpenConfirm(false)
+      setDeleteBatch('')
+      setDeleteIndex(null)
+    }
+  }
 
 
   const handleEditOrSave = async index => {
@@ -377,9 +376,9 @@ const updateBatchOptions = (updates) => {
 
   const handleReset = () => {
     reset() // Resets the form values
-    setBatchOptionsMap({}) // Also clear the batch dropdown options
+    // setBatchOptionsMap({}) // Also clear the batch dropdown options
   }
-  
+
   return (
     <>
       <Modal open={open} onClose={handleClose} aria-labelledby='Purchase'>
@@ -411,10 +410,11 @@ const updateBatchOptions = (updates) => {
                       id='Order-date'
                       label='Order Date'
                       type='date'
-                       slotProps={{
-                      inputLabel: {
-                        shrink: true
-                      }}}
+                      slotProps={{
+                        inputLabel: {
+                          shrink: true
+                        }
+                      }}
                       error={!!errors.orderDate}
                       helperText={errors.orderDate?.message || ''}
                     />
@@ -424,12 +424,12 @@ const updateBatchOptions = (updates) => {
             </Grid2>
             <Grid2 container spacing={2}>
               <Grid2 size={6}>
-                <CustomDropdown 
-                name='from' 
-                label='From' 
-                control={control} 
-                options={locationFrom} 
-                 />
+                <CustomDropdown
+                  name='from'
+                  label='From'
+                  control={control}
+                  options={locationFrom}
+                />
               </Grid2>
               <Grid2 size={6}>
                 <Controller
@@ -453,102 +453,105 @@ const updateBatchOptions = (updates) => {
                 <Button
                   type='button'
                   variant='contained'
-                  sx={{ marginRight: 3.5 }}
-                  onClick={() => append({ productId: '', batchId: '', qty: '' })}
+                  sx={{ marginRight: 2 }}
+                  onClick={() => append({ productId: '', batchId: '', qty: '' ,added:true,edited:false,deleted:false})}
                 >
                   Add
                 </Button>
               </Grid2>
 
               <Grid2 style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: 1 }}>
-                {fields.map((field, index) =>
-                {
-                 const existOrder = purchaseDetail?.find(item=>item.batch_id===field.batchId)
-               return (
-                  <Grid2 container spacing={2} key={field.id}>
-                    <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>{index + 1}</Typography>{' '}
-                    </Grid2>
-                    <Grid2 size={3.5}>
-                      <CustomDropdown
-                        name={`orders.${index}.productId`}
-                        label='Product'
-                        control={control}
-                        options={productData}
-                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
-                      />
-                    </Grid2>
-                    <Grid2 size={3}>
-                      <CustomDropdown
-                        name={`orders.${index}.batchId`}
-                        label='Batch'
-                        control={control}
-                        options={batchOptionsMap[index]?.options || []}
-                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
-                      />
-                    </Grid2>
-                    <Grid2 size={3.5}>
-                      <CustomTextField
-                        type='Number'
-                        name={`orders.${index}.qty`}
-                        label='Quantity'
-                        control={control}
-                        disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
-                      />
-                    </Grid2>
-                    <Grid2
-                      size={0.5}
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column'
-                      }}
-                    >
-                      <Box sx={{ marginTop: 2 }}>
-                        <IconButton
-                          onClick={() => {
-                            setDeleteBatch(existOrder)
-                            setDeleteIndex(index)
-                            setOpenConfirm(true)
-                          }}
-                          disabled={fields.length === 1}
-                          sx={{
-                            color: '#e53935',
-                            '&:hover': {
-                              color: '#c62828'
-                            }
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Box>
-                    </Grid2>
-                    <Grid2
-                      size={0.5}
-                      sx={{
-                        ml: 6,
-                        display: 'flex',
-                        alignItems: 'flex-start', // Align to the top
-                        justifyContent: 'center'
-                        // Move slightly upward
-                      }}
-                    >
-                      {existOrder && (
-                        <Tooltip title={editableIndex?.[index] ? 'Save' : 'Edit'}>
-                          <IconButton
-                            onClick={() => handleEditOrSave(index)}
-                            sx={{
-                              color: settings.themeColor,
+                {fields.map((field, index) => {
+                  const existOrder = purchaseDetail?.find(item => item.batch_id === field.batchId)
+                  return (
+                    <Grid2 container spacing={2} sx={{ marginTop: 2 }} key={field.id}>
+                      <Grid2 size={0.5} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <Typography style={{ display: 'flex', alignItems: 'flex-end' }}>{index + 1}</Typography>{' '}
+                      </Grid2>
+                      <Grid2 size={3.5}>
+                        <CustomDropdown
+                          name={`orders.${index}.productId`}
+                          label='Product'
+                          control={control}
+                          options={productData}
+                          disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
 
-                              mt: 1
+                        />
+                      </Grid2>
+
+
+                      <Grid2 size={3}>
+                        <CustomTextField
+                          name={`orders.${index}.batchId`}
+                          label='Batch'
+                          type='Text'
+                          control={control}
+                          disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
+                        />
+                      </Grid2>
+                      <Grid2 size={3.5}>
+                        <CustomTextField
+                          type='Number'
+                          name={`orders.${index}.qty`}
+                          label='Quantity'
+                          control={control}
+                          disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
+                        />
+                      </Grid2>
+                      <Grid2
+                        size={0.5}
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column'
+                        }}
+                      >
+                        <Box sx={{ marginTop: 2 }}>
+                          <IconButton
+                            onClick={() => {
+                              setDeleteBatch(existOrder)
+                              setDeleteIndex(index)
+                              setOpenConfirm(true)
+                            }}
+                            disabled={fields.length === 1}
+                            sx={{
+                              color: '#e53935',
+                              '&:hover': {
+                                color: '#c62828'
+                              }
                             }}
                           >
-                            {editableIndex?.[index] ? <SaveIcon /> : <EditIcon />}
+                            <DeleteIcon />
                           </IconButton>
-                        </Tooltip>
-                      )}
+                        </Box>
+                      </Grid2>
+                      <Grid2
+                        size={0.5}
+                        sx={{
+                          ml: 6,
+                          display: 'flex',
+                          alignItems: 'flex-start', // Align to the top
+                          justifyContent: 'center'
+                          // Move slightly upward
+                        }}
+                      >
+                        {existOrder && (
+                          <Tooltip title={editableIndex?.[index] ? 'Save' : 'Edit'}>
+                            <IconButton
+                              onClick={() => handleEditOrSave(index)}
+                              sx={{
+                                color: settings.themeColor,
+
+                                mt: 1
+                              }}
+                            >
+                              {editableIndex?.[index] ? <SaveIcon /> : <EditIcon />}
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Grid2>
                     </Grid2>
-                  </Grid2>
-                )})}
+                  )
+                })}
               </Grid2>
               {errors.orders?.root?.message && (
                 <Grid2>

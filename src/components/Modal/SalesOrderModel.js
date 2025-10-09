@@ -1,4 +1,4 @@
-import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form'
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form' 
 import {
   Modal,
   Box,
@@ -235,7 +235,7 @@ useEffect(() => {
         const products = res.data.data.products?.map(item => ({
           id: item.product_uuid,
           value: item.product_uuid,
-          label: item.common_name
+          label: item.api_name
         }))
         setProductData(products)
       }
@@ -688,7 +688,7 @@ setDeletedOrders([])
                 variant='outlined'
                onClick={() =>{
                  reset();
-    setDeletedOrders([])
+                 setDeletedOrders([])
                } }
                 color='primary'
               >

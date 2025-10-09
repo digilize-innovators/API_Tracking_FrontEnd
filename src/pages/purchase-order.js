@@ -95,6 +95,9 @@ const Index = () => {
       const res = await api(`/purchase-order/details/${id}`, {}, 'get', true)
       if (res.data.success) {
         const fetchedOrders = res.data.data.orders || []
+        console.log("res::",res.data);
+        console.log("fetch orders::",fetchedOrders);
+
         setPurchaseDetail(fetchedOrders)
       } else if (res.data.code === 401) {
         removeAuthToken()
@@ -264,7 +267,7 @@ const Index = () => {
                   </Box>
                 </Box>
               </Grid2>
-            </Grid2>
+            </Grid2> 
             <Grid2 item xs={12}>
               <Typography variant='h4' className='mx-4 mt-3'>
                 Purchase Order Data
@@ -280,6 +283,7 @@ const Index = () => {
         </Grid2>
       </Grid2>
       <SnackbarAlert openSnackbar={alertData.openSnackbar} closeSnackbar={closeSnackbar} alertData={alertData} />
+      
       <PurchaseOrderModel
         open={openModal}
         handleClose={handleCloseModal}

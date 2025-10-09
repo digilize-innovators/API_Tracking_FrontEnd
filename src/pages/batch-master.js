@@ -80,7 +80,7 @@ const Index = () => {
   const tableBody = batchData?.data?.map((item, index) => [
     index + batchData.index,
     item?.batch_no,
-    item?.product?.product_history[0]?.common_name,
+    item?.product?.product_history[0]?.api_name,
     item?.location?.history[0]?.location_name,
     item?.manufacturing_date ? moment(item.manufacturing_date).format('DD-MM-YYYY') : 'N/A',
     item?.expiry_date ? moment(item.expiry_date).format('DD-MM-YYYY') : 'N/A',
@@ -202,7 +202,7 @@ const Index = () => {
           audit_log: true,
           remarks: esignRemark?.length > 0 ? esignRemark : `Batch editted - ${formData.batchNo}`,
           authUser,
-          product: editData.product.product_history[0]?.common_name
+          product: editData.product.product_history[0]?.api_name
         }
       }
       data.esign_status = esign_status
@@ -285,7 +285,7 @@ const Index = () => {
           user_name: user.userName,
           remarks: remarks?.length > 0 ? remarks : `batch ${action} - ${auditLogMark}`,
           authUser: user.user_id,
-          product: eSignStatusId.product.product_history[0]?.common_name
+          product: eSignStatusId.product.product_history[0]?.api_name
         }
       : {}
   }
@@ -536,8 +536,8 @@ const Index = () => {
                   >
                     {allProductData?.map(item => {
                       return (
-                        <MenuItem key={item?.product_uuid} value={item?.common_name}>
-                          {item?.common_name}
+                        <MenuItem key={item?.product_uuid} value={item?.api_name}>
+                          {item?.api_name}
                         </MenuItem>
                       )
                     })}

@@ -15,12 +15,12 @@ const TopSellingProductsData = ({ data }) => {
   
   const chartData = data?.map((item) => {
     const timeLabel = item.month || item.year || '';
-    const fullName = item.common_name;
+    const fullName = item.api_name;
     const truncatedName = fullName.length > 10 ? `${fullName.slice(0,8)} ..`: fullName;
     return {
       name: truncatedName,
       topProducts: parseInt(item.total, 10),
-      tooltipLabel: `${item.common_name} (${timeLabel})`,
+      tooltipLabel: `${item.api_name} (${timeLabel})`,
     };
   });
 

@@ -59,7 +59,7 @@ const Row = ({
           {serialNumber}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.product?.product_history[0]?.common_name}
+          {row.product?.product_history[0]?.api_name}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {row.batch.batch_no}
@@ -161,7 +161,7 @@ const Row = ({
                             {idx + 1}
                           </TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {historyRow.product.product_history[0].common_name}
+                            {historyRow.product.product_history[0].api_name}
                           </TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             {historyRow.batch.history[0].batch_no}

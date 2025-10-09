@@ -30,7 +30,7 @@ const TableBatchCloud = props => {
       endpoint='/batch/'
       columns={[
         { path: 'batch_no', label: 'Batch No.' },
-        { path: 'product.product_history[0].common_name', label: 'Product Name' },
+        { path: 'product.product_history[0].api_name', label: 'Product Name' },
         { path: 'location.history[0].location_name', label: 'Location Name' },
         {
           path: 'manufacturing_date',
@@ -51,7 +51,7 @@ const TableBatchCloud = props => {
       ]}
       historyColumns={[
         { path: 'batch_no', label: 'Batch No.' },
-        { path: 'product.product_history[0].common_name', label: 'Product Name' },
+        { path: 'product.product_history[0].api_name', label: 'Product Name' },
         { path: 'location.history[0].location_name', label: 'Location Name' },
         {
           path: 'manufacturing_date',
