@@ -164,7 +164,7 @@ const OrderRow = ({
                                             <>{moment(row.order_date).format('DD/MM/YYYY')}</>
                                         )
                                     },
-                                    { label: 'From', path: 'order_from_location.location_name' },
+                                    { label: 'From', path: 'order_from_location.address' },
                                     { label: 'To', path: 'order_to_location.location_name' },
                                     { label: 'Status', path: 'status' },
                                 

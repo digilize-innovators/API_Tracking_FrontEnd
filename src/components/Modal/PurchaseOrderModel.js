@@ -1,4 +1,4 @@
-import { useFieldArray, useForm, Controller, useWatch } from 'react-hook-form'
+import { useFieldArray, useForm, Controller, useWatch } from 'react-hook-form'  
 import {
   Modal,
   Box,
@@ -56,20 +56,29 @@ const purchaseSchema = yup.object().shape({
       })
     )
     .min(1, 'At least one purchase item is required')
-    .test('no-duplicate-batch', 'Duplicate batch not allowed', orders => {
-      if (!orders) return true
-      const seen = new Set()
-      for (const order of orders) {
-        const key = order?.batchId
-        if (seen.has(key)) {
-          return false
-        }
-        if (key) {
-          seen.add(key)
-        }
-      }
-      return true
-    })
+   .test('no-duplicate-product-batch', 'Same product cannot have duplicate batches', orders => {
+  if (!orders) return true;
+
+  const seen = new Set();
+
+  for (const order of orders) {
+    const productId = order?.productId;
+    const batchId = order?.batchId;
+
+    if (!productId || !batchId) continue;
+
+    const key = `${productId}-${batchId}`;
+
+    if (seen.has(key)) {
+      return false; 
+    }
+
+    seen.add(key);
+  }
+
+  return true;
+})
+
 })
 
 const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handleSubmitForm }) => {
@@ -82,6 +91,8 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
   const [openConfirm, setOpenConfirm] = useState(false)
   const [deleteBatch, setDeleteBatch] = useState('')
   const [deleteIndex, setDeleteIndex] = useState(null)
+  const [deletedOrders, setDeletedOrders] = useState([])
+  const [error, setError] = useState('')
   const { settings } = useSettings()
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
@@ -126,7 +137,11 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         orders: purchaseDetail.map(order => ({
           productId: order.product_id || '',
           batchId: order.batch_id || '',
-          qty: order.qty || ''
+          qty: order.qty || '',
+          added: false,
+          edited: false,
+          deleted: false,
+          orderDetailId: order.id
         }))
       })
     } else {
@@ -135,7 +150,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         orderDate: '',
         from: '',
         to: locationTo.id || '',
-        orders: [{ productId: '', batchId: '', qty: '' }]
+        orders: [{ productId: '', batchId: '', qty: '', added: true, edited: false, deleted: false }]
       })
     }
   }, [editData])
@@ -299,74 +314,55 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         initialEditable[i] = false // disable all by default
       }
       setEditableIndex(initialEditable)
+      setDeletedOrders([])
     }
   }, [open, editData])
 
 
 
-  const handleDeleteOrder = async (orderId, index) => {
-    try {
-      setIsLoading(true)
-      if (orderId) {
-        const res = await api(`/purchase-order/details/${orderId}`, { orderId: editData.id }, 'delete', true)
-        if (!res.data.success) {
-          console.error('Failed to delete item:', res.data)
-          return
-        }
-      }
-      remove(index)
-      setEditableIndex(prev => {
-        const newState = { ...prev }
-        delete newState[index]
-        const updatedState = {}
-        Object.keys(newState).forEach(key => {
-          const numKey = parseInt(key)
-          if (numKey > index) {
-            updatedState[numKey - 1] = newState[numKey]
-          } else if (numKey < index) {
-            updatedState[numKey] = newState[numKey]
-          }
-        })
-        return updatedState
-      })
-    } catch (error) {
-      console.error('Error deleting order item:', error)
-    } finally {
-      setIsLoading(false)
+  const handleDeleteOrder = (orderId, index) => {
+    const row = getValues(`orders.${index}`)
+    const hasUnsavedEdits = Object.values(editableIndex).some((isEditing) => isEditing)
+
+    if (hasUnsavedEdits) {
+      setError('Please save edited item(s).')
       setOpenConfirm(false)
-      setDeleteBatch('')
-      setDeleteIndex(null)
+      return
     }
+
+    if (!row?.added) {
+      setDeletedOrders(prev => [
+        ...prev,
+        { ...row, deleted: true, edited: false, added: false }
+      ])
+    }
+
+    remove(index)
+    setOpenConfirm(false)
+    setDeleteBatch('')
+    setDeleteIndex(null)
   }
 
 
-  const handleEditOrSave = async index => {
+  const handleEditOrSave = (index) => {
     const isEditing = editableIndex?.[index]
     if (isEditing) {
       const updatedItem = getValues(`orders.${index}`)
-      updatedItem.orderId = editData.id
-      const itemId = purchaseDetail?.[index]?.id
 
-      if (itemId) {
-        try {
-          setIsLoading(true)
-          const res = await api(`/purchase-order/details/${itemId}`, updatedItem, 'put', true)
-          if (res.data.success) {
-            setEditableIndex(prev => ({
-              ...prev,
-              [index]: false // Exit edit mode
-            }))
-          } else {
-            console.error('Failed to update order', res.data)
-          }
-        } catch (err) {
-          console.error('Error updating order', err)
-        } finally {
-          setIsLoading(false)
-        }
+      if (updatedItem.qty > 10000) {
+        setError('qty is not more than 10000')
+        return
       }
+
+      setValue(`orders.${index}.edited`, true)
+      setValue(`orders.${index}.added`, false)
+      setValue(`orders.${index}.deleted`, false)
+
+      setEditableIndex(prev => ({
+        ...prev,
+        [index]: false
+      }))
     } else {
-      // Enter edit mode
       setEditableIndex(prev => ({
         ...prev,
         [index]: true
@@ -376,7 +372,26 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
 
   const handleReset = () => {
     reset() // Resets the form values
-    // setBatchOptionsMap({}) // Also clear the batch dropdown options
+    setDeletedOrders([])
+    setError('')
+  }
+
+  const onSubmit = (data) => {
+    const hasUnsavedEdits = Object.values(editableIndex || {}).some(val => val === true)
+    if (hasUnsavedEdits) {
+      setError('Please save or cancel all edits before submitting.')
+      return
+    }
+
+    const deletedData = deletedOrders.filter(item => item.productId !== '')
+    
+    const payload = {
+      ...data,
+      orders: [...data.orders, ...deletedData]
+    }
+    setDeletedOrders([])
+    console.log(payload)
+    handleSubmitForm(payload)
   }
 
   return (
@@ -393,10 +408,10 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
             {editData?.order_no ? 'Edit Purchase Order' : 'Add Purchase Order'}
           </Typography>
 
-          <form onSubmit={handleSubmit(handleSubmitForm)}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <Grid2 container spacing={2}>
               <Grid2 size={6}>
-                <CustomTextField name='orderNo' label='Order No' control={control} disabled={!!editData?.location_id} />
+                <CustomTextField name='orderNo' type='Number' label='Order No' control={control} disabled={!!editData?.location_id} />
               </Grid2>
               <Grid2 size={6}>
                 <Controller
@@ -553,6 +568,15 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                   )
                 })}
               </Grid2>
+              {
+                error.length > 0 && (
+                  <Grid2>
+                    <Typography color='error' sx={{ mt: 2, fontSize: 14 }}>
+                      {error}
+                    </Typography>
+                  </Grid2>
+                )
+              }
               {errors.orders?.root?.message && (
                 <Grid2>
                   <Typography color='error' sx={{ mt: 2, fontSize: 14 }}>
@@ -568,7 +592,10 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
               <Button type='button' variant='outlined' onClick={handleReset} color='primary'>
                 Reset
               </Button>
-              <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={handleClose}>
+              <Button variant='outlined' color='error' sx={{ marginLeft: 3.5 }} onClick={() => {
+                setDeletedOrders([])
+                handleClose()
+              }}>
                 Close
               </Button>
             </Grid2>

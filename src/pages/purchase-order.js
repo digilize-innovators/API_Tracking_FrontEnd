@@ -1,4 +1,4 @@
-'use-client'
+'use-client' 
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Box, Grid2, Typography, Button } from '@mui/material'
 import { IoMdAdd } from 'react-icons/io'
@@ -129,6 +129,7 @@ const Index = () => {
       const data = { ...formData }
       setIsLoading(true)
       const res = await api('/purchase-order/', data, 'post', true)
+      console.log("puchase order::",res)
       setIsLoading(false)
       if (res?.data?.success) {
         setOpenModal(false)
@@ -141,12 +142,12 @@ const Index = () => {
         })
         setEditData({})
       } else {
-        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
+        setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res?.data?.message })
         if (res.data.code === 401) {
           removeAuthToken()
           router.push('/401')
         } else if (res.data.code === 409) {
-          setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
+          setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res?.data?.message })
           console.log('409 :', res.data.message)
         } else if (res.data.code == 500) {
           setOpenModal(false)
@@ -164,18 +165,8 @@ const Index = () => {
   const editPurchaseOrder = async () => {
     try {
       const data = { ...formData }
-      console.log('editPurchaseOrder editPurchaseOrder ', data)
+      console.log('editPurchaseOrder:: ', data)
 
-      const filteredOrders = data.orders.filter(
-        order => !purchaseDetail.some(item => item.batch_id === order.batchId)
-      )
-      if (filteredOrders.length > 0) {
-        data.orders = filteredOrders
-      } else {
-        delete data.orders
-      }
-
-      delete data.to
       console.log('EDIT FORM DATA :->', data)
       setIsLoading(true)
       const res = await api(`/purchase-order/${editData.id}`, data, 'put', true)

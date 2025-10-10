@@ -10,6 +10,11 @@ const CustomSearchBar = forwardRef(({ handleSearchClick }, ref) => {
             handleSearchClick(searchInputRef.current.value);
         }
     };
+    //    const handleKeyDown = (event) => {
+    //     if (event.key === 'Enter') {
+    //         handleClick();
+    //     }
+    // };
 
     useImperativeHandle(ref, () => ({
         resetSearch: () => {
@@ -33,6 +38,7 @@ const CustomSearchBar = forwardRef(({ handleSearchClick }, ref) => {
   inputProps={{
     maxLength: 20, 
   }}
+//    onKeyDown={handleKeyDown}
 />
             </Box>
             <Box className='mx-2'>

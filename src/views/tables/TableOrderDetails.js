@@ -28,7 +28,7 @@ const downloadPdf = data => {
     doc.setFontSize(10)
     doc.text('Order No : ' + (orderDetail?.order_no || '__'), 15, 25)
     doc.text('Product Name  : ' + (row?.api_name || '__'), 15, 30)
-    doc.text('Batch No. : ' + (row?.batch_no || '__'), 15, 35)
+    doc.text('Batch No. : ' + (row?.batch_id || '__'), 15, 35)
   }
 
   const addTableSection = (title, items, startIndex, startY) => {
@@ -153,7 +153,7 @@ const downloadPdf = data => {
         {row?.api_name}
       </TableCell>
       <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-        {row?.batch_no}
+        {row?.batch_id}
       </TableCell>
 
       <TableCell align='center' className='p-2' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
@@ -259,11 +259,11 @@ const TableOrderDetails = ({
                 align='center'
                 sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('batch_no')}
+                onClick={() => handleSort('batch_id')}
               >
                 Batch
                 <IconButton align='center' aria-label='expand row' size='small'>
-                  {getSortIcon(sortBy, 'batch_no', sortDirection)}
+                  {getSortIcon(sortBy, 'batch_id', sortDirection)}
                 </IconButton>
               </TableCell>
               <TableCell
