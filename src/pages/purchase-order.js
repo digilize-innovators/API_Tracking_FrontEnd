@@ -66,7 +66,7 @@ const Index = () => {
     index + 1,
     item.order_no,
     item.status,
-    item.order_from_location.location_name,
+    item.order_from_location.address,
     item.order_to_location.location_name,
     moment(item.order_date).format('DD/MM/YYYY, hh:mm:ss a')
   ])

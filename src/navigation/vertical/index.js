@@ -22,6 +22,7 @@ import {
   MdSummarize     
   
 } from 'react-icons/md'
+import { SiMaterialformkdocs } from "react-icons/si";
 import { TbReportAnalytics } from 'react-icons/tb';
 
 
@@ -121,6 +122,12 @@ const navigation = () => {
       title: 'Batch Printing',
       icon: MdOutlineBatchPrediction,
       path: '/batch-printing',
+      mainTitle: false
+    },
+     {
+      title: 'Material Issue',
+      icon: SiMaterialformkdocs,
+      path: '/materialissue',
       mainTitle: false
     },
     {

@@ -336,7 +336,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
         { ...row, deleted: true, edited: false, added: false }
       ])
     }
-
+ 
     remove(index)
     setOpenConfirm(false)
     setDeleteBatch('')
@@ -489,7 +489,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                           label='Product'
                           control={control}
                           options={productData}
-                          disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
+                          disabled={!!editData.id && !!existOrder}
 
                         />
                       </Grid2>
@@ -501,7 +501,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
                           label='Batch'
                           type='Text'
                           control={control}
-                          disabled={!!editData.id && !!existOrder && !editableIndex?.[index]}
+                          disabled={!!editData.id && !!existOrder }
                         />
                       </Grid2>
                       <Grid2 size={3.5}>
