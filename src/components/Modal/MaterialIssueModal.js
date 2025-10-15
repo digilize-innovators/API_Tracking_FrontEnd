@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useForm, Controller} from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { Modal, Box, Typography, Button, Grid2, TextField, } from '@mui/material'
@@ -13,10 +13,11 @@ import { useRouter } from 'next/router'
 import PropTypes from 'prop-types'
 
 const MaterialIssueSchema = yup.object().shape({
+  materialissueId: yup.string().required("Material Issue can't be empty"),
   productId: yup.string().required("Product can't be empty"),
   batch_uuid: yup.string().required("Batch can't be empty"),
   quantityIssue: yup.string().required("Quality Issue can't be empty"),
-  qcresult:yup.string().required("QC Result can't be empty"),
+  qcresult: yup.string().required("QC Result can't be empty"),
   orderDate: yup.string().required('Select orders date'),
 
 })
@@ -30,7 +31,7 @@ function MaterialIssueModel({ open, onClose, editData, handleSubmitForm }) {
   const { control, handleSubmit, reset, watch, formState: { errors } } = useForm({
     resolver: yupResolver(MaterialIssueSchema),
     defaultValues: {
-
+      materialissueId: '',
       productId: '',
       batch_uuid: '',
       quantityIssue: '',
@@ -46,14 +47,14 @@ function MaterialIssueModel({ open, onClose, editData, handleSubmitForm }) {
     }
     return ''
   }
- 
+
 
   useEffect(() => {
     if (editData) {
       reset({
-
-        productId: editData?.product_uuid || '',
-        batch_uuid: editData?.batch_uuid || '',
+        materialissueId: editData?.materialissue_id || '',
+        productId: editData?.product_id || '',
+        batch_uuid: editData?.batch_id || '',
         quantityIssue: editData?.quantity_issue || '',
         qcresult: editData?.qcresult || null,
         orderDate: formatDate(editData.order_date) || '',
@@ -73,7 +74,7 @@ function MaterialIssueModel({ open, onClose, editData, handleSubmitForm }) {
             value: item.product_uuid,
             label: item.api_name
           }))
-          
+
           setAllProductData(data)
         } else if (res.data.code === 401) {
           removeAuthToken()
@@ -88,41 +89,41 @@ function MaterialIssueModel({ open, onClose, editData, handleSubmitForm }) {
     getAllProductData()
   }, [])
 
-   const watchProductId = watch('productId');
-   useEffect(() => {
-  const getAllBatches = async () => {
-    if (!watchProductId) {
-      setAllBatchData([]);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const res = await api(  `/batch/${watchProductId}?limit=-1&history_latest=true`, {},'get',true  );
-      if (res.data.success) {
-        const data = res.data?.data?.batches?.map(item => ({
-          id: item.batch_uuid,
-          value: item.batch_uuid,
-          label: item.batch_no
-        }));
-        setAllBatchData(data);
-      } else if (res.data.code === 401) {
-        removeAuthToken();
-        router.push('/401');
+  const watchProductId = watch('productId');
+  useEffect(() => {
+    const getAllBatches = async () => {
+      if (!watchProductId) {
+        setAllBatchData([]);
+        return;
       }
-    } catch (error) {
-      console.log('Error in get Batches ', error);
-    } finally {
-      setIsLoading(false);
-    }
+
+      try {
+        setIsLoading(true);
+        const res = await api(`/batch/${watchProductId}?limit=-1&history_latest=true`, {}, 'get', true);
+        if (res.data.success) {
+          const data = res.data?.data?.batches?.map(item => ({
+            id: item.batch_uuid,
+            value: item.batch_uuid,
+            label: item.batch_no
+          }));
+          setAllBatchData(data);
+        } else if (res.data.code === 401) {
+          removeAuthToken();
+          router.push('/401');
+        }
+      } catch (error) {
+        console.log('Error in get Batches ', error);
+      } finally {
+        setIsLoading(false);
+      }
       reset(prev => ({
         ...prev,
         batch_uuid: ''
       }))
-  };
+    };
 
-  getAllBatches();
-}, [watchProductId]);
+    getAllBatches();
+  }, [watchProductId]);
 
 
 
@@ -141,45 +142,16 @@ function MaterialIssueModel({ open, onClose, editData, handleSubmitForm }) {
           {editData?.id ? 'Edit Material Issue' : 'Add Material Issue'}
         </Typography>
         <form onSubmit={handleSubmit(handleSubmitForm)}>
-          <Grid2 container spacing={2}>
-            <Grid2 size={6}>
-              <CustomDropdown
-                name='productId'
-                label='Product ID *'
-                control={control}
-                options={allProductData}
-              />
-            </Grid2>
-            <Grid2 size={6}>
-              <CustomDropdown
-                name='batch_uuid'
-                label='Batch ID *'
-                control={control}
-                options={allBatchData}
-              />
-            </Grid2>
-          </Grid2>
 
-          <Grid2 container spacing={2} mt={2}>
-            <Grid2 size={6}>
-              <CustomDropdown
-              name={'qcresult'}
-                label='Qc Result'
-                control={control}
-                options={QcData}
-              />
-            </Grid2>
+          <Grid2 container spacing={2}>
             <Grid2 size={6}>
               <CustomTextField
-                name='quantityIssue'
-                label='Quality Issue *'
-                control={control} />
+                name='materialissueId'
+                label='Material Issue ID *'
+                control={control}
+                disabled={!!editData?.id} />
             </Grid2>
-          </Grid2>
-
-          <Grid2 container spacing={2}>
-
-            <Grid2 size={4}>
+            <Grid2 size={6}>
               <Controller
                 name='orderDate'
                 control={control}
@@ -202,7 +174,45 @@ function MaterialIssueModel({ open, onClose, editData, handleSubmitForm }) {
                 )}
               />
             </Grid2>
+
           </Grid2>
+
+          <Grid2 container spacing={2}>
+            <Grid2 size={6}>
+              <CustomDropdown
+                name='productId'
+                label='Product ID *'
+                control={control}
+                options={allProductData}
+              />
+            </Grid2>
+            <Grid2 size={6}>
+              <CustomDropdown
+                name='batch_uuid'
+                label='Batch ID *'
+                control={control}
+                options={allBatchData}
+              />
+            </Grid2>
+          </Grid2>
+
+          <Grid2 container spacing={2} mt={2}>
+            <Grid2 size={6}>
+              <CustomDropdown
+                name={'qcresult'}
+                label='Qc Result'
+                control={control}
+                options={QcData}
+              />
+            </Grid2>
+            <Grid2 size={6}>
+              <CustomTextField
+                name='quantityIssue'
+                label='Quantity Issue *'
+                control={control} />
+            </Grid2>
+          </Grid2>
+
 
 
           <Grid2 item xs={12} className='mt-3'>

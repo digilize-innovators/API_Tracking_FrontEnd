@@ -74,14 +74,15 @@ const Index = () => {
 
   const tableBody = materialIssueData?.data?.map((item, index) => [
     index + materialIssueData.index,
-    item?.product_uuid,
-    item?.batch_uuid,
+    item?.materialissue_id,
+    item?.product.product_history[0].api_name,
+    item?.batch.history[0].batch_no,
     item?.qcresult,
     item?.esign_status
   ])
 
   const tableData = {
-    tableHeader: ['Sr.No.', 'Product Id', 'Batch Id', 'Qc Result', 'E-Sign'],
+    tableHeader: ['Sr.No.','Id','Product Id', 'Batch Id', 'Qc Result', 'E-Sign'],
     tableHeaderText: 'Material Issue Report',
     tableBodyText: 'Material Issue Data',
     filename: 'MaterialIssue'
@@ -137,7 +138,7 @@ const Index = () => {
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          remarks: esignRemark?.length > 0 ? esignRemark : `material issue added - ${formData.productId}`,
+          remarks: esignRemark?.length > 0 ? esignRemark : `material issue added - ${formData.materialissueId}`,
           authUser
         }
       }
@@ -167,11 +168,11 @@ const Index = () => {
   const editMaterialIssue = async esign_status => {
     try {
       const data = { ...formData }
-      delete data.productId
+      delete data.materialissueId
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
-          remarks: esignRemark > 0 ? esignRemark : `Material Issue edited - ${formData?.productId}`,
+          remarks: esignRemark > 0 ? esignRemark : `Material Issue edited - ${formData?.materialissueId}`,
           authUser
         }
       }
@@ -349,7 +350,7 @@ const handleCreatorApproval = (remarks, user,isApprover) => {
 
     setAuthModalOpen(true)
     setESignStatusId(row.id)
-    setAuditLogMark(row.product_uuid)
+    setAuditLogMark(row.materialissue_id)
   }
 
   const handleUpdate = item => {

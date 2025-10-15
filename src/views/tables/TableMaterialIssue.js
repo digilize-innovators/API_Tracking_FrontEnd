@@ -9,14 +9,16 @@ const TableArea = props => {
       {...props}
       endpoint='/materialissue/'
       columns={[
-        { path: 'product_uuid', label: 'Product Id' },
-        { path: 'batch_uuid', label: 'Batch Id' },
+        { path: 'materialissue_id', label: 'MaterialIssue ID' },
+        { path: 'product.product_history[0].api_name', label: 'Product Id' },
+        { path: 'batch.history[0].batch_no', label: 'Batch Id' },
         { path: 'quantity_issue', label: 'Quality Issue' },
         { path: 'qcresult', label: 'QC Result' }
       ]}
       historyColumns={[
-         { path: 'product_uuid', label: 'Product Id' },
-        { path: 'batch_uuid', label: 'Batch Id' },
+        { path: 'materialissue_id', label: 'MaterialIssue ID' },
+        { path: 'product.product_history[0].api_name', label: 'Product Id' },
+        { path: 'batch.history[0].batch_no', label: 'Batch Id' },
         { path: 'quantity_issue', label: 'Quality Issue' },
         { path: 'qcresult', label: 'QC Result' }
       ]}

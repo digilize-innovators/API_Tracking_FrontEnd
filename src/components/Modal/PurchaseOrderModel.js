@@ -411,7 +411,7 @@ const PurchaseOrderModel = ({ open, handleClose, editData, purchaseDetail, handl
           <form onSubmit={handleSubmit(onSubmit)}>
             <Grid2 container spacing={2}>
               <Grid2 size={6}>
-                <CustomTextField name='orderNo' type='Number' label='Order No' control={control} disabled={!!editData?.location_id} />
+                <CustomTextField name='orderNo' label='Order No' control={control} disabled={!!editData?.location_id} />
               </Grid2>
               <Grid2 size={6}>
                 <Controller
