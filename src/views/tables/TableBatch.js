@@ -11,7 +11,7 @@ const TableBatch = props => {
       columns={[
         { path: 'batch_no', label: 'Batch No.' },
         { path: 'product.product_history[0].api_name', label: 'Product Name' },
-        { path: 'location.history[0].location_name', label: 'Location Name' },
+        { path: 'vendor.vendor_history[0].address', label: 'Location Name' },
         { 
           path: 'manufacturing_date', 
           label: 'Mfg. Date',
@@ -31,7 +31,7 @@ const TableBatch = props => {
       historyColumns={[
         { path: 'batch_no', label: 'Batch No.' },
         { path: 'product.product_history[0].api_name', label: 'Product Name' },
-        { path: 'location.history[0].location_name', label: 'Location Name' },
+        { path: 'vendor.vendor_history[0].address', label: 'Location Name' },
         { 
           path: 'manufacturing_date', 
           label: 'Mfg. Date',
