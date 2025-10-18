@@ -294,7 +294,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
                     id='location'
                     label='Location'
                     placeholder='Location'
-                    value={showBox1Data?.location?.location_name ? showBox1Data?.location?.location_name : ''}
+                    value={showBox1Data?.vendor?.vendor_name ? showBox1Data?.vendor?.vendor_name : ''}
                     disabled={true}
                   />
                 </Box>
@@ -366,7 +366,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
                           pattern: '[0-9]*' // Forces numeric input on mobile
                         }
                       }}
-                      disabled={!showBox1Data?.location||showBox1Data?.isBatchEnd}
+                      disabled={!showBox1Data?.vendor||showBox1Data?.isBatchEnd}
                       onChange={event => {
                         const value = event.target.value
                         // Check if empty string (allowing empty field)

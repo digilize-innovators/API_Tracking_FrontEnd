@@ -70,7 +70,7 @@ const Index = () => {
     index + codeRequestData.index,
     item?.product.product_history[0].api_name,
     item?.batch.batch_no,
-    item?.locations.location_name,
+    item?.vendor.vendor_history[0].address,
     item?.batch.qty,
     item?.no_of_codes,
     item?.status

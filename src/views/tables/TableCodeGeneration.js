@@ -65,7 +65,7 @@ const Row = ({
           {row.batch.batch_no}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-          {row.locations?.history[0]?.location_name}
+          {row.vendor?.vendor_history[0]?.address}
         </TableCell>
         <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
           {row.batch.qty}
@@ -167,7 +167,7 @@ const Row = ({
                             {historyRow.batch.history[0].batch_no}
                           </TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
-                            {historyRow.locations.history[0].location_name}
+                            {historyRow.vendor.vendor_history[0].address}
                           </TableCell>
                           <TableCell align='center' sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
                             {historyRow.batch.history[0].qty}
@@ -371,12 +371,12 @@ const TableCodeGeneration = ({
               <TableCell
                 align='center'
                 sx={{ cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                onClick={() => handleSort('locations.history[0].location_name')}
+                onClick={() => handleSort('vendor.vendor_history[0].address')}
               >
                 <Box display='flex' alignItems='center' justifyContent='center'>
                   Location
                   <IconButton aria-label='expand row' size='small'>
-                    {getSortIcon(sortBy, 'locations.history[0].location_name', sortDirection)}
+                    {getSortIcon(sortBy, 'vendor.vendor_history[0].address', sortDirection)}
                   </IconButton>
                 </Box>
               </TableCell>
