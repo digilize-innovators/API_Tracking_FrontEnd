@@ -27,7 +27,6 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
   const router = useRouter()
   const [alertData, setAlertData] = useState({ type: '', message: '', variant: 'filled', openSnackbar: false })
   const [country, setCountry] = useState('')
-  const [crmURL, setCrmURL] = useState({ value: '', checked: false })
   const [codeStructure, setCodeStructure] = useState([])
 
   const [errorCountry, setErrorCountry] = useState({ isError: false, message: '' })
@@ -73,6 +72,16 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
         {
           label: 'Unique Code',
           value: 'uniqueCode',
+          checked: false
+        }
+      ]
+    },
+      {
+      label: 'CRM URL',
+      options: [
+        {
+          label: 'CRM URL',
+          value: 'CRMURL',
           checked: false
         }
       ]
@@ -147,22 +156,9 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
     }
   }
 
-  const handleCRMURLChange = e => {
-    setCrmURL({ ...crmURL, checked: !crmURL.checked })
-    if (codeStructure?.length) {
-      const updatedCodeStructure = []
-      if (e.target.checked) {
-        setCodeStructure([...codeStructure, e.target.value])
-      } else {
-        updatedCodeStructure.splice(updatedCodeStructure.indexOf('CRMURL'), 1)
-        setCodeStructure([...codeStructure, ...updatedCodeStructure])
-      }
-    }
-  }
 
   const resetForm = () => {
     setCodeStructure([])
-    setCrmURL({ ...crmURL, checked: false })
     setCountry('')
     const updatedData = urlMakerData.map(el => {
       return {
@@ -184,7 +180,6 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
 
   useEffect(() => {
     resetForm()
-    getCRMURL()
   }, [])
 
   useEffect(() => {
@@ -217,15 +212,11 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
     setEditData(prev => ({
       ...prev,
       country: prev.country,
-      crmurl: prev.crmurl,
       codeStructure: prev.codeStructure
     }))
   }
 
   const updateCheckedValues = valuesToFind => {
-    if (valuesToFind?.includes('CRMURL')) {
-      setCrmURL({ value: 'CRMURL', checked: true })
-    }
 
      const updateGroupOptions = group => {
     const updatedOptions = group?.options?.map(option => {
@@ -239,25 +230,6 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
   };
 
   setUrlMakerData(prevData => prevData.map(updateGroupOptions))
-  }
-
-  const getCRMURL = async () => {
-    try {
-      setIsLoading(true)
-      const res = await api('/superadmin-configuration/', {}, 'get', true)
-      setIsLoading(false)
-      if (res.data.success) {
-        
-        setCrmURL({ value: res.data.data[0].crm_url, checked: false })
-      } else if (res.data.code === 401) {
-          removeAuthToken()
-          router.push('/401')
-        
-      }
-    } catch (error) {
-      console.log('Error in get companies ', error)
-      setIsLoading(false)
-    }
   }
 
   const validateNotEmpty = (field, value, fieldName) => {
@@ -300,7 +272,6 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
       const data = {
         country,
         codeStructure: codeStructure.join(' ')
-        // crmURL
       }
       setIsLoading(true)
       const res = await api('/country-master/', data, 'post', true)
@@ -472,22 +443,6 @@ const AddCountryModalComponent = ({ openModal, handleCloseModal, editData, setEd
                 <Button onClick={() => setCodeStructure([...codeStructure, '<FNC>'])}>{'<FNC>'}</Button>
               </Grid2>
             </Grid2>
-
-            {crmURL.value && (
-              <Grid2 container spacing={2}>
-                <Grid2 size={5} sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant='body1'>CRM URL :</Typography>
-                </Grid2>
-                <Grid2 size={7}>
-                  <FormGroup row>
-                    <FormControlLabel
-                      control={<Checkbox value={'CRMURL'} checked={crmURL.checked} onChange={handleCRMURLChange} />}
-                      label={'CRMURL'}
-                    />
-                  </FormGroup>
-                </Grid2>
-              </Grid2>
-            )}
 
             <Grid2 container spacing={2} className='mt-2'>
               <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={handleSubmitForm}>

@@ -294,7 +294,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
                     id='location'
                     label='Location'
                     placeholder='Location'
-                    value={showBox1Data?.vendor?.vendor_name ? showBox1Data?.vendor?.vendor_name : ''}
+                    value={showBox1Data?.vendor?.vendor_history[0]?.address ? showBox1Data?.vendor?.vendor_history[0]?.address : ''}
                     disabled={true}
                   />
                 </Box>

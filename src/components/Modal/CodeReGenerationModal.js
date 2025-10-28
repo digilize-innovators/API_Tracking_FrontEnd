@@ -128,7 +128,7 @@ const CodeReGenerationModal = ({
             <TextField
               fullWidth
               label='Location'
-              value={availableCodeData?.locations?.history[0].location_name}
+              value={availableCodeData?.vendor?.vendor_history[0]?.address}
               disabled
             />
           </Box>
