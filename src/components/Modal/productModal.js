@@ -250,7 +250,7 @@ function ProductModal({
         hazardClassification: editData?.hazard_classification || '',
         containerSize: editData.container_size || '',
         shelfLife: editData.shelfLife || '',
-        status: editData?.is_active || false
+        status: editData?.status || false
 
       })
       if (editData?.product_image && editData?.product_image !== '/images/avatars/p.png') {
