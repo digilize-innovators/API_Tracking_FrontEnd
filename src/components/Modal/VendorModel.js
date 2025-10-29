@@ -66,7 +66,16 @@ const VendorModel = ({ open, onClose, editData, handleSubmitForm }) => {
             .split(/\s+/)
             .filter(Boolean)
       setCodeStructure(values)
-    }
+    }else if (open) {
+    reset({
+      vendorCode: '',
+      vendorName: '',
+      address: '',
+      printingcomplied: false,
+      vendorStructure: ''
+    });
+    setCodeStructure([]);
+  }
     setValue('vendorStructure', (editData?.code_structure && editData?.code_structure.toString()) || '')
   }, [editData])
 
