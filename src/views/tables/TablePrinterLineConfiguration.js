@@ -13,8 +13,22 @@ const TablePrinterLineConfiguration = props => {
         { path: 'printer_line_name', label: 'PrinterLine Name' },
         { path: 'PrinterCategory.PrinterCategoryHistory[0].printer_category_name', label: 'Printer Category' },
         { path: 'PrinterMaster.PrinterMasterHistory[0].printer_id', label: 'Priner ID' },
-        { path: 'ControlPanel.ControlPanelMasterHistory[0].name', label: 'ControlPanel' },
-        { path: 'line_no', label: 'Line No.' },
+        // { path: 'ControlPanel.ControlPanelMasterHistory[0].name', label: 'ControlPanel' },
+        // { path: 'line_no', label: 'Line No.' },
+         {
+          label: 'ControlPanel',
+          path: 'controlpanel_enable',
+           render: row => {
+            const status = row.controlpanel_enable ? 'enabled' : 'disabled'
+            return (
+              <StatusChip
+                label={status}
+                color={statusObj[status]?.color || 'default'}
+              />
+            )
+          }
+        },
+        { path: 'line_no', label: 'Line No.', render: row => row.line_no ? row.line_no : '-' },
         {
           label: 'Camera',
           path: 'camera_enable',
@@ -33,8 +47,22 @@ const TablePrinterLineConfiguration = props => {
         { path: 'printer_line_name', label: 'PrinterLine Name' },
         { path: 'PrinterCategory.PrinterCategoryHistory[0].printer_category_name', label: 'Printer Category' },
         { path: 'PrinterMaster.PrinterMasterHistory[0].printer_id', label: 'Priner ID' },
-        { path: 'ControlPanelMaster.ControlPanelMasterHistory[0].name', label: 'ControlPanel' },
-        { path: 'line_no', label: 'Line No.' },
+        // { path: 'ControlPanelMaster.ControlPanelMasterHistory[0].name', label: 'ControlPanel' },
+        // { path: 'line_no', label: 'Line No.' },
+        {
+          label: 'ControlPanel',
+          path: 'controlpanel_enable',
+          render: row => {
+            const status = row.controlpanel_enable ? 'enabled' : 'disabled'
+            return (
+              <StatusChip
+                label={status}
+                color={statusObj[status]?.color || 'default'}
+              />
+            )
+          }
+        },
+        { path: 'line_no', label: 'Line No.', render: row => row.line_no ? row.line_no : '-' },
         { path: 'area_category.history[0].area_category_name', label: 'Area Category' },
         { path: 'area.history[0].area_name', label: 'Area' },
         { path: 'locations.history[0].location_name', label: 'Location' },

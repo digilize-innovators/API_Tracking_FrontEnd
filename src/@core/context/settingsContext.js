@@ -16,13 +16,13 @@ const accessibity = Cookies.get('accessibility')
 if (accessibity) {
   const accessibityObj = JSON.parse(accessibity)
   initialSettings = {
-    themeColor: accessibityObj?.themeColor || '#50BDA0',
-    mode: accessibityObj?.mode || 'light',
-    contentWidth: themeConfig?.contentWidth || 'boxed',
+    themeColor: accessibityObj?.themeColor || initialSettings.themeColor,
+    mode: accessibityObj?.mode || initialSettings.mode,
+    contentWidth: themeConfig?.contentWidth || initialSettings.contentWidth,
     recordPerPage: [5, 10, 25, 50, 100],
     rowsPerPage: 25,
-    fontFamily: accessibityObj?.fontFamily || 'Arial',
-    fontSize: accessibityObj?.fontSize || 16
+    fontFamily: accessibityObj?.fontFamily || initialSettings.fontFamily,
+    fontSize: accessibityObj?.fontSize || initialSettings.fontSize
   }
 }
 export const SettingsContext = createContext({

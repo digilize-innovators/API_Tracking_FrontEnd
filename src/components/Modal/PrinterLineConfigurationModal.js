@@ -38,20 +38,45 @@ const PrinterLineCongSchema = yup.object().shape({
     .trim()
     .max(50, 'Printer name length should be less than 50')
     .required("Printer name can't be empty"),
+    
+    // controlpanelId: yup.string().trim().required("Control Panel can't be empty"),
 
-  controlpanelId: yup.string().trim().required("Control Panel can't be empty"),
+    // lineNo: yup
+    //   .string()
+    //   .trim()
+    //   .matches(/^\d+$/, 'Line no. must be a number')
+    //   .test('isValidRange', 'Line no. must be between 1 and 5', value => {
+    //     const num = parseInt(value, 10)
+    //     return num >= 1 && num <= 5
+    //   })
+    //   .required("Line no. can't be empty"),
 
-  lineNo: yup
-    .string()
-    .trim()
-    .matches(/^\d+$/, 'Line no. must be a number')
-    .test('isValidRange', 'Line no. must be between 1 and 5', value => {
-      const num = parseInt(value, 10)
-      return num >= 1 && num <= 5
-    })
-    .required("Line no. can't be empty"),
+   controlpanelId: yup.string().when('controlpanelEnable', {
+    is: true,
+    then: schema => schema.required('Control Panel ID is required when control panel is enabled'),
+    otherwise: schema => schema.default('')
+  }),
+
+  lineNo: yup.string().when('controlpanelEnable', {
+    is: true,
+    then: schema =>
+      schema
+        .trim()
+        .matches(/^\d+$/, 'Line no. must be a number')
+        .test('isValidRange', 'Line no. must be between 1 and 5', value => {
+          if (!value) return false // required when enabled
+          const num = parseInt(value, 10)
+          return num >= 1 && num <= 5
+        })
+        .required('Line no. is required when control panel is enabled'),
+    otherwise: schema => schema.optional()
+  }),
+
 
   cameraEnable: yup.boolean().default(false).optional(),
+
+  controlpanelEnable: yup.boolean().default(false).optional(), 
+
   cameraId: yup.string().when('cameraEnable', {
     is: true,
     then: schema => schema.required('Camera ID is required when camera is enabled'),
@@ -77,6 +102,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
       controlpanelId: '',
       lineNo: '',
       cameraEnable: false,
+      controlpanelEnable: false,
       cameraId: '',
       linePcAddress: '',
       printerEnabled: false
@@ -98,6 +124,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
   const { setIsLoading } = useLoading()
   const { removeAuthToken } = useAuth()
   const camera_enable = watch('cameraEnable')
+  const controlpanel_enable = watch('controlpanelEnable')
 
   useEffect(() => {
     if (editData) {
@@ -111,6 +138,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
         controlpanelId: editData?.control_panel_id || '',
         lineNo: editData?.line_no || '',
         cameraEnable: editData?.camera_enable || false,
+        controlpanelEnable: editData?.controlpanel_enable || false,
         cameraId: editData?.cameraId || '',
         linePcAddress: editData?.line_pc_ip || '',
         printerEnabled: editData?.enabled || false
@@ -122,7 +150,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     getAllPrinterCategories()
     getAllAreaCategory()
     getAllLocation()
-    getAllControlPanels()
+    //getAllControlPanels()
     return () => {}
   }, [])
 
@@ -134,6 +162,15 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
       setValue('cameraId', '')
     }
   }, [camera_enable])
+
+  useEffect(() => {
+    if (controlpanel_enable) {
+      getAllControlPanels()
+    } else if (allControlPanelData.length && !controlpanel_enable) {
+      setValue('controlpanelId', '')
+      setValue('lineNo', '')
+    }
+  }, [controlpanel_enable])
 
   useEffect(() => {
     if (areaCategoryId !== '') {
@@ -336,7 +373,7 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
     label: item.name
   }))
 
-  return (
+   return (
     <Modal
       open={open}
       onClose={handleClose}
@@ -349,15 +386,15 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
           {editData?.id ? 'Edit Printer Line Configuration' : 'Add Printer Line Configuration'}
         </Typography>
         <form onSubmit={handleSubmit(handleSubmitForm)}>
-          <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
-            <Grid2 size={6}>
+          <Grid2 container spacing={2}>
+            <Grid2 size={6} sx={{ mt: 1 }}>
               <CustomTextField name='printerLineName' label='Printer Line Name *' control={control} />
             </Grid2>
-            <Grid2 size={6}>
+            <Grid2 size={6} sx={{ mt: 1 }}>
               <CustomDropdown name='locationId' label='Location * ' control={control} options={locationId} />
             </Grid2>
           </Grid2>
-          <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
+          <Grid2 container spacing={2}>
             <Grid2 size={6}>
               <CustomDropdown name='areaCategoryId' label='AreaCategory *' control={control} options={AreaCategory} />
             </Grid2>
@@ -378,21 +415,9 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
               <CustomDropdown name='printer' label='printer *' control={control} options={printers} />
             </Grid2>
           </Grid2>
-          <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
-            <Grid2 size={6}>
-              <CustomDropdown
-                name='controlpanelId'
-                label='controlpanel *'
-                control={control}
-                options={controlPanelData}
-              />
-            </Grid2>
-            <Grid2 size={6}>
-              <CustomTextField name='lineNo' label='Line No *' control={control} />
-            </Grid2>
-          </Grid2>
-          <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
-            <Grid2 size={6}>
+
+          <Grid2 container spacing={2}>
+            <Grid2 size={6} sx={{ mt: 3}}>
               <Typography>
                 <Controller
                   name='printerEnabled'
@@ -408,8 +433,9 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
               <CustomTextField name='linePcAddress' label='Line Pc Address *' control={control} />
             </Grid2>
           </Grid2>
-          <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
-            <Grid2 size={6}>
+
+          <Grid2 container spacing={2}>
+            <Grid2 size={6} sx={{ mt: 1}}>
               <Typography>
                 <Controller
                   name='cameraEnable'
@@ -420,7 +446,6 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
                 />
                 Camera Enable
               </Typography>
-              {/* <CustomTextField name='cameraIp' label='Camera Ip' control={control} /> */}
             </Grid2>
             {camera_enable && (
               <Grid2 size={6}>
@@ -428,6 +453,39 @@ function PrinterLineConfigurationModal({ open, handleClose, editData, handleSubm
               </Grid2>
             )}
           </Grid2>
+
+          <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
+            <Grid2 size={6}>
+              <Typography>
+                <Controller
+                  name='controlpanelEnable'
+                  control={control}
+                  render={({ field }) => (
+                    <FormControlLabel control={<Switch {...field} checked={field.value} color='primary' />} />
+                  )}
+                />
+                Control Panel
+              </Typography>
+            </Grid2>
+          </Grid2>
+
+          {controlpanel_enable && (
+            <Grid2 container spacing={2} sx={{ margin: '0.5rem 0rem' }}>
+              <Grid2 size={6} sx={{mt:2}}>
+                <CustomDropdown
+                  name='controlpanelId'
+                  label='Control Panel Name *'
+                  control={control}
+                  options={controlPanelData}
+                />
+              </Grid2>
+
+              <Grid2 size={6} sx={{mt:2}}>
+                <CustomTextField name='lineNo' label='Line No *' control={control} />
+              </Grid2>
+            </Grid2>
+          )}
+
           <Grid2 item xs={12} className='mt-3'>
             <Button variant='contained' sx={{ marginRight: 3.5 }} type='submit'>
               Save Changes
