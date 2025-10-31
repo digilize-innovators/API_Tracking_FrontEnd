@@ -163,8 +163,9 @@ const Index = () => {
           type: 'success',
           message: 'Printer Master added successfully'
         })
-        setOpenModal(false)
         resetForm()
+        setOpenModal(false)
+        setPendingAction(true)
       } else {
         console.log('Erorr to add printer master', res.data)
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data?.message })
@@ -204,8 +205,8 @@ const Index = () => {
           type: 'success',
           message: 'Printer master updated successfully'
         })
-        setOpenModal(false)
         resetForm()
+        setOpenModal(false)
       } else {
         console.log('error to edit Printer Master', res.data)
         setAlertData({ ...alertData, openSnackbar: true, type: 'error', message: res.data.message })
@@ -224,7 +225,6 @@ const Index = () => {
   }
 
   const handleAuthResult = async (isAuthenticated, user, isApprover, esignStatus, remarks) => {
-  
     if (!isAuthenticated) {
       setAlertData({
         type: 'error',
@@ -234,13 +234,11 @@ const Index = () => {
       resetState()
       return
     }
-
     if (isApprover) {
       await handleApproverActions(user, esignStatus, remarks)
     } else {
       handleCreatorActions(user, esignStatus, remarks, isApprover)
     }
-
     resetState()
   }
 
@@ -292,7 +290,7 @@ const Index = () => {
 
     if (esignStatus === 'rejected' && esignDownloadPdf) {
       setOpenModalApprove(false)
-      return;
+      return
     }
 
     const res = await api('/esign-status/update-esign-status', payload, 'patch', true)
@@ -307,7 +305,6 @@ const Index = () => {
     }
 
     setPendingAction(true)
-
   }
 
   const handleCreatorActions = (user, esignStatus, remarks, isApprover) => {
@@ -335,7 +332,6 @@ const Index = () => {
     }
 
     if (esignStatus === 'approved') {
-
       if (esignDownloadPdf) {
         setEsignDownloadPdf(false)
         setOpenModalApprove(true)

@@ -25,9 +25,9 @@ const validationSchema = yup.object().shape({
     .number()
     .required('Quantity can not be empty')
     .positive('Quantity should be greater than 0')
-    .integer('Quantity should be a whole number')
-    .min(1000)
-    .typeError('Quantity Number must be a valid number'),
+    .integer('Quantity should be a whole number'),
+    // .min(1000)
+    // .typeError('Quantity Number must be a valid number'),
 
   manufacturingDate: yup.string().required('Please select manufacturing date'),
 
@@ -64,6 +64,7 @@ function BatchModal({ openModal, handleCloseModal, editData, allProductData, all
     label: item.api_name
   }))
 
+  console.log("all LocationData", allLocationData);
   const LocationData = allLocationData?.map(item => ({
     id: item.location_uuid,
     value: item.location_uuid,
@@ -129,7 +130,7 @@ function BatchModal({ openModal, handleCloseModal, editData, allProductData, all
                 label='Location *'
                 control={control}
                 options={LocationData}
-                disabled={editData?.code_generated}
+                // disabled={editData?.code_generated}
               />
             </Grid2>
           </Grid2>
@@ -154,7 +155,7 @@ function BatchModal({ openModal, handleCloseModal, editData, allProductData, all
                 name='manufacturingDate'
                 control={control}
                 rules={{ required: 'Manufacturing date is required' }}
-                disabled={editData?.code_generated}
+                // disabled={editData?.code_generated}
                 render={({ field }) => (
                   <TextField
                     {...field}
@@ -181,7 +182,7 @@ function BatchModal({ openModal, handleCloseModal, editData, allProductData, all
                 name='expiryDate'
                 control={control}
                 rules={{ required: 'Expiry date is required' }}
-                disabled={editData?.code_generated}
+                // disabled={editData?.code_generated}
                 render={({ field }) => (
                   <TextField
                     {...field}

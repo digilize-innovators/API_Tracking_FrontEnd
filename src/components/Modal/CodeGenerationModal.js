@@ -52,9 +52,9 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
           }))
           setProductData(data)
         } else if (res.data.code === 401) {
-            removeAuthToken()
-            router.push('/401')
-          }
+          removeAuthToken()
+          router.push('/401')
+        }
       } catch (error) {
         console.log('Error in get products ', error)
         setIsLoading(false)
@@ -81,10 +81,9 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
             }))
             setBatches(data)
           } else if (res.data.code === 401) {
-              removeAuthToken()
-              router.push('/401')
-            }
-          
+            removeAuthToken()
+            router.push('/401')
+          }
         } catch (error) {
           console.log('Error in get batches ', error)
           setIsLoading(false)
@@ -112,10 +111,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
           const res = await api(`/batch/getinfo/${formData.productId}/${formData.batchId}?limit=-1`, {}, 'get', true)
           setIsLoading(false)
           if (res.data.success) {
-           
             setShowBox1Data(res.data.data)
-
-
             setPackagingHierarchyData({
               packagingHierarchy: res.data.data?.productHistory?.packagingHierarchy,
               productNumber: res.data.data?.productHistory?.productNumber,
@@ -133,7 +129,6 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
             setAlertData({ type: 'error', openSnackbar: true, message: res.data.message, variant: 'filled' })
             if (res.data.code === 401) {
               removeAuthToken()
-
               router.push('/401')
             }
           }
@@ -149,7 +144,6 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
   }, [formData.batchId])
 
   useEffect(() => {
-
     if (formData.generateQuantity !== '') {
       const batchSize = showBox1Data?.qty
       const level0 = showBox1Data?.productHistory?.productNumber
@@ -203,7 +197,6 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
   }
 
   const resetAll = () => {
-
     setPackagingHierarchyData({})
     setShowBox1Data({})
     setBatches([])
@@ -294,7 +287,11 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
                     id='location'
                     label='Location'
                     placeholder='Location'
-                    value={showBox1Data?.vendor?.vendor_history[0]?.address ? showBox1Data?.vendor?.vendor_history[0]?.address : ''}
+                    value={
+                      showBox1Data?.vendor?.vendor_history[0]?.address
+                        ? showBox1Data?.vendor?.vendor_history[0]?.address
+                        : ''
+                    }
                     disabled={true}
                   />
                 </Box>
@@ -366,7 +363,7 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
                           pattern: '[0-9]*' // Forces numeric input on mobile
                         }
                       }}
-                      disabled={!showBox1Data?.vendor||showBox1Data?.isBatchEnd}
+                      disabled={!showBox1Data?.vendor || showBox1Data?.isBatchEnd}
                       onChange={event => {
                         const value = event.target.value
                         // Check if empty string (allowing empty field)
@@ -408,12 +405,10 @@ function CodeGenerationModal({ open, onClose, handleGenerateCode, setForm, setAu
                     <FormHelperText>
                       {errorData.generateQuantityError.isError ? errorData.generateQuantityError.message : ''}
                     </FormHelperText>
-{                   showBox1Data?.isBatchEnd
-&&
-<FormHelperText sx={{color:'red'}}>
-                     Batch ended cannot generate code
-                    </FormHelperText>
-}                  </FormControl>
+                    {showBox1Data?.isBatchEnd && (
+                      <FormHelperText sx={{ color: 'red' }}>Batch ended cannot generate code</FormHelperText>
+                    )}{' '}
+                  </FormControl>
                 </Box>
                 <Box className='w-50' sx={{ ml: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <Box

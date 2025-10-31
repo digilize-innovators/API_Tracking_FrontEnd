@@ -86,6 +86,7 @@ const Index = () => {
       approveAPImethod: 'POST',
       approveAPIEndPoint: '/api/v1/codegeneration'
     })
+    
     setOpenModal(true)
   }
   const handleCloseModal = () => {
@@ -296,7 +297,11 @@ const Index = () => {
           authUser: user
         }
       }
-      data.esign_status = 'pending'
+      console.log("config?.config?.esign_status -->",config?.config?.esign_status)
+      if(config?.config?.esign_status){
+        data.esign_status = 'pending'
+      }
+      data.esign_status = 'approved' // temporary for esign status disabled
       setIsLoading(true)
       const response = await api('/codegeneration', data, 'post', true)
       if (response.data.success) {

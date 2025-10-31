@@ -58,7 +58,7 @@ const Index = ({ userId, ip }) => {
   const [config, setConfig] = useState(null)
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       await getLinesByPcIp()
       const decodedToken = getTokenValues()
       setConfig(decodedToken)
@@ -200,7 +200,7 @@ const Index = ({ userId, ip }) => {
     function handlePanelPing(data) {
       setPrinterLines(prevLines => {
         return prevLines.map(panel => {
-          if(panel.panelName !== data.panelName) return panel;
+          if (panel.panelName !== data.panelName) return panel
 
           return { ...panel, connected: data.panelConnected }
         })
@@ -269,10 +269,9 @@ const Index = ({ userId, ip }) => {
     }
   }, [])
 
-  const getPrintingStatus = async groupedPanels => {
+  const getPrintingStatus = async panels => {
     try {
       setIsLoading(true)
-      const panels = [...groupedPanels]
       const updatedPanels = await Promise.all(
         panels.map(async panel => {
           // Process all lines asynchronously
@@ -298,7 +297,7 @@ const Index = ({ userId, ip }) => {
                     true
                   ),
                   api(
-                    `/batchprinting/getAvailableCodesFromProductAndBatch/${data.product_id}/${data.batch_id}/${data.packing_hierarchy}/${line.ControlPanel.id}/${line.id}`,
+                    `/batchprinting/getAvailableCodesFromProductAndBatch/${data.product_id}/${data.batch_id}/${data.packing_hierarchy}/${line.id}`,
                     {},
                     'get',
                     true,
@@ -306,6 +305,7 @@ const Index = ({ userId, ip }) => {
                     true
                   )
                 ])
+                console.log('Fetched Data ', { productRes })
 
                 // Update line properties
                 line.products = productRes.data.data.products
@@ -397,13 +397,48 @@ const Index = ({ userId, ip }) => {
             sessionStarted: false,
             pendingCount: 0,
             printCount: 0,
-            scanned: 0
+            scanned: 0,
+            thermal: false
           }))
           groupedPanels.push({ panelName: key, lines: values, connected: false })
         })
         console.log('GROUPED PANEL ', groupedPanels)
-        setPrinterLines(groupedPanels)
-        await getPrintingStatus(groupedPanels)
+        // setPrinterLines(groupedPanels)
+        // await getPrintingStatus(groupedPanels)
+
+        const thermalGroup = []
+        const values = res.data.data.thermalGroup.map(line => ({
+          ...line,
+          batch: '',
+          product: '',
+          packagingHierarchy: '',
+          codeToPrint: '',
+          availableToCode: '',
+          errorBatch: { isError: false, message: '' },
+          errorProduct: { isError: false, message: '' },
+          errorPackagingHierarchy: { isError: false, message: '' },
+          errorCodeToPrint: { isError: false, message: '' },
+          errorAvailableToCode: { isError: false, message: '' },
+          saveData: false,
+          products: [],
+          batches: [],
+          packagingHierarchies: [],
+          disabledCodePrintSave: true,
+          disabledStartPrint: true,
+          disabledStopPrint: true,
+          disabledReset: false,
+          disabledCodeToPrint: true,
+          disabledStartSession: true,
+          disabledStopSession: true,
+          sessionStarted: false,
+          pendingCount: 0,
+          printCount: 0,
+          scanned: 0,
+          thermal: true
+        }))
+        thermalGroup.push({ thermal: true, lines: values })
+        setPrinterLines([...groupedPanels, ...thermalGroup])
+        await getPrintingStatus([...groupedPanels, ...thermalGroup])
       } else {
         console.log('Error fetching lines', res?.data)
         if (res?.data?.code === 401) {
@@ -567,14 +602,20 @@ const Index = ({ userId, ip }) => {
 
   const checkValidateBeforeStart = (panelIndex, lineIndex) => {
     const line = printerLines[panelIndex].lines[lineIndex]
-    return line.batch !== '' && line.product !== '' && line.packagingHierarchy !== '' && parseInt(line.codeToPrint) > 0 && parseInt(line.codeToPrint) <= parseInt(line.availableToCode) && parseInt(line.codeToPrint) <= 1000000
+    return (
+      line.batch !== '' &&
+      line.product !== '' &&
+      line.packagingHierarchy !== '' &&
+      parseInt(line.codeToPrint) > 0 &&
+      parseInt(line.codeToPrint) <= parseInt(line.availableToCode) &&
+      parseInt(line.codeToPrint) <= 1000000
+    )
   }
 
   const handleSubmitForm = async (panelIndex, lineIndex, line) => {
     const productID = line.product
     const batchId = line.batch
     const packagingHierarchy = line.packagingHierarchy
-    const controlPanelId = line.ControlPanel.id
 
     applyValidation(panelIndex, lineIndex)
     if (!checkValidate(panelIndex, lineIndex)) {
@@ -583,7 +624,7 @@ const Index = ({ userId, ip }) => {
     try {
       setIsLoading(true)
       const res = await api(
-        `/batchprinting/getAvailableCodesFromProductAndBatch/${productID}/${batchId}/${packagingHierarchy}/${controlPanelId}/${line.id}`,
+        `/batchprinting/getAvailableCodesFromProductAndBatch/${productID}/${batchId}/${packagingHierarchy}/${line.id}`,
         {},
         'get',
         true,
@@ -664,10 +705,11 @@ const Index = ({ userId, ip }) => {
 
   const handleStartPrinting = async line => {
     try {
+      console.log('handleStartPrinting line ', line)
       const data = {
         printerId: line.printer_id,
-        panelId: line.ControlPanel.id,
-        panelName: line.ControlPanel.name,
+        panelId: line?.ControlPanel?.id,
+        panelName: line?.ControlPanel?.name,
         cameraEnable: line.camera_enable,
         cameraId: line.cameraId,
         lineId: line.id,
@@ -675,7 +717,8 @@ const Index = ({ userId, ip }) => {
         batchId: line.batch,
         packagingHierarchy: line.packagingHierarchy,
         codeToPrint: line.codeToPrint,
-        lineNo: line.line_no
+        lineNo: line?.line_no,
+        controlPanelEnable: line.controlpanel_enable
       }
       socket.current.emit('startPrinting', data)
     } catch (error) {
@@ -686,10 +729,11 @@ const Index = ({ userId, ip }) => {
 
   const handleStopPrinting = async line => {
     try {
+      console.log('handleStopPrinting line ', line)
       const data = {
         printerId: line.printer_id,
-        panelId: line.ControlPanel.id,
-        panelName: line.ControlPanel.name,
+        panelId: line?.ControlPanel?.id,
+        panelName: line?.ControlPanel?.name,
         cameraEnable: line.camera_enable,
         cameraId: line.cameraId,
         lineId: line.id,
@@ -697,11 +741,12 @@ const Index = ({ userId, ip }) => {
         batchId: line.batch,
         packagingHierarchy: line.packagingHierarchy,
         codeToPrint: line.codeToPrint,
-        lineNo: line.line_no
+        lineNo: line?.line_no,
+        controlPanelEnable: line.controlpanel_enable
       }
       socket.current.emit('stopPrinting', data)
       const updatedPrinterLines = [...printerLines]
-      const panel = updatedPrinterLines?.find(p => p.panelName === line.ControlPanel.name)
+      const panel = updatedPrinterLines?.find(p => p?.panelName === line?.ControlPanel?.name)
       if (!panel) return
       const panelLine = panel.lines.find(l => l.id === line.id)
       if (!panelLine) return
@@ -929,6 +974,28 @@ const Index = ({ userId, ip }) => {
     }
   }
 
+  const getLayerOptions = ph => {
+    const options = []
+    options.push({ label: `Product Number`, value: 'productNumber' })
+    if (ph.packagingHierarchy >= 2) options.push({ label: `First Layer`, value: 'firstLayer' })
+    if (ph.packagingHierarchy >= 3) options.push({ label: `Second Layer`, value: 'secondLayer' })
+    if (ph.packagingHierarchy >= 4) options.push({ label: `Third Layer`, value: 'thirdLayer' })
+    options.push({ label: `Outer Layer`, value: 'outerLayer' })
+    return options
+  }
+
+  const renderHierarchyOptions = (ph) => (
+    getLayerOptions(ph).map((option, idx) =>
+      renderHierarchyOption(ph, option, idx)
+    )
+  )
+
+  const renderHierarchyOption = (ph, option, idx) => (
+    <MenuItem key={`${ph.id}-${idx}`} value={option.value}>
+      {option.label}
+    </MenuItem>
+  );
+
   return (
     <Box padding={4}>
       <Head>
@@ -949,28 +1016,30 @@ const Index = ({ userId, ip }) => {
           }}
           elevation={3}
         >
-          <Grid2 container spacing={3} sx={{ marginBottom: '16px' }}>
-            <Grid2
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
-            >
-              <Grid2 item xs={12} sm={6} md={6}>
-                <Typography variant='h3' className='mx-1 my-2' sx={{ paddingTop: '1%' }}>
-                  Control Panel: {panel.panelName}
-                </Typography>
-              </Grid2>
+          {!panel.thermal && (
+            <Grid2 container spacing={3} sx={{ marginBottom: '16px' }}>
+              <Grid2
+                item
+                xs={12}
+                sm={12}
+                md={12}
+                sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
+              >
+                <Grid2 item xs={12} sm={6} md={6}>
+                  <Typography variant='h3' className='mx-1 my-2' sx={{ paddingTop: '1%' }}>
+                    Control Panel: {panel.panelName}
+                  </Typography>
+                </Grid2>
 
-              <Grid2 item xs={12} sm={6} md={6}>
-                <Chip
-                  label={panel.connected ? 'Connected' : 'Disconnected'}
-                  sx={{ backgroundColor: panel.connected ? '#4caf50' : '#E04347', color: 'white' }}
-                />
+                <Grid2 item xs={12} sm={6} md={6}>
+                  <Chip
+                    label={panel.connected ? 'Connected' : 'Disconnected'}
+                    sx={{ backgroundColor: panel.connected ? '#4caf50' : '#E04347', color: 'white' }}
+                  />
+                </Grid2>
               </Grid2>
             </Grid2>
-          </Grid2>
+          )}
           {panel?.lines.map((line, lineIndex) => {
             return (
               line.line_pc_ip === ip && (
@@ -991,9 +1060,11 @@ const Index = ({ userId, ip }) => {
                       </Typography>
                     </Grid2>
                     <Grid2 item size={6} sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                      <Typography variant='h4' className='mx-3 my-2' sx={{ paddingTop: '1%' }}>
-                        Line No: {line.line_no}
-                      </Typography>
+                      {!panel.thermal && (
+                        <Typography variant='h4' className='mx-3 my-2' sx={{ paddingTop: '1%' }}>
+                          Line No: {line.line_no}
+                        </Typography>
+                      )}
                       <Box
                         sx={{
                           width: 30,
@@ -1032,7 +1103,7 @@ const Index = ({ userId, ip }) => {
                         >
                           {line?.products?.map(product => (
                             <MenuItem key={product.product_uuid} value={product.product_uuid}>
-                              {product?.common_name}
+                              {product?.api_name}
                             </MenuItem>
                           ))}
                         </Select>
@@ -1072,7 +1143,8 @@ const Index = ({ userId, ip }) => {
                           value={line.packagingHierarchy}
                           onChange={e => handleInputChange(panelIndex, lineIndex, 'packagingHierarchy', e.target.value)}
                         >
-                          <MenuItem value={'firstLayer'}>{'First Layer'}</MenuItem>
+                          {/* <MenuItem value={'firstLayer'}>{'First Layer'}</MenuItem> */}
+                          {line.packagingHierarchies.map(ph => renderHierarchyOptions(ph))}
                         </Select>
                       </FormControl>
                     </Grid2>

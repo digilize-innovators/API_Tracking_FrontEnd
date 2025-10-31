@@ -1,4 +1,3 @@
-
 'use-client'
 import {
   Button,
@@ -24,18 +23,18 @@ import { getTokenValues } from 'src/utils/tokenUtils'
 import AuthModal from 'src/components/authModal'
 import PropTypes from 'prop-types'
 
-
-const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAccess, ip,setAlertData }) => {
+const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAccess, ip, setAlertData }) => {
   const { setIsLoading } = useLoading()
   const [editId, setEditId] = useState(null)
   const { removeAuthToken } = useAuth()
   const router = useRouter()
   const [labels, setLabels] = useState([])
   const [settingData, setSettingData] = useState({
+    category: '',
     label: '',
     dateFormat: '',
-    noOfGroups: '',
-    printPerGroup: '',
+    noOfGroups: '1',
+    printPerGroup: '1',
     selectedVariables: [],
     variables: [
       {
@@ -43,7 +42,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         value: 'MRP',
         checked: false
       },
-       {
+      {
         label: 'Product Size',
         value: 'productSize',
         checked: false
@@ -79,6 +78,11 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         checked: false
       },
       {
+        label: 'Product Id',
+        value: 'ProductId',
+        checked: false
+      },
+      {
         label: 'Unique Code',
         value: 'UniqueCode',
         checked: false
@@ -111,10 +115,11 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
   const getPrintlineSetting = async () => {
     try {
       setIsLoading(true)
-      const res = await api(`/printLineSetting/${projectSettingData.lineId}`, {}, 'get', true,ip,true)
+      const res = await api(`/printLineSetting/${projectSettingData.lineId}`, {}, 'get', true, ip, true)
       if (res.data.success && res.data.data) {
         setEditId(res.data.data.id)
         setSettingData({
+          category: res.data.data.printer_category,
           label: res.data.data.label,
           dateFormat: res.data.data.date_format,
           noOfGroups: res.data.data.no_of_groups,
@@ -126,11 +131,14 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
               checked: res.data.data.variables?.includes(item.value)
             }
           })
-        });
-        setLabels([res.data.data.label]);
+        })
+        setLabels([res.data.data.label])
       } else {
         setSettingData({
-          ...settingData
+          ...settingData,
+          category: res.data.data?.printer_category,
+          noOfGroups: '1',
+          printPerGroup: '1'
         })
       }
       setIsLoading(false)
@@ -141,20 +149,20 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
   }
 
   const addSetting = async () => {
-      
     const data = {
       printerLineId: projectSettingData.lineId,
       label: settingData.label,
       dateFormat: settingData.dateFormat,
-      noOfGroups: settingData.noOfGroups.toString(),
-      printPerGroup: settingData.printPerGroup.toString(),
+      noOfGroups: settingData.noOfGroups || '1',
+      printPerGroup: settingData.printPerGroup || '1',
       variables: settingData.selectedVariables
     }
+    console.log('Data to add setting ', data)
     try {
       setIsLoading(true)
-      const res = await api('/printLineSetting/', data, 'post', true,ip,true)
+      const res = await api('/printLineSetting/', data, 'post', true, ip, true)
       if (res.data.success) {
-          closeModal()
+        closeModal()
         setAlertData({
           openSnackbar: true,
           type: 'success',
@@ -183,12 +191,13 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       printPerGroup: settingData.printPerGroup.toString(),
       variables: settingData.selectedVariables
     }
+    console.log('Data to edit setting ', data)
 
     try {
       setIsLoading(true)
-      const res = await api('/printLineSetting/', data, 'put', true,ip,true)
+      const res = await api('/printLineSetting/', data, 'put', true, ip, true)
       if (res.data.success) {
-          closeModal()
+        closeModal()
         setAlertData({
           openSnackbar: true,
           type: 'success',
@@ -199,28 +208,24 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     } catch (error) {
       console.error('Error applying settings:', error)
     } finally {
-
       setIsLoading(false)
-    
     }
   }
 
   const applySettings = async () => {
-    const mustHave = ["CountryCode", "UniqueCode"];
-  const notSelected = mustHave.filter(
-    value => !settingData.selectedVariables.includes(value)
-  );
+    const mustHave = ['CountryCode', 'UniqueCode']
+    const notSelected = mustHave.filter(value => !settingData.selectedVariables.includes(value))
 
-  if (notSelected.length > 0) {
-    // Show error in snackbar
-    setAlertData({
-      openSnackbar: true,
-      type: "error",
-      message: `Please select: ${notSelected.join(", ")}`,
-      variant: "filled"
-    });
-    return; // Stop execution
-  }
+    if (notSelected.length > 0) {
+      // Show error in snackbar
+      setAlertData({
+        openSnackbar: true,
+        type: 'error',
+        message: `Please select: ${notSelected.join(', ')}`,
+        variant: 'filled'
+      })
+      return // Stop execution
+    }
     if (config?.config?.esign_status) {
       setApproveAPI({
         approveAPIName: 'batch-printing-create',
@@ -246,10 +251,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     }))
   }
 
-  const closeSnackbar = () => {
-    setAlertData({ ...alertData, openSnackbar: false })
-  }
-
   const getLabels = async () => {
     try {
       setIsLoading(true)
@@ -266,11 +267,16 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       )
       setIsLoading(false)
       if (res?.data.success) {
-        const projectNames = res.data?.data?.projectNames || [];
-        setLabels(projectNames.includes(settingData.label) ? projectNames : [...projectNames, settingData.label]);
+        if (res.data.data.categoryName === 'thermal') {
+          const names = res.data?.data?.prnFiles || []
+          setLabels(names)
+        } else {
+          const projectNames = res.data?.data?.projectNames || []
+          setLabels(projectNames.includes(settingData.label) ? projectNames : [...projectNames, settingData.label])
+        }
       }
     } catch (error) {
-      console.log("Error getting while fetching label ", error)
+      console.log('Error getting while fetching label ', error)
     } finally {
       setIsLoading(false)
     }
@@ -298,7 +304,12 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
       setAuthModalOpen(false)
     }
     if (!isAuthenticated) {
-      setAlertData({ type: 'error', message: 'Authentication failed, Please try again.', openSnackbar: true })
+      setAlertData({
+        type: 'error',
+        message: 'Authentication failed, Please try again.',
+        openSnackbar: true,
+        variant: 'filled'
+      })
       return
     }
     const prepareData = () => ({
@@ -334,17 +345,17 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
     if (isApprover && esignStatus === 'approved') {
       await handleApproverActions()
       if (approveAPI.authUser.userId === user.userId) {
-        setAlertData({ ...alertData, openSnackbar: true, message: 'Same user cannot Approved', type: 'error' })
+        setAlertData({ variant: 'filled', openSnackbar: true, message: 'Same user cannot Approved', type: 'error' })
         return
       }
       editId ? await editSetting() : await addSetting()
     } else if (esignStatus === 'rejected') {
-        setAuthModalOpen(false)
-        setOpenModalApprove(false)
-      } else if (esignStatus === 'approved') {
-        handleEsignApproved()
-      }
-    
+      setAuthModalOpen(false)
+      setOpenModalApprove(false)
+    } else if (esignStatus === 'approved') {
+      handleEsignApproved()
+    }
+
     resetState()
   }
 
@@ -370,7 +381,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                   value={settingData.label}
                   onOpen={getLabels}
                 >
-                  {labels?.map((item) => (
+                  {labels?.map(item => (
                     <MenuItem key={item} value={item}>
                       {item}
                     </MenuItem>
@@ -406,7 +417,16 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
           <Grid2 container spacing={3} sx={{ marginTop: '1rem' }}>
             <Grid2 size={6}>
               <FormControl fullWidth>
-                <InputLabel id='no_of_groups_lbl'>No. of Groups</InputLabel>
+                <InputLabel
+                  id='no_of_groups_lbl'
+                  shrink={Boolean(settingData.noOfGroups)}
+                  sx={{
+                    backgroundColor: 'white',
+                    px: 0.5
+                  }}
+                >
+                  No. of Groups
+                </InputLabel>
                 <Select
                   labelId='no_of_groups_lbl'
                   id='no_of_groups'
@@ -415,6 +435,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                   onChange={handleInput}
                   name='noOfGroups'
                   value={settingData.noOfGroups}
+                  disabled={settingData.category.toLowerCase() === 'thermal'}
                 >
                   <MenuItem value='1'>1</MenuItem>
                   <MenuItem value='2'>2</MenuItem>
@@ -425,7 +446,16 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
             </Grid2>
             <Grid2 size={6}>
               <FormControl fullWidth>
-                <InputLabel id='group_prnt_lbl'>Print per group</InputLabel>
+                <InputLabel
+                  id='group_prnt_lbl'
+                  shrink={Boolean(settingData.printPerGroup)}
+                  sx={{
+                    backgroundColor: 'white',
+                    px: 0.5
+                  }}
+                >
+                  Print per group
+                </InputLabel>
                 <Select
                   labelId='group_prnt_lbl'
                   id='group_prnt'
@@ -434,6 +464,7 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                   onChange={handleInput}
                   name='printPerGroup'
                   value={settingData.printPerGroup}
+                  disabled={settingData.category.toLowerCase() === 'thermal'}
                 >
                   <MenuItem value='1'>1</MenuItem>
                   <MenuItem value='2'>2</MenuItem>
@@ -449,7 +480,15 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
           <Grid2 container spacing={1} sx={{ marginTop: '1rem' }}>
             <Grid2 size={12}>
               <FormControl sx={{ width: '100%' }}>
-                <InputLabel id='no-of-variable'>No of Variable</InputLabel>
+                <InputLabel
+                  id='no-of-variable'
+                  sx={{
+                    backgroundColor: 'white',
+                    px: 0.5
+                  }}
+                >
+                  No of Variable
+                </InputLabel>
                 <Select
                   labelId='no-of-variable'
                   id='no-of-variable'
@@ -462,11 +501,9 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                       }
                     }
                   }}
-                  // onChange={handleInput} name='noOfGroups'
-                  value={settingData.selectedVariables}
+                  value={settingData.selectedVariables || []}
                   renderValue={selected => selected.join(', ')}
                   onChange={e => {
-                    // const value = ...e.target.value;
                     setSettingData(prevData => {
                       const data = { ...prevData }
                       data.variables.forEach(i => {
@@ -475,7 +512,6 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                         } else {
                           i.checked = false
                         }
-                       
                       })
                       data.selectedVariables = e.target.value
                       return data
@@ -483,9 +519,9 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
                   }}
                   input={<OutlinedInput label='None' />}
                 >
-                  {settingData.variables?.map((item, index) => (
+                  {settingData?.variables?.map(item => (
                     <MenuItem key={item.value} value={item.value}>
-                      <Checkbox checked={item.checked} />
+                      <Checkbox checked={settingData?.selectedVariables?.includes(item.value) || false} />
                       <ListItemText primary={item.label} />
                     </MenuItem>
                   ))}
@@ -517,25 +553,24 @@ const ProjectSettings = ({ openModal, setOpenModal, projectSettingData, apiAcces
         open={authModalOpen}
         handleClose={handleAuthModalClose}
         approveAPI={{
-           approveAPIName: approveAPI.approveAPIName,
-            approveAPImethod: approveAPI.approveAPImethod,
-            approveAPIEndPoint: approveAPI.approveAPIEndPoint,
+          approveAPIName: approveAPI.approveAPIName,
+          approveAPImethod: approveAPI.approveAPImethod,
+          approveAPIEndPoint: approveAPI.approveAPIEndPoint
         }}
         handleAuthResult={handleAuthResult}
         config={config}
         handleAuthModalOpen={handleAuthModalOpen}
         openModalApprove={openModalApprove}
       />
-      
     </>
   )
 }
 
-ProjectSettings.propTypes={
-   openModal:PropTypes.any,
-    setOpenModal:PropTypes.any,
-     projectSettingData:PropTypes.any, 
-     apiAccess:PropTypes.any,
-      ip:PropTypes.any
+ProjectSettings.propTypes = {
+  openModal: PropTypes.any,
+  setOpenModal: PropTypes.any,
+  projectSettingData: PropTypes.any,
+  apiAccess: PropTypes.any,
+  ip: PropTypes.any
 }
 export default ProjectSettings

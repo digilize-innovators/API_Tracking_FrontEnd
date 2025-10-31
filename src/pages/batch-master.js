@@ -197,6 +197,7 @@ const Index = () => {
   const editBatch = async esign_status => {
     try {
       const data = { ...formData }
+      console.log('Data to edit batch ', data)
       if (config?.config?.audit_logs) {
         data.audit_log = {
           audit_log: true,
